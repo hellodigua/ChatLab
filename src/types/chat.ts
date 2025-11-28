@@ -213,6 +213,43 @@ export interface NightOwlChampion {
 }
 
 /**
+ * 龙王排名项（每天发言最多的人）
+ */
+export interface DragonKingRankItem {
+  memberId: number
+  platformId: string
+  name: string
+  count: number // 成为龙王的天数
+  percentage: number // 占总天数的百分比
+}
+
+/**
+ * 龙王分析结果
+ */
+export interface DragonKingAnalysis {
+  rank: DragonKingRankItem[]
+  totalDays: number // 统计的总天数
+}
+
+/**
+ * 潜水排名项（最后发言时间）
+ */
+export interface DivingRankItem {
+  memberId: number
+  platformId: string
+  name: string
+  lastMessageTs: number // 最后发言时间戳（秒）
+  daysSinceLastMessage: number // 距离最后发言的天数
+}
+
+/**
+ * 潜水分析结果
+ */
+export interface DivingAnalysis {
+  rank: DivingRankItem[]
+}
+
+/**
  * 夜猫分析完整结果
  */
 export interface NightOwlAnalysis {

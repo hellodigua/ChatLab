@@ -427,6 +427,36 @@ const mainIpcMain = (win: BrowserWindow) => {
       }
     }
   )
+
+  /**
+   * 获取龙王分析数据
+   */
+  ipcMain.handle(
+    'chat:getDragonKingAnalysis',
+    async (_, sessionId: string, filter?: { startTs?: number; endTs?: number }) => {
+      try {
+        return database.getDragonKingAnalysis(sessionId, filter)
+      } catch (error) {
+        console.error('获取龙王分析失败：', error)
+        return { rank: [], totalDays: 0 }
+      }
+    }
+  )
+
+  /**
+   * 获取潜水分析数据
+   */
+  ipcMain.handle(
+    'chat:getDivingAnalysis',
+    async (_, sessionId: string, filter?: { startTs?: number; endTs?: number }) => {
+      try {
+        return database.getDivingAnalysis(sessionId, filter)
+      } catch (error) {
+        console.error('获取潜水分析失败：', error)
+        return { rank: [] }
+      }
+    }
+  )
 }
 
 export default mainIpcMain

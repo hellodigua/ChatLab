@@ -12,6 +12,8 @@ import type {
   RepeatAnalysis,
   CatchphraseAnalysis,
   NightOwlAnalysis,
+  DragonKingAnalysis,
+  DivingAnalysis,
 } from '../../src/types/chat'
 
 // Custom APIs for renderer
@@ -189,6 +191,26 @@ const chatApi = {
     filter?: { startTs?: number; endTs?: number }
   ): Promise<NightOwlAnalysis> => {
     return ipcRenderer.invoke('chat:getNightOwlAnalysis', sessionId, filter)
+  },
+
+  /**
+   * 获取龙王分析数据
+   */
+  getDragonKingAnalysis: (
+    sessionId: string,
+    filter?: { startTs?: number; endTs?: number }
+  ): Promise<DragonKingAnalysis> => {
+    return ipcRenderer.invoke('chat:getDragonKingAnalysis', sessionId, filter)
+  },
+
+  /**
+   * 获取潜水分析数据
+   */
+  getDivingAnalysis: (
+    sessionId: string,
+    filter?: { startTs?: number; endTs?: number }
+  ): Promise<DivingAnalysis> => {
+    return ipcRenderer.invoke('chat:getDivingAnalysis', sessionId, filter)
   },
 }
 

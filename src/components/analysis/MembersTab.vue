@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import type { MemberActivity, MemberNameHistory, RepeatAnalysis, CatchphraseAnalysis } from '@/types/chat'
+import type { MemberActivity, MemberNameHistory, RepeatAnalysis, CatchphraseAnalysis, DragonKingAnalysis } from '@/types/chat'
 import { RankListPro, BarChart, ListPro } from '@/components/charts'
 import type { RankItem, BarChartData } from '@/components/charts'
 
@@ -14,6 +14,35 @@ const props = defineProps<{
   memberActivity: MemberActivity[]
   timeFilter?: TimeFilter
 }>()
+
+// ==================== 龙王分析 ====================
+const dragonKingAnalysis = ref<DragonKingAnalysis | null>(null)
+const isLoadingDragonKing = ref(false)
+
+// 加载龙王分析数据
+async function loadDragonKingAnalysis() {
+  if (!props.sessionId) return
+
+  isLoadingDragonKing.value = true
+  try {
+    dragonKingAnalysis.value = await window.chatApi.getDragonKingAnalysis(props.sessionId, props.timeFilter)
+  } catch (error) {
+    console.error('加载龙王分析失败:', error)
+  } finally {
+    isLoadingDragonKing.value = false
+  }
+}
+
+// 龙王排行数据
+const dragonKingRankData = computed<RankItem[]>(() => {
+  if (!dragonKingAnalysis.value) return []
+  return dragonKingAnalysis.value.rank.map((m) => ({
+    id: m.memberId.toString(),
+    name: m.name,
+    value: m.count,
+    percentage: m.percentage,
+  }))
+})
 
 // ==================== 复读分析 ====================
 const repeatAnalysis = ref<RepeatAnalysis | null>(null)
@@ -178,10 +207,11 @@ watch(
   { immediate: true }
 )
 
-// 监听 sessionId 和 timeFilter 变化，重新加载复读分析和口头禅分析
+// 监听 sessionId 和 timeFilter 变化，重新加载分析数据
 watch(
   () => [props.sessionId, props.timeFilter],
   () => {
+    loadDragonKingAnalysis()
     loadRepeatAnalysis()
     loadCatchphraseAnalysis()
   },
@@ -214,6 +244,21 @@ function formatPeriod(startTs: number, endTs: number | null): string {
   <div class="space-y-6">
     <!-- 成员活跃度排行 -->
     <RankListPro :members="memberRankData" title="成员活跃度排行" />
+
+    <!-- 龙王排名 -->
+    <div
+      v-if="isLoadingDragonKing"
+      class="rounded-xl border border-gray-200 bg-white px-5 py-8 text-center text-sm text-gray-400 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+    >
+      正在统计龙王数据...
+    </div>
+    <RankListPro
+      v-else-if="dragonKingRankData.length > 0"
+      :members="dragonKingRankData"
+      title="🐉 龙王排名"
+      :description="`每天发言最多的人+1（共 ${dragonKingAnalysis?.totalDays ?? 0} 天）`"
+      unit="天"
+    />
 
     <!-- 昵称变更记录区域 -->
     <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">

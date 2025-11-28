@@ -21,6 +21,10 @@ import type {
   TimeRankItem,
   ConsecutiveNightRecord,
   NightOwlChampion,
+  DragonKingAnalysis,
+  DragonKingRankItem,
+  DivingAnalysis,
+  DivingRankItem,
 } from '../../../src/types/chat'
 import { openDatabase } from './core'
 
@@ -1008,6 +1012,141 @@ export function getNightOwlAnalysis(sessionId: string, filter?: TimeFilter): Nig
       champions,
       totalDays,
     }
+  } finally {
+    db.close()
+  }
+}
+
+/**
+ * 获取龙王排名
+ * 每天发言最多的人+1，统计所有天数
+ */
+export function getDragonKingAnalysis(sessionId: string, filter?: TimeFilter): DragonKingAnalysis {
+  const db = openDatabase(sessionId)
+  const emptyResult: DragonKingAnalysis = {
+    rank: [],
+    totalDays: 0,
+  }
+
+  if (!db) return emptyResult
+
+  try {
+    const { clause, params } = buildTimeFilter(filter)
+    const clauseWithSystem = buildSystemMessageFilter(clause)
+
+    // 查询每天每个人的发言数，找出每天的龙王
+    const dailyTopSpeakers = db
+      .prepare(
+        `
+        WITH daily_counts AS (
+          SELECT
+            strftime('%Y-%m-%d', msg.ts, 'unixepoch', 'localtime') as date,
+            msg.sender_id,
+            m.platform_id,
+            m.name,
+            COUNT(*) as msg_count
+          FROM message msg
+          JOIN member m ON msg.sender_id = m.id
+          ${clauseWithSystem}
+          GROUP BY date, msg.sender_id
+        ),
+        daily_max AS (
+          SELECT date, MAX(msg_count) as max_count
+          FROM daily_counts
+          GROUP BY date
+        )
+        SELECT dc.sender_id, dc.platform_id, dc.name, COUNT(*) as dragon_days
+        FROM daily_counts dc
+        JOIN daily_max dm ON dc.date = dm.date AND dc.msg_count = dm.max_count
+        GROUP BY dc.sender_id
+        ORDER BY dragon_days DESC
+      `
+      )
+      .all(...params) as Array<{
+      sender_id: number
+      platform_id: string
+      name: string
+      dragon_days: number
+    }>
+
+    // 获取总天数
+    const totalDaysRow = db
+      .prepare(
+        `
+        SELECT COUNT(DISTINCT strftime('%Y-%m-%d', msg.ts, 'unixepoch', 'localtime')) as total
+        FROM message msg
+        JOIN member m ON msg.sender_id = m.id
+        ${clauseWithSystem}
+      `
+      )
+      .get(...params) as { total: number }
+
+    const totalDays = totalDaysRow.total
+
+    const rank: DragonKingRankItem[] = dailyTopSpeakers.map((item) => ({
+      memberId: item.sender_id,
+      platformId: item.platform_id,
+      name: item.name,
+      count: item.dragon_days,
+      percentage: totalDays > 0 ? Math.round((item.dragon_days / totalDays) * 10000) / 100 : 0,
+    }))
+
+    return { rank, totalDays }
+  } finally {
+    db.close()
+  }
+}
+
+/**
+ * 获取潜水排名
+ * 所有人的最后一次发言记录，按时间倒序（最久没发言的在前面）
+ */
+export function getDivingAnalysis(sessionId: string, filter?: TimeFilter): DivingAnalysis {
+  const db = openDatabase(sessionId)
+  const emptyResult: DivingAnalysis = {
+    rank: [],
+  }
+
+  if (!db) return emptyResult
+
+  try {
+    const { clause, params } = buildTimeFilter(filter)
+    const clauseWithSystem = buildSystemMessageFilter(clause)
+
+    // 查询每个成员的最后发言时间
+    const lastMessages = db
+      .prepare(
+        `
+        SELECT
+          m.id as member_id,
+          m.platform_id,
+          m.name,
+          MAX(msg.ts) as last_ts
+        FROM member m
+        JOIN message msg ON m.id = msg.sender_id
+        ${clauseWithSystem.replace('msg.', 'msg.')}
+        GROUP BY m.id
+        ORDER BY last_ts ASC
+      `
+      )
+      .all(...params) as Array<{
+      member_id: number
+      platform_id: string
+      name: string
+      last_ts: number
+    }>
+
+    const now = Math.floor(Date.now() / 1000)
+
+    const rank: DivingRankItem[] = lastMessages.map((item) => ({
+      memberId: item.member_id,
+      platformId: item.platform_id,
+      name: item.name,
+      lastMessageTs: item.last_ts,
+      daysSinceLastMessage: Math.floor((now - item.last_ts) / 86400),
+    }))
+
+    return { rank }
   } finally {
     db.close()
   }

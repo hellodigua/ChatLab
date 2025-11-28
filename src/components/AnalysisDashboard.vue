@@ -249,7 +249,13 @@ onMounted(loadData)
             :hourly-activity="hourlyActivity"
             :time-filter="timeFilter"
           />
-          <TimelineTab v-else-if="activeTab === 'timeline'" :daily-activity="dailyActivity" :time-range="timeRange" />
+          <TimelineTab
+            v-else-if="activeTab === 'timeline'"
+            :session-id="currentSessionId!"
+            :daily-activity="dailyActivity"
+            :time-range="timeRange"
+            :time-filter="timeFilter"
+          />
         </Transition>
       </div>
     </template>

@@ -19,6 +19,8 @@ export {
   getRepeatAnalysis,
   getCatchphraseAnalysis,
   getNightOwlAnalysis,
+  getDragonKingAnalysis,
+  getDivingAnalysis,
 } from './analysis'
 
 // 类型导出

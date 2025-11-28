@@ -1,13 +1,20 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { DailyActivity } from '@/types/chat'
+import { computed, ref, watch } from 'vue'
+import type { DailyActivity, DivingAnalysis } from '@/types/chat'
 import dayjs from 'dayjs'
 import { LineChart } from '@/components/charts'
 import type { LineChartData } from '@/components/charts'
 
+interface TimeFilter {
+  startTs?: number
+  endTs?: number
+}
+
 const props = defineProps<{
+  sessionId: string
   dailyActivity: DailyActivity[]
   timeRange: { start: number; end: number } | null
+  timeFilter?: TimeFilter
 }>()
 
 // 检测是否跨年
@@ -53,6 +60,47 @@ const totalDays = computed(() => {
   const end = dayjs.unix(props.timeRange.end)
   return end.diff(start, 'day') + 1
 })
+
+// ==================== 潜水分析 ====================
+const divingAnalysis = ref<DivingAnalysis | null>(null)
+const isLoadingDiving = ref(false)
+
+// 加载潜水分析数据
+async function loadDivingAnalysis() {
+  if (!props.sessionId) return
+
+  isLoadingDiving.value = true
+  try {
+    divingAnalysis.value = await window.chatApi.getDivingAnalysis(props.sessionId, props.timeFilter)
+  } catch (error) {
+    console.error('加载潜水分析失败:', error)
+  } finally {
+    isLoadingDiving.value = false
+  }
+}
+
+// 格式化最后发言时间（精确到时分秒）
+function formatLastMessageTime(ts: number): string {
+  return dayjs.unix(ts).format('YYYY-MM-DD HH:mm:ss')
+}
+
+// 格式化天数显示
+function formatDaysSince(days: number): string {
+  if (days === 0) return '今天'
+  if (days === 1) return '昨天'
+  if (days < 30) return `${days} 天前`
+  if (days < 365) return `${Math.floor(days / 30)} 个月前`
+  return `${Math.floor(days / 365)} 年前`
+}
+
+// 监听 sessionId 和 timeFilter 变化
+watch(
+  () => [props.sessionId, props.timeFilter],
+  () => {
+    loadDivingAnalysis()
+  },
+  { immediate: true, deep: true }
+)
 </script>
 
 <template>
@@ -102,6 +150,79 @@ const totalDays = computed(() => {
     <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
       <h3 class="mb-4 font-semibold text-gray-900 dark:text-white">每日消息趋势</h3>
       <LineChart :data="dailyChartData" :height="288" />
+    </div>
+
+    <!-- 潜水排名 -->
+    <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+        <h3 class="font-semibold text-gray-900 dark:text-white">🤿 潜水排名</h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          按最后发言时间排序，最久没发言的在前面
+        </p>
+      </div>
+
+      <div v-if="isLoadingDiving" class="px-5 py-8 text-center text-sm text-gray-400">
+        正在统计潜水数据...
+      </div>
+
+      <div
+        v-else-if="divingAnalysis && divingAnalysis.rank.length > 0"
+        class="divide-y divide-gray-100 dark:divide-gray-800"
+      >
+        <div
+          v-for="(member, index) in divingAnalysis.rank"
+          :key="member.memberId"
+          class="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
+        >
+          <!-- 排名 -->
+          <div
+            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold"
+            :class="
+              index === 0
+                ? 'bg-gradient-to-r from-blue-400 to-cyan-500 text-white'
+                : index === 1
+                  ? 'bg-gradient-to-r from-blue-300 to-cyan-400 text-white'
+                  : index === 2
+                    ? 'bg-gradient-to-r from-blue-200 to-cyan-300 text-gray-700'
+                    : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+            "
+          >
+            {{ index + 1 }}
+          </div>
+
+          <!-- 名字 -->
+          <div class="w-32 shrink-0">
+            <p class="truncate font-medium text-gray-900 dark:text-white">
+              {{ member.name }}
+            </p>
+          </div>
+
+          <!-- 最后发言时间 -->
+          <div class="flex flex-1 items-center gap-2">
+            <span class="text-sm text-gray-600 dark:text-gray-400">
+              {{ formatLastMessageTime(member.lastMessageTs) }}
+            </span>
+          </div>
+
+          <!-- 距今天数 -->
+          <div class="shrink-0 text-right">
+            <span
+              class="text-sm font-medium"
+              :class="
+                member.daysSinceLastMessage > 30
+                  ? 'text-red-600 dark:text-red-400'
+                  : member.daysSinceLastMessage > 7
+                    ? 'text-orange-600 dark:text-orange-400'
+                    : 'text-gray-600 dark:text-gray-400'
+              "
+            >
+              {{ formatDaysSince(member.daysSinceLastMessage) }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="px-5 py-8 text-center text-sm text-gray-400">暂无数据</div>
     </div>
   </div>
 </template>
