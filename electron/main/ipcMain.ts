@@ -1,6 +1,7 @@
 import { ipcMain, app, dialog, clipboard, shell, BrowserWindow } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import * as fs from 'fs/promises'
+import * as fsSync from 'fs'
 
 // 导入数据库核心模块（用于导入和删除操作）
 import * as databaseCore from './database/core'
@@ -8,35 +9,46 @@ import * as databaseCore from './database/core'
 import * as worker from './worker'
 // 导入解析器模块
 import * as parser from './parser'
-import { detectFormat, type ParseProgress, type ParseResult } from './parser'
+import { detectFormat, type ParseProgress } from './parser'
 // 导入合并模块
 import * as merger from './merger'
+import { deleteTempDatabase, cleanupAllTempDatabases } from './merger/tempCache'
 import type { MergeParams } from '../../src/types/chat'
 
 console.log('[IpcMain] Database, Worker and Parser modules imported')
 
-// ==================== 解析结果缓存 ====================
-// 用于合并功能：缓存文件的完整解析结果，避免重复解析
-// 这样用户删除本地文件后仍然可以进行合并
-const parseResultCache = new Map<string, ParseResult>()
+// ==================== 临时数据库缓存 ====================
+// 用于合并功能：缓存文件对应的临时数据库路径
+// 这样用户删除本地文件后仍然可以进行合并（数据已存入临时数据库）
+const tempDbCache = new Map<string, string>()
 
 /**
- * 清理指定文件的缓存
+ * 清理指定文件的缓存（删除临时数据库）
  */
-function clearParseCache(filePath: string): void {
-  parseResultCache.delete(filePath)
+function clearTempDbCache(filePath: string): void {
+  const tempDbPath = tempDbCache.get(filePath)
+  if (tempDbPath) {
+    deleteTempDatabase(tempDbPath)
+    tempDbCache.delete(filePath)
+  }
 }
 
 /**
- * 清理所有缓存
+ * 清理所有缓存（删除所有临时数据库）
  */
-function clearAllParseCache(): void {
-  parseResultCache.clear()
-  console.log('[IpcMain] 已清理所有解析缓存')
+function clearAllTempDbCache(): void {
+  for (const tempDbPath of tempDbCache.values()) {
+    deleteTempDatabase(tempDbPath)
+  }
+  tempDbCache.clear()
+  console.log('[IpcMain] 已清理所有临时数据库缓存')
 }
 
 const mainIpcMain = (win: BrowserWindow) => {
   console.log('[IpcMain] Registering IPC handlers...')
+
+  // 清理残留的临时数据库（上次崩溃可能残留）
+  cleanupAllTempDatabases()
 
   // 初始化 Worker
   try {
@@ -617,11 +629,11 @@ const mainIpcMain = (win: BrowserWindow) => {
 
   /**
    * 解析文件获取基本信息（用于合并预览）
-   * 使用流式解析获取进度，同时缓存完整解析结果
+   * 使用流式解析，数据写入临时数据库，避免内存溢出
    */
   ipcMain.handle('merge:parseFileInfo', async (_, filePath: string) => {
     try {
-      // 使用流式解析，避免大文件 OOM，同时获取完整解析结果
+      // 使用流式解析，写入临时数据库
       const result = await worker.streamParseFileInfo(filePath, (progress: ParseProgress) => {
         // 可选：发送进度到渲染进程
         win.webContents.send('merge:parseProgress', {
@@ -630,14 +642,14 @@ const mainIpcMain = (win: BrowserWindow) => {
         })
       })
 
-      // 缓存完整解析结果（用于后续合并）
-      // 这样即使用户删除本地文件，也能继续合并
-      if (result.parseResult) {
-        parseResultCache.set(filePath, result.parseResult)
-        console.log(`[IpcMain] 已缓存解析结果: ${filePath}, 消息数: ${result.parseResult.messages.length}`)
+      // 缓存临时数据库路径（用于后续合并）
+      // 这样即使用户删除本地文件，也能继续合并（数据已在临时数据库中）
+      if (result.tempDbPath) {
+        tempDbCache.set(filePath, result.tempDbPath)
+        console.log(`[IpcMain] 已缓存临时数据库: ${filePath} -> ${result.tempDbPath}`)
       }
 
-      // 返回基本信息（不包含完整解析结果，减少 IPC 传输）
+      // 返回基本信息
       return {
         name: result.name,
         format: result.format,
@@ -653,11 +665,11 @@ const mainIpcMain = (win: BrowserWindow) => {
   })
 
   /**
-   * 检测合并冲突（使用缓存的解析结果）
+   * 检测合并冲突（使用临时数据库）
    */
   ipcMain.handle('merge:checkConflicts', async (_, filePaths: string[]) => {
     try {
-      return merger.checkConflictsWithCache(filePaths, parseResultCache)
+      return merger.checkConflictsWithTempDb(filePaths, tempDbCache)
     } catch (error) {
       console.error('检测冲突失败：', error)
       throw error
@@ -665,15 +677,15 @@ const mainIpcMain = (win: BrowserWindow) => {
   })
 
   /**
-   * 执行合并（使用缓存的解析结果）
+   * 执行合并（使用临时数据库）
    */
   ipcMain.handle('merge:mergeFiles', async (_, params: MergeParams) => {
     try {
-      const result = await merger.mergeFilesWithCache(params, parseResultCache)
+      const result = await merger.mergeFilesWithTempDb(params, tempDbCache)
       // 合并完成后清理缓存
       if (result.success) {
         for (const filePath of params.filePaths) {
-          clearParseCache(filePath)
+          clearTempDbCache(filePath)
         }
       }
       return result
@@ -688,9 +700,9 @@ const mainIpcMain = (win: BrowserWindow) => {
    */
   ipcMain.handle('merge:clearCache', async (_, filePath?: string) => {
     if (filePath) {
-      clearParseCache(filePath)
+      clearTempDbCache(filePath)
     } else {
-      clearAllParseCache()
+      clearAllTempDbCache()
     }
     return true
   })

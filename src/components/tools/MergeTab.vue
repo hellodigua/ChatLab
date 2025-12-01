@@ -48,6 +48,10 @@ const mergeProgress = ref(0)
 const currentStep = ref<'select' | 'conflict' | 'done'>('select')
 const outputFilePath = ref('')
 
+// 分页相关
+const currentPage = ref(1)
+const pageSize = 20
+
 // 解析进度监听
 let unsubscribeProgress: (() => void) | null = null
 
@@ -198,6 +202,7 @@ async function doMerge() {
 
     if (checkResult.conflicts.length > 0) {
       conflicts.value = checkResult.conflicts
+      currentPage.value = 1 // 重置分页
       currentStep.value = 'conflict'
       isMerging.value = false
       return
@@ -304,6 +309,20 @@ function getStatusColor(status: FileInfo['status']): string {
 
 // 计算已解决的冲突数
 const resolvedCount = computed(() => conflicts.value.filter((c) => c.resolution).length)
+
+// 分页相关计算属性
+const totalPages = computed(() => Math.ceil(conflicts.value.length / pageSize))
+const paginatedConflicts = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return conflicts.value.slice(start, start + pageSize)
+})
+
+// 分页导航
+function goToPage(page: number) {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+  }
+}
 
 // 批量选择所有冲突
 function batchSelectAll(resolution: 'keep1' | 'keep2' | 'keepBoth') {
@@ -493,14 +512,14 @@ const file2Name = computed(() => files.value[1]?.name || '文件 2')
 
         <!-- 冲突列表 -->
         <div class="max-h-[400px] divide-y divide-gray-200 overflow-y-auto dark:divide-gray-800">
-          <div v-for="(conflict, index) in conflicts" :key="conflict.id" class="p-4">
+          <div v-for="(conflict, index) in paginatedConflicts" :key="conflict.id" class="p-4">
             <!-- 冲突信息 -->
             <div class="mb-3 flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <span
                   class="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-xs font-medium dark:bg-gray-700"
                 >
-                  {{ index + 1 }}
+                  {{ (currentPage - 1) * pageSize + index + 1 }}
                 </span>
                 <span class="text-sm text-gray-600 dark:text-gray-400">{{ conflict.sender }}</span>
               </div>
@@ -562,6 +581,50 @@ const file2Name = computed(() => files.value[1]?.name || '文件 2')
               <span class="text-sm text-gray-600 dark:text-gray-400">保留两者（作为两条独立消息）</span>
             </div>
           </div>
+        </div>
+
+        <!-- 分页控件（仅当冲突数 > 20 时显示） -->
+        <div
+          v-if="totalPages > 1"
+          class="flex items-center justify-center gap-2 border-t border-gray-200 bg-gray-50 px-5 py-3 dark:border-gray-800 dark:bg-gray-800/50"
+        >
+          <UButton
+            size="xs"
+            color="gray"
+            variant="ghost"
+            icon="i-heroicons-chevron-left"
+            :disabled="currentPage === 1"
+            @click="goToPage(currentPage - 1)"
+          />
+          <div class="flex items-center gap-1">
+            <template v-for="page in totalPages" :key="page">
+              <UButton
+                v-if="page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1"
+                size="xs"
+                :color="page === currentPage ? 'primary' : 'gray'"
+                :variant="page === currentPage ? 'soft' : 'ghost'"
+                @click="goToPage(page)"
+              >
+                {{ page }}
+              </UButton>
+              <span v-else-if="page === 2 && currentPage > 3" class="px-1 text-xs text-gray-400">...</span>
+              <span
+                v-else-if="page === totalPages - 1 && currentPage < totalPages - 2"
+                class="px-1 text-xs text-gray-400"
+              >
+                ...
+              </span>
+            </template>
+          </div>
+          <UButton
+            size="xs"
+            color="gray"
+            variant="ghost"
+            icon="i-heroicons-chevron-right"
+            :disabled="currentPage === totalPages"
+            @click="goToPage(currentPage + 1)"
+          />
+          <span class="ml-2 text-xs text-gray-500">第 {{ currentPage }} / {{ totalPages }} 页</span>
         </div>
 
         <!-- 底部操作 -->

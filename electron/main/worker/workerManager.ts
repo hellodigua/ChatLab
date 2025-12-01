@@ -314,7 +314,8 @@ export async function parseFileInfo(filePath: string): Promise<any> {
 }
 
 /**
- * 流式解析文件获取基本信息和完整解析结果（用于合并预览）
+ * 流式解析文件，写入临时数据库（用于合并功能）
+ * 返回基本信息和临时数据库路径
  */
 export async function streamParseFileInfo(
   filePath: string,
@@ -326,17 +327,7 @@ export async function streamParseFileInfo(
   messageCount: number
   memberCount: number
   fileSize: number
-  parseResult: {
-    meta: { name: string; platform: string; type: string }
-    members: Array<{ platformId: string; name: string; nickname?: string }>
-    messages: Array<{
-      senderPlatformId: string
-      senderName: string
-      timestamp: number
-      type: number
-      content?: string
-    }>
-  }
+  tempDbPath: string
 }> {
   return sendToWorkerWithProgress('streamParseFileInfo', { filePath }, onProgress)
 }

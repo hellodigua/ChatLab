@@ -16,7 +16,6 @@ import {
   type ParsedMeta,
   type ParsedMember,
   type ParsedMessage,
-  getFileSize,
 } from '../parser'
 
 /** 流式导入结果 */
@@ -26,6 +25,70 @@ export interface StreamImportResult {
   error?: string
 }
 import { getDbDir } from './dbCore'
+import { initPerfLog, logPerf, logPerfDetail, resetPerfLog, getCurrentLogFile } from './perfLogger'
+
+// ==================== 临时数据库相关（用于合并功能） ====================
+
+/**
+ * 获取临时数据库目录（Worker 环境）
+ */
+function getTempDir(): string {
+  const dbDir = getDbDir()
+  const tempDir = path.join(path.dirname(dbDir), 'temp')
+  if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true })
+  }
+  return tempDir
+}
+
+/**
+ * 生成临时数据库文件路径
+ */
+function generateTempDbPath(sourceFilePath: string): string {
+  const timestamp = Date.now()
+  const random = Math.random().toString(36).substring(2, 8)
+  const baseName = path.basename(sourceFilePath, path.extname(sourceFilePath))
+  const safeName = baseName.replace(/[/\\?%*:|"<>]/g, '_').substring(0, 50)
+  return path.join(getTempDir(), `merge_${safeName}_${timestamp}_${random}.db`)
+}
+
+/**
+ * 创建临时数据库并初始化表结构
+ */
+function createTempDatabase(dbPath: string): Database.Database {
+  const db = new Database(dbPath)
+
+  db.pragma('journal_mode = WAL')
+  db.pragma('synchronous = NORMAL')
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS meta (
+      name TEXT NOT NULL,
+      platform TEXT NOT NULL,
+      type TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS member (
+      platform_id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      nickname TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS message (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      sender_platform_id TEXT NOT NULL,
+      sender_name TEXT NOT NULL,
+      timestamp INTEGER NOT NULL,
+      type INTEGER NOT NULL,
+      content TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_message_ts ON message(timestamp);
+    CREATE INDEX IF NOT EXISTS idx_message_sender ON message(sender_platform_id);
+  `)
+
+  return db
+}
 
 /**
  * 发送进度到主进程
@@ -55,9 +118,9 @@ function getDbPath(sessionId: string): string {
 }
 
 /**
- * 创建数据库并初始化表结构
+ * 创建数据库并初始化表结构（不含索引，用于快速导入）
  */
-function createDatabase(sessionId: string): Database.Database {
+function createDatabaseWithoutIndexes(sessionId: string): Database.Database {
   const dbDir = getDbDir()
   if (!fs.existsSync(dbDir)) {
     fs.mkdirSync(dbDir, { recursive: true })
@@ -68,7 +131,10 @@ function createDatabase(sessionId: string): Database.Database {
 
   db.pragma('journal_mode = WAL')
   db.pragma('synchronous = NORMAL')
+  // 增加缓存大小以提高写入性能
+  db.pragma('cache_size = -64000') // 64MB 缓存
 
+  // 创建表结构（不创建索引，导入完成后再创建）
   db.exec(`
     CREATE TABLE IF NOT EXISTS meta (
       name TEXT NOT NULL,
@@ -101,13 +167,25 @@ function createDatabase(sessionId: string): Database.Database {
       content TEXT,
       FOREIGN KEY(sender_id) REFERENCES member(id)
     );
+  `)
 
+  return db
+}
+
+/**
+ * 导入完成后创建索引
+ */
+function createIndexes(db: Database.Database): void {
+  console.log('[StreamImport] 开始创建索引...')
+  const startTime = Date.now()
+
+  db.exec(`
     CREATE INDEX IF NOT EXISTS idx_message_ts ON message(ts);
     CREATE INDEX IF NOT EXISTS idx_message_sender ON message(sender_id);
     CREATE INDEX IF NOT EXISTS idx_member_name_history_member_id ON member_name_history(member_id);
   `)
 
-  return db
+  console.log(`[StreamImport] 索引创建完成，耗时: ${Date.now() - startTime}ms`)
 }
 
 /**
@@ -123,6 +201,12 @@ export async function streamImport(filePath: string, requestId: string): Promise
   }
 
   console.log(`[StreamImport] 开始导入: ${filePath}, 格式: ${formatFeature.name}`)
+
+  // 初始化性能日志（实时写入文件）
+  resetPerfLog()
+  const sessionId = generateSessionId()
+  initPerfLog(sessionId)
+  logPerf('开始导入', 0)
 
   // 预处理：如果格式需要且文件较大，先精简
   let actualFilePath = filePath
@@ -158,8 +242,7 @@ export async function streamImport(filePath: string, requestId: string): Promise
     }
   }
 
-  const sessionId = generateSessionId()
-  const db = createDatabase(sessionId)
+  const db = createDatabaseWithoutIndexes(sessionId)
 
   // 准备语句
   const insertMeta = db.prepare(`
@@ -176,19 +259,79 @@ export async function streamImport(filePath: string, requestId: string): Promise
     INSERT INTO member_name_history (member_id, name, start_ts, end_ts) VALUES (?, ?, ?, ?)
   `)
   const updateMemberName = db.prepare(`UPDATE member SET name = ? WHERE platform_id = ?`)
-  const updateNameHistoryEndTs = db.prepare(`
-    UPDATE member_name_history SET end_ts = ? WHERE member_id = ? AND end_ts IS NULL
-  `)
 
   // 成员ID映射（platformId -> dbId）
   const memberIdMap = new Map<string, number>()
-  // 昵称追踪器
-  const nicknameTracker = new Map<string, { currentName: string; lastSeenTs: number }>()
+  // 昵称追踪器（收集所有变化，最后批量写入）
+  const nicknameTracker = new Map<
+    string,
+    {
+      currentName: string
+      lastSeenTs: number
+      history: Array<{ name: string; startTs: number }>
+    }
+  >()
   // 是否已插入 meta
   let metaInserted = false
 
-  // 开始事务（整个导入作为一个大事务，提高性能）
-  db.exec('BEGIN TRANSACTION')
+  // 分批提交配置（每 50000 条消息提交一次）
+  const BATCH_COMMIT_SIZE = 50000
+  // WAL checkpoint 间隔（每 200000 条执行一次 checkpoint）
+  const CHECKPOINT_INTERVAL = 200000
+  let messageCountInBatch = 0
+  let totalMessageCount = 0
+  let lastCheckpointCount = 0
+  let inTransaction = false
+
+  // 开始第一个事务
+  const beginTransaction = () => {
+    if (!inTransaction) {
+      db.exec('BEGIN TRANSACTION')
+      inTransaction = true
+    }
+  }
+
+  // 执行 WAL checkpoint（将 WAL 日志合并到主数据库）
+  const doCheckpoint = () => {
+    try {
+      db.pragma('wal_checkpoint(TRUNCATE)')
+      console.log(`[StreamImport] WAL checkpoint 完成，累计 ${totalMessageCount} 条`)
+    } catch (e) {
+      console.warn('[StreamImport] WAL checkpoint 失败:', e)
+    }
+  }
+
+  // 提交当前事务并开始新事务
+  const commitAndBeginNew = () => {
+    if (inTransaction) {
+      db.exec('COMMIT')
+      inTransaction = false
+
+      // 记录性能日志
+      logPerf(`提交事务`, totalMessageCount, BATCH_COMMIT_SIZE)
+
+      // 定期执行 WAL checkpoint（防止 WAL 文件过大导致变慢）
+      if (totalMessageCount - lastCheckpointCount >= CHECKPOINT_INTERVAL) {
+        doCheckpoint()
+        logPerf('WAL checkpoint', totalMessageCount)
+        lastCheckpointCount = totalMessageCount
+      }
+
+      console.log(`[StreamImport] 已提交事务，累计 ${totalMessageCount} 条消息`)
+      // 发送写入进度
+      sendProgress(requestId, {
+        stage: 'importing',
+        bytesRead: 0,
+        totalBytes: 0,
+        messagesProcessed: totalMessageCount,
+        percentage: 100,
+        message: `正在写入数据库... 已处理 ${totalMessageCount.toLocaleString()} 条`,
+      })
+    }
+    beginTransaction()
+  }
+
+  beginTransaction()
 
   try {
     await streamParseFile(actualFilePath, {
@@ -219,22 +362,29 @@ export async function streamImport(filePath: string, requestId: string): Promise
       },
 
       onMessageBatch: (messages: ParsedMessage[]) => {
+        // 分阶段计时
+        let memberLookupTime = 0
+        let memberInsertTime = 0
+        let messageInsertTime = 0
+        let nicknameTrackTime = 0
+        let memberLookupCount = 0
+        let memberInsertCount = 0
+        let nicknameChangeCount = 0
+
         for (const msg of messages) {
           // 数据验证：跳过无效消息
           if (!msg.senderPlatformId || !msg.senderName) {
-            console.warn('[StreamImport] 跳过无效消息：缺少发送者信息')
             continue
           }
           if (msg.timestamp === undefined || msg.timestamp === null || isNaN(msg.timestamp)) {
-            console.warn('[StreamImport] 跳过无效消息：缺少时间戳')
             continue
           }
           if (msg.type === undefined || msg.type === null) {
-            console.warn('[StreamImport] 跳过无效消息：缺少消息类型')
             continue
           }
 
           // 确保成员存在
+          let t0 = Date.now()
           if (!memberIdMap.has(msg.senderPlatformId)) {
             const memberName = msg.senderName || msg.senderPlatformId
             insertMember.run(msg.senderPlatformId, memberName, null)
@@ -242,48 +392,146 @@ export async function streamImport(filePath: string, requestId: string): Promise
             if (row) {
               memberIdMap.set(msg.senderPlatformId, row.id)
             }
+            memberInsertCount++
+            memberInsertTime += Date.now() - t0
+          } else {
+            memberLookupCount++
+            memberLookupTime += Date.now() - t0
           }
 
           const senderId = memberIdMap.get(msg.senderPlatformId)
           if (senderId === undefined) continue
 
           // 插入消息
+          t0 = Date.now()
           insertMessage.run(senderId, msg.timestamp, msg.type, msg.content)
+          messageInsertTime += Date.now() - t0
+          messageCountInBatch++
+          totalMessageCount++
 
-          // 追踪昵称变化
+          // 追踪昵称变化（仅记录，不写入数据库，最后批量处理）
+          t0 = Date.now()
           const senderName = msg.senderName || msg.senderPlatformId
           const tracker = nicknameTracker.get(msg.senderPlatformId)
           if (!tracker) {
             nicknameTracker.set(msg.senderPlatformId, {
               currentName: senderName,
               lastSeenTs: msg.timestamp,
+              history: [{ name: senderName, startTs: msg.timestamp }],
             })
-            insertNameHistory.run(senderId, senderName, msg.timestamp, null)
+            nicknameChangeCount++
           } else if (tracker.currentName !== senderName) {
-            updateNameHistoryEndTs.run(msg.timestamp, senderId)
-            insertNameHistory.run(senderId, senderName, msg.timestamp, null)
+            // 记录昵称变化（稍后批量写入）
+            tracker.history.push({ name: senderName, startTs: msg.timestamp })
             tracker.currentName = senderName
             tracker.lastSeenTs = msg.timestamp
+            nicknameChangeCount++
           } else {
             tracker.lastSeenTs = msg.timestamp
+          }
+          nicknameTrackTime += Date.now() - t0
+
+          // 分批提交（每 50000 条）
+          if (messageCountInBatch >= BATCH_COMMIT_SIZE) {
+            // 记录详细分阶段耗时
+            const detail =
+              `[详细] 成员查找: ${memberLookupTime}ms (${memberLookupCount}次) | ` +
+              `成员插入: ${memberInsertTime}ms (${memberInsertCount}次) | ` +
+              `消息插入: ${messageInsertTime}ms | ` +
+              `昵称追踪: ${nicknameTrackTime}ms (变化${nicknameChangeCount}次)`
+            logPerfDetail(detail)
+
+            commitAndBeginNew()
+            messageCountInBatch = 0
+
+            // 重置计时
+            memberLookupTime = 0
+            memberInsertTime = 0
+            messageInsertTime = 0
+            nicknameTrackTime = 0
+            memberLookupCount = 0
+            memberInsertCount = 0
+            nicknameChangeCount = 0
           }
         }
       },
     })
 
-    // 更新成员的最新昵称
-    for (const [platformId, tracker] of nicknameTracker.entries()) {
-      updateMemberName.run(tracker.currentName, platformId)
+    // 提交最后的消息事务
+    if (inTransaction) {
+      db.exec('COMMIT')
+      inTransaction = false
     }
 
-    // 提交事务
-    db.exec('COMMIT')
+    // 批量写入昵称历史（在索引创建前，写入速度更快）
+    sendProgress(requestId, {
+      stage: 'importing',
+      bytesRead: 0,
+      totalBytes: 0,
+      messagesProcessed: totalMessageCount,
+      percentage: 100,
+      message: '正在写入昵称历史...',
+    })
+    logPerf('开始写入昵称历史', totalMessageCount)
 
-    console.log(`[StreamImport] 导入完成: ${sessionId}`)
+    // 开始新事务
+    db.exec('BEGIN TRANSACTION')
+    let historyCount = 0
+    for (const [platformId, tracker] of nicknameTracker.entries()) {
+      const senderId = memberIdMap.get(platformId)
+      if (!senderId) continue
+
+      // 写入所有昵称历史
+      for (let i = 0; i < tracker.history.length; i++) {
+        const h = tracker.history[i]
+        const endTs = i < tracker.history.length - 1 ? tracker.history[i + 1].startTs : null
+        insertNameHistory.run(senderId, h.name, h.startTs, endTs)
+        historyCount++
+      }
+
+      // 更新成员最新昵称
+      updateMemberName.run(tracker.currentName, platformId)
+    }
+    db.exec('COMMIT')
+    logPerf(`昵称历史写入完成 (${historyCount}条)`, totalMessageCount)
+
+    // 创建索引（导入完成后批量创建，比边导入边更新快很多）
+    sendProgress(requestId, {
+      stage: 'importing',
+      bytesRead: 0,
+      totalBytes: 0,
+      messagesProcessed: totalMessageCount,
+      percentage: 100,
+      message: '正在创建索引...',
+    })
+    logPerf('开始创建索引', totalMessageCount)
+    createIndexes(db)
+    logPerf('索引创建完成', totalMessageCount)
+
+    // 最终 WAL checkpoint
+    sendProgress(requestId, {
+      stage: 'importing',
+      bytesRead: 0,
+      totalBytes: 0,
+      messagesProcessed: totalMessageCount,
+      percentage: 100,
+      message: '正在优化数据库...',
+    })
+    doCheckpoint()
+    logPerf('WAL checkpoint 完成', totalMessageCount)
+    logPerf('导入完成', totalMessageCount)
+
+    console.log(`[StreamImport] 导入完成: ${sessionId}, 总消息数: ${totalMessageCount}`)
     return { success: true, sessionId }
   } catch (error) {
-    // 回滚事务
-    db.exec('ROLLBACK')
+    // 回滚当前事务
+    if (inTransaction) {
+      try {
+        db.exec('ROLLBACK')
+      } catch {
+        // 忽略回滚错误
+      }
+    }
 
     // 删除失败的数据库文件
     const dbPath = getDbPath(sessionId)
@@ -316,17 +564,13 @@ export interface StreamParseFileInfoResult {
   messageCount: number
   memberCount: number
   fileSize: number
-  // 完整解析结果（用于后续合并，避免重复解析）
-  parseResult: {
-    meta: ParsedMeta
-    members: ParsedMember[]
-    messages: ParsedMessage[]
-  }
+  // 临时数据库路径（用于后续合并，避免内存溢出）
+  tempDbPath: string
 }
 
 /**
- * 流式解析文件获取基本信息和完整解析结果
- * 用于合并功能的预览，同时缓存完整结果供后续合并使用
+ * 流式解析文件，写入临时数据库
+ * 用于合并功能：解析结果存入临时 SQLite，避免内存溢出
  */
 export async function streamParseFileInfo(filePath: string, requestId: string): Promise<StreamParseFileInfoResult> {
   const formatFeature = detectFormat(filePath)
@@ -347,51 +591,95 @@ export async function streamParseFileInfo(filePath: string, requestId: string): 
     message: '正在读取文件...',
   })
 
+  // 创建临时数据库
+  const tempDbPath = generateTempDbPath(filePath)
+  const db = createTempDatabase(tempDbPath)
+
+  // 准备语句
+  const insertMeta = db.prepare('INSERT INTO meta (name, platform, type) VALUES (?, ?, ?)')
+  const insertMember = db.prepare('INSERT OR IGNORE INTO member (platform_id, name, nickname) VALUES (?, ?, ?)')
+  const insertMessage = db.prepare(`
+    INSERT INTO message (sender_platform_id, sender_name, timestamp, type, content)
+    VALUES (?, ?, ?, ?, ?)
+  `)
+
   let meta: ParsedMeta = { name: '未知群聊', platform: formatFeature.platform, type: 'group' }
-  const members: ParsedMember[] = []
-  const messages: ParsedMessage[] = []
   const memberSet = new Set<string>()
+  let messageCount = 0
+  let metaInserted = false
 
-  await streamParseFile(filePath, {
-    // 对于大文件使用更小的批次，以更频繁地更新进度
-    batchSize: fileSize > 100 * 1024 * 1024 ? 2000 : 5000,
+  // 开始事务
+  db.exec('BEGIN TRANSACTION')
 
-    onProgress: (progress) => {
-      sendProgress(requestId, progress)
-    },
+  try {
+    await streamParseFile(filePath, {
+      // 对于大文件使用更小的批次，以更频繁地更新进度
+      batchSize: fileSize > 100 * 1024 * 1024 ? 2000 : 5000,
 
-    onMeta: (parsedMeta) => {
-      meta = parsedMeta
-    },
+      onProgress: (progress) => {
+        sendProgress(requestId, progress)
+      },
 
-    onMembers: (parsedMembers) => {
-      for (const m of parsedMembers) {
-        if (!memberSet.has(m.platformId)) {
-          memberSet.add(m.platformId)
-          members.push(m)
+      onMeta: (parsedMeta) => {
+        meta = parsedMeta
+        if (!metaInserted) {
+          insertMeta.run(parsedMeta.name, parsedMeta.platform, parsedMeta.type)
+          metaInserted = true
         }
-      }
-    },
+      },
 
-    onMessageBatch: (batch) => {
-      messages.push(...batch)
-      for (const msg of batch) {
-        memberSet.add(msg.senderPlatformId)
-      }
-    },
-  })
+      onMembers: (parsedMembers) => {
+        for (const m of parsedMembers) {
+          if (!memberSet.has(m.platformId)) {
+            memberSet.add(m.platformId)
+            insertMember.run(m.platformId, m.name, m.nickname || null)
+          }
+        }
+      },
 
-  return {
-    name: meta.name,
-    format: formatFeature.name,
-    platform: meta.platform,
-    messageCount: messages.length,
-    memberCount: memberSet.size,
-    fileSize,
-    parseResult: {
-      meta,
-      members,
-      messages,
-    },
+      onMessageBatch: (batch) => {
+        for (const msg of batch) {
+          // 确保成员存在
+          if (!memberSet.has(msg.senderPlatformId)) {
+            memberSet.add(msg.senderPlatformId)
+            insertMember.run(msg.senderPlatformId, msg.senderName, null)
+          }
+
+          insertMessage.run(msg.senderPlatformId, msg.senderName, msg.timestamp, msg.type, msg.content || null)
+          messageCount++
+        }
+      },
+    })
+
+    // 提交事务
+    db.exec('COMMIT')
+    db.close()
+
+    console.log(`[StreamImport] 已写入临时数据库: ${tempDbPath}, 消息数: ${messageCount}`)
+
+    return {
+      name: meta.name,
+      format: formatFeature.name,
+      platform: meta.platform,
+      messageCount,
+      memberCount: memberSet.size,
+      fileSize,
+      tempDbPath,
+    }
+  } catch (error) {
+    // 回滚并清理
+    try {
+      db.exec('ROLLBACK')
+    } catch {
+      // 忽略回滚错误
+    }
+    db.close()
+
+    // 删除失败的临时数据库
+    if (fs.existsSync(tempDbPath)) {
+      fs.unlinkSync(tempDbPath)
+    }
+
+    throw error
   }
 }
