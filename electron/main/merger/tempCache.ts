@@ -63,14 +63,15 @@ export function createTempDatabase(dbPath: string): Database.Database {
 
     CREATE TABLE IF NOT EXISTS member (
       platform_id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      nickname TEXT
+      account_name TEXT,
+      group_nickname TEXT
     );
 
     CREATE TABLE IF NOT EXISTS message (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       sender_platform_id TEXT NOT NULL,
-      sender_name TEXT NOT NULL,
+      sender_account_name TEXT,
+      sender_group_nickname TEXT,
       timestamp INTEGER NOT NULL,
       type INTEGER NOT NULL,
       content TEXT
@@ -103,11 +104,11 @@ export class TempDbWriter {
       INSERT INTO meta (name, platform, type) VALUES (?, ?, ?)
     `)
     this.insertMember = this.db.prepare(`
-      INSERT OR IGNORE INTO member (platform_id, name, nickname) VALUES (?, ?, ?)
+      INSERT OR IGNORE INTO member (platform_id, account_name, group_nickname) VALUES (?, ?, ?)
     `)
     this.insertMessage = this.db.prepare(`
-      INSERT INTO message (sender_platform_id, sender_name, timestamp, type, content)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO message (sender_platform_id, sender_account_name, sender_group_nickname, timestamp, type, content)
+      VALUES (?, ?, ?, ?, ?, ?)
     `)
 
     // 开始事务
@@ -128,7 +129,7 @@ export class TempDbWriter {
     for (const m of members) {
       if (!this.memberSet.has(m.platformId)) {
         this.memberSet.add(m.platformId)
-        this.insertMember.run(m.platformId, m.name, m.nickname || null)
+        this.insertMember.run(m.platformId, m.accountName || null, m.groupNickname || null)
       }
     }
   }
@@ -141,10 +142,17 @@ export class TempDbWriter {
       // 确保成员存在
       if (!this.memberSet.has(msg.senderPlatformId)) {
         this.memberSet.add(msg.senderPlatformId)
-        this.insertMember.run(msg.senderPlatformId, msg.senderName, null)
+        this.insertMember.run(msg.senderPlatformId, msg.senderAccountName || null, msg.senderGroupNickname || null)
       }
 
-      this.insertMessage.run(msg.senderPlatformId, msg.senderName, msg.timestamp, msg.type, msg.content || null)
+      this.insertMessage.run(
+        msg.senderPlatformId,
+        msg.senderAccountName || null,
+        msg.senderGroupNickname || null,
+        msg.timestamp,
+        msg.type,
+        msg.content || null
+      )
       this.messageCount++
     }
   }
@@ -210,13 +218,13 @@ export class TempDbReader {
   getMembers(): ParsedMember[] {
     const rows = this.db.prepare('SELECT * FROM member').all() as Array<{
       platform_id: string
-      name: string
-      nickname: string | null
+      account_name: string | null
+      group_nickname: string | null
     }>
     return rows.map((r) => ({
       platformId: r.platform_id,
-      name: r.name,
-      nickname: r.nickname || undefined,
+      accountName: r.account_name || r.platform_id, // 如果没有账号名称，使用 platformId
+      groupNickname: r.group_nickname || undefined,
     }))
   }
 
@@ -235,7 +243,7 @@ export class TempDbReader {
    */
   streamMessages(batchSize: number, callback: (messages: ParsedMessage[]) => void): void {
     const stmt = this.db.prepare(`
-      SELECT sender_platform_id, sender_name, timestamp, type, content
+      SELECT sender_platform_id, sender_account_name, sender_group_nickname, timestamp, type, content
       FROM message
       ORDER BY timestamp ASC
       LIMIT ? OFFSET ?
@@ -245,7 +253,8 @@ export class TempDbReader {
     while (true) {
       const rows = stmt.all(batchSize, offset) as Array<{
         sender_platform_id: string
-        sender_name: string
+        sender_account_name: string | null
+        sender_group_nickname: string | null
         timestamp: number
         type: number
         content: string | null
@@ -255,7 +264,8 @@ export class TempDbReader {
 
       const messages: ParsedMessage[] = rows.map((r) => ({
         senderPlatformId: r.sender_platform_id,
-        senderName: r.sender_name,
+        senderAccountName: r.sender_account_name || r.sender_platform_id,
+        senderGroupNickname: r.sender_group_nickname || undefined,
         timestamp: r.timestamp,
         type: r.type,
         content: r.content || undefined,
@@ -274,14 +284,15 @@ export class TempDbReader {
     const rows = this.db
       .prepare(
         `
-      SELECT sender_platform_id, sender_name, timestamp, type, content
+      SELECT sender_platform_id, sender_account_name, sender_group_nickname, timestamp, type, content
       FROM message
       ORDER BY timestamp ASC
     `
       )
       .all() as Array<{
       sender_platform_id: string
-      sender_name: string
+      sender_account_name: string | null
+      sender_group_nickname: string | null
       timestamp: number
       type: number
       content: string | null
@@ -289,7 +300,8 @@ export class TempDbReader {
 
     return rows.map((r) => ({
       senderPlatformId: r.sender_platform_id,
-      senderName: r.sender_name,
+      senderAccountName: r.sender_account_name || r.sender_platform_id,
+      senderGroupNickname: r.sender_group_nickname || undefined,
       timestamp: r.timestamp,
       type: r.type,
       content: r.content || undefined,

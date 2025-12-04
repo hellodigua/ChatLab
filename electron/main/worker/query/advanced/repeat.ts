@@ -30,9 +30,9 @@ export function getRepeatAnalysis(sessionId: string, filter?: TimeFilter): any {
 
   let whereClause = clause
   if (whereClause.includes('WHERE')) {
-    whereClause += " AND m.name != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND TRIM(msg.content) != ''"
+    whereClause += " AND COALESCE(m.account_name, '') != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND TRIM(msg.content) != ''"
   } else {
-    whereClause = " WHERE m.name != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND TRIM(msg.content) != ''"
+    whereClause = " WHERE COALESCE(m.account_name, '') != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND TRIM(msg.content) != ''"
   }
 
   const messages = db
@@ -44,7 +44,7 @@ export function getRepeatAnalysis(sessionId: string, filter?: TimeFilter): any {
           msg.content,
           msg.ts,
           m.platform_id as platformId,
-          m.name
+          COALESCE(m.group_nickname, m.account_name, m.platform_id) as name
         FROM message msg
         JOIN member m ON msg.sender_id = m.id
         ${whereClause}
@@ -259,10 +259,10 @@ export function getCatchphraseAnalysis(sessionId: string, filter?: TimeFilter): 
   let whereClause = clause
   if (whereClause.includes('WHERE')) {
     whereClause +=
-      " AND m.name != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND LENGTH(TRIM(msg.content)) >= 2"
+      " AND COALESCE(m.account_name, '') != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND LENGTH(TRIM(msg.content)) >= 2"
   } else {
     whereClause =
-      " WHERE m.name != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND LENGTH(TRIM(msg.content)) >= 2"
+      " WHERE COALESCE(m.account_name, '') != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND LENGTH(TRIM(msg.content)) >= 2"
   }
 
   const rows = db
@@ -271,7 +271,7 @@ export function getCatchphraseAnalysis(sessionId: string, filter?: TimeFilter): 
         SELECT
           m.id as memberId,
           m.platform_id as platformId,
-          m.name,
+          COALESCE(m.group_nickname, m.account_name, m.platform_id) as name,
           TRIM(msg.content) as content,
           COUNT(*) as count
         FROM message msg

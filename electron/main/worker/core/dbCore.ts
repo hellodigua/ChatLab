@@ -110,7 +110,8 @@ export function buildTimeFilter(filter?: TimeFilter): { clause: string; params: 
  * 构建排除系统消息的过滤条件
  */
 export function buildSystemMessageFilter(existingClause: string): string {
-  const systemFilter = "m.name != '系统消息'"
+  // 系统消息过滤：account_name 不等于 '系统消息'
+  const systemFilter = "COALESCE(m.account_name, '') != '系统消息'"
 
   if (existingClause.includes('WHERE')) {
     return existingClause + ' AND ' + systemFilter

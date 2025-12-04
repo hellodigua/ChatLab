@@ -305,6 +305,38 @@ export async function closeDatabase(sessionId: string): Promise<void> {
   return sendToWorker('closeDatabase', { sessionId })
 }
 
+// ==================== 成员管理 API ====================
+
+export interface MemberWithStats {
+  id: number
+  platformId: string
+  name: string
+  nickname: string | null
+  aliases: string[]
+  messageCount: number
+}
+
+/**
+ * 获取所有成员列表（含消息数和别名）
+ */
+export async function getMembers(sessionId: string): Promise<MemberWithStats[]> {
+  return sendToWorker('getMembers', { sessionId })
+}
+
+/**
+ * 更新成员别名
+ */
+export async function updateMemberAliases(sessionId: string, memberId: number, aliases: string[]): Promise<boolean> {
+  return sendToWorker('updateMemberAliases', { sessionId, memberId, aliases })
+}
+
+/**
+ * 删除成员及其所有消息
+ */
+export async function deleteMember(sessionId: string, memberId: number): Promise<boolean> {
+  return sendToWorker('deleteMember', { sessionId, memberId })
+}
+
 /**
  * 解析文件获取基本信息（在 Worker 线程中执行）
  * @deprecated 使用 streamParseFileInfo 替代
@@ -370,9 +402,10 @@ export async function searchMessages(
   keywords: string[],
   filter?: any,
   limit?: number,
-  offset?: number
+  offset?: number,
+  senderId?: number
 ): Promise<{ messages: SearchMessageResult[]; total: number }> {
-  return sendToWorker('searchMessages', { sessionId, keywords, filter, limit, offset })
+  return sendToWorker('searchMessages', { sessionId, keywords, filter, limit, offset, senderId })
 }
 
 /**
@@ -395,4 +428,17 @@ export async function getRecentMessages(
   limit?: number
 ): Promise<{ messages: SearchMessageResult[]; total: number }> {
   return sendToWorker('getRecentMessages', { sessionId, filter, limit })
+}
+
+/**
+ * 获取两个成员之间的对话
+ */
+export async function getConversationBetween(
+  sessionId: string,
+  memberId1: number,
+  memberId2: number,
+  filter?: any,
+  limit?: number
+): Promise<{ messages: SearchMessageResult[]; total: number; member1Name: string; member2Name: string }> {
+  return sendToWorker('getConversationBetween', { sessionId, memberId1, memberId2, filter, limit })
 }

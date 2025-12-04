@@ -20,9 +20,9 @@ export function getMonologueAnalysis(sessionId: string, filter?: TimeFilter): an
 
   let whereClause = clause
   if (whereClause.includes('WHERE')) {
-    whereClause += " AND m.name != '系统消息' AND msg.type = 0"
+    whereClause += " AND COALESCE(m.account_name, '') != '系统消息' AND msg.type = 0"
   } else {
-    whereClause = " WHERE m.name != '系统消息' AND msg.type = 0"
+    whereClause = " WHERE COALESCE(m.account_name, '') != '系统消息' AND msg.type = 0"
   }
 
   const messages = db
@@ -33,7 +33,7 @@ export function getMonologueAnalysis(sessionId: string, filter?: TimeFilter): an
           msg.sender_id as senderId,
           msg.ts,
           m.platform_id as platformId,
-          m.name
+          COALESCE(m.group_nickname, m.account_name, m.platform_id) as name
         FROM message msg
         JOIN member m ON msg.sender_id = m.id
         ${whereClause}
@@ -200,7 +200,7 @@ export function getMemeBattleAnalysis(sessionId: string, filter?: TimeFilter): a
           msg.type,
           msg.ts,
           m.platform_id as platformId,
-          m.name
+          COALESCE(m.group_nickname, m.account_name, m.platform_id) as name
         FROM message msg
         JOIN member m ON msg.sender_id = m.id
         ${whereClause}

@@ -23,6 +23,7 @@ import type {
   ConflictCheckResult,
   MergeParams,
   MergeResult,
+  MemberWithStats,
 } from '../../src/types/chat'
 
 interface TimeFilter {
@@ -62,6 +63,10 @@ interface ChatApi {
   getLaughAnalysis: (sessionId: string, filter?: TimeFilter, keywords?: string[]) => Promise<LaughAnalysis>
   getMemeBattleAnalysis: (sessionId: string, filter?: TimeFilter) => Promise<MemeBattleAnalysis>
   getCheckInAnalysis: (sessionId: string, filter?: TimeFilter) => Promise<CheckInAnalysis>
+  // 成员管理
+  getMembers: (sessionId: string) => Promise<MemberWithStats[]>
+  updateMemberAliases: (sessionId: string, memberId: number, aliases: string[]) => Promise<boolean>
+  deleteMember: (sessionId: string, memberId: number) => Promise<boolean>
 }
 
 interface Api {

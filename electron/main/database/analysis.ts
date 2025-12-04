@@ -65,7 +65,7 @@ function buildTimeFilter(filter?: TimeFilter): { clause: string; params: number[
  * 构建排除系统消息的过滤条件
  */
 function buildSystemMessageFilter(existingClause: string): string {
-  const systemFilter = "m.name != '系统消息'"
+  const systemFilter = "COALESCE(m.account_name, '') != '系统消息'"
 
   if (existingClause.includes('WHERE')) {
     return existingClause + ' AND ' + systemFilter
@@ -109,7 +109,7 @@ export function getMemberActivity(sessionId: string, filter?: TimeFilter): Membe
     const { clause, params } = buildTimeFilter(filter)
 
     const msgFilterBase = clause ? clause.replace('WHERE', 'AND') : ''
-    const msgFilterWithSystem = msgFilterBase + " AND m.name != '系统消息'"
+    const msgFilterWithSystem = msgFilterBase + " AND COALESCE(m.account_name, '') != '系统消息'"
 
     const totalClauseWithSystem = buildSystemMessageFilter(clause)
     const totalMessages = (
@@ -129,11 +129,11 @@ export function getMemberActivity(sessionId: string, filter?: TimeFilter): Membe
       SELECT
         m.id as memberId,
         m.platform_id as platformId,
-        m.name,
+        COALESCE(m.group_nickname, m.account_name, m.platform_id) as name,
         COUNT(msg.id) as messageCount
       FROM member m
       LEFT JOIN message msg ON m.id = msg.sender_id ${msgFilterWithSystem}
-      WHERE m.name != '系统消息'
+      WHERE COALESCE(m.account_name, '') != '系统消息'
       GROUP BY m.id
       HAVING messageCount > 0
       ORDER BY messageCount DESC
@@ -350,10 +350,10 @@ export function getRepeatAnalysis(sessionId: string, filter?: TimeFilter): Repea
     let whereClause = clause
     if (whereClause.includes('WHERE')) {
       whereClause +=
-        " AND m.name != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND TRIM(msg.content) != ''"
+        " AND COALESCE(m.account_name, '') != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND TRIM(msg.content) != ''"
     } else {
       whereClause =
-        " WHERE m.name != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND TRIM(msg.content) != ''"
+        " WHERE COALESCE(m.account_name, '') != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND TRIM(msg.content) != ''"
     }
 
     const messages = db
@@ -365,7 +365,7 @@ export function getRepeatAnalysis(sessionId: string, filter?: TimeFilter): Repea
           msg.content,
           msg.ts,
           m.platform_id as platformId,
-          m.name
+          COALESCE(m.group_nickname, m.account_name, m.platform_id) as name
         FROM message msg
         JOIN member m ON msg.sender_id = m.id
         ${whereClause}
@@ -600,10 +600,10 @@ export function getCatchphraseAnalysis(sessionId: string, filter?: TimeFilter): 
     let whereClause = clause
     if (whereClause.includes('WHERE')) {
       whereClause +=
-        " AND m.name != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND LENGTH(TRIM(msg.content)) >= 2"
+        " AND COALESCE(m.account_name, '') != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND LENGTH(TRIM(msg.content)) >= 2"
     } else {
       whereClause =
-        " WHERE m.name != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND LENGTH(TRIM(msg.content)) >= 2"
+        " WHERE COALESCE(m.account_name, '') != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND LENGTH(TRIM(msg.content)) >= 2"
     }
 
     const rows = db
@@ -612,7 +612,7 @@ export function getCatchphraseAnalysis(sessionId: string, filter?: TimeFilter): 
         SELECT
           m.id as memberId,
           m.platform_id as platformId,
-          m.name,
+          COALESCE(m.group_nickname, m.account_name, m.platform_id) as name,
           TRIM(msg.content) as content,
           COUNT(*) as count
         FROM message msg
@@ -741,7 +741,7 @@ export function getNightOwlAnalysis(sessionId: string, filter?: TimeFilter): Nig
           msg.sender_id as senderId,
           msg.ts,
           m.platform_id as platformId,
-          m.name
+          COALESCE(m.group_nickname, m.account_name, m.platform_id) as name
         FROM message msg
         JOIN member m ON msg.sender_id = m.id
         ${clauseWithSystem}
@@ -1046,7 +1046,7 @@ export function getDragonKingAnalysis(sessionId: string, filter?: TimeFilter): D
             strftime('%Y-%m-%d', msg.ts, 'unixepoch', 'localtime') as date,
             msg.sender_id,
             m.platform_id,
-            m.name,
+            COALESCE(m.group_nickname, m.account_name, m.platform_id) as name,
             COUNT(*) as msg_count
           FROM message msg
           JOIN member m ON msg.sender_id = m.id
@@ -1123,7 +1123,7 @@ export function getDivingAnalysis(sessionId: string, filter?: TimeFilter): Divin
         SELECT
           m.id as member_id,
           m.platform_id,
-          m.name,
+          COALESCE(m.group_nickname, m.account_name, m.platform_id) as name,
           MAX(msg.ts) as last_ts
         FROM member m
         JOIN message msg ON m.id = msg.sender_id
@@ -1175,9 +1175,9 @@ export function getMonologueAnalysis(sessionId: string, filter?: TimeFilter): Mo
     // 构建 WHERE 子句：只统计文本消息
     let whereClause = clause
     if (whereClause.includes('WHERE')) {
-      whereClause += " AND m.name != '系统消息' AND msg.type = 0"
+      whereClause += " AND COALESCE(m.account_name, '') != '系统消息' AND msg.type = 0"
     } else {
-      whereClause = " WHERE m.name != '系统消息' AND msg.type = 0"
+      whereClause = " WHERE COALESCE(m.account_name, '') != '系统消息' AND msg.type = 0"
     }
 
     // 获取所有文本消息，按时间排序
@@ -1189,7 +1189,7 @@ export function getMonologueAnalysis(sessionId: string, filter?: TimeFilter): Mo
           msg.sender_id as senderId,
           msg.ts,
           m.platform_id as platformId,
-          m.name
+          COALESCE(m.group_nickname, m.account_name, m.platform_id) as name
         FROM message msg
         JOIN member m ON msg.sender_id = m.id
         ${whereClause}

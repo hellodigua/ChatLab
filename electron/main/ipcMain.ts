@@ -634,6 +634,47 @@ const mainIpcMain = (win: BrowserWindow) => {
     }
   )
 
+  // ==================== 成员管理 ====================
+
+  /**
+   * 获取所有成员列表（含消息数和别名）
+   */
+  ipcMain.handle('chat:getMembers', async (_, sessionId: string) => {
+    try {
+      return await worker.getMembers(sessionId)
+    } catch (error) {
+      console.error('获取成员列表失败：', error)
+      return []
+    }
+  })
+
+  /**
+   * 更新成员别名
+   */
+  ipcMain.handle('chat:updateMemberAliases', async (_, sessionId: string, memberId: number, aliases: string[]) => {
+    try {
+      return await worker.updateMemberAliases(sessionId, memberId, aliases)
+    } catch (error) {
+      console.error('更新成员别名失败：', error)
+      return false
+    }
+  })
+
+  /**
+   * 删除成员及其所有消息
+   */
+  ipcMain.handle('chat:deleteMember', async (_, sessionId: string, memberId: number) => {
+    try {
+      // 先关闭数据库连接
+      await worker.closeDatabase(sessionId)
+      // 执行删除
+      return await worker.deleteMember(sessionId, memberId)
+    } catch (error) {
+      console.error('删除成员失败：', error)
+      return false
+    }
+  })
+
   // ==================== 合并功能 ====================
 
   /**

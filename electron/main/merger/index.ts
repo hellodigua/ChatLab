@@ -418,15 +418,18 @@ function executeMerge(
       for (const member of result.members) {
         const existing = memberMap.get(member.platformId)
         if (existing) {
-          // 如果昵称不同，添加到 aliases
-          if (existing.name !== member.name && !existing.aliases?.includes(member.name)) {
-            existing.aliases = existing.aliases || []
-            existing.aliases.push(member.name)
+          // 更新为最新的名字
+          if (member.accountName) {
+            existing.accountName = member.accountName
+          }
+          if (member.groupNickname) {
+            existing.groupNickname = member.groupNickname
           }
         } else {
           memberMap.set(member.platformId, {
             platformId: member.platformId,
-            name: member.name,
+            accountName: member.accountName,
+            groupNickname: member.groupNickname,
           })
         }
       }
@@ -473,7 +476,8 @@ function executeMerge(
 
       const chatLabMsg: ChatLabMessage = {
         sender: msg.senderPlatformId,
-        name: msg.senderName,
+        accountName: msg.senderAccountName,
+        groupNickname: msg.senderGroupNickname,
         timestamp: msg.timestamp,
         type: msg.type,
         content: msg.content,
@@ -539,11 +543,13 @@ function executeMerge(
         },
         members: chatLabData.members.map((m) => ({
           platformId: m.platformId,
-          name: m.name,
+          accountName: m.accountName,
+          groupNickname: m.groupNickname,
         })),
         messages: chatLabData.messages.map((msg) => ({
           senderPlatformId: msg.sender,
-          senderName: msg.name,
+          senderAccountName: msg.accountName,
+          senderGroupNickname: msg.groupNickname,
           timestamp: msg.timestamp,
           type: msg.type,
           content: msg.content,
@@ -682,14 +688,17 @@ export async function mergeFilesWithTempDb(
       for (const member of members) {
         const existing = memberMap.get(member.platformId)
         if (existing) {
-          if (existing.name !== member.name && !existing.aliases?.includes(member.name)) {
-            existing.aliases = existing.aliases || []
-            existing.aliases.push(member.name)
+          if (member.accountName) {
+            existing.accountName = member.accountName
+          }
+          if (member.groupNickname) {
+            existing.groupNickname = member.groupNickname
           }
         } else {
           memberMap.set(member.platformId, {
             platformId: member.platformId,
-            name: member.name,
+            accountName: member.accountName,
+            groupNickname: member.groupNickname,
           })
         }
       }
@@ -721,7 +730,8 @@ export async function mergeFilesWithTempDb(
 
           mergedMessages.push({
             sender: msg.senderPlatformId,
-            name: msg.senderName,
+            accountName: msg.senderAccountName,
+            groupNickname: msg.senderGroupNickname,
             timestamp: msg.timestamp,
             type: msg.type,
             content: msg.content,
@@ -793,11 +803,13 @@ export async function mergeFilesWithTempDb(
         },
         members: chatLabData.members.map((m) => ({
           platformId: m.platformId,
-          name: m.name,
+          accountName: m.accountName,
+          groupNickname: m.groupNickname,
         })),
         messages: chatLabData.messages.map((msg) => ({
           senderPlatformId: msg.sender,
-          senderName: msg.name,
+          senderAccountName: msg.accountName,
+          senderGroupNickname: msg.groupNickname,
           timestamp: msg.timestamp,
           type: msg.type,
           content: msg.content,

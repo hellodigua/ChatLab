@@ -18,14 +18,18 @@ const searchMessagesTool: ToolDefinition = {
   type: 'function',
   function: {
     name: 'search_messages',
-    description: '根据关键词搜索群聊记录。适用于用户想要查找特定话题、关键词相关的聊天内容。可以指定时间范围来筛选特定时间段的消息。',
+    description: '根据关键词搜索群聊记录。适用于用户想要查找特定话题、关键词相关的聊天内容。可以指定时间范围和发送者来筛选消息。',
     parameters: {
       type: 'object',
       properties: {
         keywords: {
           type: 'array',
-          description: '搜索关键词列表，会用 OR 逻辑匹配包含任一关键词的消息',
+          description: '搜索关键词列表，会用 OR 逻辑匹配包含任一关键词的消息。如果只需要按发送者筛选，可以传空数组 []',
           items: { type: 'string' },
+        },
+        sender_id: {
+          type: 'number',
+          description: '发送者的成员 ID，用于筛选特定成员发送的消息。可以通过 get_group_members 工具获取成员 ID',
         },
         limit: {
           type: 'number',
@@ -46,7 +50,7 @@ const searchMessagesTool: ToolDefinition = {
 }
 
 async function searchMessagesExecutor(
-  params: { keywords: string[]; limit?: number; year?: number; month?: number },
+  params: { keywords: string[]; sender_id?: number; limit?: number; year?: number; month?: number },
   context: ToolContext
 ): Promise<unknown> {
   const { sessionId, timeFilter: contextTimeFilter } = context
@@ -83,13 +87,15 @@ async function searchMessagesExecutor(
     params.keywords,
     effectiveTimeFilter,
     limit,
-    0
+    0,
+    params.sender_id
   )
 
   // 格式化为 LLM 易于理解的格式
   return {
     total: result.total,
     returned: result.messages.length,
+    senderId: params.sender_id || null,
     timeRange: effectiveTimeFilter
       ? {
           start: new Date(effectiveTimeFilter.startTs * 1000).toLocaleDateString('zh-CN'),
@@ -302,10 +308,259 @@ async function getTimeStatsExecutor(
   }
 }
 
+/**
+ * 获取群成员列表工具
+ * 返回所有群成员的详细信息，包括别名
+ */
+const getGroupMembersTool: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'get_group_members',
+    description: '获取群成员列表，包括成员的基本信息、别名和消息统计。适用于查询"群里有哪些人"、"某人的别名是什么"、"谁的QQ号是xxx"等问题。',
+    parameters: {
+      type: 'object',
+      properties: {
+        search: {
+          type: 'string',
+          description: '可选的搜索关键词，用于筛选成员昵称、别名或QQ号',
+        },
+        limit: {
+          type: 'number',
+          description: '返回成员数量限制，默认返回全部',
+        },
+      },
+    },
+  },
+}
+
+async function getGroupMembersExecutor(
+  params: { search?: string; limit?: number },
+  context: ToolContext
+): Promise<unknown> {
+  const { sessionId } = context
+
+  const members = await workerManager.getMembers(sessionId)
+
+  // 如果有搜索关键词，进行筛选
+  let filteredMembers = members
+  if (params.search) {
+    const keyword = params.search.toLowerCase()
+    filteredMembers = members.filter((m) => {
+      // 搜索群昵称
+      if (m.groupNickname && m.groupNickname.toLowerCase().includes(keyword)) return true
+      // 搜索账号名称
+      if (m.accountName && m.accountName.toLowerCase().includes(keyword)) return true
+      // 搜索 QQ 号
+      if (m.platformId.includes(keyword)) return true
+      // 搜索别名
+      if (m.aliases.some((alias) => alias.toLowerCase().includes(keyword))) return true
+      return false
+    })
+  }
+
+  // 如果有数量限制
+  if (params.limit && params.limit > 0) {
+    filteredMembers = filteredMembers.slice(0, params.limit)
+  }
+
+  return {
+    totalMembers: members.length,
+    returnedMembers: filteredMembers.length,
+    searchKeyword: params.search || null,
+    members: filteredMembers.map((m) => ({
+      id: m.id,
+      qqNumber: m.platformId,
+      displayName: m.groupNickname || m.accountName || m.platformId,
+      accountName: m.accountName,
+      groupNickname: m.groupNickname,
+      aliases: m.aliases,
+      messageCount: m.messageCount,
+    })),
+  }
+}
+
+/**
+ * 获取成员昵称变更历史工具
+ * 查看成员的历史昵称变化记录
+ */
+const getMemberNameHistoryTool: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'get_member_name_history',
+    description: '获取成员的昵称变更历史记录。适用于回答"某人以前叫什么名字"、"某人的昵称变化"、"某人曾用名"等问题。需要先通过 get_group_members 工具获取成员 ID。',
+    parameters: {
+      type: 'object',
+      properties: {
+        member_id: {
+          type: 'number',
+          description: '成员的数据库 ID，可以通过 get_group_members 工具获取',
+        },
+      },
+      required: ['member_id'],
+    },
+  },
+}
+
+async function getMemberNameHistoryExecutor(
+  params: { member_id: number },
+  context: ToolContext
+): Promise<unknown> {
+  const { sessionId } = context
+
+  // 先获取成员基本信息
+  const members = await workerManager.getMembers(sessionId)
+  const member = members.find((m) => m.id === params.member_id)
+
+  if (!member) {
+    return {
+      error: '未找到该成员',
+      member_id: params.member_id,
+    }
+  }
+
+  // 获取昵称历史
+  const history = await workerManager.getMemberNameHistory(sessionId, params.member_id)
+
+  // 分离账号名称和群昵称的历史
+  const accountNameHistory = history
+    .filter((h: { nameType: string; name: string; startTs: number; endTs: number | null }) => h.nameType === 'account_name')
+    .map((h: { nameType: string; name: string; startTs: number; endTs: number | null }) => ({
+      name: h.name,
+      startTime: new Date(h.startTs * 1000).toLocaleString('zh-CN'),
+      endTime: h.endTs ? new Date(h.endTs * 1000).toLocaleString('zh-CN') : '至今',
+    }))
+
+  const groupNicknameHistory = history
+    .filter((h: { nameType: string; name: string; startTs: number; endTs: number | null }) => h.nameType === 'group_nickname')
+    .map((h: { nameType: string; name: string; startTs: number; endTs: number | null }) => ({
+      name: h.name,
+      startTime: new Date(h.startTs * 1000).toLocaleString('zh-CN'),
+      endTime: h.endTs ? new Date(h.endTs * 1000).toLocaleString('zh-CN') : '至今',
+    }))
+
+  return {
+    member: {
+      id: member.id,
+      qqNumber: member.platformId,
+      currentAccountName: member.accountName,
+      currentGroupNickname: member.groupNickname,
+      aliases: member.aliases,
+    },
+    accountNameHistory: accountNameHistory.length > 0 ? accountNameHistory : '无变更记录',
+    groupNicknameHistory: groupNicknameHistory.length > 0 ? groupNicknameHistory : '无变更记录',
+    totalChanges: history.length,
+  }
+}
+
+/**
+ * 获取两个成员之间的对话工具
+ */
+const getConversationBetweenTool: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'get_conversation_between',
+    description: '获取两个群成员之间的对话记录。适用于回答"A和B之间聊了什么"、"查看两人的对话"等问题。需要先通过 get_group_members 获取成员 ID。',
+    parameters: {
+      type: 'object',
+      properties: {
+        member_id_1: {
+          type: 'number',
+          description: '第一个成员的数据库 ID',
+        },
+        member_id_2: {
+          type: 'number',
+          description: '第二个成员的数据库 ID',
+        },
+        limit: {
+          type: 'number',
+          description: '返回消息数量限制，默认 100',
+        },
+        year: {
+          type: 'number',
+          description: '筛选指定年份的消息',
+        },
+        month: {
+          type: 'number',
+          description: '筛选指定月份的消息（1-12），需要配合 year 使用',
+        },
+      },
+      required: ['member_id_1', 'member_id_2'],
+    },
+  },
+}
+
+async function getConversationBetweenExecutor(
+  params: { member_id_1: number; member_id_2: number; limit?: number; year?: number; month?: number },
+  context: ToolContext
+): Promise<unknown> {
+  const { sessionId, timeFilter: contextTimeFilter } = context
+  const limit = params.limit || 100
+
+  // 构建时间过滤器
+  let effectiveTimeFilter = contextTimeFilter
+  if (params.year) {
+    const year = params.year
+    const month = params.month
+
+    let startDate: Date
+    let endDate: Date
+
+    if (month) {
+      startDate = new Date(year, month - 1, 1)
+      endDate = new Date(year, month, 0, 23, 59, 59)
+    } else {
+      startDate = new Date(year, 0, 1)
+      endDate = new Date(year, 11, 31, 23, 59, 59)
+    }
+
+    effectiveTimeFilter = {
+      startTs: Math.floor(startDate.getTime() / 1000),
+      endTs: Math.floor(endDate.getTime() / 1000),
+    }
+  }
+
+  const result = await workerManager.getConversationBetween(
+    sessionId,
+    params.member_id_1,
+    params.member_id_2,
+    effectiveTimeFilter,
+    limit
+  )
+
+  if (result.messages.length === 0) {
+    return {
+      error: '未找到这两人之间的对话',
+      member1Id: params.member_id_1,
+      member2Id: params.member_id_2,
+    }
+  }
+
+  return {
+    total: result.total,
+    returned: result.messages.length,
+    member1: result.member1Name,
+    member2: result.member2Name,
+    timeRange: effectiveTimeFilter
+      ? {
+          start: new Date(effectiveTimeFilter.startTs * 1000).toLocaleDateString('zh-CN'),
+          end: new Date(effectiveTimeFilter.endTs * 1000).toLocaleDateString('zh-CN'),
+        }
+      : '全部时间',
+    conversation: result.messages.map((m) => ({
+      sender: m.senderName,
+      content: m.content,
+      time: new Date(m.timestamp * 1000).toLocaleString('zh-CN'),
+    })),
+  }
+}
+
 // ==================== 注册工具 ====================
 
 registerTool(searchMessagesTool, searchMessagesExecutor)
 registerTool(getRecentMessagesTool, getRecentMessagesExecutor)
 registerTool(getMemberStatsTool, getMemberStatsExecutor)
 registerTool(getTimeStatsTool, getTimeStatsExecutor)
+registerTool(getGroupMembersTool, getGroupMembersExecutor)
+registerTool(getMemberNameHistoryTool, getMemberNameHistoryExecutor)
+registerTool(getConversationBetweenTool, getConversationBetweenExecutor)
 

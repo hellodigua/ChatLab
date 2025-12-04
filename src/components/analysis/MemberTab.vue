@@ -1,0 +1,405 @@
+<script setup lang="ts">
+import { ref, computed, watch, onMounted } from 'vue'
+import type { MemberWithStats } from '@/types/chat'
+
+// Props
+const props = defineProps<{
+  sessionId: string
+}>()
+
+// Emits
+const emit = defineEmits<{
+  'data-changed': []
+}>()
+
+// 成员列表
+const members = ref<MemberWithStats[]>([])
+const isLoading = ref(false)
+const searchQuery = ref('')
+
+// 分页配置
+const pageSize = 20
+const currentPage = ref(1)
+
+// 排序配置
+const sortOrder = ref<'desc' | 'asc'>('desc') // desc = 发言多在前
+
+// 删除确认状态
+const deletingMember = ref<MemberWithStats | null>(null)
+const isDeleting = ref(false)
+
+// 正在保存别名的成员ID（用于显示加载状态）
+const savingAliasesId = ref<number | null>(null)
+
+// 获取成员显示名称
+function getDisplayName(member: MemberWithStats): string {
+  return member.groupNickname || member.accountName || member.platformId
+}
+
+// 获取成员首字符（用于头像）
+function getFirstChar(member: MemberWithStats): string {
+  const name = getDisplayName(member)
+  return name.slice(0, 1)
+}
+
+// 过滤和排序后的成员列表
+const filteredAndSortedMembers = computed(() => {
+  let result = [...members.value]
+
+  // 搜索过滤
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    result = result.filter(
+      (m) =>
+        (m.groupNickname && m.groupNickname.toLowerCase().includes(query)) ||
+        (m.accountName && m.accountName.toLowerCase().includes(query)) ||
+        m.platformId.toLowerCase().includes(query) ||
+        m.aliases.some((a) => a.toLowerCase().includes(query))
+    )
+  }
+
+  // 按消息数排序
+  result.sort((a, b) =>
+    sortOrder.value === 'desc' ? b.messageCount - a.messageCount : a.messageCount - b.messageCount
+  )
+
+  return result
+})
+
+// 分页后的成员列表
+const paginatedMembers = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return filteredAndSortedMembers.value.slice(start, start + pageSize)
+})
+
+// 总页数
+const totalPages = computed(() => Math.ceil(filteredAndSortedMembers.value.length / pageSize))
+
+// 切换排序
+function toggleSort() {
+  sortOrder.value = sortOrder.value === 'desc' ? 'asc' : 'desc'
+}
+
+// 加载成员列表
+async function loadMembers() {
+  if (!props.sessionId) return
+  isLoading.value = true
+  try {
+    members.value = await window.chatApi.getMembers(props.sessionId)
+  } catch (error) {
+    console.error('加载成员列表失败:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 直接更新别名（输入框失焦或回车时触发）
+async function updateAliases(member: MemberWithStats, newAliases: string[]) {
+  // 将 Vue 响应式数组转换为普通数组，避免 IPC 序列化问题
+  const aliasesToSave = JSON.parse(JSON.stringify(newAliases)) as string[]
+
+  // 检查是否有变化
+  const currentAliases = JSON.stringify(member.aliases)
+  const newAliasesStr = JSON.stringify(aliasesToSave)
+  if (currentAliases === newAliasesStr) return
+
+  savingAliasesId.value = member.id
+  try {
+    const success = await window.chatApi.updateMemberAliases(props.sessionId, member.id, aliasesToSave)
+    if (success) {
+      // 更新本地数据 - 找到对应成员并更新
+      const idx = members.value.findIndex((m) => m.id === member.id)
+      if (idx !== -1) {
+        members.value[idx] = {
+          ...members.value[idx],
+          aliases: aliasesToSave,
+        }
+      }
+    }
+  } catch (error) {
+    console.error('保存别名失败:', error)
+  } finally {
+    savingAliasesId.value = null
+  }
+}
+
+// 显示删除确认
+function showDeleteConfirm(member: MemberWithStats) {
+  deletingMember.value = member
+}
+
+// 取消删除
+function cancelDelete() {
+  deletingMember.value = null
+}
+
+// 确认删除
+async function confirmDelete() {
+  if (!deletingMember.value) return
+  isDeleting.value = true
+  try {
+    const success = await window.chatApi.deleteMember(props.sessionId, deletingMember.value.id)
+    if (success) {
+      // 从列表中移除
+      members.value = members.value.filter((m) => m.id !== deletingMember.value!.id)
+      // 通知父组件刷新数据
+      emit('data-changed')
+    }
+  } catch (error) {
+    console.error('删除成员失败:', error)
+  } finally {
+    isDeleting.value = false
+    deletingMember.value = null
+  }
+}
+
+// 搜索时重置页码
+watch(searchQuery, () => {
+  currentPage.value = 1
+})
+
+// 监听 sessionId 变化
+watch(
+  () => props.sessionId,
+  () => {
+    loadMembers()
+    searchQuery.value = ''
+    currentPage.value = 1
+  },
+  { immediate: true }
+)
+
+onMounted(() => {
+  loadMembers()
+})
+</script>
+
+<template>
+  <div class="p-6">
+    <!-- 页面标题 -->
+    <div class="mb-6">
+      <div class="flex items-center gap-3">
+        <div
+          class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600"
+        >
+          <UIcon name="i-heroicons-user-group" class="h-6 w-6 text-white" />
+        </div>
+        <div>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">群成员管理</h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            共 {{ members.length }} 位成员，可为成员添加别名备注或移除成员
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 搜索框 -->
+    <div class="mb-4">
+      <UInput
+        v-model="searchQuery"
+        placeholder="搜索群昵称、账号名称、ID 或别名..."
+        icon="i-heroicons-magnifying-glass"
+        size="lg"
+        :ui="{ icon: { trailing: { pointer: '' } } }"
+      >
+        <template #trailing v-if="searchQuery">
+          <UButton icon="i-heroicons-x-mark" variant="link" color="neutral" size="xs" @click="searchQuery = ''" />
+        </template>
+      </UInput>
+    </div>
+
+    <!-- 成员列表 -->
+    <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+      <!-- 加载状态 -->
+      <div v-if="isLoading" class="flex h-60 items-center justify-center">
+        <UIcon name="i-heroicons-arrow-path" class="h-8 w-8 animate-spin text-pink-500" />
+      </div>
+
+      <!-- 空状态 -->
+      <div v-else-if="filteredAndSortedMembers.length === 0" class="flex h-60 flex-col items-center justify-center">
+        <UIcon name="i-heroicons-user-group" class="mb-3 h-12 w-12 text-gray-300 dark:text-gray-600" />
+        <p class="text-gray-500 dark:text-gray-400">
+          {{ searchQuery ? '没有找到匹配的成员' : '暂无成员数据' }}
+        </p>
+      </div>
+
+      <!-- 成员表格 -->
+      <div v-else>
+        <div class="max-h-[500px] overflow-y-auto">
+          <table class="w-full">
+            <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800">
+              <tr class="text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">
+                <th class="px-4 py-4">ID</th>
+                <th class="px-4 py-4">账号名称</th>
+                <th class="px-4 py-4">群昵称</th>
+                <th class="px-4 py-4">
+                  <button
+                    class="flex items-center gap-1.5 hover:text-gray-700 dark:hover:text-gray-200"
+                    @click="toggleSort"
+                  >
+                    消息数
+                    <UIcon
+                      :name="sortOrder === 'desc' ? 'i-heroicons-arrow-down' : 'i-heroicons-arrow-up'"
+                      class="h-3.5 w-3.5"
+                    />
+                  </button>
+                </th>
+                <th class="px-4 py-4">自定义别名</th>
+                <th class="px-4 py-4 text-right">操作</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+              <tr
+                v-for="member in paginatedMembers"
+                :key="member.id"
+                class="hover:bg-gray-50 dark:hover:bg-gray-800/50"
+              >
+                <!-- 平台ID -->
+                <td class="px-4 py-4">
+                  <div class="flex items-center gap-2">
+                    <div
+                      class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-pink-400 to-pink-600 text-xs font-medium text-white"
+                    >
+                      {{ getFirstChar(member) }}
+                    </div>
+                    <span class="text-sm text-gray-500 dark:text-gray-400">{{ member.platformId }}</span>
+                  </div>
+                </td>
+
+                <!-- 账号名称 -->
+                <td class="px-4 py-4">
+                  <span class="text-sm text-gray-900 dark:text-white">
+                    {{ member.accountName || '-' }}
+                  </span>
+                </td>
+
+                <!-- 群昵称 -->
+                <td class="px-4 py-4">
+                  <span v-if="member.groupNickname" class="text-sm font-medium text-blue-600 dark:text-blue-400">
+                    {{ member.groupNickname }}
+                  </span>
+                  <span v-else class="text-sm text-gray-400 dark:text-gray-500">-</span>
+                </td>
+
+                <!-- 消息数 -->
+                <td class="px-4 py-4">
+                  <span class="text-sm font-semibold text-gray-900 dark:text-white">
+                    {{ member.messageCount.toLocaleString() }}
+                  </span>
+                </td>
+
+                <!-- 别名 - 直接编辑 -->
+                <td class="px-4 py-4">
+                  <div class="relative max-w-xs">
+                    <UInputTags
+                      :model-value="member.aliases"
+                      @update:model-value="(val) => updateAliases(member, val)"
+                      placeholder="输入后回车..."
+                      size="sm"
+                      :ui="{ base: 'min-h-[36px]' }"
+                    />
+                    <!-- 保存中指示器 -->
+                    <div v-if="savingAliasesId === member.id" class="absolute right-2 top-1/2 -translate-y-1/2">
+                      <UIcon name="i-heroicons-arrow-path" class="h-4 w-4 animate-spin text-pink-500" />
+                    </div>
+                  </div>
+                </td>
+
+                <!-- 操作 -->
+                <td class="px-4 py-4 text-right">
+                  <UTooltip text="删除成员">
+                    <UButton
+                      icon="i-heroicons-trash"
+                      variant="ghost"
+                      color="error"
+                      size="sm"
+                      @click="showDeleteConfirm(member)"
+                    />
+                  </UTooltip>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 分页 -->
+        <div
+          v-if="totalPages > 1"
+          class="flex items-center justify-between border-t border-gray-200 px-6 py-4 dark:border-gray-700"
+        >
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            显示 {{ (currentPage - 1) * pageSize + 1 }} -
+            {{ Math.min(currentPage * pageSize, filteredAndSortedMembers.length) }}
+            条，共 {{ filteredAndSortedMembers.length }} 位成员
+          </p>
+          <div class="flex items-center gap-2">
+            <UButton
+              icon="i-heroicons-chevron-left"
+              variant="outline"
+              size="sm"
+              :disabled="currentPage === 1"
+              @click="currentPage--"
+            />
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-300">
+              {{ currentPage }} / {{ totalPages }}
+            </span>
+            <UButton
+              icon="i-heroicons-chevron-right"
+              variant="outline"
+              size="sm"
+              :disabled="currentPage >= totalPages"
+              @click="currentPage++"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 提示信息 -->
+    <div class="mt-4 flex items-start gap-3 rounded-xl bg-amber-50 p-4 dark:bg-amber-900/20">
+      <UIcon name="i-heroicons-exclamation-triangle" class="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+      <div>
+        <p class="text-sm font-medium text-amber-800 dark:text-amber-200">字段说明</p>
+        <ul class="mt-1 list-inside list-disc text-sm text-amber-700 dark:text-amber-300">
+          <li>
+            <strong>账号名称</strong>
+            ：用户的 QQ 原始昵称
+          </li>
+          <li>
+            <strong>群昵称</strong>
+            ：用户在本群的专属备注名称
+          </li>
+          <li>
+            <strong>自定义别名</strong>
+            ：您为用户添加的备注，用于搜索和 AI 分析
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 删除确认弹窗 -->
+    <UModal :open="!!deletingMember" @update:open="deletingMember = null" :ui="{ content: 'max-w-sm' }">
+      <template #content>
+        <div class="p-6 text-center">
+          <div
+            class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30"
+          >
+            <UIcon name="i-heroicons-exclamation-triangle" class="h-7 w-7 text-red-500" />
+          </div>
+          <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">确认删除成员？</h3>
+          <p class="mb-6 text-sm text-gray-500 dark:text-gray-400">
+            即将删除成员
+            <span class="font-medium text-gray-900 dark:text-white">
+              {{ deletingMember ? getDisplayName(deletingMember) : '' }}
+            </span>
+            及其 {{ deletingMember?.messageCount.toLocaleString() }} 条消息，此操作不可恢复。
+          </p>
+          <div class="flex justify-center gap-3">
+            <UButton variant="outline" @click="cancelDelete">取消</UButton>
+            <UButton color="error" :loading="isDeleting" @click="confirmDelete">确认删除</UButton>
+          </div>
+        </div>
+      </template>
+    </UModal>
+  </div>
+</template>

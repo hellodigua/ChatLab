@@ -6,7 +6,15 @@
 import Database from 'better-sqlite3'
 import * as fs from 'fs'
 import * as path from 'path'
-import { openDatabase, getDbDir, getDbPath, buildTimeFilter, buildSystemMessageFilter, type TimeFilter } from '../core'
+import {
+  openDatabase,
+  closeDatabase,
+  getDbDir,
+  getDbPath,
+  buildTimeFilter,
+  buildSystemMessageFilter,
+  type TimeFilter,
+} from '../core'
 
 // ==================== 基础查询 ====================
 
@@ -40,7 +48,7 @@ export function getMemberActivity(sessionId: string, filter?: TimeFilter): any[]
   const { clause, params } = buildTimeFilter(filter)
 
   const msgFilterBase = clause ? clause.replace('WHERE', 'AND') : ''
-  const msgFilterWithSystem = msgFilterBase + " AND m.name != '系统消息'"
+  const msgFilterWithSystem = msgFilterBase + " AND COALESCE(m.account_name, '') != '系统消息'"
 
   const totalClauseWithSystem = buildSystemMessageFilter(clause)
   const totalMessages = (
@@ -60,11 +68,11 @@ export function getMemberActivity(sessionId: string, filter?: TimeFilter): any[]
       SELECT
         m.id as memberId,
         m.platform_id as platformId,
-        m.name,
+        COALESCE(m.group_nickname, m.account_name, m.platform_id) as name,
         COUNT(msg.id) as messageCount
       FROM member m
       LEFT JOIN message msg ON m.id = msg.sender_id ${msgFilterWithSystem}
-      WHERE m.name != '系统消息'
+      WHERE COALESCE(m.account_name, '') != '系统消息'
       GROUP BY m.id
       HAVING messageCount > 0
       ORDER BY messageCount DESC
@@ -287,13 +295,13 @@ export function getMemberNameHistory(sessionId: string, memberId: number): any[]
   const rows = db
     .prepare(
       `
-      SELECT name, start_ts as startTs, end_ts as endTs
+      SELECT name_type as nameType, name, start_ts as startTs, end_ts as endTs
       FROM member_name_history
       WHERE member_id = ?
       ORDER BY start_ts DESC
     `
     )
-    .all(memberId) as Array<{ name: string; startTs: number; endTs: number | null }>
+    .all(memberId) as Array<{ nameType: string; name: string; startTs: number; endTs: number | null }>
 
   return rows
 }
@@ -336,7 +344,7 @@ export function getAllSessions(): any[] {
               `SELECT COUNT(*) as count
              FROM message msg
              JOIN member m ON msg.sender_id = m.id
-             WHERE m.name != '系统消息'`
+             WHERE COALESCE(m.account_name, '') != '系统消息'`
             )
             .get() as { count: number }
         ).count
@@ -345,7 +353,7 @@ export function getAllSessions(): any[] {
             .prepare(
               `SELECT COUNT(*) as count
              FROM member
-             WHERE name != '系统消息'`
+             WHERE COALESCE(account_name, '') != '系统消息'`
             )
             .get() as { count: number }
         ).count
@@ -387,7 +395,7 @@ export function getSession(sessionId: string): any | null {
         `SELECT COUNT(*) as count
          FROM message msg
          JOIN member m ON msg.sender_id = m.id
-         WHERE m.name != '系统消息'`
+         WHERE COALESCE(m.account_name, '') != '系统消息'`
       )
       .get() as { count: number }
   ).count
@@ -397,7 +405,7 @@ export function getSession(sessionId: string): any | null {
       .prepare(
         `SELECT COUNT(*) as count
          FROM member
-         WHERE name != '系统消息'`
+         WHERE COALESCE(account_name, '') != '系统消息'`
       )
       .get() as { count: number }
   ).count
@@ -414,3 +422,159 @@ export function getSession(sessionId: string): any | null {
   }
 }
 
+// ==================== 成员管理 ====================
+
+/**
+ * 成员信息（含统计数据）
+ */
+interface MemberWithStats {
+  id: number
+  platformId: string
+  accountName: string | null
+  groupNickname: string | null
+  aliases: string[]
+  messageCount: number
+}
+
+// 用于标记已检查过 aliases 字段的会话
+const aliasesCheckedSessions = new Set<string>()
+
+/**
+ * 确保 member 表有 aliases 字段（数据库迁移）
+ * 用于兼容旧数据库
+ */
+function ensureAliasesColumn(sessionId: string): void {
+  // 每个会话只检查一次
+  if (aliasesCheckedSessions.has(sessionId)) return
+
+  const dbPath = getDbPath(sessionId)
+  if (!fs.existsSync(dbPath)) return
+
+  // 先关闭可能缓存的只读连接
+  closeDatabase(sessionId)
+
+  // 使用写入模式打开数据库检查并添加字段
+  const db = new Database(dbPath)
+  db.pragma('journal_mode = WAL')
+
+  try {
+    // 检查 aliases 字段是否存在
+    const columns = db.prepare('PRAGMA table_info(member)').all() as Array<{ name: string }>
+    const hasAliases = columns.some((col) => col.name === 'aliases')
+
+    if (!hasAliases) {
+      // 添加 aliases 字段
+      db.exec("ALTER TABLE member ADD COLUMN aliases TEXT DEFAULT '[]'")
+      console.log(`[Worker] Added aliases column to member table in session ${sessionId}`)
+    }
+
+    // 标记为已检查
+    aliasesCheckedSessions.add(sessionId)
+  } finally {
+    db.close()
+  }
+}
+
+/**
+ * 获取所有成员列表（含消息数和别名）
+ */
+export function getMembers(sessionId: string): MemberWithStats[] {
+  // 先确保数据库有 aliases 字段（兼容旧数据库）
+  ensureAliasesColumn(sessionId)
+
+  const db = openDatabase(sessionId)
+  if (!db) return []
+
+  const rows = db
+    .prepare(
+      `
+      SELECT
+        m.id,
+        m.platform_id as platformId,
+        m.account_name as accountName,
+        m.group_nickname as groupNickname,
+        m.aliases,
+        COUNT(msg.id) as messageCount
+      FROM member m
+      LEFT JOIN message msg ON m.id = msg.sender_id
+      WHERE COALESCE(m.group_nickname, m.account_name, m.platform_id) != '系统消息'
+      GROUP BY m.id
+      ORDER BY messageCount DESC
+    `
+    )
+    .all() as Array<{
+    id: number
+    platformId: string
+    accountName: string | null
+    groupNickname: string | null
+    aliases: string | null
+    messageCount: number
+  }>
+
+  return rows.map((row) => ({
+    id: row.id,
+    platformId: row.platformId,
+    accountName: row.accountName,
+    groupNickname: row.groupNickname,
+    aliases: row.aliases ? JSON.parse(row.aliases) : [],
+    messageCount: row.messageCount,
+  }))
+}
+
+/**
+ * 更新成员别名
+ */
+export function updateMemberAliases(sessionId: string, memberId: number, aliases: string[]): boolean {
+  const dbPath = getDbPath(sessionId)
+  if (!fs.existsSync(dbPath)) {
+    return false
+  }
+
+  try {
+    const db = new Database(dbPath)
+    db.pragma('journal_mode = WAL')
+
+    const stmt = db.prepare('UPDATE member SET aliases = ? WHERE id = ?')
+    stmt.run(JSON.stringify(aliases), memberId)
+
+    db.close()
+    return true
+  } catch (error) {
+    console.error('[Worker] Failed to update member aliases:', error)
+    return false
+  }
+}
+
+/**
+ * 删除成员及其所有消息
+ */
+export function deleteMember(sessionId: string, memberId: number): boolean {
+  const dbPath = getDbPath(sessionId)
+  if (!fs.existsSync(dbPath)) {
+    return false
+  }
+
+  try {
+    const db = new Database(dbPath)
+    db.pragma('journal_mode = WAL')
+
+    // 使用事务删除成员及其相关数据
+    const deleteTransaction = db.transaction(() => {
+      // 1. 删除该成员的消息
+      db.prepare('DELETE FROM message WHERE sender_id = ?').run(memberId)
+
+      // 2. 删除该成员的昵称历史
+      db.prepare('DELETE FROM member_name_history WHERE member_id = ?').run(memberId)
+
+      // 3. 删除成员记录
+      db.prepare('DELETE FROM member WHERE id = ?').run(memberId)
+    })
+
+    deleteTransaction()
+    db.close()
+    return true
+  } catch (error) {
+    console.error('[Worker] Failed to delete member:', error)
+    return false
+  }
+}

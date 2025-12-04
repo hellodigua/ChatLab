@@ -27,9 +27,9 @@ export function getMentionAnalysis(sessionId: string, filter?: TimeFilter): any 
   const members = db
     .prepare(
       `
-      SELECT id, platform_id as platformId, name
+      SELECT id, platform_id as platformId, COALESCE(group_nickname, account_name, platform_id) as name
       FROM member
-      WHERE name != '系统消息'
+      WHERE COALESCE(account_name, '') != '系统消息'
     `
     )
     .all() as Array<{ id: number; platformId: string; name: string }>
@@ -67,9 +67,9 @@ export function getMentionAnalysis(sessionId: string, filter?: TimeFilter): any 
 
   let whereClause = clause
   if (whereClause.includes('WHERE')) {
-    whereClause += " AND m.name != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND msg.content LIKE '%@%'"
+    whereClause += " AND COALESCE(m.account_name, '') != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND msg.content LIKE '%@%'"
   } else {
-    whereClause = " WHERE m.name != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND msg.content LIKE '%@%'"
+    whereClause = " WHERE COALESCE(m.account_name, '') != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND msg.content LIKE '%@%'"
   }
 
   const messages = db
@@ -352,9 +352,9 @@ export function getLaughAnalysis(sessionId: string, filter?: TimeFilter, keyword
 
   let whereClause = clause
   if (whereClause.includes('WHERE')) {
-    whereClause += " AND m.name != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL"
+    whereClause += " AND COALESCE(m.account_name, '') != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL"
   } else {
-    whereClause = " WHERE m.name != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL"
+    whereClause = " WHERE COALESCE(m.account_name, '') != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL"
   }
 
   const messages = db
@@ -364,7 +364,7 @@ export function getLaughAnalysis(sessionId: string, filter?: TimeFilter, keyword
         msg.sender_id as senderId,
         msg.content,
         m.platform_id as platformId,
-        m.name
+        COALESCE(m.group_nickname, m.account_name, m.platform_id) as name
       FROM message msg
       JOIN member m ON msg.sender_id = m.id
       ${whereClause}

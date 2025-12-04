@@ -36,6 +36,11 @@ import {
   searchMessages,
   getMessageContext,
   getRecentMessages,
+  getConversationBetween,
+  // 成员管理
+  getMembers,
+  updateMemberAliases,
+  deleteMember,
 } from './query'
 import { parseFile, detectFormat } from '../parser'
 import { streamImport, streamParseFileInfo } from './import'
@@ -101,6 +106,11 @@ const syncHandlers: Record<string, (payload: any) => any> = {
     return true
   },
 
+  // 成员管理
+  getMembers: (p) => getMembers(p.sessionId),
+  updateMemberAliases: (p) => updateMemberAliases(p.sessionId, p.memberId, p.aliases),
+  deleteMember: (p) => deleteMember(p.sessionId, p.memberId),
+
   // 高级分析
   getRepeatAnalysis: (p) => getRepeatAnalysis(p.sessionId, p.filter),
   getCatchphraseAnalysis: (p) => getCatchphraseAnalysis(p.sessionId, p.filter),
@@ -114,9 +124,10 @@ const syncHandlers: Record<string, (payload: any) => any> = {
   getCheckInAnalysis: (p) => getCheckInAnalysis(p.sessionId, p.filter),
 
   // AI 查询
-  searchMessages: (p) => searchMessages(p.sessionId, p.keywords, p.filter, p.limit, p.offset),
+  searchMessages: (p) => searchMessages(p.sessionId, p.keywords, p.filter, p.limit, p.offset, p.senderId),
   getMessageContext: (p) => getMessageContext(p.sessionId, p.messageId, p.contextSize),
   getRecentMessages: (p) => getRecentMessages(p.sessionId, p.filter, p.limit),
+  getConversationBetween: (p) => getConversationBetween(p.sessionId, p.memberId1, p.memberId2, p.filter, p.limit),
 }
 
 // 异步消息处理器（流式操作）

@@ -78,13 +78,15 @@ function createDatabase(sessionId: string): Database.Database {
     CREATE TABLE IF NOT EXISTS member (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       platform_id TEXT NOT NULL UNIQUE,
-      name TEXT NOT NULL,
-      nickname TEXT
+      account_name TEXT,
+      group_nickname TEXT,
+      aliases TEXT DEFAULT '[]'
     );
 
     CREATE TABLE IF NOT EXISTS member_name_history (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       member_id INTEGER NOT NULL,
+      name_type TEXT NOT NULL,
       name TEXT NOT NULL,
       start_ts INTEGER NOT NULL,
       end_ts INTEGER,
@@ -94,6 +96,8 @@ function createDatabase(sessionId: string): Database.Database {
     CREATE TABLE IF NOT EXISTS message (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       sender_id INTEGER NOT NULL,
+      sender_account_name TEXT,
+      sender_group_nickname TEXT,
       ts INTEGER NOT NULL,
       type INTEGER NOT NULL,
       content TEXT,
@@ -149,7 +153,7 @@ export function importData(parseResult: ParseResult): string {
       )
 
       const insertMember = db.prepare(`
-        INSERT OR IGNORE INTO member (platform_id, name, nickname) VALUES (?, ?, ?)
+        INSERT OR IGNORE INTO member (platform_id, account_name, group_nickname) VALUES (?, ?, ?)
       `)
       const getMemberId = db.prepare(`
         SELECT id FROM member WHERE platform_id = ?
@@ -158,57 +162,96 @@ export function importData(parseResult: ParseResult): string {
       const memberIdMap = new Map<string, number>()
 
       for (const member of parseResult.members) {
-        insertMember.run(member.platformId, member.name, member.nickname || null)
+        insertMember.run(member.platformId, member.accountName || null, member.groupNickname || null)
         const row = getMemberId.get(member.platformId) as { id: number }
         memberIdMap.set(member.platformId, row.id)
       }
 
       const sortedMessages = [...parseResult.messages].sort((a, b) => a.timestamp - b.timestamp)
-      const nicknameTracker = new Map<string, { currentName: string; lastSeenTs: number }>()
+      // 分别追踪 account_name 和 group_nickname 的变化
+      const accountNameTracker = new Map<string, { currentName: string; lastSeenTs: number }>()
+      const groupNicknameTracker = new Map<string, { currentName: string; lastSeenTs: number }>()
 
       const insertMessage = db.prepare(`
-        INSERT INTO message (sender_id, ts, type, content) VALUES (?, ?, ?, ?)
+        INSERT INTO message (sender_id, sender_account_name, sender_group_nickname, ts, type, content)
+        VALUES (?, ?, ?, ?, ?, ?)
       `)
       const insertNameHistory = db.prepare(`
-        INSERT INTO member_name_history (member_id, name, start_ts, end_ts)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO member_name_history (member_id, name_type, name, start_ts, end_ts)
+        VALUES (?, ?, ?, ?, ?)
       `)
-      const updateMemberName = db.prepare(`
-        UPDATE member SET name = ? WHERE platform_id = ?
+      const updateMemberAccountName = db.prepare(`
+        UPDATE member SET account_name = ? WHERE platform_id = ?
+      `)
+      const updateMemberGroupNickname = db.prepare(`
+        UPDATE member SET group_nickname = ? WHERE platform_id = ?
       `)
       const updateNameHistoryEndTs = db.prepare(`
         UPDATE member_name_history
         SET end_ts = ?
-        WHERE member_id = ? AND end_ts IS NULL
+        WHERE member_id = ? AND name_type = ? AND end_ts IS NULL
       `)
 
       for (const msg of sortedMessages) {
         const senderId = memberIdMap.get(msg.senderPlatformId)
         if (senderId === undefined) continue
 
-        insertMessage.run(senderId, msg.timestamp, msg.type, msg.content)
+        insertMessage.run(
+          senderId,
+          msg.senderAccountName || null,
+          msg.senderGroupNickname || null,
+          msg.timestamp,
+          msg.type,
+          msg.content
+        )
 
-        const currentName = msg.senderName
-        const tracker = nicknameTracker.get(msg.senderPlatformId)
+        // 追踪 account_name 变化
+        const accountName = msg.senderAccountName
+        if (accountName) {
+          const tracker = accountNameTracker.get(msg.senderPlatformId)
+          if (!tracker) {
+            accountNameTracker.set(msg.senderPlatformId, {
+              currentName: accountName,
+              lastSeenTs: msg.timestamp,
+            })
+            insertNameHistory.run(senderId, 'account_name', accountName, msg.timestamp, null)
+          } else if (tracker.currentName !== accountName) {
+            updateNameHistoryEndTs.run(msg.timestamp, senderId, 'account_name')
+            insertNameHistory.run(senderId, 'account_name', accountName, msg.timestamp, null)
+            tracker.currentName = accountName
+            tracker.lastSeenTs = msg.timestamp
+          } else {
+            tracker.lastSeenTs = msg.timestamp
+          }
+        }
 
-        if (!tracker) {
-          nicknameTracker.set(msg.senderPlatformId, {
-            currentName,
-            lastSeenTs: msg.timestamp,
-          })
-          insertNameHistory.run(senderId, currentName, msg.timestamp, null)
-        } else if (tracker.currentName !== currentName) {
-          updateNameHistoryEndTs.run(msg.timestamp, senderId)
-          insertNameHistory.run(senderId, currentName, msg.timestamp, null)
-          tracker.currentName = currentName
-          tracker.lastSeenTs = msg.timestamp
-        } else {
-          tracker.lastSeenTs = msg.timestamp
+        // 追踪 group_nickname 变化
+        const groupNickname = msg.senderGroupNickname
+        if (groupNickname) {
+          const tracker = groupNicknameTracker.get(msg.senderPlatformId)
+          if (!tracker) {
+            groupNicknameTracker.set(msg.senderPlatformId, {
+              currentName: groupNickname,
+              lastSeenTs: msg.timestamp,
+            })
+            insertNameHistory.run(senderId, 'group_nickname', groupNickname, msg.timestamp, null)
+          } else if (tracker.currentName !== groupNickname) {
+            updateNameHistoryEndTs.run(msg.timestamp, senderId, 'group_nickname')
+            insertNameHistory.run(senderId, 'group_nickname', groupNickname, msg.timestamp, null)
+            tracker.currentName = groupNickname
+            tracker.lastSeenTs = msg.timestamp
+          } else {
+            tracker.lastSeenTs = msg.timestamp
+          }
         }
       }
 
-      for (const [platformId, tracker] of nicknameTracker.entries()) {
-        updateMemberName.run(tracker.currentName, platformId)
+      // 更新成员最新的 account_name 和 group_nickname
+      for (const [platformId, tracker] of accountNameTracker.entries()) {
+        updateMemberAccountName.run(tracker.currentName, platformId)
+      }
+      for (const [platformId, tracker] of groupNicknameTracker.entries()) {
+        updateMemberGroupNickname.run(tracker.currentName, platformId)
       }
     })
 
@@ -269,7 +312,7 @@ export function getAllSessions(): AnalysisSession[] {
               `SELECT COUNT(*) as count
              FROM message msg
              JOIN member m ON msg.sender_id = m.id
-             WHERE m.name != '系统消息'`
+             WHERE COALESCE(m.account_name, '') != '系统消息'`
             )
             .get() as { count: number }
         ).count
@@ -278,7 +321,7 @@ export function getAllSessions(): AnalysisSession[] {
             .prepare(
               `SELECT COUNT(*) as count
              FROM member
-             WHERE name != '系统消息'`
+             WHERE COALESCE(account_name, '') != '系统消息'`
             )
             .get() as { count: number }
         ).count
@@ -323,7 +366,7 @@ export function getSession(sessionId: string): AnalysisSession | null {
           `SELECT COUNT(*) as count
          FROM message msg
          JOIN member m ON msg.sender_id = m.id
-         WHERE m.name != '系统消息'`
+         WHERE COALESCE(m.account_name, '') != '系统消息'`
         )
         .get() as { count: number }
     ).count
@@ -333,7 +376,7 @@ export function getSession(sessionId: string): AnalysisSession | null {
         .prepare(
           `SELECT COUNT(*) as count
          FROM member
-         WHERE name != '系统消息'`
+         WHERE COALESCE(account_name, '') != '系统消息'`
         )
         .get() as { count: number }
     ).count

@@ -31,6 +31,10 @@ export {
   getAllSessions,
   getSession,
   closeDatabase,
+  // 成员管理 API
+  getMembers,
+  updateMemberAliases,
+  deleteMember,
   // 文件解析 API（已废弃，使用流式版本）
   parseFileInfo,
   // 流式导入 API
@@ -41,4 +45,4 @@ export {
   getMessageContext,
 } from './workerManager'
 
-export type { SearchMessageResult } from './workerManager'
+export type { SearchMessageResult, MemberWithStats } from './workerManager'

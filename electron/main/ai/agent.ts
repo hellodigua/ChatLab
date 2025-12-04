@@ -125,10 +125,19 @@ function getSystemPrompt(): string {
 
 你可以使用以下工具来获取群聊数据：
 
-1. search_messages - 根据关键词搜索聊天记录，可指定 year 和 month 筛选特定时间段
+1. search_messages - 根据关键词搜索聊天记录，可指定 year/month 筛选时间段，也可指定 sender_id 筛选特定成员的发言
 2. get_recent_messages - 获取指定时间段的聊天消息，可指定 year 和 month
 3. get_member_stats - 获取成员活跃度统计
 4. get_time_stats - 获取时间分布统计
+5. get_group_members - 获取群成员列表，包括 id、QQ号、账号名称、群昵称、别名和消息统计
+6. get_member_name_history - 获取成员的昵称变更历史，需要先通过 get_group_members 获取成员 ID
+7. get_conversation_between - 获取两个成员之间的对话记录，需要先通过 get_group_members 获取两人的成员 ID
+
+成员查询策略：
+- 当用户提到特定群成员（如"张三说过什么"、"小明的发言"等）时，应先调用 get_group_members 获取成员列表
+- 群成员有三种名称：accountName（QQ原始昵称）、groupNickname（群昵称）、aliases（用户自定义别名）
+- 通过 get_group_members 的 search 参数可以模糊搜索这三种名称
+- 找到成员后，使用其 id 字段作为 search_messages 的 sender_id 参数来获取该成员的发言
 
 时间处理要求：
 - 如果用户提到"X月"但没有指定年份，默认使用当前年份（${now.getFullYear()}年）

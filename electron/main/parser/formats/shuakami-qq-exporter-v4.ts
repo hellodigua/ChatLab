@@ -96,8 +96,8 @@ interface V4Message {
 
 interface MemberInfo {
   platformId: string
-  displayName: string // 显示名（sendMemberName || sendNickName）
-  nickname: string // QQ原始昵称（sendNickName）
+  accountName: string // 账号名称（QQ原始昵称 sendNickName）
+  groupNickname: string | undefined // 群昵称（sendMemberName，可为空）
 }
 
 // ==================== 消息类型转换 ====================
@@ -198,24 +198,23 @@ async function* parseV4(options: ParseOptions): AsyncGenerator<ParseEvent, void,
 
       // 从 rawMessage 获取名字信息
       const raw = msg.rawMessage
-      const sendNickName = raw?.sendNickName || msg.sender.name || platformId
-      const sendMemberName = raw?.sendMemberName
-
-      // 显示名优先级：群昵称 > QQ昵称
-      const displayName = sendMemberName || sendNickName
+      const accountName = raw?.sendNickName || msg.sender.name || platformId // QQ 原始昵称
+      const groupNickname = raw?.sendMemberName || undefined // 群昵称（可为空）
 
       // 更新成员信息（保留最新的名字）
       const existingMember = memberMap.get(platformId)
       if (!existingMember) {
         memberMap.set(platformId, {
           platformId,
-          displayName,
-          nickname: sendNickName,
+          accountName,
+          groupNickname,
         })
       } else {
         // 更新为最新的名字
-        existingMember.displayName = displayName
-        existingMember.nickname = sendNickName
+        existingMember.accountName = accountName
+        if (groupNickname) {
+          existingMember.groupNickname = groupNickname
+        }
       }
 
       // 解析时间戳
@@ -233,7 +232,8 @@ async function* parseV4(options: ParseOptions): AsyncGenerator<ParseEvent, void,
 
       return {
         senderPlatformId: platformId,
-        senderName: displayName, // 用于昵称历史追踪
+        senderAccountName: accountName,
+        senderGroupNickname: groupNickname,
         timestamp,
         type,
         content: textContent || null,
@@ -277,11 +277,11 @@ async function* parseV4(options: ParseOptions): AsyncGenerator<ParseEvent, void,
     pipeline.on('error', reject)
   })
 
-  // 发送成员（包含 nickname）
+  // 发送成员
   const members: ParsedMember[] = Array.from(memberMap.values()).map((m) => ({
     platformId: m.platformId,
-    name: m.displayName,
-    nickname: m.nickname,
+    accountName: m.accountName,
+    groupNickname: m.groupNickname,
   }))
   yield { type: 'members', data: members }
 

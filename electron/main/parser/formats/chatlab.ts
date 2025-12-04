@@ -58,7 +58,8 @@ export const feature: FormatFeature = {
 
 interface ChatLabMessage {
   sender: string // platformId
-  name: string // 发送时昵称
+  accountName: string // 发送时的账号名称
+  groupNickname?: string // 发送时的群昵称
   timestamp: number // 秒级时间戳
   type: number // MessageType
   content: string | null
@@ -66,7 +67,8 @@ interface ChatLabMessage {
 
 interface ChatLabMember {
   platformId: string
-  name: string
+  accountName: string // 账号名称
+  groupNickname?: string // 群昵称
   aliases?: string[]
 }
 
@@ -146,7 +148,8 @@ async function* parseChatLab(options: ParseOptions): AsyncGenerator<ParseEvent, 
       for (const m of membersJson) {
         members.push({
           platformId: m.platformId,
-          name: m.name,
+          accountName: m.accountName,
+          groupNickname: m.groupNickname,
         })
       }
     }
@@ -178,13 +181,15 @@ async function* parseChatLab(options: ParseOptions): AsyncGenerator<ParseEvent, 
       if (members.length === 0) {
         memberMapFromMessages.set(msg.sender, {
           platformId: msg.sender,
-          name: msg.name,
+          accountName: msg.accountName,
+          groupNickname: msg.groupNickname,
         })
       }
 
       batchCollector.push({
         senderPlatformId: msg.sender,
-        senderName: msg.name,
+        senderAccountName: msg.accountName,
+        senderGroupNickname: msg.groupNickname,
         timestamp: msg.timestamp,
         type: msg.type,
         content: msg.content,

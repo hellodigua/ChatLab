@@ -16,6 +16,10 @@ export {
   getMemberNameHistory,
   getAllSessions,
   getSession,
+  // 成员管理
+  getMembers,
+  updateMemberAliases,
+  deleteMember,
 } from './basic'
 
 // 高级分析
@@ -33,5 +37,4 @@ export {
 } from './advanced'
 
 // AI 查询
-export { searchMessages, getMessageContext, getRecentMessages } from './ai'
-
+export { searchMessages, getMessageContext, getRecentMessages, getConversationBetween } from './ai'

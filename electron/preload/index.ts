@@ -24,6 +24,7 @@ import type {
   ConflictCheckResult,
   MergeParams,
   MergeResult,
+  MemberWithStats,
 } from '../../src/types/chat'
 
 // Custom APIs for renderer
@@ -290,6 +291,29 @@ const chatApi = {
    */
   getCheckInAnalysis: (sessionId: string, filter?: { startTs?: number; endTs?: number }): Promise<CheckInAnalysis> => {
     return ipcRenderer.invoke('chat:getCheckInAnalysis', sessionId, filter)
+  },
+
+  // ==================== 成员管理 ====================
+
+  /**
+   * 获取所有成员列表（含消息数和别名）
+   */
+  getMembers: (sessionId: string): Promise<MemberWithStats[]> => {
+    return ipcRenderer.invoke('chat:getMembers', sessionId)
+  },
+
+  /**
+   * 更新成员别名
+   */
+  updateMemberAliases: (sessionId: string, memberId: number, aliases: string[]): Promise<boolean> => {
+    return ipcRenderer.invoke('chat:updateMemberAliases', sessionId, memberId, aliases)
+  },
+
+  /**
+   * 删除成员及其所有消息
+   */
+  deleteMember: (sessionId: string, memberId: number): Promise<boolean> => {
+    return ipcRenderer.invoke('chat:deleteMember', sessionId, memberId)
   },
 }
 

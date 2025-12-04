@@ -70,7 +70,7 @@ export function getNightOwlAnalysis(sessionId: string, filter?: TimeFilter): any
           msg.sender_id as senderId,
           msg.ts,
           m.platform_id as platformId,
-          m.name
+          COALESCE(m.group_nickname, m.account_name, m.platform_id) as name
         FROM message msg
         JOIN member m ON msg.sender_id = m.id
         ${clauseWithSystem}
@@ -347,7 +347,7 @@ export function getDragonKingAnalysis(sessionId: string, filter?: TimeFilter): a
             strftime('%Y-%m-%d', msg.ts, 'unixepoch', 'localtime') as date,
             msg.sender_id,
             m.platform_id,
-            m.name,
+            COALESCE(m.group_nickname, m.account_name, m.platform_id) as name,
             COUNT(*) as msg_count
           FROM message msg
           JOIN member m ON msg.sender_id = m.id
@@ -417,7 +417,7 @@ export function getDivingAnalysis(sessionId: string, filter?: TimeFilter): any {
         SELECT
           m.id as member_id,
           m.platform_id,
-          m.name,
+          COALESCE(m.group_nickname, m.account_name, m.platform_id) as name,
           MAX(msg.ts) as last_ts
         FROM member m
         JOIN message msg ON m.id = msg.sender_id
@@ -475,7 +475,7 @@ export function getCheckInAnalysis(sessionId: string, filter?: TimeFilter): any 
       `
       SELECT
         msg.sender_id as senderId,
-        m.name,
+        COALESCE(m.group_nickname, m.account_name, m.platform_id) as name,
         DATE(${tsExpr}, 'unixepoch', 'localtime') as day
       FROM message msg
       JOIN member m ON msg.sender_id = m.id

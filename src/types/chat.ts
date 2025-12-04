@@ -79,8 +79,9 @@ export interface DbMeta {
 export interface DbMember {
   id: number // 自增ID
   platform_id: string // 平台标识（QQ号等）
-  name: string // 最新显示昵称（群昵称优先）
-  nickname: string | null // QQ原始昵称
+  account_name: string | null // 账号名称（QQ原始昵称 sendNickName）
+  group_nickname: string | null // 群昵称（sendMemberName，可为空）
+  aliases: string // 用户自定义别名（JSON数组格式）
 }
 
 /**
@@ -89,6 +90,8 @@ export interface DbMember {
 export interface DbMessage {
   id: number // 自增ID
   sender_id: number // FK -> member.id
+  sender_account_name: string | null // 发送时的账号名称
+  sender_group_nickname: string | null // 发送时的群昵称
   ts: number // 时间戳（秒）
   type: MessageType // 消息类型
   content: string | null // 纯文本内容
@@ -101,8 +104,8 @@ export interface DbMessage {
  */
 export interface ParsedMember {
   platformId: string // 平台标识
-  name: string // 显示昵称（群昵称优先，否则QQ昵称）
-  nickname?: string // QQ原始昵称（sendNickName）
+  accountName: string // 账号名称（QQ原始昵称 sendNickName）
+  groupNickname?: string // 群昵称（sendMemberName，可为空）
 }
 
 /**
@@ -110,7 +113,8 @@ export interface ParsedMember {
  */
 export interface ParsedMessage {
   senderPlatformId: string // 发送者平台ID
-  senderName: string // 发送者在该消息时的昵称
+  senderAccountName: string // 发送时的账号名称
+  senderGroupNickname?: string // 发送时的群昵称（可为空）
   timestamp: number // 时间戳（秒）
   type: MessageType // 消息类型
   content: string | null // 内容
@@ -140,6 +144,18 @@ export interface MemberActivity {
   name: string
   messageCount: number
   percentage: number // 占总消息的百分比
+}
+
+/**
+ * 成员信息（含统计数据和别名，用于成员管理）
+ */
+export interface MemberWithStats {
+  id: number
+  platformId: string
+  accountName: string | null // 账号名称
+  groupNickname: string | null // 群昵称
+  aliases: string[] // 用户自定义别名
+  messageCount: number
 }
 
 /**
@@ -346,6 +362,7 @@ export interface AnalysisSession {
  * 成员历史昵称记录
  */
 export interface MemberNameHistory {
+  nameType: 'account_name' | 'group_nickname' // 名称类型
   name: string // 昵称
   startTs: number // 开始使用时间戳（秒）
   endTs: number | null // 停止使用时间戳（秒），null 表示当前昵称
@@ -726,8 +743,9 @@ export interface ChatLabMeta {
  */
 export interface ChatLabMember {
   platformId: string // 平台标识
-  name: string // 当前昵称
-  aliases?: string[] // 历史昵称（可选）
+  accountName: string // 账号名称
+  groupNickname?: string // 群昵称（可选）
+  aliases?: string[] // 用户自定义别名（可选）
 }
 
 /**
@@ -735,7 +753,8 @@ export interface ChatLabMember {
  */
 export interface ChatLabMessage {
   sender: string // 发送者 platformId
-  name: string // 发送时的昵称
+  accountName: string // 发送时的账号名称
+  groupNickname?: string // 发送时的群昵称（可选）
   timestamp: number // 时间戳（秒）
   type: MessageType // 消息类型
   content: string | null // 内容

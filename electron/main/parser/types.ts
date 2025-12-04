@@ -154,3 +154,15 @@ export type CreateProgress = (
 
 // 重新导出共享类型
 export type { ParsedMember, ParsedMessage, ChatPlatform, ChatType }
+
+/**
+ * 获取显示名称
+ * 优先使用群昵称，否则使用账号名称，最后使用平台ID
+ */
+export function getDisplayName(
+  groupNickname: string | null | undefined,
+  accountName: string | null | undefined,
+  platformId: string
+): string {
+  return groupNickname || accountName || platformId
+}

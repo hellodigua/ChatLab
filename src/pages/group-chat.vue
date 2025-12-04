@@ -12,6 +12,7 @@ import TimelineTab from '@/components/analysis/TimelineTab.vue'
 import QuotesTab from '@/components/analysis/QuotesTab.vue'
 import RelationshipsTab from '@/components/analysis/RelationshipsTab.vue'
 import AITab from '@/components/analysis/AITab.vue'
+import MemberTab from '@/components/analysis/MemberTab.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -39,6 +40,7 @@ const tabs = [
   { id: 'quotes', label: '群语录', icon: 'i-heroicons-chat-bubble-bottom-center-text' },
   { id: 'relationships', label: '群关系', icon: 'i-heroicons-heart' },
   { id: 'timeline', label: '群趋势', icon: 'i-heroicons-chart-bar' },
+  { id: 'members', label: '群成员', icon: 'i-heroicons-user-group' },
   { id: 'ai', label: 'AI实验室', icon: 'i-heroicons-sparkles' },
 ]
 
@@ -266,7 +268,7 @@ onMounted(() => {
             <button
               v-for="tab in tabs"
               :key="tab.id"
-              class="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all"
+              class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all"
               :class="[
                 activeTab === tab.id
                   ? 'bg-pink-500 text-white dark:bg-pink-900/30 dark:text-pink-300'
@@ -339,6 +341,12 @@ onMounted(() => {
               :member-activity="memberActivity"
               :time-range="timeRange"
               :time-filter="timeFilter"
+            />
+            <MemberTab
+              v-else-if="activeTab === 'members'"
+              :key="'members-' + selectedYear"
+              :session-id="currentSessionId!"
+              @data-changed="loadData"
             />
             <AITab
               v-else-if="activeTab === 'ai'"

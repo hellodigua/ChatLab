@@ -70,14 +70,15 @@ function createTempDatabase(dbPath: string): Database.Database {
 
     CREATE TABLE IF NOT EXISTS member (
       platform_id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      nickname TEXT
+      account_name TEXT,
+      group_nickname TEXT
     );
 
     CREATE TABLE IF NOT EXISTS message (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       sender_platform_id TEXT NOT NULL,
-      sender_name TEXT NOT NULL,
+      sender_account_name TEXT,
+      sender_group_nickname TEXT,
       timestamp INTEGER NOT NULL,
       type INTEGER NOT NULL,
       content TEXT
@@ -146,13 +147,15 @@ function createDatabaseWithoutIndexes(sessionId: string): Database.Database {
     CREATE TABLE IF NOT EXISTS member (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       platform_id TEXT NOT NULL UNIQUE,
-      name TEXT NOT NULL,
-      nickname TEXT
+      account_name TEXT,
+      group_nickname TEXT,
+      aliases TEXT DEFAULT '[]'
     );
 
     CREATE TABLE IF NOT EXISTS member_name_history (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       member_id INTEGER NOT NULL,
+      name_type TEXT NOT NULL,
       name TEXT NOT NULL,
       start_ts INTEGER NOT NULL,
       end_ts INTEGER,
@@ -162,6 +165,8 @@ function createDatabaseWithoutIndexes(sessionId: string): Database.Database {
     CREATE TABLE IF NOT EXISTS message (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       sender_id INTEGER NOT NULL,
+      sender_account_name TEXT,
+      sender_group_nickname TEXT,
       ts INTEGER NOT NULL,
       type INTEGER NOT NULL,
       content TEXT,
@@ -239,23 +244,31 @@ export async function streamImport(filePath: string, requestId: string): Promise
     INSERT INTO meta (name, platform, type, imported_at) VALUES (?, ?, ?, ?)
   `)
   const insertMember = db.prepare(`
-    INSERT OR IGNORE INTO member (platform_id, name, nickname) VALUES (?, ?, ?)
+    INSERT OR IGNORE INTO member (platform_id, account_name, group_nickname) VALUES (?, ?, ?)
   `)
   const getMemberId = db.prepare(`SELECT id FROM member WHERE platform_id = ?`)
   const insertMessage = db.prepare(`
-    INSERT INTO message (sender_id, ts, type, content) VALUES (?, ?, ?, ?)
+    INSERT INTO message (sender_id, sender_account_name, sender_group_nickname, ts, type, content)
+    VALUES (?, ?, ?, ?, ?, ?)
   `)
   const insertNameHistory = db.prepare(`
-    INSERT INTO member_name_history (member_id, name, start_ts, end_ts) VALUES (?, ?, ?, ?)
+    INSERT INTO member_name_history (member_id, name_type, name, start_ts, end_ts) VALUES (?, ?, ?, ?, ?)
   `)
-  const updateMemberName = db.prepare(`UPDATE member SET name = ? WHERE platform_id = ?`)
+  const updateMemberAccountName = db.prepare(`UPDATE member SET account_name = ? WHERE platform_id = ?`)
+  const updateMemberGroupNickname = db.prepare(`UPDATE member SET group_nickname = ? WHERE platform_id = ?`)
 
   // 成员ID映射（platformId -> dbId）
   const memberIdMap = new Map<string, number>()
-  // 成员原始昵称映射（platformId -> nickname），用于过滤虚假的昵称变更
-  const memberNicknameMap = new Map<string, string>()
-  // 昵称追踪器（收集所有变化，最后批量写入）
-  const nicknameTracker = new Map<
+  // 分别追踪 account_name 和 group_nickname 的变化
+  const accountNameTracker = new Map<
+    string,
+    {
+      currentName: string
+      lastSeenTs: number
+      history: Array<{ name: string; startTs: number }>
+    }
+  >()
+  const groupNicknameTracker = new Map<
     string,
     {
       currentName: string
@@ -341,14 +354,10 @@ export async function streamImport(filePath: string, requestId: string): Promise
 
       onMembers: (members: ParsedMember[]) => {
         for (const member of members) {
-          insertMember.run(member.platformId, member.name, member.nickname || null)
+          insertMember.run(member.platformId, member.accountName || null, member.groupNickname || null)
           const row = getMemberId.get(member.platformId) as { id: number } | undefined
           if (row) {
             memberIdMap.set(member.platformId, row.id)
-          }
-          // 存储原始昵称，用于过滤虚假的昵称变更
-          if (member.nickname) {
-            memberNicknameMap.set(member.platformId, member.nickname)
           }
         }
       },
@@ -365,7 +374,7 @@ export async function streamImport(filePath: string, requestId: string): Promise
 
         for (const msg of messages) {
           // 数据验证：跳过无效消息
-          if (!msg.senderPlatformId || !msg.senderName) {
+          if (!msg.senderPlatformId || !msg.senderAccountName) {
             continue
           }
           if (msg.timestamp === undefined || msg.timestamp === null || isNaN(msg.timestamp)) {
@@ -378,8 +387,7 @@ export async function streamImport(filePath: string, requestId: string): Promise
           // 确保成员存在
           let t0 = Date.now()
           if (!memberIdMap.has(msg.senderPlatformId)) {
-            const memberName = msg.senderName || msg.senderPlatformId
-            insertMember.run(msg.senderPlatformId, memberName, null)
+            insertMember.run(msg.senderPlatformId, msg.senderAccountName || null, msg.senderGroupNickname || null)
             const row = getMemberId.get(msg.senderPlatformId) as { id: number } | undefined
             if (row) {
               memberIdMap.set(msg.senderPlatformId, row.id)
@@ -396,41 +404,63 @@ export async function streamImport(filePath: string, requestId: string): Promise
 
           // 插入消息
           t0 = Date.now()
-          insertMessage.run(senderId, msg.timestamp, msg.type, msg.content)
+          insertMessage.run(
+            senderId,
+            msg.senderAccountName || null,
+            msg.senderGroupNickname || null,
+            msg.timestamp,
+            msg.type,
+            msg.content
+          )
           messageInsertTime += Date.now() - t0
           messageCountInBatch++
           totalMessageCount++
 
           // 追踪昵称变化（仅记录，不写入数据库，最后批量处理）
           t0 = Date.now()
-          const senderName = msg.senderName || msg.senderPlatformId
-          const originalNickname = memberNicknameMap.get(msg.senderPlatformId)
 
-          // 判断是否是"真实昵称"（非 platformId，非原始昵称）
-          const isRealNickname =
-            senderName !== msg.senderPlatformId && // 不是 QQ 号
-            senderName !== originalNickname // 不是 QQ 原始昵称
-
-          const tracker = nicknameTracker.get(msg.senderPlatformId)
-          if (!tracker) {
-            // 首次记录：只记录真实昵称
-            if (isRealNickname) {
-              nicknameTracker.set(msg.senderPlatformId, {
-                currentName: senderName,
+          // 追踪 account_name 变化
+          const accountName = msg.senderAccountName
+          if (accountName && accountName !== msg.senderPlatformId) {
+            const tracker = accountNameTracker.get(msg.senderPlatformId)
+            if (!tracker) {
+              accountNameTracker.set(msg.senderPlatformId, {
+                currentName: accountName,
                 lastSeenTs: msg.timestamp,
-                history: [{ name: senderName, startTs: msg.timestamp }],
+                history: [{ name: accountName, startTs: msg.timestamp }],
               })
               nicknameChangeCount++
+            } else if (tracker.currentName !== accountName) {
+              tracker.history.push({ name: accountName, startTs: msg.timestamp })
+              tracker.currentName = accountName
+              tracker.lastSeenTs = msg.timestamp
+              nicknameChangeCount++
+            } else {
+              tracker.lastSeenTs = msg.timestamp
             }
-          } else if (tracker.currentName !== senderName && isRealNickname) {
-            // 昵称变化：只记录变化到真实昵称的情况
-            tracker.history.push({ name: senderName, startTs: msg.timestamp })
-            tracker.currentName = senderName
-            tracker.lastSeenTs = msg.timestamp
-            nicknameChangeCount++
-          } else {
-            tracker.lastSeenTs = msg.timestamp
           }
+
+          // 追踪 group_nickname 变化
+          const groupNickname = msg.senderGroupNickname
+          if (groupNickname) {
+            const tracker = groupNicknameTracker.get(msg.senderPlatformId)
+            if (!tracker) {
+              groupNicknameTracker.set(msg.senderPlatformId, {
+                currentName: groupNickname,
+                lastSeenTs: msg.timestamp,
+                history: [{ name: groupNickname, startTs: msg.timestamp }],
+              })
+              nicknameChangeCount++
+            } else if (tracker.currentName !== groupNickname) {
+              tracker.history.push({ name: groupNickname, startTs: msg.timestamp })
+              tracker.currentName = groupNickname
+              tracker.lastSeenTs = msg.timestamp
+              nicknameChangeCount++
+            } else {
+              tracker.lastSeenTs = msg.timestamp
+            }
+          }
+
           nicknameTrackTime += Date.now() - t0
 
           // 分批提交（每 50000 条）
@@ -480,17 +510,15 @@ export async function streamImport(filePath: string, requestId: string): Promise
     db.exec('BEGIN TRANSACTION')
     let historyCount = 0
     let filteredCount = 0
-    for (const [platformId, tracker] of nicknameTracker.entries()) {
-      // 跳过无效的 platformId（0、空字符串等）
-      if (!platformId || platformId === '0' || platformId === 'undefined') {
-        continue
-      }
+
+    // 处理 account_name 历史
+    for (const [platformId, tracker] of accountNameTracker.entries()) {
+      if (!platformId || platformId === '0' || platformId === 'undefined') continue
 
       const senderId = memberIdMap.get(platformId)
       if (!senderId) continue
 
-      // 清理历史记录：去除重复和来回切换的记录
-      // 只保留每个唯一昵称的首次使用时间
+      // 清理历史记录
       const uniqueNames = new Map<string, { startTs: number; lastTs: number }>()
       for (const h of tracker.history) {
         const existing = uniqueNames.get(h.name)
@@ -501,30 +529,59 @@ export async function streamImport(filePath: string, requestId: string): Promise
         }
       }
 
-      // 过滤掉 platformId（QQ 号）本身
       uniqueNames.delete(platformId)
 
-      // 如果只有一个唯一昵称，不算有变更
       if (uniqueNames.size <= 1) {
         filteredCount++
-        // 仍然更新成员最新昵称
-        updateMemberName.run(tracker.currentName, platformId)
+        updateMemberAccountName.run(tracker.currentName, platformId)
         continue
       }
 
-      // 按首次使用时间排序，写入昵称历史
       const sortedHistory = Array.from(uniqueNames.entries()).sort((a, b) => a[1].startTs - b[1].startTs)
-
       for (let i = 0; i < sortedHistory.length; i++) {
         const [name, { startTs }] = sortedHistory[i]
         const endTs = i < sortedHistory.length - 1 ? sortedHistory[i + 1][1].startTs : null
-        insertNameHistory.run(senderId, name, startTs, endTs)
+        insertNameHistory.run(senderId, 'account_name', name, startTs, endTs)
         historyCount++
       }
 
-      // 更新成员最新昵称
-      updateMemberName.run(tracker.currentName, platformId)
+      updateMemberAccountName.run(tracker.currentName, platformId)
     }
+
+    // 处理 group_nickname 历史
+    for (const [platformId, tracker] of groupNicknameTracker.entries()) {
+      if (!platformId || platformId === '0' || platformId === 'undefined') continue
+
+      const senderId = memberIdMap.get(platformId)
+      if (!senderId) continue
+
+      const uniqueNames = new Map<string, { startTs: number; lastTs: number }>()
+      for (const h of tracker.history) {
+        const existing = uniqueNames.get(h.name)
+        if (!existing) {
+          uniqueNames.set(h.name, { startTs: h.startTs, lastTs: h.startTs })
+        } else {
+          existing.lastTs = h.startTs
+        }
+      }
+
+      if (uniqueNames.size <= 1) {
+        filteredCount++
+        updateMemberGroupNickname.run(tracker.currentName, platformId)
+        continue
+      }
+
+      const sortedHistory = Array.from(uniqueNames.entries()).sort((a, b) => a[1].startTs - b[1].startTs)
+      for (let i = 0; i < sortedHistory.length; i++) {
+        const [name, { startTs }] = sortedHistory[i]
+        const endTs = i < sortedHistory.length - 1 ? sortedHistory[i + 1][1].startTs : null
+        insertNameHistory.run(senderId, 'group_nickname', name, startTs, endTs)
+        historyCount++
+      }
+
+      updateMemberGroupNickname.run(tracker.currentName, platformId)
+    }
+
     db.exec('COMMIT')
     logPerf(`昵称历史写入完成 (${historyCount}条)`, totalMessageCount)
 
@@ -627,10 +684,12 @@ export async function streamParseFileInfo(filePath: string, requestId: string): 
 
   // 准备语句
   const insertMeta = db.prepare('INSERT INTO meta (name, platform, type) VALUES (?, ?, ?)')
-  const insertMember = db.prepare('INSERT OR IGNORE INTO member (platform_id, name, nickname) VALUES (?, ?, ?)')
+  const insertMember = db.prepare(
+    'INSERT OR IGNORE INTO member (platform_id, account_name, group_nickname) VALUES (?, ?, ?)'
+  )
   const insertMessage = db.prepare(`
-    INSERT INTO message (sender_platform_id, sender_name, timestamp, type, content)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO message (sender_platform_id, sender_account_name, sender_group_nickname, timestamp, type, content)
+    VALUES (?, ?, ?, ?, ?, ?)
   `)
 
   let meta: ParsedMeta = { name: '未知群聊', platform: formatFeature.platform, type: 'group' }
@@ -662,7 +721,7 @@ export async function streamParseFileInfo(filePath: string, requestId: string): 
         for (const m of parsedMembers) {
           if (!memberSet.has(m.platformId)) {
             memberSet.add(m.platformId)
-            insertMember.run(m.platformId, m.name, m.nickname || null)
+            insertMember.run(m.platformId, m.accountName || null, m.groupNickname || null)
           }
         }
       },
@@ -672,10 +731,17 @@ export async function streamParseFileInfo(filePath: string, requestId: string): 
           // 确保成员存在
           if (!memberSet.has(msg.senderPlatformId)) {
             memberSet.add(msg.senderPlatformId)
-            insertMember.run(msg.senderPlatformId, msg.senderName, null)
+            insertMember.run(msg.senderPlatformId, msg.senderAccountName || null, msg.senderGroupNickname || null)
           }
 
-          insertMessage.run(msg.senderPlatformId, msg.senderName, msg.timestamp, msg.type, msg.content || null)
+          insertMessage.run(
+            msg.senderPlatformId,
+            msg.senderAccountName || null,
+            msg.senderGroupNickname || null,
+            msg.timestamp,
+            msg.type,
+            msg.content || null
+          )
           messageCount++
         }
       },
@@ -711,4 +777,3 @@ export async function streamParseFileInfo(filePath: string, requestId: string): 
     throw error
   }
 }
-
