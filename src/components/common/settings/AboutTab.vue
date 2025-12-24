@@ -89,6 +89,15 @@ onMounted(() => {
           </UButton>
         </div>
       </div>
+      <!-- 更新策略提示 -->
+      <UAlert
+        class="mt-3"
+        color="info"
+        variant="subtle"
+        icon="i-heroicons-light-bulb"
+        title="更新策略"
+        description="项目前期更新频繁，为避免打扰，小版本不会自动提醒，仅中版本以上才会推送。如需获取小版本更新，需手动点击检查更新。"
+      />
     </div>
 
     <!-- 隐私设置 -->

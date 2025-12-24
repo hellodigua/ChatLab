@@ -70,8 +70,17 @@ const checkUpdate = (win) => {
       } else if (Array.isArray(info.releaseNotes)) {
         releaseNotes = info.releaseNotes.map((note) => note.note || note).join('\n')
       }
-      // 简单清理 HTML 标签
-      releaseNotes = releaseNotes.replace(/<[^>]*>/g, '').trim()
+      // 简单清理 HTML 标签，合并连续空行，截断下载说明
+      releaseNotes = releaseNotes
+        .replace(/<[^>]*>/g, '')
+        .replace(/\n{2,}/g, '\n')
+        .trim()
+
+      // 如果包含"下载说明"，截断该部分及之后的内容
+      const downloadGuideIndex = releaseNotes.indexOf('下载说明')
+      if (downloadGuideIndex > 0) {
+        releaseNotes = releaseNotes.substring(0, downloadGuideIndex).trim()
+      }
     }
 
     const detail = releaseNotes
