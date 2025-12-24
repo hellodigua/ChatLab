@@ -2,7 +2,8 @@
 import { ref, watch } from 'vue'
 import AIConfigTab from './settings/AIConfigTab.vue'
 import AIPromptConfigTab from './settings/AIPromptConfigTab.vue'
-import CacheManageTab from './settings/CacheManageTab.vue'
+import BasicSettingsTab from './settings/BasicSettingsTab.vue'
+import StorageTab from './settings/StorageTab.vue'
 import AboutTab from './settings/AboutTab.vue'
 
 // Props
@@ -21,12 +22,13 @@ const tabs = [
   { id: 'settings', label: '基础设置', icon: 'i-heroicons-cog-6-tooth' },
   { id: 'ai-config', label: '模型配置', icon: 'i-heroicons-sparkles' },
   { id: 'ai-prompt', label: 'AI 对话配置', icon: 'i-heroicons-document-text' },
+  { id: 'storage', label: '存储管理', icon: 'i-heroicons-folder-open' },
   { id: 'about', label: '关于', icon: 'i-heroicons-information-circle' },
 ]
 
 const activeTab = ref('settings')
 const aiConfigRef = ref<InstanceType<typeof AIConfigTab> | null>(null)
-const cacheManageRef = ref<InstanceType<typeof CacheManageTab> | null>(null)
+const storageTabRef = ref<InstanceType<typeof StorageTab> | null>(null)
 
 // AI 配置变更回调
 function handleAIConfigChanged() {
@@ -44,8 +46,8 @@ watch(
   (newVal) => {
     if (newVal) {
       activeTab.value = 'settings' // 默认打开基础设置 Tab
-      // 刷新缓存管理
-      cacheManageRef.value?.refresh()
+      // 刷新存储管理（如果需要的话，或者在切换到 storage tab 时刷新）
+      storageTabRef.value?.refresh()
     }
   }
 )
@@ -54,8 +56,8 @@ watch(
 watch(
   () => activeTab.value,
   (newTab) => {
-    if (newTab === 'settings') {
-      cacheManageRef.value?.refresh()
+    if (newTab === 'storage') {
+      storageTabRef.value?.refresh()
     }
   }
 )
@@ -105,7 +107,12 @@ watch(
 
           <!-- 设置 Tab -->
           <div v-show="activeTab === 'settings'">
-            <CacheManageTab ref="cacheManageRef" />
+            <BasicSettingsTab />
+          </div>
+
+          <!-- 存储管理 Tab -->
+          <div v-show="activeTab === 'storage'">
+            <StorageTab ref="storageTabRef" />
           </div>
 
           <!-- 关于 Tab -->

@@ -30,7 +30,7 @@ const globalMaxMessages = computed({
   },
 })
 
-// 历史轮数限制
+// AI上下文限制
 const globalMaxHistoryRounds = computed({
   get: () => aiGlobalSettings.value.maxHistoryRounds ?? 10,
   set: (val: number) => {
@@ -106,18 +106,18 @@ function isActivePreset(presetId: string, chatType: 'group' | 'private'): boolea
           <div class="flex-1 pr-4">
             <p class="text-sm font-medium text-gray-900 dark:text-white">发送条数限制</p>
             <p class="text-xs text-gray-500 dark:text-gray-400">
-              每次发送给 AI 的最大消息条数，数值越大 Token 消耗越多
+              每次发送给 AI 的最大消息条数，数值越大 Token 消耗越多，回复也更准确
             </p>
           </div>
           <UInput v-model.number="globalMaxMessages" type="number" min="1" max="5000" class="w-24" />
         </div>
 
-        <!-- 历史轮数限制 -->
+        <!-- AI上下文限制 -->
         <div class="flex items-center justify-between">
           <div class="flex-1 pr-4">
-            <p class="text-sm font-medium text-gray-900 dark:text-white">历史轮数限制</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">AI上下文限制</p>
             <p class="text-xs text-gray-500 dark:text-gray-400">
-              保留最近的对话轮数（1轮 = 用户提问 + AI回复），防止上下文过长消耗 Token
+              每次对话保留最近的对话轮数（1轮 = 用户提问 + AI回复），防止上下文过长消耗 Token
             </p>
           </div>
           <UInput v-model.number="globalMaxHistoryRounds" type="number" min="1" max="50" class="w-24" />
