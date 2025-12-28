@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import AlertTips from './AlertTips.vue'
+import Tabs from '@/components/UI/Tabs.vue'
 
 // ============ 类型定义 ============
 
@@ -81,6 +82,11 @@ const modelOptions = computed(() => {
     value: m.id,
     description: m.description,
   }))
+})
+
+const selectedModel = computed(() => {
+  if (!currentProvider.value) return null
+  return currentProvider.value.models.find((m) => m.id === formData.value.model)
 })
 
 const canSave = computed(() => {
@@ -478,7 +484,7 @@ watch(
             <!-- 服务商选择 -->
             <div>
               <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">AI 服务商</label>
-              <UTabs
+              <Tabs
                 v-model="formData.provider"
                 :items="presetProviders.map((p) => ({ label: p.name, value: p.id }))"
                 class="w-full"
@@ -524,7 +530,13 @@ watch(
             <!-- 模型选择 -->
             <div>
               <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">模型</label>
-              <UTabs v-model="formData.model" :items="modelOptions" placeholder="选择模型" />
+              <Tabs v-model="formData.model" :items="modelOptions" />
+              <!-- 模型详情 -->
+              <div v-if="selectedModel" class="mt-3 rounded-md p-3 text-xs text-gray-500">
+                <p class="mb-1 text-gray-700 dark:text-gray-300">
+                  {{ selectedModel.id }}：{{ selectedModel.description }}
+                </p>
+              </div>
             </div>
           </template>
 
