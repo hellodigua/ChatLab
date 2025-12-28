@@ -467,6 +467,14 @@ watch(
 
           <!-- ========== 预设服务商配置 ========== -->
           <template v-if="configType === 'preset'">
+            <!-- 模型指南提示 -->
+            <AlertTips
+              v-if="aiTips.modelGuide?.show"
+              icon="i-heroicons-information-circle"
+              :content="aiTips.modelGuide?.content"
+              class="mb-4"
+            />
+
             <!-- 服务商选择 -->
             <div>
               <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">AI 服务商</label>
@@ -536,7 +544,7 @@ watch(
             <!-- 模型名称 -->
             <div>
               <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">模型名称</label>
-              <UInput v-model="formData.model" placeholder="如 qwen3、deepseek-r1" />
+              <UInput v-model="formData.model" placeholder="如 qwen3、deepseek-r1" class="w-full" />
               <p class="mt-1 text-xs text-gray-500">输入本地部署的模型名称</p>
             </div>
 
@@ -608,7 +616,7 @@ watch(
             <!-- API 端点 -->
             <div>
               <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">API 端点</label>
-              <UInput v-model="formData.baseUrl" placeholder="https://api.example.com/v1" />
+              <UInput v-model="formData.baseUrl" class="w-full" placeholder="https://api.example.com/v1" />
               <p class="mt-1 text-xs text-gray-500">兼容 OpenAI 格式的 API 端点</p>
             </div>
 
@@ -653,7 +661,7 @@ watch(
             <!-- 模型名称 -->
             <div>
               <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">模型名称</label>
-              <UInput v-model="formData.model" placeholder="如 gpt-4、claude-3" />
+              <UInput v-model="formData.model" class="w-full" placeholder="如 gpt-4、claude-3" />
               <p class="mt-1 text-xs text-gray-500">输入 API 支持的模型名称</p>
             </div>
           </template>

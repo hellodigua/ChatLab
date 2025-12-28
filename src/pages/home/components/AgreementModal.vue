@@ -97,7 +97,7 @@ function handleDisagree() {
             <UIcon name="i-heroicons-document-text" class="h-6 w-6 text-pink-600 dark:text-pink-400" />
           </div>
           <div>
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white">欢迎使用 ChatLab</h2>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">隐私政策与用户协议</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400">使用前请仔细阅读</p>
           </div>
         </div>

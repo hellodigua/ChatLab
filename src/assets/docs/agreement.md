@@ -24,8 +24,8 @@
 
 ## 4. 风险警告
 
-- **官方渠道**：请仅通过 [chatlab.fun](https://chatlab.fun) 或 [GitHub Release](https://github.com/ChatLab-Team/ChatLab/releases) 下载本软件。
-- **供应链风险**：本项目代码完全开源，任何人均可二次打包。他人分享的非官方版本可能被植入恶意代码，导致您的 API Token、聊天记录或本地数据泄露，请务必保持警惕。
+- **官方渠道**：请仅通过 [chatlab.fun](https://chatlab.fun) 或 [GitHub Release](https://github.com/hellodigua/ChatLab/releases) 下载本软件。
+- **供应链风险**：本项目代码完全开源，任何人均可二次打包。他人分享的非官方版本可能会植入恶意代码，导致您的 API Token、聊天记录或本地数据泄露，请务必保持警惕。
 - **结果准确性**：软件和 AI 生成的分析结果可能存在错误或"幻觉"，仅供参考，不应作为法律证据或正式决策依据。
 
 ## 5. 免责声明

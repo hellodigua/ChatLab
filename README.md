@@ -77,9 +77,9 @@ electron-fix start
 - 对于新功能，请先提交 Issue 进行讨论，**未经讨论直接提交的 PR 会被关闭**
 - 一个 PR 尽量只做一件事，若改动较大，请考虑拆分为多个独立的 PR
 
-## 用户协议
+## 隐私政策与用户协议
 
-使用本软件前，请阅读 [用户协议](./src/assets/docs/agreement.md)
+使用本软件前，请阅读 [隐私政策与用户协议](./src/assets/docs/agreement.md)
 
 ## License
 
