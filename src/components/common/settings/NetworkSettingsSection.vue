@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 // 代理配置
 const proxyEnabled = ref(false)
@@ -30,13 +33,13 @@ function validateProxyUrl(url: string): boolean {
   try {
     const parsed = new URL(url)
     if (!['http:', 'https:'].includes(parsed.protocol)) {
-      proxyUrlError.value = '仅支持 http:// 或 https:// 协议'
+      proxyUrlError.value = t('settings.basic.network.onlyHttpSupported')
       return false
     }
     proxyUrlError.value = ''
     return true
   } catch {
-    proxyUrlError.value = '请输入有效的代理地址，格式如 http://127.0.0.1:7890'
+    proxyUrlError.value = t('settings.basic.network.invalidProxyUrl')
     return false
   }
 }
@@ -48,7 +51,7 @@ async function saveProxyConfig() {
 
   // 如果启用了代理但没填地址
   if (proxyEnabled.value && !proxyUrl.value.trim()) {
-    proxyUrlError.value = '请输入代理地址'
+    proxyUrlError.value = t('settings.basic.network.enterProxyFirst')
     return
   }
 
@@ -65,11 +68,11 @@ async function saveProxyConfig() {
     })
 
     if (!result.success) {
-      proxyUrlError.value = result.error || '保存失败'
+      proxyUrlError.value = result.error || t('settings.basic.network.saveFailed')
     }
   } catch (error) {
     console.error('保存代理配置失败:', error)
-    proxyUrlError.value = '保存失败'
+    proxyUrlError.value = t('settings.basic.network.saveFailed')
   } finally {
     isSavingProxy.value = false
   }
@@ -106,7 +109,7 @@ async function handleProxyUrlBlur() {
 // 测试代理连接
 async function testProxyConnection() {
   if (!proxyUrl.value.trim()) {
-    proxyUrlError.value = '请先输入代理地址'
+    proxyUrlError.value = t('settings.basic.network.enterProxyFirst')
     return
   }
 
@@ -121,12 +124,12 @@ async function testProxyConnection() {
     const result = await window.networkApi.testProxyConnection(proxyUrl.value.trim())
     proxyTestResult.value = {
       success: result.success,
-      message: result.success ? '代理连接成功！' : result.error || '连接失败',
+      message: result.success ? t('settings.basic.network.connectionSuccess') : result.error || t('settings.basic.network.connectionFailed'),
     }
   } catch (error) {
     proxyTestResult.value = {
       success: false,
-      message: '测试失败：' + (error instanceof Error ? error.message : String(error)),
+      message: t('settings.basic.network.connectionFailed') + ': ' + (error instanceof Error ? error.message : String(error)),
     }
   } finally {
     isTestingProxy.value = false
@@ -143,14 +146,14 @@ onMounted(() => {
   <div>
     <h3 class="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
       <UIcon name="i-heroicons-globe-alt" class="h-4 w-4 text-cyan-500" />
-      网络设置
+      {{ t('settings.basic.network.title') }}
     </h3>
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
       <!-- 代理开关 -->
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-sm font-medium text-gray-900 dark:text-white">启用代理</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">通过代理服务器连接网络（适用于需要代理的网络环境）</p>
+          <p class="text-sm font-medium text-gray-900 dark:text-white">{{ t('settings.basic.network.enableProxy') }}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('settings.basic.network.enableProxyDesc') }}</p>
         </div>
         <USwitch :model-value="proxyEnabled" @update:model-value="toggleProxy" />
       </div>
@@ -158,10 +161,10 @@ onMounted(() => {
       <!-- 代理地址输入 -->
       <div v-if="proxyEnabled" class="mt-4 space-y-3">
         <div>
-          <label class="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300"> 代理地址 </label>
+          <label class="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300"> {{ t('settings.basic.network.proxyAddress') }} </label>
           <UInput
             v-model="proxyUrl"
-            placeholder="http://127.0.0.1:7890"
+            :placeholder="t('settings.basic.network.proxyPlaceholder')"
             :color="proxyUrlError ? 'error' : 'neutral'"
             size="sm"
             class="w-full"
@@ -171,7 +174,7 @@ onMounted(() => {
           <p v-if="proxyUrlError" class="mt-1 text-xs text-red-500">
             {{ proxyUrlError }}
           </p>
-          <p v-else class="mt-1 text-xs text-gray-400">支持 HTTP/HTTPS 代理，格式如：http://127.0.0.1:7890</p>
+          <p v-else class="mt-1 text-xs text-gray-400">{{ t('settings.basic.network.proxyHelp') }}</p>
         </div>
 
         <!-- 测试连接按钮和结果 -->
@@ -185,7 +188,7 @@ onMounted(() => {
             @click="testProxyConnection"
           >
             <UIcon name="i-heroicons-signal" class="mr-1 h-4 w-4" />
-            {{ isTestingProxy ? '测试中...' : '测试连接' }}
+            {{ isTestingProxy ? t('settings.basic.network.testing') : t('settings.basic.network.testConnection') }}
           </UButton>
 
           <div v-if="proxyTestResult" class="flex items-center gap-1.5">

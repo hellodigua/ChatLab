@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 // 缓存目录信息类型
 interface CacheDirectoryInfo {
@@ -97,14 +100,14 @@ defineExpose({
       <div>
         <h3 class="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
           <UIcon name="i-heroicons-folder-open" class="h-4 w-4 text-amber-500" />
-          本地存储管理
+          {{ t('settings.storage.title') }}
         </h3>
-        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">管理 ChatLab 在本地存储的数据文件</p>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t('settings.storage.description') }}</p>
       </div>
       <div class="flex items-center gap-2">
         <!-- 总大小 -->
         <div class="rounded-lg bg-gray-100 px-3 py-1.5 dark:bg-gray-800">
-          <span class="text-xs text-gray-500 dark:text-gray-400">总占用：</span>
+          <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('settings.storage.totalUsage') }}</span>
           <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ totalSizeFormatted }}</span>
         </div>
         <!-- 刷新按钮 -->
@@ -115,7 +118,7 @@ defineExpose({
     <!-- 加载状态 -->
     <div v-if="isLoading && !cacheInfo" class="flex items-center justify-center py-8">
       <UIcon name="i-heroicons-arrow-path" class="h-5 w-5 animate-spin text-gray-400" />
-      <span class="ml-2 text-sm text-gray-500">加载中...</span>
+      <span class="ml-2 text-sm text-gray-500">{{ t('settings.storage.loading') }}</span>
     </div>
 
     <!-- 缓存目录列表 -->
@@ -151,7 +154,7 @@ defineExpose({
             <div>
               <div class="flex items-center gap-2">
                 <h4 class="text-sm font-medium text-gray-900 dark:text-white">{{ dir.name }}</h4>
-                <UBadge v-if="!dir.exists" variant="soft" color="gray" size="xs">不存在</UBadge>
+                <UBadge v-if="!dir.exists" variant="soft" color="gray" size="xs">{{ t('settings.storage.notExist') }}</UBadge>
               </div>
               <p class="text-xs text-gray-500 dark:text-gray-400">{{ dir.description }}</p>
             </div>
@@ -161,7 +164,7 @@ defineExpose({
           <div class="flex items-center">
             <!-- 文件数和大小（固定宽度对齐） -->
             <div class="flex items-center gap-2 text-xs text-gray-400">
-              <span class="w-14 text-right">{{ dir.fileCount }} 文件</span>
+              <span class="w-14 text-right">{{ dir.fileCount }} {{ t('settings.storage.files') }}</span>
               <span class="w-16 text-right">{{ formatSize(dir.size) }}</span>
             </div>
             <!-- 操作按钮（固定宽度） -->
@@ -176,10 +179,10 @@ defineExpose({
                 :disabled="clearingId !== null"
                 @click="clearCache(dir.id)"
               >
-                清理
+                {{ t('settings.storage.clear') }}
               </UButton>
               <UButton icon="i-heroicons-folder-open" variant="ghost" size="xs" @click="openDirectory(dir.id)">
-                打开
+                {{ t('settings.storage.open') }}
               </UButton>
             </div>
           </div>
@@ -192,10 +195,10 @@ defineExpose({
       <div class="flex items-start gap-2">
         <UIcon name="i-heroicons-exclamation-triangle" class="h-4 w-4 shrink-0 text-amber-500" />
         <div class="text-xs text-amber-700 dark:text-amber-400">
-          <p class="font-medium">注意事项</p>
+          <p class="font-medium">{{ t('settings.storage.notes.title') }}</p>
           <ul class="mt-1 list-inside list-disc space-y-0.5 text-amber-600 dark:text-amber-500">
-            <li>日志文件主要用于排查BUG，可以安全清理</li>
-            <li>所有文件清理后无法恢复，请谨慎操作</li>
+            <li>{{ t('settings.storage.notes.logSafe') }}</li>
+            <li>{{ t('settings.storage.notes.noRecover') }}</li>
           </ul>
         </div>
       </div>

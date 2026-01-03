@@ -2,6 +2,7 @@
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import Sidebar from '@/components/common/Sidebar.vue'
 import SettingModal from '@/components/common/SettingModal.vue'
 import ScreenCaptureModal from '@/components/common/ScreenCaptureModal.vue'
@@ -10,6 +11,8 @@ import { useSessionStore } from '@/stores/session'
 import { useLayoutStore } from '@/stores/layout'
 import { usePromptStore } from '@/stores/prompt'
 import { useSettingsStore } from '@/stores/settings'
+
+const { t } = useI18n()
 
 const sessionStore = useSessionStore()
 const layoutStore = useLayoutStore()
@@ -38,7 +41,7 @@ onMounted(async () => {
         <div class="flex h-full w-full items-center justify-center">
           <div class="flex flex-col items-center justify-center text-center">
             <UIcon name="i-heroicons-arrow-path" class="h-8 w-8 animate-spin text-pink-500" />
-            <p class="mt-2 text-sm text-gray-500">加载中...</p>
+            <p class="mt-2 text-sm text-gray-500">{{ t('common.initializing') }}</p>
           </div>
         </div>
       </template>

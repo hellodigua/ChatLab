@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import { useSessionStore } from '@/stores/session'
 
+const { t } = useI18n()
 const sessionStore = useSessionStore()
 const { migrationCount, pendingMigrations, isMigrating } = storeToRefs(sessionStore)
 
@@ -19,7 +21,7 @@ async function handleMigration() {
     // 迁移完成后重新加载会话列表
     await sessionStore.loadSessions()
   } else {
-    migrationError.value = result.error || '迁移失败'
+    migrationError.value = result.error || t('home.migration.failed')
   }
 }
 
@@ -41,16 +43,16 @@ onMounted(async () => {
         >
           <UIcon name="i-heroicons-arrow-up-circle" class="h-7 w-7 text-blue-500" />
         </div>
-        <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">数据库需要升级</h3>
+        <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{ t('home.migration.title') }}</h3>
         <p class="mb-3 text-sm text-gray-500 dark:text-gray-400">
-          检测到 {{ migrationCount }} 个数据库需要升级以支持新功能。
+          {{ t('home.migration.description', { count: migrationCount }) }}
           <br />
-          升级过程通常只需几秒钟，不会丢失任何数据。
+          {{ t('home.migration.note') }}
         </p>
 
         <!-- 升级内容列表 -->
         <div v-if="pendingMigrations.length > 0" class="mb-4 rounded-lg bg-gray-50 p-3 text-left dark:bg-gray-800">
-          <p class="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">本次升级内容：</p>
+          <p class="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">{{ t('home.migration.upgradeContent') }}</p>
           <ul class="space-y-2">
             <li v-for="migration in pendingMigrations" :key="migration.version" class="flex items-start gap-2">
               <UIcon name="i-heroicons-check-circle" class="mt-0.5 h-4 w-4 shrink-0 text-green-500" />
@@ -74,7 +76,7 @@ onMounted(async () => {
         </div>
 
         <UButton color="primary" size="lg" :loading="isMigrating" class="w-full" @click="handleMigration">
-          {{ isMigrating ? '正在升级...' : '立即升级' }}
+          {{ isMigrating ? t('home.migration.upgrading') : t('home.migration.upgradeNow') }}
         </UButton>
       </div>
     </template>

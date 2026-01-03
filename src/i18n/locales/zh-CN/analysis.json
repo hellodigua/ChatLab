@@ -1,0 +1,31 @@
+{
+  "groupChat": {
+    "title": "群聊分析",
+    "loading": "加载分析数据...",
+    "loadError": "无法加载会话数据",
+    "description": "{dateRange}，{memberCount} 位成员共聊了 {messageCount} 条消息"
+  },
+  "privateChat": {
+    "title": "私聊分析",
+    "loading": "加载分析数据...",
+    "loadError": "无法加载会话数据",
+    "description": "{dateRange}，共 {messageCount} 条消息"
+  },
+  "tabs": {
+    "overview": "总览",
+    "ranking": "群榜单",
+    "groupQuotes": "群语录",
+    "quotes": "语录",
+    "members": "群成员",
+    "member": "成员",
+    "ai": "AI实验室"
+  },
+  "yearFilter": {
+    "allTime": "全部时间",
+    "year": "{year}年"
+  },
+  "tooltip": {
+    "chatViewer": "聊天记录查看器",
+    "screenshot": "截屏当前页面"
+  }
+}

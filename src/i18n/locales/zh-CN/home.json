@@ -1,0 +1,44 @@
+{
+  "title": "ChatLab",
+  "subtitle": "你的本地聊天分析实验室ヾ(*ゝω・*)ノ",
+  "features": {
+    "privacy": {
+      "title": "隐私至上",
+      "description": "聊天记录本地存储本地分析，保护你的隐私。"
+    },
+    "analysis": {
+      "title": "多维度分析",
+      "description": "从群榜单到群语录，全方位解读群聊数据，发现隐藏的趣味。"
+    },
+    "ai": {
+      "title": "AI 洞察",
+      "description": "内置 AI Agent，智能回答关于群聊的一切疑问，挖掘数据背后的趣事。"
+    }
+  },
+  "import": {
+    "dropHint": "松开鼠标导入文件",
+    "clickHint": "点击选择或拖拽聊天记录导入",
+    "progress": {
+      "detecting": "正在检测格式...",
+      "reading": "正在读取文件...",
+      "parsing": "正在解析消息...",
+      "saving": "正在写入数据库...",
+      "done": "导入完成",
+      "error": "导入中断"
+    },
+    "processed": "已处理 {count} 条消息",
+    "tutorial": "查看聊天记录导入教程 →",
+    "viewLog": "查看导入日志",
+    "cannotReadPath": "无法读取文件路径"
+  },
+  "migration": {
+    "title": "数据库需要升级",
+    "description": "检测到 {count} 个数据库需要升级以支持新功能。",
+    "note": "升级过程通常只需几秒钟，不会丢失任何数据。",
+    "upgradeContent": "本次升级内容：",
+    "upgradeNow": "立即升级",
+    "upgrading": "正在升级...",
+    "failed": "迁移失败"
+  }
+}
+

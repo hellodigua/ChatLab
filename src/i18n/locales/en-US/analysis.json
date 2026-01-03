@@ -1,0 +1,31 @@
+{
+  "groupChat": {
+    "title": "Group Chat Analysis",
+    "loading": "Loading analysis data...",
+    "loadError": "Unable to load session data",
+    "description": "{dateRange}, {memberCount} members chatted {messageCount} messages"
+  },
+  "privateChat": {
+    "title": "Private Chat Analysis",
+    "loading": "Loading analysis data...",
+    "loadError": "Unable to load session data",
+    "description": "{dateRange}, {messageCount} messages in total"
+  },
+  "tabs": {
+    "overview": "Overview",
+    "ranking": "Rankings",
+    "groupQuotes": "Quotes",
+    "quotes": "Quotes",
+    "members": "Members",
+    "member": "Members",
+    "ai": "AI Lab"
+  },
+  "yearFilter": {
+    "allTime": "All Time",
+    "year": "{year}"
+  },
+  "tooltip": {
+    "chatViewer": "Chat Record Viewer",
+    "screenshot": "Capture Current Page"
+  }
+}

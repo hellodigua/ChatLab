@@ -7,6 +7,7 @@
   "rename": "重命名",
   "close": "关闭",
   "loading": "加载中...",
+  "initializing": "初始化中...",
   "noData": "暂无数据",
   "error": {
     "general": "操作失败，请重试",

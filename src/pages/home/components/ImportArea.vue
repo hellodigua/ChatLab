@@ -3,8 +3,10 @@ import { FileDropZone } from '@/components/UI'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useSessionStore } from '@/stores/session'
 
+const { t } = useI18n()
 const sessionStore = useSessionStore()
 const { isImporting, importProgress } = storeToRefs(sessionStore)
 
@@ -44,7 +46,7 @@ async function handleClickImport() {
 // 处理文件拖拽
 async function handleFileDrop({ paths }: { files: File[]; paths: string[] }) {
   if (paths.length === 0) {
-    importError.value = '无法读取文件路径'
+    importError.value = t('home.import.cannotReadPath')
     return
   }
 
@@ -78,17 +80,17 @@ function getProgressText(): string {
   if (!importProgress.value) return ''
   switch (importProgress.value.stage) {
     case 'detecting':
-      return '正在检测格式...'
+      return t('home.import.progress.detecting')
     case 'reading':
-      return '正在读取文件...'
+      return t('home.import.progress.reading')
     case 'parsing':
-      return '正在解析消息...'
+      return t('home.import.progress.parsing')
     case 'saving':
-      return '正在写入数据库...'
+      return t('home.import.progress.saving')
     case 'done':
-      return '导入完成'
+      return t('home.import.progress.done')
     case 'error':
-      return '导入中断'
+      return t('home.import.progress.error')
     default:
       return ''
   }
@@ -99,7 +101,7 @@ function getProgressDetail(): string {
   const { messagesProcessed, totalBytes, bytesRead } = importProgress.value
 
   if (messagesProcessed && messagesProcessed > 0) {
-    return `已处理 ${messagesProcessed.toLocaleString()} 条消息`
+    return t('home.import.processed', { count: messagesProcessed.toLocaleString() })
   }
 
   if (totalBytes && bytesRead) {
@@ -160,7 +162,7 @@ function getProgressDetail(): string {
             <template v-else>
               <!-- 默认状态 -->
               <p class="text-lg font-semibold text-gray-900 dark:text-white">
-                {{ isDragOver ? '松开鼠标导入文件' : '点击选择或拖拽聊天记录导入' }}
+                {{ isDragOver ? t('home.import.dropHint') : t('home.import.clickHint') }}
               </p>
             </template>
           </div>
@@ -174,9 +176,9 @@ function getProgressDetail(): string {
         <UIcon name="i-heroicons-exclamation-circle" class="h-5 w-5 shrink-0" />
         <span>{{ importError }}</span>
       </div>
-      <UButton v-if="hasImportLog" size="xs" @click="openLatestImportLog">查看导入日志</UButton>
+      <UButton v-if="hasImportLog" size="xs" @click="openLatestImportLog">{{ t('home.import.viewLog') }}</UButton>
     </div>
 
-    <UButton @click="openTutorial">查看聊天记录导入教程 →</UButton>
+    <UButton @click="openTutorial">{{ t('home.import.tutorial') }}</UButton>
   </div>
 </template>

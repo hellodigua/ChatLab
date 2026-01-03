@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import { useLayoutStore } from '@/stores/layout'
 import DynamicIcon from './DynamicIcon.vue'
 import { defaultFooterLinks, type FooterLinkConfig } from '@/types/sidebar'
 
+const { t } = useI18n()
 const layoutStore = useLayoutStore()
 const { isSidebarCollapsed: isCollapsed } = storeToRefs(layoutStore)
 
@@ -58,7 +60,7 @@ onMounted(() => {
   <div class="px-4 py-2 dark:border-gray-800 space-y-2 mb-4">
     <!-- 帮助和反馈 -->
     <UPopover :popper="{ placement: 'right' }">
-      <UTooltip :text="isCollapsed ? '反馈和帮助' : ''" :popper="{ placement: 'right' }">
+      <UTooltip :text="isCollapsed ? t('sidebar.footer.helpAndFeedback') : ''" :popper="{ placement: 'right' }">
         <UButton
           :block="!isCollapsed"
           class="transition-all rounded-full hover:bg-gray-200/60 dark:hover:bg-gray-800 h-12 cursor-pointer"
@@ -67,7 +69,7 @@ onMounted(() => {
           variant="ghost"
         >
           <UIcon name="i-heroicons-information-circle" class="h-5 w-5 shrink-0" :class="[isCollapsed ? '' : 'mr-2']" />
-          <span v-if="!isCollapsed" class="truncate">反馈和帮助</span>
+          <span v-if="!isCollapsed" class="truncate">{{ t('sidebar.footer.helpAndFeedback') }}</span>
         </UButton>
       </UTooltip>
 
@@ -96,7 +98,7 @@ onMounted(() => {
     </UPopover>
 
     <!-- 设置 -->
-    <UTooltip :text="isCollapsed ? '设置' : ''" :popper="{ placement: 'right' }">
+    <UTooltip :text="isCollapsed ? t('sidebar.footer.settings') : ''" :popper="{ placement: 'right' }">
       <UButton
         :block="!isCollapsed"
         class="transition-all rounded-full hover:bg-gray-200/60 dark:hover:bg-gray-800 h-12 cursor-pointer"
@@ -106,7 +108,7 @@ onMounted(() => {
         @click="layoutStore.showSettingModal = true"
       >
         <UIcon name="i-heroicons-cog-6-tooth" class="h-5 w-5 shrink-0" :class="[isCollapsed ? '' : 'mr-2']" />
-        <span v-if="!isCollapsed" class="truncate">设置</span>
+        <span v-if="!isCollapsed" class="truncate">{{ t('sidebar.footer.settings') }}</span>
       </UButton>
     </UTooltip>
   </div>

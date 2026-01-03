@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 // 版本信息
-const appVersion = ref('加载中...')
+const appVersion = ref(t('common.loading'))
 const isCheckingUpdate = ref(false)
 
 // 匿名统计开关
@@ -14,7 +17,7 @@ async function loadAppVersion() {
     appVersion.value = await window.api.app.getVersion()
   } catch (error) {
     console.error('获取版本号失败:', error)
-    appVersion.value = '未知'
+    appVersion.value = t('settings.about.unknown')
   }
 }
 
@@ -60,7 +63,7 @@ onMounted(() => {
     <div>
       <h3 class="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
         <UIcon name="i-heroicons-information-circle" class="h-4 w-4 text-blue-500" />
-        关于 ChatLab
+        {{ t('settings.about.title') }}
       </h3>
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
         <div class="flex items-center justify-between">
@@ -72,8 +75,8 @@ onMounted(() => {
             </div>
             <div>
               <p class="text-sm font-semibold text-gray-900 dark:text-white">ChatLab</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">聊天记录分析工具</p>
-              <p class="mt-1 text-xs text-gray-400">版本 {{ appVersion }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('settings.about.description') }}</p>
+              <p class="mt-1 text-xs text-gray-400">{{ t('settings.about.version') }} {{ appVersion }}</p>
             </div>
           </div>
           <UButton
@@ -85,7 +88,7 @@ onMounted(() => {
             @click="checkUpdate"
           >
             <UIcon name="i-heroicons-arrow-path" class="mr-1 h-4 w-4" />
-            {{ isCheckingUpdate ? '检查中...' : '检查更新' }}
+            {{ isCheckingUpdate ? t('settings.about.checking') : t('settings.about.checkUpdate') }}
           </UButton>
         </div>
       </div>
@@ -95,14 +98,14 @@ onMounted(() => {
     <div>
       <h3 class="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
         <UIcon name="i-heroicons-shield-check" class="h-4 w-4 text-purple-500" />
-        隐私设置
+        {{ t('settings.about.privacy.title') }}
       </h3>
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm font-medium text-gray-900 dark:text-white">匿名使用统计</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ t('settings.about.privacy.analytics') }}</p>
             <p class="text-xs text-gray-500 dark:text-gray-400">
-              开启后，软件会收集版本号、操作系统版本等非敏感数据，用于帮助优化产品
+              {{ t('settings.about.privacy.analyticsDesc') }}
             </p>
           </div>
           <USwitch :model-value="analyticsEnabled" @update:model-value="toggleAnalytics" />

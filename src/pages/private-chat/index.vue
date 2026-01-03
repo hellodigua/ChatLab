@@ -2,6 +2,7 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import type { AnalysisSession, MessageType } from '@/types/base'
 import type { MemberActivity, HourlyActivity, DailyActivity } from '@/types/analysis'
 import { formatDateRange } from '@/utils'
@@ -14,6 +15,8 @@ import MemberTab from './components/MemberTab.vue'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import { useSessionStore } from '@/stores/session'
 import { useLayoutStore } from '@/stores/layout'
+
+const { t } = useI18n()
 
 const route = useRoute()
 const router = useRouter()
@@ -42,10 +45,10 @@ const isInitialLoad = ref(true) // 用于跳过初始加载时的 watch 触发�
 
 // Tab 配置 - 私聊有总览、语录、成员、AI实验室（趋势已合并到总览）
 const tabs = [
-  { id: 'overview', label: '总览', icon: 'i-heroicons-chart-pie' },
-  { id: 'quotes', label: '语录', icon: 'i-heroicons-chat-bubble-left-right' },
-  { id: 'member', label: '成员', icon: 'i-heroicons-user-group' },
-  { id: 'ai', label: 'AI实验室', icon: 'i-heroicons-sparkles' },
+  { id: 'overview', labelKey: 'analysis.tabs.overview', icon: 'i-heroicons-chart-pie' },
+  { id: 'quotes', labelKey: 'analysis.tabs.quotes', icon: 'i-heroicons-chat-bubble-left-right' },
+  { id: 'member', labelKey: 'analysis.tabs.member', icon: 'i-heroicons-user-group' },
+  { id: 'ai', labelKey: 'analysis.tabs.ai', icon: 'i-heroicons-sparkles' },
 ]
 
 const activeTab = ref((route.query.tab as string) || 'overview')
@@ -66,9 +69,9 @@ const timeFilter = computed(() => {
 
 // 年份选项
 const yearOptions = computed(() => {
-  const options = [{ label: '全部时间', value: 0 }]
+  const options = [{ label: t('analysis.yearFilter.allTime'), value: 0 }]
   for (const year of availableYears.value) {
-    options.push({ label: `${year}年`, value: year })
+    options.push({ label: t('analysis.yearFilter.year', { year }), value: year })
   }
   return options
 })
@@ -220,7 +223,7 @@ onMounted(() => {
     <div v-if="isInitialLoad" class="flex h-full items-center justify-center">
       <div class="flex flex-col items-center justify-center text-center">
         <UIcon name="i-heroicons-arrow-path" class="h-8 w-8 animate-spin text-pink-500" />
-        <p class="mt-2 text-sm text-gray-500">加载分析数据...</p>
+        <p class="mt-2 text-sm text-gray-500">{{ t('analysis.privateChat.loading') }}</p>
       </div>
     </div>
 
@@ -229,11 +232,14 @@ onMounted(() => {
       <!-- Header -->
       <PageHeader
         :title="session.name"
-        :description="`${dateRangeText}，共 ${selectedYear ? filteredMessageCount : session.messageCount} 条消息`"
+        :description="t('analysis.privateChat.description', {
+          dateRange: dateRangeText,
+          messageCount: selectedYear ? filteredMessageCount : session.messageCount
+        })"
         icon="i-heroicons-user"
       >
         <template #actions>
-          <UTooltip text="聊天记录查看器">
+          <UTooltip :text="t('analysis.tooltip.chatViewer')">
             <UButton
               icon="i-heroicons-chat-bubble-bottom-center-text"
               color="neutral"
@@ -242,7 +248,7 @@ onMounted(() => {
               @click="openChatRecordViewer"
             />
           </UTooltip>
-          <CaptureButton tooltip="截屏当前页面" />
+          <CaptureButton :tooltip="t('analysis.tooltip.screenshot')" />
         </template>
         <!-- Tabs -->
         <div class="mt-4 flex items-center justify-between gap-4">
@@ -259,7 +265,7 @@ onMounted(() => {
               @click="activeTab = tab.id"
             >
               <UIcon :name="tab.icon" class="h-4 w-4" />
-              <span class="whitespace-nowrap">{{ tab.label }}</span>
+              <span class="whitespace-nowrap">{{ t(tab.labelKey) }}</span>
             </button>
           </div>
           <!-- 年份选择器靠右（AI实验室时隐藏） -->
@@ -320,7 +326,7 @@ onMounted(() => {
 
     <!-- Empty State -->
     <div v-else class="flex h-full items-center justify-center">
-      <p class="text-gray-500">无法加载会话数据</p>
+      <p class="text-gray-500">{{ t('analysis.privateChat.loadError') }}</p>
     </div>
   </div>
 </template>

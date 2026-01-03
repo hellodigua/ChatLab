@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { SubTabs } from '@/components/UI'
 import ChatExplorer from './ai/ChatExplorer.vue'
 import SQLLabTab from './SQLLabTab.vue'
+
+const { t } = useI18n()
 
 // Props
 const props = defineProps<{
@@ -22,31 +25,25 @@ const isGroupChat = computed(() => route.name === 'group-chat')
 const groupOnlyTabs = ['mbti', 'cyber-friend', 'campus']
 
 // 所有子 Tab 配置
-const allSubTabs = [
-  { id: 'chat-explorer', label: '对话式探索', icon: 'i-heroicons-chat-bubble-left-ellipsis' },
-  { id: 'sql-lab', label: 'SQL实验室', icon: 'i-heroicons-command-line' },
+const allSubTabs = computed(() => [
+  { id: 'chat-explorer', label: t('chatExplorer'), icon: 'i-heroicons-chat-bubble-left-ellipsis' },
+  { id: 'sql-lab', label: t('sqlLab'), icon: 'i-heroicons-command-line' },
   {
     id: 'manual',
-    label: '筛选分析',
-    desc: '计划实现高级筛选功能，可以先按人/按时间/按搜索内容手动筛选，然后再进行AI分析',
+    label: t('filterAnalysis'),
+    desc: t('filterAnalysisDesc'),
     icon: 'i-heroicons-adjustments-horizontal',
   },
-  // {
-  //   id: 'campus',
-  //   label: '阵营9宫格',
-  //   desc: '和朋友们聊天的时候产生的一个有趣的想法，群里偶尔会很认真的讨论某个话题，那么是不是可以让AI分析聊天记录，然后针对这个话题，让AI用 守序善良/绝对中立/守序邪恶/混乱邪恶 这样的九宫格把群友划分到对应的格子里面',
-  //   icon: 'i-heroicons-squares-2x2',
-  // },
-]
+])
 
 // 根据聊天类型过滤显示的子 Tab
 const subTabs = computed(() => {
   if (isGroupChat.value) {
     // 群聊显示所有 Tab
-    return allSubTabs
+    return allSubTabs.value
   }
   // 私聊过滤掉群聊专属功能
-  return allSubTabs.filter((tab) => !groupOnlyTabs.includes(tab.id))
+  return allSubTabs.value.filter((tab) => !groupOnlyTabs.includes(tab.id))
 })
 
 const activeSubTab = ref('chat-explorer')
@@ -95,14 +92,14 @@ defineExpose({
             <div class="text-center">
               <UIcon :name="subTabs.find((t) => t.id === activeSubTab)?.icon" class="mx-auto h-12 w-12 text-gray-400" />
               <p class="mt-3 text-sm font-medium text-gray-600 dark:text-gray-400">
-                {{ subTabs.find((t) => t.id === activeSubTab)?.label }}功能开发中
+                {{ t('featureInDev', { name: subTabs.find((tab) => tab.id === activeSubTab)?.label || '' }) }}
               </p>
               <p class="mt-1 max-w-md px-4 text-sm text-gray-500">
-                {{ subTabs.find((t) => t.id === activeSubTab)?.desc || '敬请期待...' }}
+                {{ subTabs.find((tab) => tab.id === activeSubTab)?.desc || t('comingSoon') }}
               </p>
 
               <div class="mt-8 flex items-center justify-center gap-1 text-xs text-gray-400">
-                <span>功能上线通知，欢迎关注我的小红书</span>
+                <span>{{ t('followNotice') }}</span>
                 <UButton
                   to="https://www.xiaohongshu.com/user/profile/6841741e000000001d0091b4"
                   target="_blank"
@@ -135,3 +132,26 @@ defineExpose({
   opacity: 0;
 }
 </style>
+
+<i18n>
+{
+  "zh-CN": {
+    "chatExplorer": "对话式探索",
+    "sqlLab": "SQL实验室",
+    "filterAnalysis": "筛选分析",
+    "filterAnalysisDesc": "计划实现高级筛选功能，可以先按人/按时间/按搜索内容手动筛选，然后再进行AI分析",
+    "featureInDev": "{name}功能开发中",
+    "comingSoon": "敬请期待...",
+    "followNotice": "功能上线通知，欢迎关注我的小红书"
+  },
+  "en-US": {
+    "chatExplorer": "Chat Explorer",
+    "sqlLab": "SQL Lab",
+    "filterAnalysis": "Filter Analysis",
+    "filterAnalysisDesc": "Advanced filtering feature is planned. You can filter by person, time, or search content before AI analysis",
+    "featureInDev": "{name} is in development",
+    "comingSoon": "Coming soon...",
+    "followNotice": "Follow me on Xiaohongshu for updates"
+  }
+}
+</i18n>

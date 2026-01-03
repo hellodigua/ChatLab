@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { FileDropZone } from '@/components/UI'
+
+const { t } = useI18n()
 
 interface FileInfo {
   id: string
@@ -353,13 +356,9 @@ const file2Name = computed(() => files.value[1]?.name || '文件 2')
       <div class="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
         <!-- 标题 -->
         <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
-          <h2 class="font-semibold text-gray-900 dark:text-white">群工局：合并聊天记录</h2>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            将多个聊天记录文件合并为一个，支持 JSON、JSONL、TXT 等多种格式
-          </p>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            该工具的用途是，如果你们群有多份聊天记录，每个人的聊天记录都不一样，可以试试使用这个工具进行合并，合并后将会得到该群最完整的聊天记录
-          </p>
+          <h2 class="font-semibold text-gray-900 dark:text-white">{{ t('title') }}</h2>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ t('description') }}</p>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ t('usageHint') }}</p>
         </div>
 
         <!-- 文件上传区域 -->
@@ -382,21 +381,21 @@ const file2Name = computed(() => files.value[1]?.name || '文件 2')
                     v-if="file.fileSize && file.fileSize > 50 * 1024 * 1024"
                     class="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
                   >
-                    大文件
+                    {{ t('largeFile') }}
                   </span>
                 </div>
                 <p class="text-xs text-gray-500 dark:text-gray-400">
                   <span :class="getStatusColor(file.status)">
                     {{
                       file.status === 'pending'
-                        ? file.progressMessage || '解析中...'
+                        ? file.progressMessage || t('parsing')
                         : file.status === 'error'
                           ? file.error
                           : file.format
                     }}
                   </span>
                   <template v-if="file.status === 'parsed'">
-                    · {{ file.messageCount.toLocaleString() }} 条消息
+                    · {{ t('messagesCount', { count: file.messageCount.toLocaleString() }) }}
                     <span v-if="file.fileSize" class="text-gray-400">· {{ formatFileSize(file.fileSize) }}</span>
                   </template>
                 </p>
@@ -435,9 +434,9 @@ const file2Name = computed(() => files.value[1]?.name || '文件 2')
                   :class="{ 'text-primary-500': isDragOver }"
                 />
                 <p class="mt-2 text-sm font-medium text-gray-600 dark:text-gray-400">
-                  {{ isDragOver ? '松开以添加文件' : '拖拽文件到这里，或点击选择' }}
+                  {{ isDragOver ? t('dropToAdd') : t('dragOrClick') }}
                 </p>
-                <p class="mt-1 text-xs text-gray-400">支持 .json、.jsonl 和 .txt 格式</p>
+                <p class="mt-1 text-xs text-gray-400">{{ t('supportedFormats') }}</p>
               </div>
             </template>
           </FileDropZone>
@@ -445,27 +444,27 @@ const file2Name = computed(() => files.value[1]?.name || '文件 2')
 
         <!-- 输出设置 -->
         <div v-if="files.length > 0" class="border-t border-gray-200 p-5 dark:border-gray-800">
-          <h3 class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">输出设置</h3>
+          <h3 class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('outputSettings') }}</h3>
 
           <div class="space-y-3">
             <!-- 名称 -->
             <div>
-              <label class="mb-1 block text-xs text-gray-500 dark:text-gray-400">群聊名称</label>
-              <UInput v-model="outputName" placeholder="合并的聊天记录" />
+              <label class="mb-1 block text-xs text-gray-500 dark:text-gray-400">{{ t('chatName') }}</label>
+              <UInput v-model="outputName" :placeholder="t('mergedChatRecords')" />
             </div>
 
             <!-- 输出目录 -->
             <div>
-              <label class="mb-1 block text-xs text-gray-500 dark:text-gray-400">输出目录（可选）</label>
+              <label class="mb-1 block text-xs text-gray-500 dark:text-gray-400">{{ t('outputDir') }}</label>
               <div class="flex gap-2">
-                <UInput v-model="outputDir" placeholder="默认保存到文档/ChatLab/merged/" class="flex-1" readonly />
-                <UButton icon="i-heroicons-folder" variant="soft" @click="selectOutputDir">选择</UButton>
+                <UInput v-model="outputDir" :placeholder="t('defaultOutputPath')" class="flex-1" readonly />
+                <UButton icon="i-heroicons-folder" variant="soft" @click="selectOutputDir">{{ t('select') }}</UButton>
               </div>
             </div>
 
             <!-- 输出格式 -->
             <div>
-              <label class="mb-1 block text-xs text-gray-500 dark:text-gray-400">输出格式</label>
+              <label class="mb-1 block text-xs text-gray-500 dark:text-gray-400">{{ t('outputFormat') }}</label>
               <div class="flex gap-3">
                 <label
                   v-for="opt in formatOptions"
@@ -495,7 +494,7 @@ const file2Name = computed(() => files.value[1]?.name || '文件 2')
         >
           <div class="flex items-center justify-between text-sm">
             <span class="text-gray-500 dark:text-gray-400">
-              共 {{ files.length }} 个文件，约 {{ totalMessages.toLocaleString() }} 条消息
+              {{ t('fileSummary', { fileCount: files.length, messageCount: totalMessages.toLocaleString() }) }}
             </span>
           </div>
         </div>
@@ -503,7 +502,7 @@ const file2Name = computed(() => files.value[1]?.name || '文件 2')
         <!-- 操作按钮 -->
         <div class="flex justify-end gap-3 border-t border-gray-200 px-5 py-4 dark:border-gray-800">
           <UButton :disabled="!canMerge || isMerging" :loading="isMerging" color="primary" @click="doMerge">
-            合并并导出
+            {{ t('mergeAndExport') }}
           </UButton>
         </div>
       </div>
@@ -518,14 +517,12 @@ const file2Name = computed(() => files.value[1]?.name || '文件 2')
             <div>
               <div class="flex items-center gap-2">
                 <UIcon name="i-heroicons-exclamation-triangle" class="h-5 w-5 text-amber-500" />
-                <h2 class="font-semibold text-gray-900 dark:text-white">发现 {{ conflicts.length }} 个格式差异</h2>
+                <h2 class="font-semibold text-gray-900 dark:text-white">{{ t('conflictsFound', { count: conflicts.length }) }}</h2>
               </div>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                同一条消息在不同文件中的格式可能有差异，请选择保留哪个版本
-              </p>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ t('conflictDescription') }}</p>
             </div>
             <div class="text-sm text-gray-500">
-              已选择
+              {{ t('selectedCount') }}
               <span class="font-medium text-primary-600">{{ resolvedCount }}</span>
               / {{ conflicts.length }}
             </div>
@@ -536,10 +533,10 @@ const file2Name = computed(() => files.value[1]?.name || '文件 2')
         <div
           class="flex flex-wrap items-center gap-2 border-b border-gray-200 bg-gray-50 px-5 py-3 dark:border-gray-800 dark:bg-gray-800/50"
         >
-          <span class="text-sm text-gray-600 dark:text-gray-400">一键选择：</span>
-          <UButton size="xs" variant="soft" @click="batchSelectAll('keep1')">全部保留「{{ file1Name }}」</UButton>
-          <UButton size="xs" variant="soft" @click="batchSelectAll('keep2')">全部保留「{{ file2Name }}」</UButton>
-          <UButton size="xs" variant="soft" @click="batchSelectAll('keepBoth')">全部保留两者</UButton>
+          <span class="text-sm text-gray-600 dark:text-gray-400">{{ t('batchSelect') }}</span>
+          <UButton size="xs" variant="soft" @click="batchSelectAll('keep1')">{{ t('keepAll', { name: file1Name }) }}</UButton>
+          <UButton size="xs" variant="soft" @click="batchSelectAll('keep2')">{{ t('keepAll', { name: file2Name }) }}</UButton>
+          <UButton size="xs" variant="soft" @click="batchSelectAll('keepBoth')">{{ t('keepBothAll') }}</UButton>
         </div>
 
         <!-- 冲突列表 -->
@@ -610,7 +607,7 @@ const file2Name = computed(() => files.value[1]?.name || '文件 2')
               ]"
               @click="conflict.resolution = 'keepBoth'"
             >
-              <span class="text-sm text-gray-600 dark:text-gray-400">保留两者（作为两条独立消息）</span>
+              <span class="text-sm text-gray-600 dark:text-gray-400">{{ t('keepBothOption') }}</span>
             </div>
           </div>
         </div>
@@ -663,7 +660,7 @@ const file2Name = computed(() => files.value[1]?.name || '文件 2')
         <div class="flex items-center justify-between border-t border-gray-200 px-5 py-4 dark:border-gray-800">
           <UButton variant="ghost" @click="currentStep = 'select'">
             <UIcon name="i-heroicons-arrow-left" class="mr-1 h-4 w-4" />
-            返回
+            {{ t('back') }}
           </UButton>
           <UButton
             color="primary"
@@ -671,7 +668,7 @@ const file2Name = computed(() => files.value[1]?.name || '文件 2')
             :loading="isMerging"
             @click="resolveConflictsAndMerge"
           >
-            合并并导出
+            {{ t('mergeAndExport') }}
           </UButton>
         </div>
       </div>
@@ -685,14 +682,14 @@ const file2Name = computed(() => files.value[1]?.name || '文件 2')
         >
           <UIcon name="i-heroicons-check" class="h-8 w-8 text-green-600 dark:text-green-400" />
         </div>
-        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">合并完成！</h2>
-        <p class="mt-2 text-gray-500 dark:text-gray-400">聊天记录已成功合并并导出</p>
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">{{ t('mergeComplete') }}</h2>
+        <p class="mt-2 text-gray-500 dark:text-gray-400">{{ t('mergeSuccessMessage') }}</p>
         <div class="mt-6 flex justify-center gap-3">
           <UButton color="primary" @click="openOutputFolder">
             <UIcon name="i-heroicons-folder-open" class="mr-1 h-4 w-4" />
-            打开文件夹
+            {{ t('openFolder') }}
           </UButton>
-          <UButton @click="reset">继续合并</UButton>
+          <UButton @click="reset">{{ t('continueMerge') }}</UButton>
         </div>
       </div>
     </template>
@@ -706,15 +703,88 @@ const file2Name = computed(() => files.value[1]?.name || '文件 2')
               <UIcon name="i-heroicons-exclamation-triangle" class="h-5 w-5 text-red-600 dark:text-red-400" />
             </div>
             <div class="flex-1">
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">合并失败</h3>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('mergeFailed') }}</h3>
               <p class="mt-2 whitespace-pre-line text-sm text-gray-600 dark:text-gray-400">{{ errorMessage }}</p>
             </div>
           </div>
           <div class="mt-6 flex justify-end">
-            <UButton @click="showErrorModal = false">我知道了</UButton>
+            <UButton @click="showErrorModal = false">{{ t('gotIt') }}</UButton>
           </div>
         </div>
       </template>
     </UModal>
   </div>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "title": "群工局：合并聊天记录",
+    "description": "将多个聊天记录文件合并为一个，支持 JSON、JSONL、TXT 等多种格式",
+    "usageHint": "该工具的用途是，如果你们群有多份聊天记录，每个人的聊天记录都不一样，可以试试使用这个工具进行合并，合并后将会得到该群最完整的聊天记录",
+    "parsing": "解析中...",
+    "messagesCount": "{count} 条消息",
+    "dropToAdd": "松开以添加文件",
+    "dragOrClick": "拖拽文件到这里，或点击选择",
+    "supportedFormats": "支持 .json、.jsonl 和 .txt 格式",
+    "outputSettings": "输出设置",
+    "chatName": "群聊名称",
+    "mergedChatRecords": "合并的聊天记录",
+    "outputDir": "输出目录（可选）",
+    "defaultOutputPath": "默认保存到文档/ChatLab/merged/",
+    "select": "选择",
+    "outputFormat": "输出格式",
+    "fileSummary": "共 {fileCount} 个文件，约 {messageCount} 条消息",
+    "mergeAndExport": "合并并导出",
+    "conflictsFound": "发现 {count} 个格式差异",
+    "conflictDescription": "同一条消息在不同文件中的格式可能有差异，请选择保留哪个版本",
+    "selectedCount": "已选择",
+    "batchSelect": "一键选择：",
+    "keepAll": "全部保留「{name}」",
+    "keepBothAll": "全部保留两者",
+    "keepBothOption": "保留两者（作为两条独立消息）",
+    "back": "返回",
+    "mergeComplete": "合并完成！",
+    "mergeSuccessMessage": "聊天记录已成功合并并导出",
+    "openFolder": "打开文件夹",
+    "continueMerge": "继续合并",
+    "mergeFailed": "合并失败",
+    "gotIt": "我知道了",
+    "largeFile": "大文件"
+  },
+  "en-US": {
+    "title": "Merge Chat Records",
+    "description": "Merge multiple chat record files into one, supporting JSON, JSONL, TXT and more formats",
+    "usageHint": "If your group has multiple chat records from different people, you can use this tool to merge them and get the most complete chat history",
+    "parsing": "Parsing...",
+    "messagesCount": "{count} messages",
+    "dropToAdd": "Drop to add files",
+    "dragOrClick": "Drag files here or click to select",
+    "supportedFormats": "Supports .json, .jsonl and .txt formats",
+    "outputSettings": "Output Settings",
+    "chatName": "Chat Name",
+    "mergedChatRecords": "Merged Chat Records",
+    "outputDir": "Output Directory (Optional)",
+    "defaultOutputPath": "Default: Documents/ChatLab/merged/",
+    "select": "Select",
+    "outputFormat": "Output Format",
+    "fileSummary": "{fileCount} files, ~{messageCount} messages",
+    "mergeAndExport": "Merge & Export",
+    "conflictsFound": "Found {count} Format Differences",
+    "conflictDescription": "The same message may have different formats in different files. Please choose which version to keep",
+    "selectedCount": "Selected",
+    "batchSelect": "Quick select:",
+    "keepAll": "Keep all from {name}",
+    "keepBothAll": "Keep both all",
+    "keepBothOption": "Keep both (as separate messages)",
+    "back": "Back",
+    "mergeComplete": "Merge Complete!",
+    "mergeSuccessMessage": "Chat records have been successfully merged and exported",
+    "openFolder": "Open Folder",
+    "continueMerge": "Continue Merging",
+    "mergeFailed": "Merge Failed",
+    "gotIt": "Got it",
+    "largeFile": "Large File"
+  }
+}
+</i18n>

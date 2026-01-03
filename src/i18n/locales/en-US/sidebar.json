@@ -23,6 +23,10 @@
     "collapse": "Collapse sidebar",
     "hint": "Right-click to rename or delete"
   },
-  "sessionInfo": "{count} messages · {time}"
+  "sessionInfo": "{count} messages · {time}",
+  "footer": {
+    "helpAndFeedback": "Help & Feedback",
+    "settings": "Settings"
+  }
 }
 

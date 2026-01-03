@@ -1,0 +1,44 @@
+{
+  "title": "ChatLab",
+  "subtitle": "Your local chat analysis lab ヾ(*ゝω・*)ノ",
+  "features": {
+    "privacy": {
+      "title": "Privacy First",
+      "description": "Chat records stored and analyzed locally, protecting your privacy."
+    },
+    "analysis": {
+      "title": "Multi-dimensional Analysis",
+      "description": "From rankings to quotes, comprehensive insights into chat data."
+    },
+    "ai": {
+      "title": "AI Insights",
+      "description": "Built-in AI Agent to answer all questions about your chats and discover hidden stories."
+    }
+  },
+  "import": {
+    "dropHint": "Drop to import file",
+    "clickHint": "Click to select or drag chat records to import",
+    "progress": {
+      "detecting": "Detecting format...",
+      "reading": "Reading file...",
+      "parsing": "Parsing messages...",
+      "saving": "Saving to database...",
+      "done": "Import complete",
+      "error": "Import interrupted"
+    },
+    "processed": "{count} messages processed",
+    "tutorial": "View import tutorial →",
+    "viewLog": "View import log",
+    "cannotReadPath": "Cannot read file path"
+  },
+  "migration": {
+    "title": "Database upgrade required",
+    "description": "{count} database(s) need to be upgraded for new features.",
+    "note": "The upgrade usually takes only a few seconds and won't lose any data.",
+    "upgradeContent": "Upgrade content:",
+    "upgradeNow": "Upgrade Now",
+    "upgrading": "Upgrading...",
+    "failed": "Migration failed"
+  }
+}
+

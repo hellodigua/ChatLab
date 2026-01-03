@@ -14,8 +14,113 @@
     },
     "appearance": {
       "title": "Appearance",
-      "description": "Choose theme mode"
+      "themeMode": "Theme Mode",
+      "auto": "System",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "screenshot": {
+      "title": "Screenshot",
+      "mobileAdapt": "Mobile Adaptation",
+      "mobileAdaptDesc": "Auto-scale width when taking screenshots for mobile viewing"
+    },
+    "network": {
+      "title": "Network",
+      "enableProxy": "Enable Proxy",
+      "enableProxyDesc": "Connect via proxy server (for network environments requiring proxy)",
+      "proxyAddress": "Proxy Address",
+      "proxyPlaceholder": "http://127.0.0.1:7890",
+      "proxyHelp": "Supports HTTP/HTTPS proxy, e.g.: http://127.0.0.1:7890",
+      "testConnection": "Test Connection",
+      "testing": "Testing...",
+      "connectionSuccess": "Proxy connection successful!",
+      "connectionFailed": "Connection failed",
+      "enterProxyFirst": "Please enter proxy address first",
+      "invalidProxyUrl": "Please enter a valid proxy address, e.g. http://127.0.0.1:7890",
+      "onlyHttpSupported": "Only http:// or https:// protocols are supported",
+      "saveFailed": "Save failed"
+    }
+  },
+  "aiConfig": {
+    "loading": "Loading...",
+    "inUse": "Active",
+    "defaultModel": "Default Model",
+    "localService": "Local Service",
+    "customEndpoint": "Custom Endpoint",
+    "edit": "Edit",
+    "delete": "Delete",
+    "empty": {
+      "title": "No AI service configured",
+      "description": "Add a configuration to start using AI features"
+    },
+    "addConfig": "Add Configuration",
+    "maxConfigs": "Maximum configurations reached (10)",
+    "modal": {
+      "addTitle": "Add New Configuration",
+      "editTitle": "Edit Configuration",
+      "configType": {
+        "preset": "Official API",
+        "presetDesc": "DeepSeek, Gemini, etc.",
+        "local": "Local Service",
+        "localDesc": "Ollama, etc.",
+        "compatible": "OpenAI Compatible",
+        "compatibleDesc": "Custom Endpoint"
+      },
+      "configName": "Configuration Name",
+      "configNameOptional": " (Optional)",
+      "configNamePlaceholderPreset": "Leave empty to use provider name",
+      "configNamePlaceholderOther": "Leave empty to use API endpoint",
+      "provider": "AI Provider",
+      "apiKey": "API Key",
+      "apiKeyPlaceholderNew": "Enter your API Key",
+      "apiKeyPlaceholderEdit": "Enter new API Key (leave empty to keep current)",
+      "validate": "Validate",
+      "validationSuccess": "Connection validated successfully",
+      "validationFailed": "Validation failed: ",
+      "model": "Model",
+      "apiEndpoint": "API Endpoint",
+      "modelName": "Model Name",
+      "modelNamePlaceholderLocal": "e.g. qwen3, deepseek-r1",
+      "modelNamePlaceholderCompatible": "e.g. gpt-4, claude-3",
+      "modelNameHelp": "Enter the locally deployed model name",
+      "modelNameHelpCompatible": "Enter the model name supported by the API",
+      "disableThinking": "Disable Thinking Mode",
+      "disableThinkingDesc": "For models like Qwen3, DeepSeek-R1; uses standard tool calling format when disabled",
+      "advancedOptions": "Advanced Options",
+      "apiKeyOptional": " (Optional)",
+      "apiKeyLocalHelp": "Enter here if service requires authentication",
+      "localNoKeyNeeded": "Usually not needed for local services",
+      "compatibleEndpointHelp": "OpenAI-compatible API endpoint",
+      "add": "Add",
+      "save": "Save"
+    }
+  },
+  "storage": {
+    "title": "Local Storage Management",
+    "description": "Manage data files stored locally by ChatLab",
+    "totalUsage": "Total: ",
+    "loading": "Loading...",
+    "files": "files",
+    "notExist": "Not exist",
+    "clear": "Clear",
+    "open": "Open",
+    "notes": {
+      "title": "Notes",
+      "logSafe": "Log files are mainly for debugging and can be safely cleared",
+      "noRecover": "All cleared files cannot be recovered, please proceed with caution"
+    }
+  },
+  "about": {
+    "title": "About ChatLab",
+    "description": "Chat records analysis tool",
+    "version": "Version",
+    "checkUpdate": "Check for Updates",
+    "checking": "Checking...",
+    "unknown": "Unknown",
+    "privacy": {
+      "title": "Privacy Settings",
+      "analytics": "Anonymous Usage Statistics",
+      "analyticsDesc": "When enabled, the app collects non-sensitive data like version number and OS version to help improve the product"
     }
   }
 }
-

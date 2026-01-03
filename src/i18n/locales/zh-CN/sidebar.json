@@ -23,6 +23,10 @@
     "collapse": "收起侧边栏",
     "hint": "右键可删除或重命名聊天记录"
   },
-  "sessionInfo": "{count} 条消息 · {time}"
+  "sessionInfo": "{count} 条消息 · {time}",
+  "footer": {
+    "helpAndFeedback": "反馈和帮助",
+    "settings": "设置"
+  }
 }
 

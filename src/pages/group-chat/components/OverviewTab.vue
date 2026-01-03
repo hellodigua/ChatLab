@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { AnalysisSession, MessageType } from '@/types/base'
 import { getMessageTypeName } from '@/types/base'
 import type {
@@ -18,6 +19,8 @@ import OverviewStatCards from '@/components/analysis/Overview/OverviewStatCards.
 import OverviewIdentityCard from '@/components/analysis/Overview/OverviewIdentityCard.vue'
 import ActivityTimeDistribution from '@/components/analysis/Overview/ActivityTimeDistribution.vue'
 import DailyTrendCard from '@/components/analysis/Overview/DailyTrendCard.vue'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   session: AnalysisSession
@@ -76,7 +79,7 @@ const memberChartData = computed<DoughnutChartData>(() => {
   const values = top10.map((m) => m.messageCount)
 
   if (othersCount > 0) {
-    labels.push('其他人')
+    labels.push(t('others'))
     values.push(othersCount)
   }
 
@@ -155,14 +158,14 @@ watch(
     <!-- 图表区域：消息类型 & 成员分布 -->
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <!-- 消息类型分布 -->
-      <SectionCard title="消息类型分布" :show-divider="false">
+      <SectionCard :title="t('messageTypeDistribution')" :show-divider="false">
         <div class="p-5">
           <DoughnutChart :data="typeChartData" :height="256" />
         </div>
       </SectionCard>
 
       <!-- 成员水群分布 -->
-      <SectionCard title="成员水群分布" :show-divider="false">
+      <SectionCard :title="t('memberDistribution')" :show-divider="false">
         <div class="p-5">
           <DoughnutChart :data="memberChartData" :height="256" />
         </div>
@@ -184,3 +187,18 @@ watch(
     <DailyTrendCard :daily-activity="dailyActivity" :daily-chart-data="dailyChartData" />
   </div>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "messageTypeDistribution": "消息类型分布",
+    "memberDistribution": "成员水群分布",
+    "others": "其他人"
+  },
+  "en-US": {
+    "messageTypeDistribution": "Message Type Distribution",
+    "memberDistribution": "Member Activity Distribution",
+    "others": "Others"
+  }
+}
+</i18n>

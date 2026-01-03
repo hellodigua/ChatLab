@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AIConfigTab from './settings/AIConfigTab.vue'
 import AIPromptConfigTab from './settings/AIPromptConfigTab.vue'
 import BasicSettingsTab from './settings/BasicSettingsTab.vue'
 import StorageTab from './settings/StorageTab.vue'
 import AboutTab from './settings/AboutTab.vue'
+
+const { t } = useI18n()
 
 // Props
 const props = defineProps<{
@@ -17,14 +20,14 @@ const emit = defineEmits<{
   'ai-config-saved': []
 }>()
 
-// Tab 配置
-const tabs = [
-  { id: 'settings', label: '基础设置', icon: 'i-heroicons-cog-6-tooth' },
-  { id: 'ai-config', label: '模型配置', icon: 'i-heroicons-sparkles' },
-  { id: 'ai-prompt', label: 'AI 对话配置', icon: 'i-heroicons-document-text' },
-  { id: 'storage', label: '存储管理', icon: 'i-heroicons-folder-open' },
-  { id: 'about', label: '关于', icon: 'i-heroicons-information-circle' },
-]
+// Tab 配置（使用 computed 以便语言切换时自动更新）
+const tabs = computed(() => [
+  { id: 'settings', label: t('settings.tabs.basic'), icon: 'i-heroicons-cog-6-tooth' },
+  { id: 'ai-config', label: t('settings.tabs.aiConfig'), icon: 'i-heroicons-sparkles' },
+  { id: 'ai-prompt', label: t('settings.tabs.aiPrompt'), icon: 'i-heroicons-document-text' },
+  { id: 'storage', label: t('settings.tabs.storage'), icon: 'i-heroicons-folder-open' },
+  { id: 'about', label: t('settings.tabs.about'), icon: 'i-heroicons-information-circle' },
+])
 
 const activeTab = ref('settings')
 const aiConfigRef = ref<InstanceType<typeof AIConfigTab> | null>(null)
@@ -69,7 +72,7 @@ watch(
       <div class="p-6">
         <!-- Header -->
         <div class="mb-4 flex items-center justify-between">
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">全局设置</h2>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('settings.title') }}</h2>
           <UButton icon="i-heroicons-x-mark" variant="ghost" size="sm" @click="closeModal" />
         </div>
 

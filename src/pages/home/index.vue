@@ -1,34 +1,38 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AgreementModal from './components/AgreementModal.vue'
 import MigrationModal from './components/MigrationModal.vue'
 import ImportArea from './components/ImportArea.vue'
 
-const features = [
+const { t } = useI18n()
+
+const features = computed(() => [
   {
     icon: '🔒',
-    title: '隐私至上',
-    desc: '聊天记录本地存储本地分析，保护你的隐私。',
+    title: t('home.features.privacy.title'),
+    desc: t('home.features.privacy.description'),
     color: 'text-green-500',
     bg: 'bg-green-50',
     delay: '200ms',
   },
   {
     icon: '📊',
-    title: '多维度分析',
-    desc: '从群榜单到群语录，全方位解读群聊数据，发现隐藏的趣味。',
+    title: t('home.features.analysis.title'),
+    desc: t('home.features.analysis.description'),
     color: 'text-blue-500',
     bg: 'bg-blue-50',
     delay: '100ms',
   },
   {
     icon: '🤖',
-    title: 'AI 洞察',
-    desc: '内置 AI Agent，智能回答关于群聊的一切疑问，挖掘数据背后的趣事。',
+    title: t('home.features.ai.title'),
+    desc: t('home.features.ai.description'),
     color: 'text-purple-500',
     bg: 'bg-purple-50',
     delay: '300ms',
   },
-]
+])
 </script>
 
 <template>
@@ -52,11 +56,11 @@ const features = [
         <!-- Hero Section -->
         <div class="xl:mb-16 mb-8 text-center">
           <!-- Title -->
-          <h1 class="mb-4 text-6xl sm:text-7xl lg:text-8xl font-black tracking-tight text-pink-500">ChatLab</h1>
+          <h1 class="mb-4 text-6xl sm:text-7xl lg:text-8xl font-black tracking-tight text-pink-500">{{ t('home.title') }}</h1>
           <!-- Description -->
           <div class="relative inline-block mb-8">
             <p class="text-lg sm:text-2xl text-gray-600 dark:text-gray-400 font-medium">
-              你的本地聊天分析实验室ヾ(*ゝω・*)ノ
+              {{ t('home.subtitle') }}
             </p>
             <UIcon name="i-heroicons-sparkles" class="absolute -right-6 -top-3 h-5 w-5 animate-bounce text-pink-400" />
           </div>
