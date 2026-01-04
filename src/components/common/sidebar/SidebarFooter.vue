@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useLayoutStore } from '@/stores/layout'
 import DynamicIcon from './DynamicIcon.vue'
+import SidebarButton from './SidebarButton.vue'
 import { defaultFooterLinks, type FooterLinkConfig } from '@/types/sidebar'
 
 const { t } = useI18n()
 const layoutStore = useLayoutStore()
-const { isSidebarCollapsed: isCollapsed } = storeToRefs(layoutStore)
 
 // 配置常量
 const CONFIG_URL = 'https://chatlab.fun/config.json'
@@ -60,18 +59,7 @@ onMounted(() => {
   <div class="px-4 py-2 dark:border-gray-800 space-y-2 mb-4">
     <!-- 帮助和反馈 -->
     <UPopover :popper="{ placement: 'right' }">
-      <UTooltip :text="isCollapsed ? t('sidebar.footer.helpAndFeedback') : ''" :popper="{ placement: 'right' }">
-        <UButton
-          :block="!isCollapsed"
-          class="transition-all rounded-full hover:bg-gray-200/60 dark:hover:bg-gray-800 h-12 cursor-pointer"
-          :class="[isCollapsed ? 'flex w-12 items-center justify-center px-0' : 'justify-start pl-4']"
-          color="gray"
-          variant="ghost"
-        >
-          <UIcon name="i-heroicons-information-circle" class="h-5 w-5 shrink-0" :class="[isCollapsed ? '' : 'mr-2']" />
-          <span v-if="!isCollapsed" class="truncate">{{ t('sidebar.footer.helpAndFeedback') }}</span>
-        </UButton>
-      </UTooltip>
+      <SidebarButton icon="i-heroicons-information-circle" :title="t('sidebar.footer.helpAndFeedback')" />
 
       <template #content>
         <div class="flex flex-col p-2 min-w-[200px] gap-1">
@@ -98,18 +86,10 @@ onMounted(() => {
     </UPopover>
 
     <!-- 设置 -->
-    <UTooltip :text="isCollapsed ? t('sidebar.footer.settings') : ''" :popper="{ placement: 'right' }">
-      <UButton
-        :block="!isCollapsed"
-        class="transition-all rounded-full hover:bg-gray-200/60 dark:hover:bg-gray-800 h-12 cursor-pointer"
-        :class="[isCollapsed ? 'flex w-12 items-center justify-center px-0' : 'justify-start pl-4']"
-        color="gray"
-        variant="ghost"
-        @click="layoutStore.showSettingModal = true"
-      >
-        <UIcon name="i-heroicons-cog-6-tooth" class="h-5 w-5 shrink-0" :class="[isCollapsed ? '' : 'mr-2']" />
-        <span v-if="!isCollapsed" class="truncate">{{ t('sidebar.footer.settings') }}</span>
-      </UButton>
-    </UTooltip>
+    <SidebarButton
+      icon="i-heroicons-cog-6-tooth"
+      :title="t('sidebar.footer.settings')"
+      @click="layoutStore.showSettingModal = true"
+    />
   </div>
 </template>

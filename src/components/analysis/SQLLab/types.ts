@@ -53,7 +53,7 @@ export const COLUMN_LABELS: Record<string, Record<string, string>> = {
   },
   member: {
     id: '成员ID',
-    platform_id: '平台ID(QQ号)',
+    platform_id: '平台ID',
     account_name: '账号名称',
     group_nickname: '群昵称',
     aliases: '自定义别名',
@@ -83,4 +83,3 @@ export function getTableLabel(tableName: string): string {
 export function getColumnLabel(tableName: string, columnName: string): string {
   return COLUMN_LABELS[tableName]?.[columnName] || columnName
 }
-

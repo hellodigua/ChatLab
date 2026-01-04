@@ -8,15 +8,13 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
 import 'dayjs/locale/en'
+import SidebarButton from './sidebar/SidebarButton.vue'
 import SidebarFooter from './sidebar/SidebarFooter.vue'
 import { useSessionStore } from '@/stores/session'
 import { useLayoutStore } from '@/stores/layout'
-import { useSettingsStore } from '@/stores/settings'
 
 dayjs.extend(relativeTime)
-
 const { t } = useI18n()
-const settingsStore = useSettingsStore()
 
 const sessionStore = useSessionStore()
 const layoutStore = useLayoutStore()
@@ -163,8 +161,13 @@ function getSessionAvatarText(session: AnalysisSession): string {
     <div class="flex flex-col p-4">
       <!-- Header / Toggle -->
       <div class="mb-2 flex items-center" :class="[isCollapsed ? 'justify-center' : 'justify-between']">
-        <div v-if="!isCollapsed" class="text-2xl font-black tracking-tight text-pink-500 ml-2">{{ t('sidebar.brand') }}</div>
-        <UTooltip :text="isCollapsed ? t('sidebar.tooltip.expand') : t('sidebar.tooltip.collapse')" :popper="{ placement: 'right' }">
+        <div v-if="!isCollapsed" class="text-2xl font-black tracking-tight text-pink-500 ml-2">
+          {{ t('sidebar.brand') }}
+        </div>
+        <UTooltip
+          :text="isCollapsed ? t('sidebar.tooltip.expand') : t('sidebar.tooltip.collapse')"
+          :popper="{ placement: 'right' }"
+        >
           <UButton
             icon="i-heroicons-bars-3"
             color="gray"
@@ -176,40 +179,17 @@ function getSessionAvatarText(session: AnalysisSession): string {
         </UTooltip>
       </div>
 
-      <!-- New Analysis Button -->
-      <UTooltip :text="isCollapsed ? t('sidebar.newAnalysis') : ''" :popper="{ placement: 'right' }">
-        <UButton
-          :block="!isCollapsed"
-          class="transition-all rounded-full hover:bg-gray-200/60 dark:hover:bg-gray-800 h-12 cursor-pointer"
-          :class="[isCollapsed ? 'flex w-12 items-center justify-center px-0' : 'justify-start pl-4']"
-          color="gray"
-          variant="ghost"
-          @click="handleImport"
-        >
-          <UIcon name="i-heroicons-plus" class="h-5 w-5 shrink-0" :class="[isCollapsed ? '' : 'mr-2']" />
-          <span v-if="!isCollapsed" class="truncate">{{ t('sidebar.newAnalysis') }}</span>
-        </UButton>
-      </UTooltip>
+      <!-- 新建分析 -->
+      <SidebarButton icon="i-heroicons-plus" :title="t('sidebar.newAnalysis')" @click="handleImport" />
 
-      <!-- Tools Button -->
-      <UTooltip :text="isCollapsed ? t('sidebar.tools') : ''" :popper="{ placement: 'right' }">
-        <UButton
-          :block="!isCollapsed"
-          class="transition-all rounded-full hover:bg-gray-200/60 dark:hover:bg-gray-800 h-12 cursor-pointer mt-2"
-          :class="[
-            isCollapsed ? 'flex w-12 items-center justify-center px-0' : 'justify-start pl-4',
-            route.name === 'tools'
-              ? 'bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400'
-              : '',
-          ]"
-          color="gray"
-          variant="ghost"
-          @click="router.push({ name: 'tools' })"
-        >
-          <UIcon name="i-heroicons-wrench-screwdriver" class="h-4 w-4 shrink-0" :class="[isCollapsed ? '' : 'mr-2']" />
-          <span v-if="!isCollapsed" class="truncate">{{ t('sidebar.tools') }}</span>
-        </UButton>
-      </UTooltip>
+      <!-- 工具 -->
+      <SidebarButton
+        icon="i-heroicons-wrench-screwdriver"
+        :title="t('sidebar.tools')"
+        :active="route.name === 'tools'"
+        class="mt-2"
+        @click="router.push({ name: 'tools' })"
+      />
     </div>
 
     <!-- Session List -->
@@ -228,7 +208,9 @@ function getSessionAvatarText(session: AnalysisSession): string {
 
       <!-- 聊天记录列表 - 可滚动区域 -->
       <div class="flex-1 overflow-y-auto">
-        <div v-if="sessions.length === 0 && !isCollapsed" class="py-8 text-center text-sm text-gray-500">{{ t('sidebar.noRecords') }}</div>
+        <div v-if="sessions.length === 0 && !isCollapsed" class="py-8 text-center text-sm text-gray-500">
+          {{ t('sidebar.noRecords') }}
+        </div>
 
         <div class="space-y-1 pb-8">
           <UTooltip
@@ -313,7 +295,9 @@ function getSessionAvatarText(session: AnalysisSession): string {
           />
           <div class="flex justify-end gap-2">
             <UButton variant="soft" @click="closeRenameModal">{{ t('common.cancel') }}</UButton>
-            <UButton color="primary" :disabled="!newName.trim()" @click="handleRename">{{ t('common.confirm') }}</UButton>
+            <UButton color="primary" :disabled="!newName.trim()" @click="handleRename">
+              {{ t('common.confirm') }}
+            </UButton>
           </div>
         </div>
       </template>

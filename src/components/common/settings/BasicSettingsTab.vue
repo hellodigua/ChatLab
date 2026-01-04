@@ -22,7 +22,7 @@ const colorMode = useColorMode({
   initialValue: 'light',
 })
 
-// Color mode options (using computed for i18n reactivity)
+// Color mode options
 const colorModeOptions = computed(() => [
   { label: t('settings.basic.appearance.auto'), value: 'auto' },
   { label: t('settings.basic.appearance.light'), value: 'light' },
@@ -37,10 +37,11 @@ const languageOptions = computed(() =>
   }))
 )
 
-// Handle language change
-function handleLocaleChange(newLocale: LocaleType) {
-  settingsStore.setLocale(newLocale)
-}
+// Handle language change with writable computed for v-model support
+const currentLocale = computed({
+  get: () => locale.value,
+  set: (val: LocaleType) => settingsStore.setLocale(val),
+})
 </script>
 
 <template>
@@ -59,7 +60,7 @@ function handleLocaleChange(newLocale: LocaleType) {
             </p>
           </div>
           <div class="w-48">
-            <UTabs :model-value="locale" :items="languageOptions" @update:model-value="handleLocaleChange"></UTabs>
+            <UTabs v-model="currentLocale" size="sm" class="gap-0" :items="languageOptions"></UTabs>
           </div>
         </div>
       </div>
@@ -74,10 +75,12 @@ function handleLocaleChange(newLocale: LocaleType) {
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
         <div class="flex items-center justify-between">
           <div class="flex-1 pr-4">
-            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ t('settings.basic.appearance.themeMode') }}</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">
+              {{ t('settings.basic.appearance.themeMode') }}
+            </p>
           </div>
           <div class="w-64">
-            <UTabs v-model="colorMode" :items="colorModeOptions"></UTabs>
+            <UTabs v-model="colorMode" size="sm" class="gap-0" :items="colorModeOptions"></UTabs>
           </div>
         </div>
       </div>
@@ -92,7 +95,9 @@ function handleLocaleChange(newLocale: LocaleType) {
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
         <div class="flex items-center justify-between">
           <div class="flex-1 pr-4">
-            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ t('settings.basic.screenshot.mobileAdapt') }}</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">
+              {{ t('settings.basic.screenshot.mobileAdapt') }}
+            </p>
             <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('settings.basic.screenshot.mobileAdaptDesc') }}</p>
           </div>
           <USwitch v-model="screenshotMobileAdapt" />
