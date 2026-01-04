@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import CaptureButton from '@/components/common/CaptureButton.vue'
+
+const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{
@@ -17,7 +20,6 @@ const props = withDefaults(
   }>(),
   {
     topN: 10,
-    countTemplate: '共 {count} 项',
   }
 )
 
@@ -35,7 +37,10 @@ const topNData = computed(() => props.items.slice(0, props.topN))
 const showViewAll = computed(() => props.items.length > props.topN)
 
 // 格式化总数描述
-const formattedCount = computed(() => props.countTemplate.replace('{count}', String(props.items.length)))
+const formattedCount = computed(() => {
+  const template = props.countTemplate || t('countTemplate')
+  return template.replace('{count}', String(props.items.length))
+})
 </script>
 
 <template>
@@ -51,11 +56,11 @@ const formattedCount = computed(() => props.countTemplate.replace('{count}', Str
         <slot name="headerRight" />
 
         <!-- 卡片截屏按钮 -->
-        <CaptureButton tooltip="截取列表" size="xs" type="element" :target-element="cardRef" />
+        <CaptureButton :tooltip="t('captureList')" size="xs" type="element" :target-element="cardRef" />
 
         <!-- 完整列表弹窗 -->
         <UModal v-model:open="isOpen" :ui="{ content: 'md:w-full max-w-3xl' }">
-          <UButton v-if="showViewAll" icon="i-heroicons-list-bullet" variant="ghost">完整排行</UButton>
+          <UButton v-if="showViewAll" icon="i-heroicons-list-bullet" variant="ghost">{{ t('fullRanking') }}</UButton>
           <template #content>
             <div ref="modalBodyRef" class="section-content flex flex-col">
               <!-- Header -->
@@ -66,7 +71,12 @@ const formattedCount = computed(() => props.countTemplate.replace('{count}', Str
                   <h3 class="text-lg font-semibold text-gray-900 whitespace-nowrap dark:text-white">{{ title }}</h3>
                   <span class="text-sm text-gray-500">（{{ formattedCount }}）</span>
                 </div>
-                <CaptureButton tooltip="截取完整列表" size="xs" type="element" :target-element="modalBodyRef" />
+                <CaptureButton
+                  :tooltip="t('captureFullList')"
+                  size="xs"
+                  type="element"
+                  :target-element="modalBodyRef"
+                />
               </div>
               <!-- Body -->
               <div class="max-h-[60vh] p-4 divide-y divide-gray-100 overflow-y-auto dark:divide-gray-800">
@@ -93,8 +103,27 @@ const formattedCount = computed(() => props.countTemplate.replace('{count}', Str
     <!-- 空状态 -->
     <div v-if="items.length === 0">
       <slot name="empty">
-        <div class="px-5 py-8 text-center text-sm text-gray-400">暂无数据</div>
+        <div class="px-5 py-8 text-center text-sm text-gray-400">{{ t('empty') }}</div>
       </slot>
     </div>
   </div>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "countTemplate": "共 {count} 项",
+    "captureList": "截屏列表",
+    "captureFullList": "截屏完整列表",
+    "fullRanking": "完整排行",
+    "empty": "暂无数据"
+  },
+  "en-US": {
+    "countTemplate": "{count} items",
+    "captureList": "Screenshot list",
+    "captureFullList": "Screenshot full list",
+    "fullRanking": "Full Ranking",
+    "empty": "No data"
+  }
+}
+</i18n>

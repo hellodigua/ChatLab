@@ -9,7 +9,7 @@ interface Props {
   tooltip?: string
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   active: false,
   tooltip: '',
 })

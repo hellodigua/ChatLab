@@ -153,10 +153,12 @@ defineExpose({
             </div>
             <div>
               <div class="flex items-center gap-2">
-                <h4 class="text-sm font-medium text-gray-900 dark:text-white">{{ dir.name }}</h4>
-                <UBadge v-if="!dir.exists" variant="soft" color="gray" size="xs">{{ t('settings.storage.notExist') }}</UBadge>
+                <h4 class="text-sm font-medium text-gray-900 dark:text-white">{{ t(dir.name) }}</h4>
+                <UBadge v-if="!dir.exists" variant="soft" color="gray" size="xs">
+                  {{ t('settings.storage.notExist') }}
+                </UBadge>
               </div>
-              <p class="text-xs text-gray-500 dark:text-gray-400">{{ dir.description }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">{{ t(dir.description) }}</p>
             </div>
           </div>
 

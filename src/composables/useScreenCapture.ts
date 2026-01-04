@@ -448,7 +448,7 @@ export function useScreenCapture() {
       // 提供更友好的错误提示
       let errorMessage = String(error)
       if (errorMessage.includes('URI malformed')) {
-        errorMessage = '页面包含无法处理的特殊字符，请尝试截取其他区域'
+        errorMessage = '页面包含无法处理的特殊字符，请尝试截屏其他区域'
       }
 
       toast.add({

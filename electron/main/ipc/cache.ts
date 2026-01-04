@@ -79,16 +79,16 @@ export function registerCacheHandlers(_context: IpcContext): void {
     const cacheDirectories = [
       {
         id: 'databases',
-        name: '聊天记录数据库',
-        description: '导入的聊天记录分析数据',
+        name: 'settings.storage.cache.databases.name',
+        description: 'settings.storage.cache.databases.description',
         path: path.join(chatLabDir, 'databases'),
         icon: 'i-heroicons-circle-stack',
         canClear: false, // 不允许一键清理，因为是重要数据
       },
       {
         id: 'ai',
-        name: 'AI 对话数据库',
-        description: 'AI 对话历史和配置文件',
+        name: 'settings.storage.cache.ai.name',
+        description: 'settings.storage.cache.ai.description',
         path: path.join(chatLabDir, 'ai'),
         icon: 'i-heroicons-sparkles',
         canClear: false, // 不允许一键清理
@@ -96,16 +96,16 @@ export function registerCacheHandlers(_context: IpcContext): void {
       // 临时文件已有自动清理机制（应用启动时、合并完成后），无需暴露给用户
       {
         id: 'downloads',
-        name: '下载目录',
-        description: '包含截屏文件、分析结果等',
+        name: 'settings.storage.cache.downloads.name',
+        description: 'settings.storage.cache.downloads.description',
         path: path.join(chatLabDir, 'downloads'),
         icon: 'i-heroicons-arrow-down-tray',
         canClear: true, // 可以清理
       },
       {
         id: 'logs',
-        name: '日志文件',
-        description: '软件的运行日志，包含导入、AI、错误等日志',
+        name: 'settings.storage.cache.logs.name',
+        description: 'settings.storage.cache.logs.description',
         path: path.join(chatLabDir, 'logs'),
         icon: 'i-heroicons-document-text',
         canClear: true, // 可以清理

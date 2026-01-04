@@ -30,8 +30,12 @@ const tabs = computed(() => [
 ])
 
 const activeTab = ref('settings')
+// Template refs - used via ref="xxx" in template
 const aiConfigRef = ref<InstanceType<typeof AIConfigTab> | null>(null)
 const storageTabRef = ref<InstanceType<typeof StorageTab> | null>(null)
+// Ensure refs are tracked for vue-tsc
+void aiConfigRef
+void storageTabRef
 
 // AI 配置变更回调
 function handleAIConfigChanged() {
@@ -98,27 +102,26 @@ watch(
 
         <!-- Tab 内容 -->
         <div class="h-[500px] overflow-y-auto">
-          <!-- AI 配置 Tab -->
+          <!-- 基础设置 -->
+          <div v-show="activeTab === 'settings'">
+            <BasicSettingsTab />
+          </div>
+          <!-- 模型配置 -->
           <div v-show="activeTab === 'ai-config'">
             <AIConfigTab ref="aiConfigRef" @config-changed="handleAIConfigChanged" />
           </div>
 
-          <!-- AI对话配置 Tab -->
+          <!-- AI对话配置 -->
           <div v-show="activeTab === 'ai-prompt'">
             <AIPromptConfigTab @config-changed="handleAIConfigChanged" />
           </div>
 
-          <!-- 设置 Tab -->
-          <div v-show="activeTab === 'settings'">
-            <BasicSettingsTab />
-          </div>
-
-          <!-- 存储管理 Tab -->
+          <!-- 存储管理 -->
           <div v-show="activeTab === 'storage'">
             <StorageTab ref="storageTabRef" />
           </div>
 
-          <!-- 关于 Tab -->
+          <!-- 关于 -->
           <div v-show="activeTab === 'about'">
             <AboutTab />
           </div>

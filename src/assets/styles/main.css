@@ -16,3 +16,34 @@
   --color-pink-900: #84173b;
   --color-pink-950: #4a071c;
 }
+
+/* 全局滚动条样式 */
+::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 3px;
+}
+
+:hover::-webkit-scrollbar-thumb {
+  background-color: var(--color-gray-300);
+}
+
+.dark :hover::-webkit-scrollbar-thumb {
+  background-color: var(--color-gray-700);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-gray-400);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-gray-600);
+}

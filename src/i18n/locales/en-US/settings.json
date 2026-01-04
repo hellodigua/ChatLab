@@ -10,7 +10,7 @@
   "basic": {
     "language": {
       "title": "Language",
-      "description": "Choose display language"
+      "description": "Choose language"
     },
     "appearance": {
       "title": "Appearance",
@@ -27,7 +27,7 @@
     "network": {
       "title": "Network",
       "enableProxy": "Enable Proxy",
-      "enableProxyDesc": "Connect via proxy server (for network environments requiring proxy)",
+      "enableProxyDesc": "Connect via proxy server",
       "proxyAddress": "Proxy Address",
       "proxyPlaceholder": "http://127.0.0.1:7890",
       "proxyHelp": "Supports HTTP/HTTPS proxy, e.g.: http://127.0.0.1:7890",
@@ -108,6 +108,50 @@
       "title": "Notes",
       "logSafe": "Log files are mainly for debugging and can be safely cleared",
       "noRecover": "All cleared files cannot be recovered, please proceed with caution"
+    },
+    "cache": {
+      "databases": {
+        "name": "Chat Databases",
+        "description": "Imported chat analysis data"
+      },
+      "ai": {
+        "name": "AI Chat Databases",
+        "description": "AI chat history and config files"
+      },
+      "downloads": {
+        "name": "Downloads",
+        "description": "Screenshots, analysis results, etc."
+      },
+      "logs": {
+        "name": "Log Files",
+        "description": "App logs including import, AI, error logs"
+      }
+    }
+  },
+  "aiPrompt": {
+    "title": "Chat Settings",
+    "maxMessages": {
+      "title": "Max Messages per Request",
+      "description": "Max number of messages sent to AI per request. Higher values consume more tokens but provide more accurate context."
+    },
+    "maxHistory": {
+      "title": "Context Limit",
+      "description": "Number of recent conversation rounds to keep (1 round = User + AI). Prevents excessive token usage."
+    },
+    "group": {
+      "title": "Group Chat System Prompts",
+      "add": "Add"
+    },
+    "private": {
+      "title": "Private Chat System Prompts",
+      "add": "Add"
+    },
+    "preset": {
+      "builtIn": "Built-in",
+      "view": "View",
+      "edit": "Edit",
+      "copy": "Copy",
+      "delete": "Delete"
     }
   },
   "about": {

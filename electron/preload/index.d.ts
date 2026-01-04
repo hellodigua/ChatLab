@@ -27,6 +27,20 @@ interface TimeFilter {
   endTs?: number
 }
 
+// 迁移相关类型
+interface MigrationInfo {
+  version: number
+  description: string
+  userMessage: string
+}
+
+interface MigrationCheckResult {
+  needsMigration: boolean
+  count: number
+  currentVersion: number
+  pendingMigrations: MigrationInfo[]
+}
+
 interface ChatApi {
   selectFile: () => Promise<{ filePath?: string; format?: string; error?: string } | null>
   import: (filePath: string) => Promise<{ success: boolean; sessionId?: string; error?: string }>
@@ -34,6 +48,11 @@ interface ChatApi {
   getSession: (sessionId: string) => Promise<AnalysisSession | null>
   deleteSession: (sessionId: string) => Promise<boolean>
   renameSession: (sessionId: string, newName: string) => Promise<boolean>
+  // 迁移相关
+  checkMigration: () => Promise<MigrationCheckResult>
+  runMigration: () => Promise<{ success: boolean; error?: string }>
+  // 会话所有者
+  updateSessionOwnerId: (sessionId: string, ownerId: string | null) => Promise<boolean>
   getAvailableYears: (sessionId: string) => Promise<number[]>
   getMemberActivity: (sessionId: string, filter?: TimeFilter) => Promise<MemberActivity[]>
   getMemberNameHistory: (sessionId: string, memberId: number) => Promise<MemberNameHistory[]>

@@ -52,7 +52,7 @@ const hintText = computed(() => {
   if (currentOwner.value) {
     return `当前：${getDisplayName(currentOwner.value)}`
   }
-  return '选择你是谁：1. 将会显示在聊天记录查看器中的右侧 2. AI对话中会标识你的身份'
+  return '1. 将会显示在聊天记录查看器中的右侧 2. AI对话中会标识你的身份'
 })
 
 // 更新 owner
@@ -80,7 +80,7 @@ async function updateOwner(value: string) {
           <UIcon name="i-heroicons-user" class="h-4 w-4 text-white" />
         </div>
         <div>
-          <h3 class="text-sm font-medium text-gray-900 dark:text-white">设置「Owner」</h3>
+          <h3 class="text-sm font-medium text-gray-900 dark:text-white">选择你是谁</h3>
           <p class="text-xs text-gray-500 dark:text-gray-400">{{ hintText }}</p>
         </div>
       </div>

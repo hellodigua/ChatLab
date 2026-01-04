@@ -126,8 +126,8 @@ export interface DbMeta {
  */
 export interface DbMember {
   id: number // 自增ID
-  platform_id: string // 平台标识（QQ号等）
-  account_name: string | null // 账号名称（QQ原始昵称 sendNickName）
+  platform_id: string // 平台标识
+  account_name: string | null // 账号名称（原始昵称 sendNickName）
   group_nickname: string | null // 群昵称（sendMemberName，可为空）
   aliases: string // 用户自定义别名（JSON数组格式）
   avatar: string | null // 头像（base64 Data URL）

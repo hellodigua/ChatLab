@@ -34,9 +34,17 @@ const renameInputRef = ref<HTMLInputElement | null>(null)
 const showDeleteModal = ref(false)
 const deleteTarget = ref<AnalysisSession | null>(null)
 
-// 加载会话列表
-onMounted(() => {
+// 版本号
+const version = ref('')
+
+// 加载会话列表和版本号
+onMounted(async () => {
   sessionStore.loadSessions()
+  try {
+    version.value = await window.api.app.getVersion()
+  } catch (e) {
+    console.error('Failed to get version', e)
+  }
 })
 
 function handleImport() {
@@ -106,20 +114,17 @@ function getContextMenuItems(session: AnalysisSession) {
   return [
     [
       {
-        label: t('sidebar.contextMenu.rename'),
-        icon: 'i-lucide-pencil',
-        class: 'p-2',
-        onSelect: () => openRenameModal(session),
-      },
-      {
         label: isPinned ? t('sidebar.contextMenu.unpin') : t('sidebar.contextMenu.pin'),
-        icon: isPinned ? 'i-lucide-pin-off' : 'i-lucide-pin',
         class: 'p-2',
         onSelect: () => sessionStore.togglePinSession(session.id),
       },
       {
+        label: t('sidebar.contextMenu.rename'),
+        class: 'p-2',
+        onSelect: () => openRenameModal(session),
+      },
+      {
         label: t('sidebar.contextMenu.delete'),
-        icon: 'i-lucide-trash',
         color: 'error' as const,
         class: 'p-2',
         onSelect: () => openDeleteModal(session),
@@ -157,12 +162,14 @@ function getSessionAvatarText(session: AnalysisSession): string {
     class="flex h-full flex-col border-r border-gray-200 bg-gray-50 transition-all duration-300 ease-in-out dark:border-gray-800 dark:bg-gray-900"
     :class="[isCollapsed ? 'w-20' : 'w-72']"
   >
-    <!-- Top Section -->
     <div class="flex flex-col p-4">
-      <!-- Header / Toggle -->
+      <!-- Header -->
       <div class="mb-2 flex items-center" :class="[isCollapsed ? 'justify-center' : 'justify-between']">
-        <div v-if="!isCollapsed" class="text-2xl font-black tracking-tight text-pink-500 ml-2">
-          {{ t('sidebar.brand') }}
+        <div v-if="!isCollapsed" class="flex items-baseline ml-2">
+          <div class="text-2xl font-black tracking-tight text-pink-500">
+            {{ t('sidebar.brand') }}
+          </div>
+          <span class="text-xs text-gray-400 ml-2">v{{ version }}</span>
         </div>
         <UTooltip
           :text="isCollapsed ? t('sidebar.tooltip.expand') : t('sidebar.tooltip.collapse')"
@@ -183,13 +190,12 @@ function getSessionAvatarText(session: AnalysisSession): string {
       <SidebarButton icon="i-heroicons-plus" :title="t('sidebar.newAnalysis')" @click="handleImport" />
 
       <!-- 工具 -->
-      <SidebarButton
+      <!-- <SidebarButton
         icon="i-heroicons-wrench-screwdriver"
         :title="t('sidebar.tools')"
         :active="route.name === 'tools'"
-        class="mt-2"
         @click="router.push({ name: 'tools' })"
-      />
+      /> -->
     </div>
 
     <!-- Session List -->
@@ -267,7 +273,9 @@ function getSessionAvatarText(session: AnalysisSession): string {
                     />
                   </div>
                   <p class="truncate text-xs text-gray-500 dark:text-gray-400">
-                    {{ session.messageCount }} 条消息 · {{ formatTime(session.importedAt) }}
+                    {{
+                      t('sidebar.sessionInfo', { count: session.messageCount, time: formatTime(session.importedAt) })
+                    }}
                   </p>
                 </div>
               </div>
@@ -277,7 +285,7 @@ function getSessionAvatarText(session: AnalysisSession): string {
       </div>
       <!-- Fade overlay at bottom -->
       <div
-        class="absolute bottom-0 left-0 right-0 h-16 pointer-events-none bg-gradient-to-t from-gray-50 dark:from-gray-900 to-transparent"
+        class="absolute bottom-0 left-0 right-0 h-16 pointer-events-none bg-linear-to-t from-gray-50 dark:from-gray-900 to-transparent"
       />
     </div>
 

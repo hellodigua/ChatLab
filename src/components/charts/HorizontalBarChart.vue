@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Bar } from 'vue-chartjs'
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
+
+const { t } = useI18n()
 
 export interface HorizontalBarChartData {
   labels: string[]
@@ -43,7 +46,7 @@ const chartData = computed(() => {
     labels: props.data.labels,
     datasets: [
       {
-        label: '数量',
+        label: t('count'),
         data: props.data.values,
         backgroundColor: props.data.colors || defaultColors.slice(0, props.data.values.length),
         borderRadius: props.borderRadius,
@@ -103,3 +106,14 @@ const chartOptions = {
     <Bar :data="chartData" :options="chartOptions" />
   </div>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "count": "数量"
+  },
+  "en-US": {
+    "count": "Count"
+  }
+}
+</i18n>

@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { ref } from 'vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import 'dayjs/locale/en'

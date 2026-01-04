@@ -10,7 +10,7 @@
   "basic": {
     "language": {
       "title": "语言",
-      "description": "选择界面显示语言"
+      "description": "选择软件显示语言"
     },
     "appearance": {
       "title": "外观设置",
@@ -27,7 +27,7 @@
     "network": {
       "title": "网络设置",
       "enableProxy": "启用代理",
-      "enableProxyDesc": "通过代理服务器连接网络（适用于需要代理的网络环境）",
+      "enableProxyDesc": "通过代理服务器连接网络",
       "proxyAddress": "代理地址",
       "proxyPlaceholder": "http://127.0.0.1:7890",
       "proxyHelp": "支持 HTTP/HTTPS 代理，格式如：http://127.0.0.1:7890",
@@ -108,6 +108,50 @@
       "title": "注意事项",
       "logSafe": "日志文件主要用于排查BUG，可以安全清理",
       "noRecover": "所有文件清理后无法恢复，请谨慎操作"
+    },
+    "cache": {
+      "databases": {
+        "name": "聊天记录数据库",
+        "description": "导入的聊天记录分析数据"
+      },
+      "ai": {
+        "name": "AI 对话数据库",
+        "description": "AI 对话历史和配置文件"
+      },
+      "downloads": {
+        "name": "下载目录",
+        "description": "包含截屏文件、分析结果等"
+      },
+      "logs": {
+        "name": "日志文件",
+        "description": "软件的运行日志，包含导入、AI、错误等日志"
+      }
+    }
+  },
+  "aiPrompt": {
+    "title": "对话设置",
+    "maxMessages": {
+      "title": "发送条数限制",
+      "description": "每次发送给 AI 的最大消息条数，数值越大 Token 消耗越多，回复也更准确"
+    },
+    "maxHistory": {
+      "title": "AI上下文限制",
+      "description": "每次对话保留最近的对话轮数（1轮 = 用户提问 + AI回复），防止上下文过长消耗 Token"
+    },
+    "group": {
+      "title": "群聊系统提示词",
+      "add": "添加"
+    },
+    "private": {
+      "title": "私聊系统提示词",
+      "add": "添加"
+    },
+    "preset": {
+      "builtIn": "内置",
+      "view": "查看",
+      "edit": "编辑",
+      "copy": "复制",
+      "delete": "删除"
     }
   },
   "about": {
