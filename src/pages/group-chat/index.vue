@@ -104,7 +104,7 @@ const filteredMemberCount = computed(() => {
 // 格式化时间范围显示
 const dateRangeText = computed(() => {
   if (selectedYear.value) {
-    return `${selectedYear.value}年`
+    return t('analysis.yearFilter.year', { year: selectedYear.value })
   }
   if (!timeRange.value) return ''
   return formatDateRange(timeRange.value.start, timeRange.value.end)
@@ -258,11 +258,13 @@ onMounted(() => {
       <!-- Header -->
       <PageHeader
         :title="session.name"
-        :description="t('analysis.groupChat.description', {
-          dateRange: dateRangeText,
-          memberCount: selectedYear ? filteredMemberCount : session.memberCount,
-          messageCount: selectedYear ? filteredMessageCount : session.messageCount
-        })"
+        :description="
+          t('analysis.groupChat.description', {
+            dateRange: dateRangeText,
+            memberCount: selectedYear ? filteredMemberCount : session.memberCount,
+            messageCount: selectedYear ? filteredMessageCount : session.messageCount,
+          })
+        "
         :avatar="session.groupAvatar"
         icon="i-heroicons-chat-bubble-left-right"
       >
@@ -276,7 +278,7 @@ onMounted(() => {
               @click="openChatRecordViewer"
             />
           </UTooltip>
-          <CaptureButton :tooltip="t('analysis.tooltip.screenshot')" />
+          <CaptureButton />
         </template>
         <!-- Tabs -->
         <div class="mt-4 flex items-center justify-between gap-4">

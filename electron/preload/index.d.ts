@@ -372,7 +372,8 @@ interface AgentApi {
     onChunk?: (chunk: AgentStreamChunk) => void,
     historyMessages?: Array<{ role: 'user' | 'assistant'; content: string }>,
     chatType?: 'group' | 'private',
-    promptConfig?: PromptConfig
+    promptConfig?: PromptConfig,
+    locale?: string
   ) => { requestId: string; promise: Promise<{ success: boolean; result?: AgentResult; error?: string }> }
   abort: (requestId: string) => Promise<{ success: boolean; error?: string }>
 }

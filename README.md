@@ -1,5 +1,7 @@
 # ChatLab
 
+简体中文 | [English](./README_en.md)
+
 ChatLab 是一个免费、开源、本地化的，专注于分析聊天记录的应用。通过 AI Agent 和灵活的 SQL 引擎，你可以自由地拆解、查询甚至重构你的社交数据。
 
 我们拒绝将你的隐私上传云端，而是把强大的分析能力直接塞进你的电脑。
@@ -18,15 +20,15 @@ ChatLab 是一个免费、开源、本地化的，专注于分析聊天记录的
 
 ## 使用指南
 
-- [导出聊天记录指南](https://chatlab.fun/usage/how-to-export.html)
-- [标准化格式规范](https://chatlab.fun/usage/chatlab-format.html)
-- [故障排查指南](https://chatlab.fun/usage/troubleshooting.html)
+- [导出聊天记录指南](https://chatlab.fun/cn/usage/how-to-export.html)
+- [标准化格式规范](https://chatlab.fun/cn/usage/chatlab-format.html)
+- [故障排查指南](https://chatlab.fun/cn/usage/troubleshooting.html)
 
 ## 预览界面
 
-预览更多请前往官网 [chatlab.fun](https://chatlab.fun)
+预览更多请前往官网 [chatlab.fun](https://chatlab.fun/cn/)
 
-![预览界面](/public/images/intro.png)
+![预览界面](/public/images/intro_zh.png)
 
 ## 系统架构
 
@@ -79,7 +81,7 @@ electron-fix start
 
 ## 隐私政策与用户协议
 
-使用本软件前，请阅读 [隐私政策与用户协议](./src/assets/docs/agreement.md)
+使用本软件前，请阅读 [隐私政策与用户协议](./src/assets/docs/agreement_zh.md)
 
 ## License
 

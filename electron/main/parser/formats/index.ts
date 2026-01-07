@@ -20,7 +20,7 @@ export const formats: FormatModule[] = [
   chatlab, // 优先级 1 - ChatLab JSON
   chatlabJsonl, // 优先级 2 - ChatLab JSONL（流式格式，支持超大文件）
   shuakamiQqExporter, // 优先级 10 - shuakami/qq-chat-exporter
-  yccccccyEchotrace, // 优先级 15 - ycccccccy/echotrace 微信导出
+  yccccccyEchotrace, // 优先级 15 - ycccccccy/echotrace
   whatsappNativeTxt, // 优先级 25 - WhatsApp 官方导出 TXT
   qqNativeTxt, // 优先级 30 - QQ 官方导出 TXT
 ]

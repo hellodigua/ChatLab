@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
+
+const { t } = useI18n()
 
 interface Conversation {
   id: string
@@ -58,7 +61,7 @@ function formatTime(timestamp: number): string {
 
 // 获取对话标题
 function getTitle(conv: Conversation): string {
-  return conv.title || '新对话'
+  return conv.title || t('conversation.newChat')
 }
 
 // 开始编辑标题
@@ -121,7 +124,7 @@ defineExpose({
     <!-- 头部 -->
     <div class="flex items-center justify-between border-b border-gray-200 p-2 dark:border-gray-800">
       <template v-if="!isCollapsed">
-        <span class="text-xs font-medium text-gray-500 dark:text-gray-400">AI对话记录</span>
+        <span class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ t('conversation.title') }}</span>
         <div class="flex items-center gap-1">
           <UButton
             icon="i-heroicons-plus"
@@ -161,8 +164,8 @@ defineExpose({
         <div class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 dark:bg-gray-800">
           <UIcon name="i-heroicons-chat-bubble-left" class="h-6 w-6 text-gray-300 dark:text-gray-600" />
         </div>
-        <p class="mt-3 text-xs text-gray-400">暂无历史记录</p>
-        <UButton class="mt-2" size="xs" variant="link" color="primary" @click="emit('create')">开始新对话</UButton>
+        <p class="mt-3 text-xs text-gray-400">{{ t('conversation.empty') }}</p>
+        <UButton class="mt-2" size="xs" variant="link" color="primary" @click="emit('create')">{{ t('conversation.startNew') }}</UButton>
       </div>
 
       <!-- 对话列表 -->
@@ -183,7 +186,7 @@ defineExpose({
             <input
               v-model="editingTitle"
               class="w-full rounded border-none bg-white px-2 py-1 text-sm shadow-sm ring-1 ring-gray-200 focus:ring-2 focus:ring-primary-500 dark:bg-gray-900 dark:ring-gray-700"
-              placeholder="输入标题..."
+              :placeholder="t('conversation.titlePlaceholder')"
               autoFocus
               @blur="saveTitle(conv.id)"
               @keyup.enter="saveTitle(conv.id)"
@@ -237,7 +240,7 @@ defineExpose({
       <!-- 新建按钮 -->
       <button
         class="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-pink-500 dark:hover:bg-gray-800"
-        title="开始新对话"
+        :title="t('conversation.startNew')"
         @click="emit('create')"
       >
         <UIcon name="i-heroicons-plus" class="h-4 w-4" />
@@ -260,3 +263,26 @@ defineExpose({
     </div>
   </div>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "conversation": {
+      "title": "AI对话记录",
+      "newChat": "新对话",
+      "empty": "暂无历史记录",
+      "startNew": "开始新对话",
+      "titlePlaceholder": "输入标题..."
+    }
+  },
+  "en-US": {
+    "conversation": {
+      "title": "AI Conversations",
+      "newChat": "New Chat",
+      "empty": "No history yet",
+      "startNew": "Start New Chat",
+      "titlePlaceholder": "Enter title..."
+    }
+  }
+}
+</i18n>

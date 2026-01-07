@@ -108,7 +108,7 @@ export const useSessionStore = defineStore(
       try {
         const result = await window.chatApi.selectFile()
         if (!result || !result.filePath) {
-          return { success: false, error: '未选择文件' }
+          return { success: false, error: 'error.no_file_selected' }
         }
         if (result.error) {
           return { success: false, error: result.error }
@@ -128,7 +128,7 @@ export const useSessionStore = defineStore(
         importProgress.value = {
           stage: 'detecting',
           progress: 0,
-          message: '准备导入...',
+          message: '', // Progress text is handled by frontend i18n
         }
 
         // 进度队列控制
@@ -190,7 +190,7 @@ export const useSessionStore = defineStore(
           currentSessionId.value = importResult.sessionId
           return { success: true }
         } else {
-          return { success: false, error: importResult.error || '导入失败' }
+          return { success: false, error: importResult.error || 'error.import_failed' }
         }
       } catch (error) {
         return { success: false, error: String(error) }

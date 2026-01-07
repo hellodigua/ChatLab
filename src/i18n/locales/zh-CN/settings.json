@@ -132,11 +132,15 @@
     "title": "对话设置",
     "maxMessages": {
       "title": "发送条数限制",
-      "description": "每次发送给 AI 的最大消息条数，数值越大 Token 消耗越多，回复也更准确"
+      "description": "每次提交给 AI 的最大消息数，数值越大 Token 消耗越多，分析也更准确（建议2000）"
     },
     "maxHistory": {
       "title": "AI上下文限制",
       "description": "每次对话保留最近的对话轮数（1轮 = 用户提问 + AI回复），防止上下文过长消耗 Token"
+    },
+    "presets": {
+      "title": "系统提示词",
+      "import": "导入预设"
     },
     "group": {
       "title": "群聊系统提示词",

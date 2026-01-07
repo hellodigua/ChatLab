@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 // Props
 const props = defineProps<{
@@ -44,7 +47,7 @@ function handleStop() {
     <div class="w-full">
       <UChatPrompt
         v-model="inputValue"
-        :placeholder="placeholder || '输入你的问题...'"
+        :placeholder="placeholder || t('chatInput.placeholder')"
         :disabled="disabled"
         variant="subtle"
         @submit="handleSubmit"
@@ -62,3 +65,18 @@ function handleStop() {
     </div>
   </div>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "chatInput": {
+      "placeholder": "输入你的问题..."
+    }
+  },
+  "en-US": {
+    "chatInput": {
+      "placeholder": "Enter your question..."
+    }
+  }
+}
+</i18n>

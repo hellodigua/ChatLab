@@ -15,6 +15,21 @@ const hasImportLog = ref(false)
 
 const router = useRouter()
 
+/**
+ * Translate error key to localized message
+ * Error keys follow format: 'error.{error_name}'
+ * Example: 'error.unrecognized_format' -> t('home.import.errors.unrecognized_format')
+ */
+function translateError(error: string): string {
+  if (error.startsWith('error.')) {
+    const key = `home.import.errors.${error.slice(6)}` // Remove 'error.' prefix
+    const translated = t(key)
+    return translated !== key ? translated : error
+  }
+  // Unknown error format, return as-is
+  return error
+}
+
 // 根据会话类型导航到对应页面
 async function navigateToSession(sessionId: string) {
   const session = await window.chatApi.getSession(sessionId)
@@ -35,8 +50,9 @@ async function handleClickImport() {
   importError.value = null
   hasImportLog.value = false
   const result = await sessionStore.importFile()
-  if (!result.success && result.error && result.error !== '未选择文件') {
-    importError.value = result.error
+  // Skip showing error if user just cancelled the file dialog
+  if (!result.success && result.error && result.error !== 'error.no_file_selected') {
+    importError.value = translateError(result.error)
     await checkImportLog()
   } else if (result.success && sessionStore.currentSessionId) {
     await navigateToSession(sessionStore.currentSessionId)
@@ -54,7 +70,7 @@ async function handleFileDrop({ paths }: { files: File[]; paths: string[] }) {
   hasImportLog.value = false
   const result = await sessionStore.importFileFromPath(paths[0])
   if (!result.success && result.error) {
-    importError.value = result.error
+    importError.value = translateError(result.error)
     await checkImportLog()
   } else if (result.success && sessionStore.currentSessionId) {
     await navigateToSession(sessionStore.currentSessionId)

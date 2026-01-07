@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { PromptPreset } from '@/types/ai'
 import {
   getDefaultRoleDefinition,
   getDefaultResponseRules,
   getLockedPromptSectionPreview,
   getOriginalBuiltinPreset,
+  type LocaleType,
 } from '@/config/prompts'
 import { usePromptStore } from '@/stores/prompt'
+
+const { t, locale } = useI18n()
 
 // Props
 const props = defineProps<{
@@ -43,8 +47,8 @@ const isModified = computed(() => {
 })
 
 const modalTitle = computed(() => {
-  if (isBuiltIn.value) return '编辑系统提示词'
-  return isEditMode.value ? '编辑自定义提示词' : '添加自定义提示词'
+  if (isBuiltIn.value) return t('modal.editBuiltin')
+  return isEditMode.value ? t('modal.editCustom') : t('modal.addCustom')
 })
 
 const canSave = computed(() => {
@@ -69,8 +73,8 @@ watch(
         formData.value = {
           name: '',
           chatType: props.defaultChatType,
-          roleDefinition: getDefaultRoleDefinition(props.defaultChatType),
-          responseRules: getDefaultResponseRules(props.defaultChatType),
+          roleDefinition: getDefaultRoleDefinition(props.defaultChatType, locale.value as LocaleType),
+          responseRules: getDefaultResponseRules(props.defaultChatType, locale.value as LocaleType),
         }
       }
     }
@@ -112,7 +116,7 @@ function handleSave() {
 function handleReset() {
   if (!props.preset || !isBuiltIn.value) return
 
-  const original = getOriginalBuiltinPreset(props.preset.id)
+  const original = getOriginalBuiltinPreset(props.preset.id, locale.value as LocaleType)
   if (original) {
     // 重置表单为原始值
     formData.value = {
@@ -131,14 +135,15 @@ const previewContent = computed(() => {
   const chatType = formData.value.chatType
 
   // 获取锁定的系统部分（用于预览）
-  const lockedSection = getLockedPromptSectionPreview(chatType)
+  const lockedSection = getLockedPromptSectionPreview(chatType, undefined, locale.value as LocaleType)
 
   // 组合完整提示词
+  const responseRulesLabel = locale.value === 'zh-CN' ? '回答要求：' : 'Response requirements:'
   return `${formData.value.roleDefinition}
 
 ${lockedSection}
 
-回答要求：
+${responseRulesLabel}
 ${formData.value.responseRules}`
 })
 </script>
@@ -157,8 +162,8 @@ ${formData.value.responseRules}`
         <div class="max-h-[500px] space-y-4 overflow-y-auto pr-1">
           <!-- 预设名称 -->
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">预设名称</label>
-            <UInput v-model="formData.name" placeholder="为预设起个名字" class="w-60" />
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('modal.presetName') }}</label>
+            <UInput v-model="formData.name" :placeholder="t('modal.presetNamePlaceholder')" class="w-60" />
           </div>
 
           <!-- 适用类型（只读显示） -->
@@ -167,16 +172,16 @@ ${formData.value.responseRules}`
               :name="formData.chatType === 'group' ? 'i-heroicons-chat-bubble-left-right' : 'i-heroicons-user'"
               class="h-4 w-4"
             />
-            <span>适用于{{ formData.chatType === 'group' ? '群聊' : '私聊' }}</span>
+            <span>{{ t('modal.appliesTo') }}{{ formData.chatType === 'group' ? t('modal.groupChat') : t('modal.privateChat') }}</span>
           </div>
 
           <!-- 角色定义 -->
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">角色定义</label>
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('modal.roleDefinition') }}</label>
             <UTextarea
               v-model="formData.roleDefinition"
               :rows="8"
-              placeholder="定义 AI 助手的角色和任务..."
+              :placeholder="t('modal.roleDefinitionPlaceholder')"
               class="font-mono text-sm w-120"
             />
           </div>
@@ -184,13 +189,13 @@ ${formData.value.responseRules}`
           <!-- 回答要求 -->
           <div>
             <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              回答要求
-              <span class="font-normal text-gray-500">（指导 AI 如何回答）</span>
+              {{ t('modal.responseRules') }}
+              <span class="font-normal text-gray-500">{{ t('modal.responseRulesHint') }}</span>
             </label>
             <UTextarea
               v-model="formData.responseRules"
               :rows="5"
-              placeholder="定义 AI 回答的格式和要求..."
+              :placeholder="t('modal.responseRulesPlaceholder')"
               class="font-mono text-sm w-120"
             />
           </div>
@@ -199,7 +204,7 @@ ${formData.value.responseRules}`
           <div>
             <label class="mb-1.5 flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
               <UIcon name="i-heroicons-eye" class="h-4 w-4 text-violet-500" />
-              完整提示词预览
+              {{ t('modal.preview') }}
             </label>
             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
               <pre class="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300">{{ previewContent }}</pre>
@@ -212,14 +217,63 @@ ${formData.value.responseRules}`
           <!-- 内置预设：显示重置按钮 -->
           <UButton v-if="isBuiltIn && isModified" variant="outline" color="warning" @click="handleReset">
             <UIcon name="i-heroicons-arrow-path" class="mr-1 h-4 w-4" />
-            重置为默认
+            {{ t('modal.resetToDefault') }}
           </UButton>
-          <UButton variant="ghost" @click="closeModal">取消</UButton>
+          <UButton variant="ghost" @click="closeModal">{{ t('modal.cancel') }}</UButton>
           <UButton color="primary" :disabled="!canSave" @click="handleSave">
-            {{ isEditMode ? '保存修改' : '添加预设' }}
+            {{ isEditMode ? t('modal.saveChanges') : t('modal.addPreset') }}
           </UButton>
         </div>
       </div>
     </template>
   </UModal>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "modal": {
+      "editBuiltin": "编辑系统提示词",
+      "editCustom": "编辑自定义提示词",
+      "addCustom": "添加自定义提示词",
+      "presetName": "预设名称",
+      "presetNamePlaceholder": "为预设起个名字",
+      "appliesTo": "适用于",
+      "groupChat": "群聊",
+      "privateChat": "私聊",
+      "roleDefinition": "角色定义",
+      "roleDefinitionPlaceholder": "定义 AI 助手的角色和任务...",
+      "responseRules": "回答要求",
+      "responseRulesHint": "（指导 AI 如何回答）",
+      "responseRulesPlaceholder": "定义 AI 回答的格式和要求...",
+      "preview": "完整提示词预览",
+      "resetToDefault": "重置为默认",
+      "cancel": "取消",
+      "saveChanges": "保存修改",
+      "addPreset": "添加预设"
+    }
+  },
+  "en-US": {
+    "modal": {
+      "editBuiltin": "Edit System Prompt",
+      "editCustom": "Edit Custom Prompt",
+      "addCustom": "Add Custom Prompt",
+      "presetName": "Preset Name",
+      "presetNamePlaceholder": "Give your preset a name",
+      "appliesTo": "Applies to ",
+      "groupChat": "Group Chat",
+      "privateChat": "Private Chat",
+      "roleDefinition": "Role Definition",
+      "roleDefinitionPlaceholder": "Define the AI assistant's role and tasks...",
+      "responseRules": "Response Rules",
+      "responseRulesHint": " (Guide how AI should respond)",
+      "responseRulesPlaceholder": "Define AI response format and requirements...",
+      "preview": "Full Prompt Preview",
+      "resetToDefault": "Reset to Default",
+      "cancel": "Cancel",
+      "saveChanges": "Save Changes",
+      "addPreset": "Add Preset"
+    }
+  }
+}
+</i18n>

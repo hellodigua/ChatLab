@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { MemberWithStats } from '@/types/analysis'
 import { useSessionStore } from '@/stores/session'
 
+const { t } = useI18n()
 const sessionStore = useSessionStore()
 
 // Props
@@ -34,7 +36,7 @@ const UNSET_VALUE = '__UNSET__'
 // 成员选项（用于下拉选择）
 const memberOptions = computed(() => {
   return [
-    { label: '未设置', value: UNSET_VALUE },
+    { label: t('unset'), value: UNSET_VALUE },
     ...props.members.map((m) => ({
       label: `${getDisplayName(m)} (${m.platformId})`,
       value: m.platformId,
@@ -50,9 +52,9 @@ const selectedOwnerValue = computed(() => {
 // 提示文字
 const hintText = computed(() => {
   if (currentOwner.value) {
-    return `当前：${getDisplayName(currentOwner.value)}`
+    return t('currentOwner', { name: getDisplayName(currentOwner.value) })
   }
-  return '1. 将会显示在聊天记录查看器中的右侧 2. AI对话中会标识你的身份'
+  return t('hint')
 })
 
 // 更新 owner
@@ -80,7 +82,7 @@ async function updateOwner(value: string) {
           <UIcon name="i-heroicons-user" class="h-4 w-4 text-white" />
         </div>
         <div>
-          <h3 class="text-sm font-medium text-gray-900 dark:text-white">选择你是谁</h3>
+          <h3 class="text-sm font-medium text-gray-900 dark:text-white">{{ t('title') }}</h3>
           <p class="text-xs text-gray-500 dark:text-gray-400">{{ hintText }}</p>
         </div>
       </div>
@@ -88,7 +90,7 @@ async function updateOwner(value: string) {
         <USelect
           :model-value="selectedOwnerValue"
           :items="memberOptions"
-          placeholder="选择成员"
+          :placeholder="t('selectMember')"
           class="w-48"
           :disabled="isSavingOwner || isLoading"
           @update:model-value="updateOwner"
@@ -103,3 +105,22 @@ async function updateOwner(value: string) {
     </div>
   </div>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "title": "选择你是谁",
+    "unset": "未设置",
+    "selectMember": "选择成员",
+    "currentOwner": "当前：{name}",
+    "hint": "1. 将会显示在聊天记录查看器中的右侧 2. AI对话中会标识你的身份"
+  },
+  "en-US": {
+    "title": "Select Your Identity",
+    "unset": "Not Set",
+    "selectMember": "Select Member",
+    "currentOwner": "Current: {name}",
+    "hint": "1. Shown on the right side of chat viewer 2. Identifies you in AI conversations"
+  }
+}
+</i18n>

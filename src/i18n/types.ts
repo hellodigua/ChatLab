@@ -68,4 +68,3 @@ export function isFeatureSupported(feature: string, currentLocale: LocaleType): 
   }
   return supportedLocales.includes(currentLocale)
 }
-

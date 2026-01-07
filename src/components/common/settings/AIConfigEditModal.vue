@@ -1,7 +1,36 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useSettingsStore } from '@/stores/settings'
 import AlertTips from './AlertTips.vue'
 import Tabs from '@/components/UI/Tabs.vue'
+
+const { t } = useI18n()
+const settingsStore = useSettingsStore()
+
+// 仅在中文环境显示的提供商（中国市场特定）
+const CHINA_MARKET_PROVIDERS = ['kimi', 'doubao']
+
+// Get localized provider name
+function getLocalizedProviderName(providerId: string): string {
+  const key = `providers.${providerId}.name`
+  const translated = t(key)
+  return translated === key ? providerId : translated
+}
+
+// Get localized provider description
+function getLocalizedProviderDescription(providerId: string): string {
+  const key = `providers.${providerId}.description`
+  const translated = t(key)
+  return translated === key ? '' : translated
+}
+
+// Get localized model description
+function getLocalizedModelDescription(providerId: string, modelId: string): string {
+  const key = `providers.${providerId}.models.${modelId}`
+  const translated = t(key)
+  return translated === key ? '' : translated
+}
 
 // ============ 类型定义 ============
 
@@ -66,9 +95,17 @@ const validationMessage = ref('')
 
 // ============ 计算属性 ============
 
-// 预设服务商（排除 openai-compatible）
+// 预设服务商（排除 openai-compatible，英文环境下排除中国市场特定提供商）
 const presetProviders = computed(() => {
-  return props.providers.filter((p) => p.id !== 'openai-compatible')
+  return props.providers.filter((p) => {
+    // 排除 openai-compatible（通过另一个配置类型访问）
+    if (p.id === 'openai-compatible') return false
+    // 非中文环境下，排除中国市场特定提供商
+    if (settingsStore.locale !== 'zh-CN' && CHINA_MARKET_PROVIDERS.includes(p.id)) {
+      return false
+    }
+    return true
+  })
 })
 
 const currentProvider = computed(() => {
@@ -80,7 +117,7 @@ const modelOptions = computed(() => {
   return currentProvider.value.models.map((m) => ({
     label: m.name,
     value: m.id,
-    description: m.description,
+    description: getLocalizedModelDescription(currentProvider.value!.id, m.id) || m.description,
   }))
 })
 
@@ -116,7 +153,7 @@ const canSave = computed(() => {
   return provider
 })
 
-const modalTitle = computed(() => (props.mode === 'add' ? '添加新配置' : '编辑配置'))
+const modalTitle = computed(() => (props.mode === 'add' ? t('addConfig') : t('editConfig')))
 
 // ============ 方法 ============
 
@@ -214,14 +251,14 @@ async function validateKey() {
     )
     validationResult.value = result.success ? 'valid' : 'invalid'
     if (result.success) {
-      validationMessage.value = '连接验证成功'
+      validationMessage.value = t('validationSuccess')
     } else {
       // 显示详细的错误信息
-      validationMessage.value = result.error || '连接验证失败'
+      validationMessage.value = result.error || t('validationFailed')
     }
   } catch (error) {
     validationResult.value = 'invalid'
-    validationMessage.value = '验证失败：' + String(error)
+    validationMessage.value = t('validationError') + String(error)
   } finally {
     isValidating.value = false
   }
@@ -244,11 +281,11 @@ function getDefaultName(): string {
         const url = new URL(formData.value.baseUrl)
         return url.hostname
       } catch {
-        return formData.value.baseUrl || '自定义服务'
+        return formData.value.baseUrl || t('customService')
       }
     }
     default:
-      return '未命名配置'
+      return t('unnamedConfig')
   }
 }
 
@@ -389,9 +426,9 @@ watch(
                       : 'text-gray-700 dark:text-gray-300',
                   ]"
                 >
-                  官方API
+                  {{ t('officialApi') }}
                 </p>
-                <p class="mt-0.5 text-[10px] text-gray-500">DeepSeek、Gemini 等</p>
+                <p class="mt-0.5 text-[10px] text-gray-500">{{ t('officialApiDesc') }}</p>
               </div>
             </button>
 
@@ -419,9 +456,9 @@ watch(
                       : 'text-gray-700 dark:text-gray-300',
                   ]"
                 >
-                  本地服务
+                  {{ t('localService') }}
                 </p>
-                <p class="mt-0.5 text-[10px] text-gray-500">Ollama 等</p>
+                <p class="mt-0.5 text-[10px] text-gray-500">{{ t('localServiceDesc') }}</p>
               </div>
             </button>
 
@@ -449,9 +486,9 @@ watch(
                       : 'text-gray-700 dark:text-gray-300',
                   ]"
                 >
-                  OpenAI 兼容
+                  {{ t('openaiCompatible') }}
                 </p>
-                <p class="mt-0.5 text-[10px] text-gray-500">自定义端点</p>
+                <p class="mt-0.5 text-[10px] text-gray-500">{{ t('openaiCompatibleDesc') }}</p>
               </div>
             </button>
           </div>
@@ -461,12 +498,14 @@ watch(
           <!-- 配置名称（选填） -->
           <div>
             <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              配置名称
-              <span class="font-normal text-gray-400">（选填）</span>
+              {{ t('configName') }}
+              <span class="font-normal text-gray-400">{{ t('optional') }}</span>
             </label>
             <UInput
               v-model="formData.name"
-              :placeholder="configType === 'preset' ? '留空将使用服务商名称' : '留空将使用 API 端点地址'"
+              :placeholder="
+                configType === 'preset' ? t('configNamePlaceholderPreset') : t('configNamePlaceholderCustom')
+              "
               class="w-full"
             />
           </div>
@@ -483,14 +522,16 @@ watch(
 
             <!-- 服务商选择 -->
             <div>
-              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">AI 服务商</label>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {{ t('aiProvider') }}
+              </label>
               <Tabs
                 v-model="formData.provider"
-                :items="presetProviders.map((p) => ({ label: p.name, value: p.id }))"
+                :items="presetProviders.map((p) => ({ label: getLocalizedProviderName(p.id), value: p.id }))"
                 class="w-full"
               />
               <p v-if="currentProvider" class="mt-2 text-xs text-gray-500">
-                {{ currentProvider.description }}
+                {{ getLocalizedProviderDescription(currentProvider.id) || currentProvider.description }}
               </p>
             </div>
 
@@ -501,11 +542,11 @@ watch(
                 <UInput
                   v-model="formData.apiKey"
                   type="password"
-                  :placeholder="mode === 'edit' ? '输入新的 API Key（留空保持原有）' : '输入你的 API Key'"
+                  :placeholder="mode === 'edit' ? t('apiKeyPlaceholderEdit') : t('apiKeyPlaceholder')"
                   class="flex-1"
                 />
                 <UButton :loading="isValidating" :disabled="!formData.apiKey" variant="soft" @click="validateKey">
-                  验证
+                  {{ t('validate') }}
                 </UButton>
               </div>
               <!-- 验证结果 -->
@@ -529,12 +570,14 @@ watch(
 
             <!-- 模型选择 -->
             <div>
-              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">模型</label>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('model') }}</label>
               <Tabs v-model="formData.model" :items="modelOptions" />
               <!-- 模型详情 -->
-              <div v-if="selectedModel" class="mt-3 rounded-md p-3 text-xs text-gray-500">
+              <div v-if="selectedModel && currentProvider" class="mt-3 rounded-md p-3 text-xs text-gray-500">
                 <p class="mb-1 text-gray-700 dark:text-gray-300">
-                  {{ selectedModel.id }}：{{ selectedModel.description }}
+                  {{ selectedModel.id }}：{{
+                    getLocalizedModelDescription(currentProvider.id, selectedModel.id) || selectedModel.description
+                  }}
                 </p>
               </div>
             </div>
@@ -544,29 +587,31 @@ watch(
           <template v-else-if="configType === 'local'">
             <!-- API 端点 -->
             <div>
-              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">API 端点</label>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {{ t('apiEndpoint') }}
+              </label>
               <div class="flex gap-2">
                 <UInput v-model="formData.baseUrl" placeholder="http://localhost:11434/v1" class="flex-1" />
                 <UButton :loading="isValidating" :disabled="!formData.baseUrl" variant="soft" @click="validateKey">
-                  验证
+                  {{ t('validate') }}
                 </UButton>
               </div>
             </div>
 
             <!-- 模型名称 -->
             <div>
-              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">模型名称</label>
-              <UInput v-model="formData.model" placeholder="如 qwen3、deepseek-r1" class="w-full" />
-              <p class="mt-1 text-xs text-gray-500">输入本地部署的模型名称</p>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {{ t('modelName') }}
+              </label>
+              <UInput v-model="formData.model" :placeholder="t('modelNamePlaceholderLocal')" class="w-full" />
+              <p class="mt-1 text-xs text-gray-500">{{ t('modelNameHintLocal') }}</p>
             </div>
 
             <!-- 禁用思考模式 -->
             <div class="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
               <div>
-                <p class="text-sm font-medium text-gray-700 dark:text-gray-300">禁用思考模式</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">
-                  针对 Qwen3、DeepSeek-R1 等模型，禁用后使用标准工具调用格式
-                </p>
+                <p class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('disableThinking') }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('disableThinkingDesc') }}</p>
               </div>
               <USwitch v-model="formData.disableThinking" />
             </div>
@@ -600,17 +645,17 @@ watch(
                   class="h-4 w-4 transition-transform"
                   :class="{ 'rotate-90': showAdvanced }"
                 />
-                高级选项
+                {{ t('advancedOptions') }}
               </button>
 
               <div v-if="showAdvanced" class="mt-3 rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
                 <div>
                   <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     API Key
-                    <span class="font-normal text-gray-400">（可选）</span>
+                    <span class="font-normal text-gray-400">{{ t('optional') }}</span>
                   </label>
-                  <UInput v-model="formData.apiKey" type="password" placeholder="本地服务通常不需要" />
-                  <p class="mt-1 text-xs text-gray-500">如果服务设置了认证，在此输入</p>
+                  <UInput v-model="formData.apiKey" type="password" :placeholder="t('apiKeyPlaceholderLocal')" />
+                  <p class="mt-1 text-xs text-gray-500">{{ t('apiKeyHintLocal') }}</p>
                 </div>
               </div>
             </div>
@@ -627,9 +672,11 @@ watch(
 
             <!-- API 端点 -->
             <div>
-              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">API 端点</label>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {{ t('apiEndpoint') }}
+              </label>
               <UInput v-model="formData.baseUrl" class="w-full" placeholder="https://api.example.com/v1" />
-              <p class="mt-1 text-xs text-gray-500">兼容 OpenAI 格式的 API 端点</p>
+              <p class="mt-1 text-xs text-gray-500">{{ t('apiEndpointHint') }}</p>
             </div>
 
             <!-- API Key -->
@@ -639,7 +686,7 @@ watch(
                 <UInput
                   v-model="formData.apiKey"
                   type="password"
-                  :placeholder="mode === 'edit' ? '输入新的 API Key（留空保持原有）' : '输入你的 API Key'"
+                  :placeholder="mode === 'edit' ? t('apiKeyPlaceholderEdit') : t('apiKeyPlaceholder')"
                   class="flex-1"
                 />
                 <UButton
@@ -648,7 +695,7 @@ watch(
                   variant="soft"
                   @click="validateKey"
                 >
-                  验证
+                  {{ t('validate') }}
                 </UButton>
               </div>
               <!-- 验证结果 -->
@@ -672,21 +719,106 @@ watch(
 
             <!-- 模型名称 -->
             <div>
-              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">模型名称</label>
-              <UInput v-model="formData.model" class="w-full" placeholder="如 gpt-4、claude-3" />
-              <p class="mt-1 text-xs text-gray-500">输入 API 支持的模型名称</p>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {{ t('modelName') }}
+              </label>
+              <UInput v-model="formData.model" class="w-full" :placeholder="t('modelNamePlaceholder')" />
+              <p class="mt-1 text-xs text-gray-500">{{ t('modelNameHint') }}</p>
             </div>
           </template>
         </div>
 
         <!-- 底部按钮 -->
         <div class="mt-6 flex justify-end gap-2">
-          <UButton variant="soft" @click="closeModal">取消</UButton>
+          <UButton variant="soft" @click="closeModal">{{ t('cancel') }}</UButton>
           <UButton color="primary" :disabled="!canSave" :loading="isSaving" @click="saveConfig">
-            {{ mode === 'add' ? '添加' : '保存' }}
+            {{ mode === 'add' ? t('add') : t('save') }}
           </UButton>
         </div>
       </div>
     </template>
   </UModal>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "addConfig": "添加新配置",
+    "editConfig": "编辑配置",
+    "officialApi": "官方API",
+    "officialApiDesc": "DeepSeek、Gemini 等",
+    "localService": "本地服务",
+    "localServiceDesc": "Ollama 等",
+    "openaiCompatible": "OpenAI 兼容",
+    "openaiCompatibleDesc": "自定义端点",
+    "configName": "配置名称",
+    "optional": "（选填）",
+    "configNamePlaceholderPreset": "留空将使用服务商名称",
+    "configNamePlaceholderCustom": "留空将使用 API 端点地址",
+    "aiProvider": "AI 服务商",
+    "apiKeyPlaceholder": "输入你的 API Key",
+    "apiKeyPlaceholderEdit": "输入新的 API Key（留空保持原有）",
+    "apiKeyPlaceholderLocal": "本地服务通常不需要",
+    "apiKeyHintLocal": "如果服务设置了认证，在此输入",
+    "validate": "验证",
+    "validationSuccess": "连接验证成功",
+    "validationFailed": "连接验证失败",
+    "validationError": "验证失败：",
+    "model": "模型",
+    "modelName": "模型名称",
+    "modelNamePlaceholder": "如 gpt-4、claude-3",
+    "modelNamePlaceholderLocal": "如 qwen3、deepseek-r1",
+    "modelNameHint": "输入 API 支持的模型名称",
+    "modelNameHintLocal": "输入本地部署的模型名称",
+    "apiEndpoint": "API 端点",
+    "apiEndpointHint": "兼容 OpenAI 格式的 API 端点",
+    "disableThinking": "禁用思考模式",
+    "disableThinkingDesc": "针对 Qwen3、DeepSeek-R1 等模型，禁用后使用标准工具调用格式",
+    "advancedOptions": "高级选项",
+    "customService": "自定义服务",
+    "unnamedConfig": "未命名配置",
+    "cancel": "取消",
+    "add": "添加",
+    "save": "保存"
+  },
+  "en-US": {
+    "addConfig": "Add New Configuration",
+    "editConfig": "Edit Configuration",
+    "officialApi": "Official API",
+    "officialApiDesc": "DeepSeek, Gemini, etc.",
+    "localService": "Local Service",
+    "localServiceDesc": "Ollama, etc.",
+    "openaiCompatible": "OpenAI Compatible",
+    "openaiCompatibleDesc": "Custom endpoint",
+    "configName": "Configuration Name",
+    "optional": " (Optional)",
+    "configNamePlaceholderPreset": "Leave empty to use provider name",
+    "configNamePlaceholderCustom": "Leave empty to use API endpoint",
+    "aiProvider": "AI Provider",
+    "apiKeyPlaceholder": "Enter your API Key",
+    "apiKeyPlaceholderEdit": "Enter new API Key (leave empty to keep current)",
+    "apiKeyPlaceholderLocal": "Usually not required for local services",
+    "apiKeyHintLocal": "Enter if the service requires authentication",
+    "validate": "Validate",
+    "validationSuccess": "Connection validated successfully",
+    "validationFailed": "Connection validation failed",
+    "validationError": "Validation failed: ",
+    "model": "Model",
+    "modelName": "Model Name",
+    "modelNamePlaceholder": "e.g. gpt-4, claude-3",
+    "modelNamePlaceholderLocal": "e.g. qwen3, deepseek-r1",
+    "modelNameHint": "Enter the model name supported by the API",
+    "modelNameHintLocal": "Enter the locally deployed model name",
+    "apiEndpoint": "API Endpoint",
+    "apiEndpointHint": "OpenAI-compatible API endpoint",
+    "disableThinking": "Disable Thinking Mode",
+    "disableThinkingDesc": "For models like Qwen3, DeepSeek-R1. Uses standard tool calling format when disabled.",
+    "advancedOptions": "Advanced Options",
+    "customService": "Custom Service",
+    "unnamedConfig": "Unnamed Configuration",
+    "cancel": "Cancel",
+    "add": "Add",
+    "save": "Save"
+  }
+}
+</i18n>

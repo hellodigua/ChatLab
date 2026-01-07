@@ -81,7 +81,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       const format = formatFeature?.name || null
       console.log('[IpcMain] Detected format:', format)
       if (!format) {
-        return { error: '无法识别的文件格式' }
+        return { error: 'error.unrecognized_format' }
       }
 
       return { filePath, format }
@@ -98,11 +98,11 @@ export function registerChatHandlers(ctx: IpcContext): void {
     console.log('[IpcMain] chat:import called with:', filePath)
 
     try {
-      // 发送进度：开始检测格式
+      // Send progress: detecting format (message not used by frontend, stage-based translation)
       win.webContents.send('chat:importProgress', {
         stage: 'detecting',
         progress: 5,
-        message: '正在检测文件格式...',
+        message: '', // Frontend translates based on stage
       })
 
       // 使用流式导入（在 Worker 线程中执行）

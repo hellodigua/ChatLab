@@ -83,7 +83,7 @@ async function* parseChatLab(options: ParseOptions): AsyncGenerator<ParseEvent, 
   let messagesProcessed = 0
 
   // 发送初始进度
-  const initialProgress = createProgress('parsing', 0, totalBytes, 0, '开始解析...')
+  const initialProgress = createProgress('parsing', 0, totalBytes, 0, '')
   yield { type: 'progress', data: initialProgress }
   onProgress?.(initialProgress)
 
@@ -245,7 +245,7 @@ async function* parseChatLab(options: ParseOptions): AsyncGenerator<ParseEvent, 
   }
 
   // 完成
-  const doneProgress = createProgress('done', totalBytes, totalBytes, messagesProcessed, '解析完成')
+  const doneProgress = createProgress('done', totalBytes, totalBytes, messagesProcessed, '')
   yield { type: 'progress', data: doneProgress }
   onProgress?.(doneProgress)
 

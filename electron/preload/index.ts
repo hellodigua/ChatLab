@@ -865,6 +865,7 @@ const agentApi = {
    * @param historyMessages 对话历史（可选，用于上下文关联）
    * @param chatType 聊天类型（'group' | 'private'）
    * @param promptConfig 用户自定义提示词配置（可选）
+   * @param locale 语言设置（可选，默认 'zh-CN'）
    * @returns 返回 { requestId, promise }，requestId 可用于中止请求
    */
   runStream: (
@@ -873,7 +874,8 @@ const agentApi = {
     onChunk?: (chunk: AgentStreamChunk) => void,
     historyMessages?: Array<{ role: 'user' | 'assistant'; content: string }>,
     chatType?: 'group' | 'private',
-    promptConfig?: PromptConfig
+    promptConfig?: PromptConfig,
+    locale?: string
   ): { requestId: string; promise: Promise<{ success: boolean; result?: AgentResult; error?: string }> } => {
     const requestId = `agent_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
     console.log(
@@ -901,21 +903,29 @@ const agentApi = {
       }
 
       // 监听完成事件
-      const completeHandler = (_event: Electron.IpcRendererEvent, data: { requestId: string; result: AgentResult }) => {
+      const completeHandler = (
+        _event: Electron.IpcRendererEvent,
+        data: { requestId: string; result: AgentResult & { error?: string } }
+      ) => {
         if (data.requestId === requestId) {
-          console.log('[preload] Agent 完成，requestId:', requestId)
+          console.log('[preload] Agent 完成，requestId:', requestId, 'hasError:', !!data.result?.error)
           ipcRenderer.removeListener('agent:streamChunk', chunkHandler)
           ipcRenderer.removeListener('agent:complete', completeHandler)
-          resolve({ success: true, result: data.result })
+          // 如果 result 中包含 error，返回失败状态
+          if (data.result?.error) {
+            resolve({ success: false, error: data.result.error })
+          } else {
+            resolve({ success: true, result: data.result })
+          }
         }
       }
 
       ipcRenderer.on('agent:streamChunk', chunkHandler)
       ipcRenderer.on('agent:complete', completeHandler)
 
-      // 发起请求（传递历史消息、聊天类型和提示词配置）
+      // 发起请求（传递历史消息、聊天类型、提示词配置和语言设置）
       ipcRenderer
-        .invoke('agent:runStream', requestId, userMessage, context, historyMessages, chatType, promptConfig)
+        .invoke('agent:runStream', requestId, userMessage, context, historyMessages, chatType, promptConfig, locale)
         .then((result) => {
           console.log('[preload] Agent invoke 返回:', result)
           if (!result.success) {

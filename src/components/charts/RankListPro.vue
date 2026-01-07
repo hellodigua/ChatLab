@@ -52,7 +52,7 @@ const showViewAll = computed(() => {
 
       <div class="no-capture flex items-center gap-1">
         <!-- 卡片截屏按钮 -->
-        <CaptureButton :tooltip="t('captureCard')" size="xs" type="element" :target-element="cardRef" />
+        <CaptureButton size="xs" type="element" :target-element="cardRef" />
 
         <!-- 完整排行榜 Dialog -->
         <UModal v-model:open="isOpen" :ui="{ content: 'md:w-full max-w-3xl' }">
@@ -67,12 +67,7 @@ const showViewAll = computed(() => {
                   <h3 class="text-lg font-semibold text-gray-900 whitespace-nowrap dark:text-white">{{ title }}</h3>
                   <span class="text-sm text-gray-500">（{{ t('memberCount', { count: members.length }) }}）</span>
                 </div>
-                <CaptureButton
-                  :tooltip="t('captureFullRanking')"
-                  size="xs"
-                  type="element"
-                  :target-element="modalBodyRef"
-                />
+                <CaptureButton size="xs" type="element" :target-element="modalBodyRef" />
               </div>
               <!-- Body -->
               <div class="max-h-[60vh] p-4 overflow-y-auto">
@@ -91,14 +86,10 @@ const showViewAll = computed(() => {
 <i18n>
 {
   "zh-CN": {
-    "captureCard": "截屏当前卡片",
-    "captureFullRanking": "截屏完整排行",
     "fullRanking": "完整排行",
     "memberCount": "共 {count} 位成员"
   },
   "en-US": {
-    "captureCard": "Screenshot card",
-    "captureFullRanking": "Screenshot full ranking",
     "fullRanking": "Full Ranking",
     "memberCount": "{count} members"
   }

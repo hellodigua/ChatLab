@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { TableSchema } from './types'
 import { getTableLabel, getColumnLabel } from './types'
+import type { LocaleType } from '@/i18n/types'
+
+const { t, locale } = useI18n()
 
 // Props
 const props = defineProps<{
@@ -67,7 +71,7 @@ onMounted(() => {
   >
     <!-- 面板头部 -->
     <div class="flex items-center justify-between border-b border-gray-200 p-2 dark:border-gray-800">
-      <span v-if="!isCollapsed" class="text-xs font-medium text-gray-500 dark:text-gray-400">数据表</span>
+      <span v-if="!isCollapsed" class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ t('tables') }}</span>
       <button
         class="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
         @click="isCollapsed = !isCollapsed"
@@ -90,7 +94,9 @@ onMounted(() => {
           />
           <UIcon name="i-heroicons-table-cells" class="h-4 w-4 shrink-0 text-pink-500" />
           <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ table.name }}</span>
-          <span class="flex-1 truncate text-right text-xs text-gray-400">{{ getTableLabel(table.name) }}</span>
+          <span class="flex-1 truncate text-right text-xs text-gray-400">
+            {{ getTableLabel(table.name, locale as LocaleType) }}
+          </span>
         </button>
 
         <!-- 列列表 -->
@@ -99,14 +105,19 @@ onMounted(() => {
             v-for="column in table.columns"
             :key="column.name"
             class="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-xs transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-            title="双击插入到 SQL"
+            :title="t('doubleClickToInsert')"
             @dblclick="handleInsertColumn(table.name, column.name)"
           >
-            <UIcon v-if="column.pk" name="i-heroicons-key" class="h-3 w-3 shrink-0 text-yellow-500" title="主键" />
+            <UIcon
+              v-if="column.pk"
+              name="i-heroicons-key"
+              class="h-3 w-3 shrink-0 text-yellow-500"
+              :title="t('primaryKey')"
+            />
             <span class="font-mono text-gray-700 dark:text-gray-300">{{ column.name }}</span>
-            <span class="flex-1 truncate text-right text-[10px] text-gray-400">{{
-              getColumnLabel(table.name, column.name)
-            }}</span>
+            <span class="flex-1 truncate text-right text-[10px] text-gray-400">
+              {{ getColumnLabel(table.name, column.name, locale as LocaleType) }}
+            </span>
           </button>
         </div>
       </div>
@@ -118,7 +129,7 @@ onMounted(() => {
         v-for="table in schema"
         :key="table.name"
         class="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-pink-500 dark:hover:bg-gray-800"
-        :title="`${getTableLabel(table.name)} (${table.name})`"
+        :title="`${getTableLabel(table.name, locale as LocaleType)} (${table.name})`"
         @click="expandTable(table.name)"
       >
         <UIcon name="i-heroicons-table-cells" class="h-4 w-4" />
@@ -127,3 +138,17 @@ onMounted(() => {
   </div>
 </template>
 
+<i18n>
+{
+  "zh-CN": {
+    "tables": "数据表",
+    "doubleClickToInsert": "双击插入到 SQL",
+    "primaryKey": "主键"
+  },
+  "en-US": {
+    "tables": "Tables",
+    "doubleClickToInsert": "Double-click to insert into SQL",
+    "primaryKey": "Primary Key"
+  }
+}
+</i18n>

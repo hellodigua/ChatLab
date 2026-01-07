@@ -25,7 +25,6 @@
     "year": "{year}年"
   },
   "tooltip": {
-    "chatViewer": "聊天记录查看器",
-    "screenshot": "截屏当前页面"
+    "chatViewer": "聊天记录查看器"
   }
 }

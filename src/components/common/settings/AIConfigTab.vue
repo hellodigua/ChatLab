@@ -117,6 +117,13 @@ async function setActive(id: string) {
 }
 
 function getProviderName(providerId: string): string {
+  // Get localized provider name
+  const key = `providers.${providerId}.name`
+  const translated = t(key)
+  if (translated !== key) {
+    return translated
+  }
+  // Fallback to original name
   return providers.value.find((p) => p.id === providerId)?.name || providerId
 }
 
@@ -173,7 +180,9 @@ onMounted(() => {
           <div>
             <div class="flex items-center gap-2">
               <span class="font-medium text-gray-900 dark:text-white">{{ config.name }}</span>
-              <UBadge v-if="config.id === activeConfigId" color="primary" variant="soft" size="xs">{{ t('settings.aiConfig.inUse') }}</UBadge>
+              <UBadge v-if="config.id === activeConfigId" color="primary" variant="soft" size="xs">
+                {{ t('settings.aiConfig.inUse') }}
+              </UBadge>
             </div>
             <div class="mt-0.5 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               <span>{{ getProviderName(config.provider) }}</span>
@@ -181,7 +190,7 @@ onMounted(() => {
               <span>{{ config.model || t('settings.aiConfig.defaultModel') }}</span>
               <span v-if="config.baseUrl">·</span>
               <span v-if="config.baseUrl" class="text-violet-500">
-                {{ config.provider === 'openai-compatible' ? t('settings.aiConfig.localService') : t('settings.aiConfig.customEndpoint') }}
+                {{ t('settings.aiConfig.customEndpoint') }}
               </span>
             </div>
           </div>
@@ -189,8 +198,12 @@ onMounted(() => {
 
         <!-- 操作按钮 -->
         <div class="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100" @click.stop>
-          <UButton size="xs" color="gray" variant="ghost" @click="openEditModal(config)">{{ t('settings.aiConfig.edit') }}</UButton>
-          <UButton size="xs" color="error" variant="ghost" @click="deleteConfig(config.id)">{{ t('settings.aiConfig.delete') }}</UButton>
+          <UButton size="xs" color="gray" variant="ghost" @click="openEditModal(config)">
+            {{ t('settings.aiConfig.edit') }}
+          </UButton>
+          <UButton size="xs" color="error" variant="ghost" @click="deleteConfig(config.id)">
+            {{ t('settings.aiConfig.delete') }}
+          </UButton>
         </div>
       </div>
     </div>

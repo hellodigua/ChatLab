@@ -29,6 +29,8 @@ export interface ToolContext {
   maxMessagesLimit?: number
   /** Owner 信息（当前用户在对话中的身份） */
   ownerInfo?: OwnerInfo
+  /** 语言环境（用于工具返回结果的国际化） */
+  locale?: string
 }
 
 /**

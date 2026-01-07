@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import type { PromptPreset } from '@/types/ai'
 import AIPromptEditModal from './AIPromptEditModal.vue'
+import ImportPresetModal from './ImportPresetModal.vue'
 import { usePromptStore } from '@/stores/prompt'
 
 const { t } = useI18n()
@@ -19,6 +20,7 @@ const emit = defineEmits<{
 
 // 弹窗状态
 const showEditModal = ref(false)
+const showImportModal = ref(false)
 const editMode = ref<'add' | 'edit'>('add')
 const editingPreset = ref<PromptPreset | null>(null)
 const defaultChatType = ref<'group' | 'private'>('group')
@@ -27,7 +29,7 @@ const defaultChatType = ref<'group' | 'private'>('group')
 const globalMaxMessages = computed({
   get: () => aiGlobalSettings.value.maxMessagesPerRequest,
   set: (val: number) => {
-    const clampedVal = Math.max(10, Math.min(5000, val || 200))
+    const clampedVal = Math.max(10, Math.min(10000, val || 200))
     promptStore.updateAIGlobalSettings({ maxMessagesPerRequest: clampedVal })
     emit('config-changed')
   },
@@ -93,6 +95,11 @@ function isActivePreset(presetId: string, chatType: 'group' | 'private'): boolea
   }
   return aiPromptSettings.value.activePrivatePresetId === presetId
 }
+
+/** 导入预设后的回调 */
+function handleImportPresetAdded() {
+  emit('config-changed')
+}
 </script>
 
 <template>
@@ -114,7 +121,7 @@ function isActivePreset(presetId: string, chatType: 'group' | 'private'): boolea
               {{ t('settings.aiPrompt.maxMessages.description') }}
             </p>
           </div>
-          <UInput v-model.number="globalMaxMessages" type="number" min="1" max="5000" class="w-24" />
+          <UInput v-model.number="globalMaxMessages" type="number" min="1" max="10000" class="w-24" />
         </div>
 
         <!-- AI上下文限制 -->
@@ -134,6 +141,18 @@ function isActivePreset(presetId: string, chatType: 'group' | 'private'): boolea
 
     <!-- 分隔线 -->
     <div class="border-t border-gray-200 dark:border-gray-700"></div>
+
+    <!-- 系统提示词标题和导入按钮 -->
+    <div class="flex items-center justify-between">
+      <h4 class="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
+        <UIcon name="i-heroicons-document-text" class="h-4 w-4 text-amber-500" />
+        {{ t('settings.aiPrompt.presets.title') }}
+      </h4>
+      <UButton variant="soft" color="primary" size="xs" @click="showImportModal = true">
+        <UIcon name="i-heroicons-cloud-arrow-down" class="mr-1 h-3.5 w-3.5" />
+        {{ t('settings.aiPrompt.presets.import') }}
+      </UButton>
+    </div>
 
     <!-- 群聊和私聊系统提示词并排 -->
     <div class="grid grid-cols-2 gap-4">
@@ -178,16 +197,20 @@ function isActivePreset(presetId: string, chatType: 'group' | 'private'): boolea
               </div>
               <div class="flex items-center gap-1.5">
                 <span class="text-xs font-medium text-gray-900 dark:text-white">{{ preset.name }}</span>
-                <UBadge v-if="preset.isBuiltIn" color="gray" variant="soft" size="xs">{{ t("settings.aiPrompt.preset.builtIn") }}</UBadge>
+                <UBadge v-if="preset.isBuiltIn" color="gray" variant="soft" size="xs">
+                  {{ t('settings.aiPrompt.preset.builtIn') }}
+                </UBadge>
               </div>
             </div>
 
             <!-- 操作按钮 -->
             <div class="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100" @click.stop>
               <UButton color="gray" variant="ghost" size="xs" @click="openEditModal(preset)">
-                {{ preset.isBuiltIn ? t("settings.aiPrompt.preset.view") : t("settings.aiPrompt.preset.edit") }}
+                {{ preset.isBuiltIn ? t('settings.aiPrompt.preset.view') : t('settings.aiPrompt.preset.edit') }}
               </UButton>
-              <UButton color="gray" variant="ghost" size="xs" @click="duplicatePreset(preset.id)">{{ t("settings.aiPrompt.preset.copy") }}</UButton>
+              <UButton color="gray" variant="ghost" size="xs" @click="duplicatePreset(preset.id)">
+                {{ t('settings.aiPrompt.preset.copy') }}
+              </UButton>
               <UButton
                 v-if="!preset.isBuiltIn"
                 color="error"
@@ -195,7 +218,7 @@ function isActivePreset(presetId: string, chatType: 'group' | 'private'): boolea
                 size="xs"
                 @click="deletePreset(preset.id)"
               >
-                {{ t("settings.aiPrompt.preset.delete") }}
+                {{ t('settings.aiPrompt.preset.delete') }}
               </UButton>
             </div>
           </div>
@@ -243,16 +266,20 @@ function isActivePreset(presetId: string, chatType: 'group' | 'private'): boolea
               </div>
               <div class="flex items-center gap-1.5">
                 <span class="text-xs font-medium text-gray-900 dark:text-white">{{ preset.name }}</span>
-                <UBadge v-if="preset.isBuiltIn" color="gray" variant="soft" size="xs">{{ t("settings.aiPrompt.preset.builtIn") }}</UBadge>
+                <UBadge v-if="preset.isBuiltIn" color="gray" variant="soft" size="xs">
+                  {{ t('settings.aiPrompt.preset.builtIn') }}
+                </UBadge>
               </div>
             </div>
 
             <!-- 操作按钮 -->
             <div class="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100" @click.stop>
               <UButton color="gray" variant="ghost" size="xs" @click="openEditModal(preset)">
-                {{ preset.isBuiltIn ? t("settings.aiPrompt.preset.view") : t("settings.aiPrompt.preset.edit") }}
+                {{ preset.isBuiltIn ? t('settings.aiPrompt.preset.view') : t('settings.aiPrompt.preset.edit') }}
               </UButton>
-              <UButton color="gray" variant="ghost" size="xs" @click="duplicatePreset(preset.id)">{{ t("settings.aiPrompt.preset.copy") }}</UButton>
+              <UButton color="gray" variant="ghost" size="xs" @click="duplicatePreset(preset.id)">
+                {{ t('settings.aiPrompt.preset.copy') }}
+              </UButton>
               <UButton
                 v-if="!preset.isBuiltIn"
                 color="error"
@@ -260,7 +287,7 @@ function isActivePreset(presetId: string, chatType: 'group' | 'private'): boolea
                 size="xs"
                 @click="deletePreset(preset.id)"
               >
-                {{ t("settings.aiPrompt.preset.delete") }}
+                {{ t('settings.aiPrompt.preset.delete') }}
               </UButton>
             </div>
           </div>
@@ -277,4 +304,7 @@ function isActivePreset(presetId: string, chatType: 'group' | 'private'): boolea
     :default-chat-type="defaultChatType"
     @saved="handleModalSaved"
   />
+
+  <!-- 导入预设弹窗 -->
+  <ImportPresetModal v-model:open="showImportModal" @preset-added="handleImportPresetAdded" />
 </template>

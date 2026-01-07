@@ -4,8 +4,11 @@
  * 支持消息ID、成员、时间范围、关键词的组合筛选
  */
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import type { ChatRecordQuery, FilterFormData } from './types'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   /** 当前查询条件 */
@@ -116,20 +119,8 @@ function resetFilter() {
   <div class="border-b border-gray-200 px-4 py-3 dark:border-gray-800">
     <!-- 第一行：消息ID、成员、时间范围 -->
     <div class="flex items-center gap-3">
-      <UInput
-        v-model="formData.messageId"
-        type="number"
-        placeholder="消息 ID"
-        size="sm"
-        class="w-24"
-      />
-      <UInput
-        v-model="formData.memberName"
-        placeholder="成员（暂不支持）"
-        size="sm"
-        class="w-28"
-        disabled
-      />
+      <UInput v-model="formData.messageId" type="number" :placeholder="t('messageId')" size="sm" class="w-24" />
+      <UInput v-model="formData.memberName" :placeholder="t('memberNotSupported')" size="sm" class="w-28" disabled />
       <div class="flex items-center gap-2">
         <UInput v-model="formData.startDate" type="date" size="sm" class="w-32" />
         <span class="text-xs text-gray-400">~</span>
@@ -141,20 +132,38 @@ function resetFilter() {
     <div class="mt-2 flex items-center gap-3">
       <UInput
         v-model="formData.keywords"
-        placeholder="关键词，多个用逗号分隔，回车搜索"
+        :placeholder="t('keywordsPlaceholder')"
         size="sm"
         class="flex-1"
         @keydown="handleKeywordsKeydown"
       />
       <div class="flex gap-2">
         <UButton color="neutral" variant="ghost" size="sm" @click="resetFilter">
-          重置
+          {{ t('reset') }}
         </UButton>
         <UButton color="primary" size="sm" @click="applyFilter">
-          筛选
+          {{ t('filter') }}
         </UButton>
       </div>
     </div>
   </div>
 </template>
 
+<i18n>
+{
+  "zh-CN": {
+    "messageId": "消息 ID",
+    "memberNotSupported": "成员（暂不支持）",
+    "keywordsPlaceholder": "关键词，多个用逗号分隔，回车搜索",
+    "reset": "重置",
+    "filter": "筛选"
+  },
+  "en-US": {
+    "messageId": "Message ID",
+    "memberNotSupported": "Member (not supported)",
+    "keywordsPlaceholder": "Keywords, comma separated, Enter to search",
+    "reset": "Reset",
+    "filter": "Filter"
+  }
+}
+</i18n>

@@ -75,12 +75,34 @@ export interface TokenUsage {
   totalTokens: number
 }
 
-// 工具名称映射（英文 → 中文）
-const TOOL_DISPLAY_NAMES: Record<string, string> = {
-  search_messages: '搜索聊天记录',
-  get_recent_messages: '获取最近消息',
-  get_member_stats: '获取成员统计',
-  get_time_stats: '获取时间分布',
+// 工具名称多语言映射
+const TOOL_DISPLAY_NAMES_I18N: Record<string, Record<string, string>> = {
+  'zh-CN': {
+    search_messages: '搜索聊天记录',
+    get_recent_messages: '获取最近消息',
+    get_member_stats: '获取成员统计',
+    get_time_stats: '获取时间分布',
+    get_group_members: '获取成员列表',
+    get_member_name_history: '获取昵称历史',
+    get_conversation_between: '获取对话记录',
+    get_message_context: '获取上下文',
+  },
+  'en-US': {
+    search_messages: 'Search Messages',
+    get_recent_messages: 'Get Recent Messages',
+    get_member_stats: 'Get Member Stats',
+    get_time_stats: 'Get Time Stats',
+    get_group_members: 'Get Members',
+    get_member_name_history: 'Get Nickname History',
+    get_conversation_between: 'Get Conversation',
+    get_message_context: 'Get Message Context',
+  },
+}
+
+// 获取工具显示名称
+function getToolDisplayName(toolName: string, locale: string): string {
+  const names = TOOL_DISPLAY_NAMES_I18N[locale] || TOOL_DISPLAY_NAMES_I18N['zh-CN']
+  return names[toolName] || toolName
 }
 
 /** Owner 信息类型 */
@@ -92,7 +114,8 @@ interface OwnerInfo {
 export function useAIChat(
   sessionId: string,
   timeFilter?: { startTs: number; endTs: number },
-  chatType: 'group' | 'private' = 'group'
+  chatType: 'group' | 'private' = 'group',
+  locale: string = 'zh-CN'
 ) {
   // 获取 chat store 中的提示词配置和全局设置
   const promptStore = usePromptStore()
@@ -263,7 +286,7 @@ export function useAIChat(
         type: 'tool',
         tool: {
           name: toolName,
-          displayName: TOOL_DISPLAY_NAMES[toolName] || toolName,
+          displayName: getToolDisplayName(toolName, locale),
           status: 'running',
           params,
         },
@@ -326,7 +349,7 @@ export function useAIChat(
         promptConfig: currentPromptConfig.value,
       })
 
-      // 获取 requestId 和 promise（传递历史消息、聊天类型和提示词配置）
+      // 获取 requestId 和 promise（传递历史消息、聊天类型、提示词配置和语言设置）
       const { requestId: agentReqId, promise: agentPromise } = window.agentApi.runStream(
         content,
         context,
@@ -362,7 +385,7 @@ export function useAIChat(
                 const toolParams = chunk.toolParams as Record<string, unknown> | undefined
                 currentToolStatus.value = {
                   name: chunk.toolName,
-                  displayName: TOOL_DISPLAY_NAMES[chunk.toolName] || chunk.toolName,
+                  displayName: getToolDisplayName(chunk.toolName, locale),
                   status: 'running',
                 }
                 toolsUsedInCurrentRound.value.push(chunk.toolName)
@@ -423,7 +446,8 @@ export function useAIChat(
         {
           roleDefinition: currentPromptConfig.value.roleDefinition,
           responseRules: currentPromptConfig.value.responseRules,
-        }
+        },
+        locale
       )
 
       // 存储 Agent 请求 ID（用于中止）

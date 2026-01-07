@@ -4,9 +4,12 @@
  * 支持 Owner 消息显示在右侧（类似聊天界面）
  */
 import { computed, ref, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import type { ChatRecordMessage } from './types'
 import { useSessionStore } from '@/stores/session'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   /** 消息数据 */
@@ -262,7 +265,7 @@ function highlightContent(content: string): string {
           >
             <button
               class="mt-1 flex h-6 w-6 items-center justify-center rounded opacity-0 transition-opacity hover:bg-gray-200 group-hover:opacity-100 dark:hover:bg-gray-700"
-              title="查看上下文"
+              :title="t('viewContext')"
               @click="openContextPopover"
             >
               <UIcon name="i-heroicons-chat-bubble-left-ellipsis" class="h-4 w-4 text-gray-400" />
@@ -271,7 +274,7 @@ function highlightContent(content: string): string {
             <template #content>
               <div class="context-popover-content w-80 max-h-96 overflow-y-auto">
                 <div class="px-3 py-2 border-b border-gray-200 dark:border-gray-700">
-                  <span class="text-xs font-medium text-gray-500">消息上下文（前后各10条）</span>
+                  <span class="text-xs font-medium text-gray-500">{{ t('contextTitle') }}</span>
                 </div>
 
                 <div v-if="isLoadingContext" class="flex items-center justify-center py-8">
@@ -279,7 +282,7 @@ function highlightContent(content: string): string {
                 </div>
 
                 <div v-else-if="contextMessages.length === 0" class="py-8 text-center text-sm text-gray-400">
-                  暂无上下文
+                  {{ t('noContext') }}
                 </div>
 
                 <div v-else class="divide-y divide-gray-100 dark:divide-gray-800">
@@ -311,3 +314,18 @@ function highlightContent(content: string): string {
     </div>
   </div>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "viewContext": "查看上下文",
+    "contextTitle": "消息上下文（前后各10条）",
+    "noContext": "暂无上下文"
+  },
+  "en-US": {
+    "viewContext": "View Context",
+    "contextTitle": "Message Context (10 before and after)",
+    "noContext": "No context available"
+  }
+}
+</i18n>

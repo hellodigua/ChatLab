@@ -56,7 +56,7 @@ const formattedCount = computed(() => {
         <slot name="headerRight" />
 
         <!-- 卡片截屏按钮 -->
-        <CaptureButton :tooltip="t('captureList')" size="xs" type="element" :target-element="cardRef" />
+        <CaptureButton size="xs" type="element" :target-element="cardRef" />
 
         <!-- 完整列表弹窗 -->
         <UModal v-model:open="isOpen" :ui="{ content: 'md:w-full max-w-3xl' }">
@@ -71,12 +71,7 @@ const formattedCount = computed(() => {
                   <h3 class="text-lg font-semibold text-gray-900 whitespace-nowrap dark:text-white">{{ title }}</h3>
                   <span class="text-sm text-gray-500">（{{ formattedCount }}）</span>
                 </div>
-                <CaptureButton
-                  :tooltip="t('captureFullList')"
-                  size="xs"
-                  type="element"
-                  :target-element="modalBodyRef"
-                />
+                <CaptureButton size="xs" type="element" :target-element="modalBodyRef" />
               </div>
               <!-- Body -->
               <div class="max-h-[60vh] p-4 divide-y divide-gray-100 overflow-y-auto dark:divide-gray-800">
@@ -113,15 +108,11 @@ const formattedCount = computed(() => {
 {
   "zh-CN": {
     "countTemplate": "共 {count} 项",
-    "captureList": "截屏列表",
-    "captureFullList": "截屏完整列表",
     "fullRanking": "完整排行",
     "empty": "暂无数据"
   },
   "en-US": {
     "countTemplate": "{count} items",
-    "captureList": "Screenshot list",
-    "captureFullList": "Screenshot full list",
     "fullRanking": "Full Ranking",
     "empty": "No data"
   }

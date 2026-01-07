@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import MarkdownIt from 'markdown-it'
 import type { SQLResult } from './types'
 import { COLUMN_LABELS } from './types'
+
+const { t, locale } = useI18n()
 
 // 创建 markdown-it 实例
 const md = new MarkdownIt({
@@ -36,14 +39,17 @@ const summaryContent = ref('')
 const summaryError = ref<string | null>(null)
 const streamingContent = ref('')
 
-// 获取列的中文标签（尝试匹配所有表的列）
-function getColumnLabel(columnName: string): string | null {
+// 获取列的标签（尝试匹配所有表的列）
+function getColumnLabelLocal(columnName: string): string | null {
   // 处理带表名前缀的情况，如 "message.sender_id" 或 "m.sender_id"
   const parts = columnName.split('.')
   const colName = parts.length > 1 ? parts[parts.length - 1] : columnName
 
+  // 获取当前语言的标签
+  const localeLabels = COLUMN_LABELS[locale.value as 'zh-CN' | 'en-US'] || COLUMN_LABELS['zh-CN']
+
   // 遍历所有表查找匹配
-  for (const tableColumns of Object.values(COLUMN_LABELS)) {
+  for (const tableColumns of Object.values(localeLabels)) {
     if (tableColumns[colName]) {
       return tableColumns[colName]
     }
@@ -157,7 +163,7 @@ async function openSummaryModal() {
 async function generateSummary() {
   const hasConfig = await window.llmApi.hasConfig()
   if (!hasConfig) {
-    summaryError.value = '请先在设置中配置 AI 服务'
+    summaryError.value = t('errorNoAIConfig')
     return
   }
 
@@ -203,7 +209,7 @@ ${resultSummary}
     if (result.success) {
       summaryContent.value = streamingContent.value
     } else {
-      summaryError.value = result.error || '总结失败'
+      summaryError.value = result.error || t('errorSummary')
     }
   } catch (err: any) {
     summaryError.value = err.message || String(err)
@@ -230,7 +236,7 @@ defineExpose({ resetSort })
       <div class="flex items-start gap-2">
         <UIcon name="i-heroicons-exclamation-circle" class="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
         <div class="min-w-0 flex-1">
-          <p class="text-sm font-medium text-red-800 dark:text-red-200">查询错误</p>
+          <p class="text-sm font-medium text-red-800 dark:text-red-200">{{ t('queryError') }}</p>
           <p class="mt-1 break-all font-mono text-xs text-red-600 dark:text-red-400">{{ error }}</p>
         </div>
       </div>
@@ -244,8 +250,8 @@ defineExpose({ resetSort })
       <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
         <span>
           <UIcon name="i-heroicons-table-cells" class="mr-1 inline h-4 w-4" />
-          {{ result.rowCount }} 行
-          <span v-if="result.limited" class="text-yellow-600 dark:text-yellow-400">（已截断至 1000 行）</span>
+          {{ t('rows', { count: result.rowCount }) }}
+          <span v-if="result.limited" class="text-yellow-600 dark:text-yellow-400">{{ t('truncated') }}</span>
         </span>
         <span>
           <UIcon name="i-heroicons-clock" class="mr-1 inline h-4 w-4" />
@@ -255,11 +261,11 @@ defineExpose({ resetSort })
       <div class="flex items-center gap-2">
         <UButton variant="ghost" size="xs" @click="openSummaryModal">
           <UIcon name="i-heroicons-sparkles" class="mr-1 h-4 w-4" />
-          总结一下
+          {{ t('summarize') }}
         </UButton>
         <UButton variant="ghost" size="xs" @click="copyAsCSV">
           <UIcon name="i-heroicons-clipboard-document" class="mr-1 h-4 w-4" />
-          复制 CSV
+          {{ t('copyCSV') }}
         </UButton>
       </div>
     </div>
@@ -277,8 +283,8 @@ defineExpose({ resetSort })
             >
               <div class="flex items-center gap-1">
                 <div class="flex flex-col">
-                  <span class="text-gray-700 dark:text-gray-300">{{ getColumnLabel(column) || column }}</span>
-                  <span v-if="getColumnLabel(column)" class="font-mono text-[10px] text-gray-400">{{ column }}</span>
+                  <span class="text-gray-700 dark:text-gray-300">{{ getColumnLabelLocal(column) || column }}</span>
+                  <span v-if="getColumnLabelLocal(column)" class="font-mono text-[10px] text-gray-400">{{ column }}</span>
                 </div>
                 <UIcon
                   v-if="sortColumn === column"
@@ -312,7 +318,7 @@ defineExpose({ resetSort })
     >
       <div class="text-center">
         <UIcon name="i-heroicons-inbox" class="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600" />
-        <p class="mt-2 text-sm">查询结果为空</p>
+        <p class="mt-2 text-sm">{{ t('emptyResult') }}</p>
       </div>
     </div>
 
@@ -320,8 +326,8 @@ defineExpose({ resetSort })
     <div v-else-if="!error" class="flex flex-1 items-center justify-center text-gray-500 dark:text-gray-400">
       <div class="text-center">
         <UIcon name="i-heroicons-command-line" class="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600" />
-        <p class="mt-2 text-sm">输入 SQL 语句并运行查看结果</p>
-        <p class="mt-1 text-xs text-gray-400">仅支持 SELECT 查询，结果最多返回 1000 行</p>
+        <p class="mt-2 text-sm">{{ t('initialState') }}</p>
+        <p class="mt-1 text-xs text-gray-400">{{ t('initialHint') }}</p>
       </div>
     </div>
 
@@ -331,13 +337,13 @@ defineExpose({ resetSort })
         <div class="max-h-[70vh] overflow-hidden p-6">
           <div class="mb-4 flex items-center gap-2">
             <UIcon name="i-heroicons-sparkles" class="h-5 w-5 text-pink-500" />
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">AI 结果总结</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('summaryTitle') }}</h3>
           </div>
 
           <!-- 加载状态 -->
           <div v-if="isSummarizing && !streamingContent" class="flex items-center justify-center py-8">
             <UIcon name="i-heroicons-arrow-path" class="h-6 w-6 animate-spin text-pink-500" />
-            <span class="ml-2 text-sm text-gray-500">AI 正在分析结果...</span>
+            <span class="ml-2 text-sm text-gray-500">{{ t('analyzing') }}</span>
           </div>
 
           <!-- 流式输出 / 最终结果 -->
@@ -348,7 +354,7 @@ defineExpose({ resetSort })
             />
             <div v-if="isSummarizing" class="mt-2 flex items-center text-xs text-gray-400">
               <UIcon name="i-heroicons-arrow-path" class="mr-1 h-3 w-3 animate-spin" />
-              生成中...
+              {{ t('generating') }}
             </div>
           </div>
 
@@ -361,14 +367,53 @@ defineExpose({ resetSort })
           <div class="mt-4 flex justify-end gap-2">
             <UButton v-if="!isSummarizing && summaryContent" variant="outline" @click="generateSummary">
               <UIcon name="i-heroicons-arrow-path" class="mr-1 h-4 w-4" />
-              重新生成
+              {{ t('regenerate') }}
             </UButton>
-            <UButton variant="ghost" @click="closeSummaryModal">关闭</UButton>
+            <UButton variant="ghost" @click="closeSummaryModal">{{ t('close') }}</UButton>
           </div>
         </div>
       </template>
     </UModal>
   </div>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "queryError": "查询错误",
+    "rows": "{count} 行",
+    "truncated": "（已截断至 1000 行）",
+    "summarize": "总结一下",
+    "copyCSV": "复制 CSV",
+    "emptyResult": "查询结果为空",
+    "initialState": "输入 SQL 语句并运行查看结果",
+    "initialHint": "仅支持 SELECT 查询，结果最多返回 1000 行",
+    "summaryTitle": "AI 结果总结",
+    "analyzing": "AI 正在分析结果...",
+    "generating": "生成中...",
+    "regenerate": "重新生成",
+    "close": "关闭",
+    "errorNoAIConfig": "请先在设置中配置 AI 服务",
+    "errorSummary": "总结失败"
+  },
+  "en-US": {
+    "queryError": "Query Error",
+    "rows": "{count} rows",
+    "truncated": " (truncated to 1000 rows)",
+    "summarize": "Summarize",
+    "copyCSV": "Copy CSV",
+    "emptyResult": "Query returned no results",
+    "initialState": "Enter SQL and run to see results",
+    "initialHint": "Only SELECT queries supported, max 1000 rows",
+    "summaryTitle": "AI Result Summary",
+    "analyzing": "AI is analyzing results...",
+    "generating": "Generating...",
+    "regenerate": "Regenerate",
+    "close": "Close",
+    "errorNoAIConfig": "Please configure AI service in settings first",
+    "errorSummary": "Summary failed"
+  }
+}
+</i18n>
 
 <!-- Markdown 样式已提取到全局 src/assets/styles/markdown.css -->

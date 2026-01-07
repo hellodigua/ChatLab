@@ -29,7 +29,14 @@
     "processed": "{count} messages processed",
     "tutorial": "View import tutorial →",
     "viewLog": "View import log",
-    "cannotReadPath": "Cannot read file path"
+    "cannotReadPath": "Cannot read file path",
+    "preparing": "Preparing import...",
+    "errors": {
+      "no_file_selected": "No file selected",
+      "import_failed": "Import failed",
+      "unrecognized_format": "Unrecognized file format",
+      "no_messages": "No messages parsed. Please check if the file format is correct."
+    }
   },
   "migration": {
     "title": "Database upgrade required",

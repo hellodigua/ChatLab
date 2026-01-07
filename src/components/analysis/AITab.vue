@@ -6,7 +6,21 @@ import { SubTabs } from '@/components/UI'
 import ChatExplorer from './ai/ChatExplorer.vue'
 import SQLLabTab from './SQLLabTab.vue'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+
+// 关注链接配置
+const followLink = computed(() => {
+  if (locale.value === 'zh-CN') {
+    return {
+      url: 'https://www.xiaohongshu.com/user/profile/6841741e000000001d0091b4',
+      name: '@地瓜',
+    }
+  }
+  return {
+    url: 'https://x.com/hellodigua',
+    name: '@digua',
+  }
+})
 
 // Props
 const props = defineProps<{
@@ -101,13 +115,13 @@ defineExpose({
               <div class="mt-8 flex items-center justify-center gap-1 text-xs text-gray-400">
                 <span>{{ t('followNotice') }}</span>
                 <UButton
-                  to="https://www.xiaohongshu.com/user/profile/6841741e000000001d0091b4"
+                  :to="followLink.url"
                   target="_blank"
                   variant="link"
                   :padded="false"
                   class="text-xs font-medium"
                 >
-                  @地瓜
+                  {{ followLink.name }}
                 </UButton>
               </div>
             </div>
@@ -151,7 +165,7 @@ defineExpose({
     "filterAnalysisDesc": "Advanced filtering feature is planned. You can filter by person, time, or search content before AI analysis",
     "featureInDev": "{name} is in development",
     "comingSoon": "Coming soon...",
-    "followNotice": "Follow me on Xiaohongshu for updates"
+    "followNotice": "Follow me on X for updates"
   }
 }
 </i18n>

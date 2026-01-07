@@ -29,7 +29,14 @@
     "processed": "已处理 {count} 条消息",
     "tutorial": "查看聊天记录导入教程 →",
     "viewLog": "查看导入日志",
-    "cannotReadPath": "无法读取文件路径"
+    "cannotReadPath": "无法读取文件路径",
+    "preparing": "准备导入...",
+    "errors": {
+      "no_file_selected": "未选择文件",
+      "import_failed": "导入失败",
+      "unrecognized_format": "无法识别的文件格式",
+      "no_messages": "未解析到任何消息，请检查文件格式是否正确"
+    }
   },
   "migration": {
     "title": "数据库需要升级",

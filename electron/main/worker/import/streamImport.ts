@@ -207,7 +207,7 @@ export async function streamImport(filePath: string, requestId: string): Promise
   // 检测格式
   const formatFeature = detectFormat(filePath)
   if (!formatFeature) {
-    return { success: false, error: '无法识别文件格式' }
+    return { success: false, error: 'error.unrecognized_format' }
   }
 
   // 初始化性能日志（实时写入文件）
@@ -234,14 +234,14 @@ export async function streamImport(filePath: string, requestId: string): Promise
       totalBytes: 0,
       messagesProcessed: 0,
       percentage: 0,
-      message: '预处理：精简大文件中...',
+      message: '', // Frontend translates based on stage
     })
 
     try {
       tempFilePath = await preprocessor.preprocess(filePath, (progress) => {
         sendProgress(requestId, {
           ...progress,
-          message: progress.message || '预处理中...',
+          message: '', // Frontend translates based on stage
         })
       })
       actualFilePath = tempFilePath
@@ -340,14 +340,14 @@ export async function streamImport(filePath: string, requestId: string): Promise
         lastCheckpointCount = totalMessageCount
       }
 
-      // 发送写入进度
+      // Send write progress (frontend shows messagesProcessed count)
       sendProgress(requestId, {
         stage: 'importing',
         bytesRead: 0,
         totalBytes: 0,
         messagesProcessed: totalMessageCount,
         percentage: 100,
-        message: `正在写入数据库... 已处理 ${totalMessageCount.toLocaleString()} 条`,
+        message: '', // Frontend translates based on stage and shows messagesProcessed
       })
     }
     beginTransaction()
@@ -545,7 +545,7 @@ export async function streamImport(filePath: string, requestId: string): Promise
       totalBytes: 0,
       messagesProcessed: totalMessageCount,
       percentage: 100,
-      message: '正在写入昵称历史...',
+      message: '', // Frontend translates based on stage
     })
     logPerf('开始写入昵称历史', totalMessageCount)
 
@@ -635,7 +635,7 @@ export async function streamImport(filePath: string, requestId: string): Promise
       totalBytes: 0,
       messagesProcessed: totalMessageCount,
       percentage: 100,
-      message: '正在创建索引...',
+      message: '', // Frontend translates based on stage
     })
     logPerf('开始创建索引', totalMessageCount)
     createIndexes(db)
@@ -648,7 +648,7 @@ export async function streamImport(filePath: string, requestId: string): Promise
       totalBytes: 0,
       messagesProcessed: totalMessageCount,
       percentage: 100,
-      message: '正在优化数据库...',
+      message: '', // Frontend translates based on stage
     })
     doCheckpoint()
     logPerf('WAL checkpoint 完成', totalMessageCount)
@@ -669,7 +669,7 @@ export async function streamImport(filePath: string, requestId: string): Promise
 
       return {
         success: false,
-        error: '未解析到任何消息，请检查文件格式是否正确',
+        error: 'error.no_messages',
       }
     }
 
@@ -740,7 +740,7 @@ export async function streamParseFileInfo(filePath: string, requestId: string): 
     totalBytes: fileSize,
     messagesProcessed: 0,
     percentage: 0,
-    message: '正在读取文件...',
+    message: '', // Frontend translates based on stage
   })
 
   // 创建临时数据库

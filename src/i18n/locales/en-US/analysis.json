@@ -25,7 +25,6 @@
     "year": "{year}"
   },
   "tooltip": {
-    "chatViewer": "Chat Record Viewer",
-    "screenshot": "Capture Current Page"
+    "chatViewer": "Chat Record Viewer"
   }
 }

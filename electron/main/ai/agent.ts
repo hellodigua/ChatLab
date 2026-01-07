@@ -136,14 +136,113 @@ export interface PromptConfig {
   responseRules: string
 }
 
+// 国际化内容
+const i18nContent = {
+  'zh-CN': {
+    currentDateIs: '当前日期是',
+    chatTypeDesc: { private: '私聊记录', group: '群聊记录' },
+    chatContext: { private: '对话', group: '群聊' },
+    ownerNote: (displayName: string, platformId: string, chatContext: string) => `当前用户身份：
+- 用户在${chatContext}中的身份是「${displayName}」（platformId: ${platformId}）
+- 当用户提到"我"、"我的"时，指的就是「${displayName}」
+- 查询"我"的发言时，使用 sender_id 参数筛选该成员
+`,
+    memberNotePrivate: `成员查询策略：
+- 私聊只有两个人，可以直接获取成员列表
+- 当用户提到"对方"、"他/她"时，通过 get_group_members 获取另一方信息
+`,
+    memberNoteGroup: `成员查询策略：
+- 当用户提到特定群成员（如"张三说过什么"、"小明的发言"等）时，应先调用 get_group_members 获取成员列表
+- 群成员有三种名称：accountName（原始昵称）、groupNickname（群昵称）、aliases（用户自定义别名）
+- 通过 get_group_members 的 search 参数可以模糊搜索这三种名称
+- 找到成员后，使用其 id 字段作为 search_messages 的 sender_id 参数来获取该成员的发言
+`,
+    toolsIntro: (chatTypeDesc: string) => `你可以使用以下工具来获取${chatTypeDesc}数据：`,
+    toolDescriptions: [
+      'search_messages - 根据关键词搜索聊天记录，支持时间筛选和发送者筛选',
+      'get_recent_messages - 获取指定时间段的聊天消息',
+      'get_member_stats - 获取成员活跃度统计',
+      'get_time_stats - 获取时间分布统计',
+      'get_group_members - 获取成员列表，包括 id、QQ号、账号名称、昵称、别名和消息统计',
+      'get_member_name_history - 获取成员的昵称变更历史，需要先通过 get_group_members 获取成员 ID',
+      'get_conversation_between - 获取两个成员之间的对话记录，需要先通过 get_group_members 获取两人的成员 ID',
+      'get_message_context - 根据消息 ID 获取前后的上下文消息，支持批量查询，消息 ID 可从其他搜索工具的返回结果中获取',
+    ],
+    timeParamsIntro: '时间参数：按用户提到的精度组合 year/month/day/hour',
+    timeParamExample1: (year: number) => `"10月" → year: ${year}, month: 10`,
+    timeParamExample2: (year: number) => `"10月1号" → year: ${year}, month: 10, day: 1`,
+    timeParamExample3: (year: number) => `"10月1号下午3点" → year: ${year}, month: 10, day: 1, hour: 15`,
+    defaultYearNote: (year: number, prevYear: number) => `未指定年份默认${year}年，若该月份未到则用${prevYear}年`,
+    responseInstruction: '根据用户的问题，选择合适的工具获取数据，然后基于数据给出回答。',
+    responseRulesTitle: '回答要求：',
+    fallbackRoleDefinition: (chatType: string) => `你是一个专业的${chatType}记录分析助手。
+你的任务是帮助用户理解和分析他们的${chatType}记录数据。`,
+    fallbackResponseRules: `1. 基于工具返回的数据回答，不要编造信息
+2. 如果数据不足以回答问题，请说明
+3. 回答要简洁明了，使用 Markdown 格式`,
+  },
+  'en-US': {
+    currentDateIs: 'Current date is',
+    chatTypeDesc: { private: 'private chat records', group: 'group chat records' },
+    chatContext: { private: 'conversation', group: 'group chat' },
+    ownerNote: (displayName: string, platformId: string, chatContext: string) => `Current user identity:
+- The user's identity in this ${chatContext} is "${displayName}" (platformId: ${platformId})
+- When the user refers to "I" or "my", it refers to "${displayName}"
+- When querying "my" messages, use the sender_id parameter to filter for this member
+`,
+    memberNotePrivate: `Member query strategy:
+- Private chats only have two participants, so the member list can be directly obtained
+- When the user refers to "the other party" or "he/she", get the other participant's information via get_group_members
+`,
+    memberNoteGroup: `Member query strategy:
+- When the user refers to specific group members (e.g., "what did John say", "Mary's messages"), first call get_group_members to get the member list
+- Group members have three names: accountName (original nickname), groupNickname (group nickname), aliases (user-defined aliases)
+- The search parameter of get_group_members can be used for fuzzy searching these three names
+- Once a member is found, use their id field as the sender_id parameter for search_messages to retrieve their messages
+`,
+    toolsIntro: (chatTypeDesc: string) => `You can use the following tools to get ${chatTypeDesc} data:`,
+    toolDescriptions: [
+      'search_messages - Search chat records by keywords, supports time and sender filtering',
+      'get_recent_messages - Get chat messages for a specified time period',
+      'get_member_stats - Get member activity statistics',
+      'get_time_stats - Get time distribution statistics',
+      'get_group_members - Get member list, including ID, QQ number, account name, nickname, aliases, and message statistics',
+      'get_member_name_history - Get member nickname change history, requires member ID from get_group_members first',
+      'get_conversation_between - Get conversation records between two members, requires member IDs from get_group_members first',
+      'get_message_context - Get context messages before and after a message ID, supports batch queries, message ID can be obtained from other search tool results',
+    ],
+    timeParamsIntro: 'Time parameters: combine year/month/day/hour based on user mention',
+    timeParamExample1: (year: number) => `"October" → year: ${year}, month: 10`,
+    timeParamExample2: (year: number) => `"October 1st" → year: ${year}, month: 10, day: 1`,
+    timeParamExample3: (year: number) => `"October 1st 3 PM" → year: ${year}, month: 10, day: 1, hour: 15`,
+    defaultYearNote: (year: number, prevYear: number) =>
+      `If year is not specified, defaults to ${year}. If the month has not yet occurred, ${prevYear} is used.`,
+    responseInstruction:
+      "Based on the user's question, select appropriate tools to retrieve data, then provide an answer based on the data.",
+    responseRulesTitle: 'Response requirements:',
+    fallbackRoleDefinition: (chatType: string) => `You are a professional ${chatType} analysis assistant.
+Your task is to help users understand and analyze their ${chatType} data.`,
+    fallbackResponseRules: `1. Answer based on data returned by tools, do not fabricate information
+2. If data is insufficient to answer, please state so
+3. Keep answers concise and clear, use Markdown format`,
+  },
+}
+
 /**
  * 获取系统锁定部分的提示词（工具说明、时间处理等）
  * @param chatType 聊天类型 ('group' | 'private')
  * @param ownerInfo Owner 信息（当前用户在对话中的身份）
+ * @param locale 语言设置
  */
-function getLockedPromptSection(chatType: 'group' | 'private', ownerInfo?: OwnerInfo): string {
+function getLockedPromptSection(
+  chatType: 'group' | 'private',
+  ownerInfo?: OwnerInfo,
+  locale: string = 'zh-CN'
+): string {
+  const content = i18nContent[locale as keyof typeof i18nContent] || i18nContent['zh-CN']
   const now = new Date()
-  const currentDate = now.toLocaleDateString('zh-CN', {
+  const dateLocale = locale === 'zh-CN' ? 'zh-CN' : 'en-US'
+  const currentDate = now.toLocaleDateString(dateLocale, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -151,71 +250,52 @@ function getLockedPromptSection(chatType: 'group' | 'private', ownerInfo?: Owner
   })
 
   const isPrivate = chatType === 'private'
-  const chatTypeDesc = isPrivate ? '私聊记录' : '群聊记录'
+  const chatTypeDesc = content.chatTypeDesc[chatType]
+  const chatContext = content.chatContext[chatType]
 
   // Owner 说明（当用户设置了"我是谁"时）
-  const ownerNote = ownerInfo
-    ? `当前用户身份：
-- 用户在${isPrivate ? '对话' : '群聊'}中的身份是「${ownerInfo.displayName}」（platformId: ${ownerInfo.platformId}）
-- 当用户提到"我"、"我的"时，指的就是「${ownerInfo.displayName}」
-- 查询"我"的发言时，使用 sender_id 参数筛选该成员
-`
-    : ''
+  const ownerNote = ownerInfo ? content.ownerNote(ownerInfo.displayName, ownerInfo.platformId, chatContext) : ''
 
   // 成员说明（私聊只有2人）
-  const memberNote = isPrivate
-    ? `成员查询策略：
-- 私聊只有两个人，可以直接获取成员列表
-- 当用户提到"对方"、"他/她"时，通过 get_group_members 获取另一方信息
-`
-    : `成员查询策略：
-- 当用户提到特定群成员（如"张三说过什么"、"小明的发言"等）时，应先调用 get_group_members 获取成员列表
-- 群成员有三种名称：accountName（原始昵称）、groupNickname（群昵称）、aliases（用户自定义别名）
-- 通过 get_group_members 的 search 参数可以模糊搜索这三种名称
-- 找到成员后，使用其 id 字段作为 search_messages 的 sender_id 参数来获取该成员的发言
-`
+  const memberNote = isPrivate ? content.memberNotePrivate : content.memberNoteGroup
 
-  return `当前日期是 ${currentDate}。
+  const toolsList = content.toolDescriptions.map((desc, i) => `${i + 1}. ${desc}`).join('\n')
+  const year = now.getFullYear()
+  const prevYear = year - 1
+
+  return `${content.currentDateIs} ${currentDate}。
 ${ownerNote}
-你可以使用以下工具来获取${chatTypeDesc}数据：
+${content.toolsIntro(chatTypeDesc)}
 
-1. search_messages - 根据关键词搜索聊天记录，支持时间筛选和发送者筛选
-2. get_recent_messages - 获取指定时间段的聊天消息
-3. get_member_stats - 获取成员活跃度统计
-4. get_time_stats - 获取时间分布统计
-5. get_group_members - 获取成员列表，包括 id、QQ号、账号名称、昵称、别名和消息统计
-6. get_member_name_history - 获取成员的昵称变更历史，需要先通过 get_group_members 获取成员 ID
-7. get_conversation_between - 获取两个成员之间的对话记录，需要先通过 get_group_members 获取两人的成员 ID
-8. get_message_context - 根据消息 ID 获取前后的上下文消息，支持批量查询，消息 ID 可从其他搜索工具的返回结果中获取
+${toolsList}
 
 ${memberNote}
-时间参数：按用户提到的精度组合 year/month/day/hour
-- "10月" → year: ${now.getFullYear()}, month: 10
-- "10月1号" → year: ${now.getFullYear()}, month: 10, day: 1
-- "10月1号下午3点" → year: ${now.getFullYear()}, month: 10, day: 1, hour: 15
-未指定年份默认${now.getFullYear()}年，若该月份未到则用${now.getFullYear() - 1}年
+${content.timeParamsIntro}
+- ${content.timeParamExample1(year)}
+- ${content.timeParamExample2(year)}
+- ${content.timeParamExample3(year)}
+${content.defaultYearNote(year, prevYear)}
 
-根据用户的问题，选择合适的工具获取数据，然后基于数据给出回答。`
+${content.responseInstruction}`
 }
 
 /**
  * 获取 Fallback 角色定义（主要配置来自前端 src/config/prompts.ts）
  * 仅在前端未传递 promptConfig 时使用
  */
-function getFallbackRoleDefinition(chatType: 'group' | 'private'): string {
-  const chatTypeDesc = chatType === 'private' ? '私聊' : '群聊'
-  return `你是一个专业的${chatTypeDesc}记录分析助手。
-你的任务是帮助用户理解和分析他们的${chatTypeDesc}记录数据。`
+function getFallbackRoleDefinition(chatType: 'group' | 'private', locale: string = 'zh-CN'): string {
+  const content = i18nContent[locale as keyof typeof i18nContent] || i18nContent['zh-CN']
+  const chatTypeDesc = chatType === 'private' ? (locale === 'zh-CN' ? '私聊' : 'private chat') : (locale === 'zh-CN' ? '群聊' : 'group chat')
+  return content.fallbackRoleDefinition(chatTypeDesc)
 }
 
 /**
  * 获取 Fallback 回答要求（主要配置来自前端 src/config/prompts.ts）
  * 仅在前端未传递 promptConfig 时使用
  */
-function getFallbackResponseRules(): string {
-  return `1. 基于工具返回的数据回答，不要编造信息
-2. 如果数据不足以回答问题，请说明
-3. 回答要简洁明了，使用 Markdown 格式`
+function getFallbackResponseRules(locale: string = 'zh-CN'): string {
+  const content = i18nContent[locale as keyof typeof i18nContent] || i18nContent['zh-CN']
+  return content.fallbackResponseRules
 }
 
 /**
@@ -227,25 +307,29 @@ function getFallbackResponseRules(): string {
  * @param chatType 聊天类型 ('group' | 'private')
  * @param promptConfig 用户自定义提示词配置（来自前端激活的预设）
  * @param ownerInfo Owner 信息（当前用户在对话中的身份）
+ * @param locale 语言设置
  */
 function buildSystemPrompt(
   chatType: 'group' | 'private' = 'group',
   promptConfig?: PromptConfig,
-  ownerInfo?: OwnerInfo
+  ownerInfo?: OwnerInfo,
+  locale: string = 'zh-CN'
 ): string {
+  const content = i18nContent[locale as keyof typeof i18nContent] || i18nContent['zh-CN']
+
   // 使用用户配置或 fallback
-  const roleDefinition = promptConfig?.roleDefinition || getFallbackRoleDefinition(chatType)
-  const responseRules = promptConfig?.responseRules || getFallbackResponseRules()
+  const roleDefinition = promptConfig?.roleDefinition || getFallbackRoleDefinition(chatType, locale)
+  const responseRules = promptConfig?.responseRules || getFallbackResponseRules(locale)
 
   // 获取锁定的系统部分（包含动态日期、工具说明和 Owner 信息）
-  const lockedSection = getLockedPromptSection(chatType, ownerInfo)
+  const lockedSection = getLockedPromptSection(chatType, ownerInfo, locale)
 
   // 组合完整提示词
   return `${roleDefinition}
 
 ${lockedSection}
 
-回答要求：
+${content.responseRulesTitle}
 ${responseRules}`
 }
 
@@ -263,6 +347,7 @@ export class Agent {
   private historyMessages: ChatMessage[] = []
   private chatType: 'group' | 'private' = 'group'
   private promptConfig?: PromptConfig
+  private locale: string = 'zh-CN'
   /** 累计 Token 使用量 */
   private totalUsage: TokenUsage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
 
@@ -271,13 +356,15 @@ export class Agent {
     config: AgentConfig = {},
     historyMessages: ChatMessage[] = [],
     chatType: 'group' | 'private' = 'group',
-    promptConfig?: PromptConfig
+    promptConfig?: PromptConfig,
+    locale: string = 'zh-CN'
   ) {
     this.context = context
     this.abortSignal = config.abortSignal
     this.historyMessages = historyMessages
     this.chatType = chatType
     this.promptConfig = promptConfig
+    this.locale = locale
     this.config = {
       maxToolRounds: config.maxToolRounds ?? 5,
       llmOptions: config.llmOptions ?? { temperature: 0.7, maxTokens: 2048 },
@@ -315,7 +402,7 @@ export class Agent {
     }
 
     // 初始化消息（包含历史记录）
-    const systemPrompt = buildSystemPrompt(this.chatType, this.promptConfig, this.context.ownerInfo)
+    const systemPrompt = buildSystemPrompt(this.chatType, this.promptConfig, this.context.ownerInfo, this.locale)
     this.messages = [
       { role: 'system', content: systemPrompt },
       ...this.historyMessages, // 插入历史对话
@@ -420,7 +507,7 @@ export class Agent {
     }
 
     // 初始化消息（包含历史记录）
-    const systemPrompt = buildSystemPrompt(this.chatType, this.promptConfig, this.context.ownerInfo)
+    const systemPrompt = buildSystemPrompt(this.chatType, this.promptConfig, this.context.ownerInfo, this.locale)
     this.messages = [
       { role: 'system', content: systemPrompt },
       ...this.historyMessages, // 插入历史对话
@@ -681,8 +768,8 @@ export class Agent {
       tool_calls: toolCalls,
     })
 
-    // 执行工具
-    const results = await executeToolCalls(toolCalls, this.context)
+    // 执行工具（传递 locale 用于工具返回结果的国际化）
+    const results = await executeToolCalls(toolCalls, { ...this.context, locale: this.locale })
 
     // 添加 tool 消息
     for (let i = 0; i < toolCalls.length; i++) {

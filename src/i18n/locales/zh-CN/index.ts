@@ -4,6 +4,7 @@ import settings from './settings.json'
 import home from './home.json'
 import analysis from './analysis.json'
 import tools from './tools.json'
+import providers from './providers.json'
 
 export default {
   common,
@@ -12,5 +13,6 @@ export default {
   home,
   analysis,
   tools,
+  providers,
 }
 
