@@ -355,6 +355,11 @@ export async function streamImport(filePath: string, requestId: string): Promise
 
   beginTransaction()
 
+  // 标记是否需要在 finally 中删除数据库文件
+  // 仅在导入失败或消息数为 0 时设置为 true
+  let shouldDeleteDb = false
+  let importError: string | null = null
+
   try {
     await streamParseFile(actualFilePath, {
       batchSize: 5000,
@@ -446,6 +451,13 @@ export async function streamImport(filePath: string, requestId: string): Promise
           if (senderId === undefined) continue
 
           // 插入消息
+          // 防御性处理：确保所有值都是 SQLite 兼容的类型
+          // SQLite 只支持: numbers, strings, bigints, buffers, null
+          let safeContent: string | null = null
+          if (msg.content != null) {
+            safeContent = typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
+          }
+
           t0 = Date.now()
           insertMessage.run(
             senderId,
@@ -453,7 +465,7 @@ export async function streamImport(filePath: string, requestId: string): Promise
             msg.senderGroupNickname || null,
             msg.timestamp,
             msg.type,
-            msg.content
+            safeContent
           )
           messageInsertTime += Date.now() - t0
           messageCountInBatch++
@@ -660,20 +672,10 @@ export async function streamImport(filePath: string, requestId: string): Promise
     // 检查消息数量，如果为 0 则视为导入失败
     if (totalMessageCount === 0) {
       logError('导入失败：未解析到任何消息，可能是文件格式不匹配或内容为空')
-
-      // 删除空的数据库文件
-      const dbPath = getDbPath(sessionId)
-      if (fs.existsSync(dbPath)) {
-        fs.unlinkSync(dbPath)
-      }
-
-      return {
-        success: false,
-        error: 'error.no_messages',
-      }
+      // 标记需要删除数据库文件（将在 finally 中执行，确保数据库已关闭）
+      shouldDeleteDb = true
+      importError = 'error.no_messages'
     }
-
-    return { success: true, sessionId }
   } catch (error) {
     // 记录错误日志
     logError('导入失败', error instanceof Error ? error : undefined)
@@ -687,24 +689,45 @@ export async function streamImport(filePath: string, requestId: string): Promise
       }
     }
 
-    // 删除失败的数据库文件
-    const dbPath = getDbPath(sessionId)
-    if (fs.existsSync(dbPath)) {
-      fs.unlinkSync(dbPath)
-    }
-
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-    }
+    // 标记需要删除数据库文件（将在 finally 中执行，确保数据库已关闭）
+    shouldDeleteDb = true
+    importError = error instanceof Error ? error.message : String(error)
   } finally {
+    // 先关闭数据库连接（释放文件锁）
     db.close()
 
     // 清理临时文件
     if (tempFilePath && preprocessor) {
       preprocessor.cleanup(tempFilePath)
     }
+
+    // 删除失败的数据库文件（在数据库关闭后执行，避免 Windows 上的 EBUSY 错误）
+    if (shouldDeleteDb) {
+      const dbPath = getDbPath(sessionId)
+      try {
+        if (fs.existsSync(dbPath)) {
+          fs.unlinkSync(dbPath)
+        }
+        // 同时清理 WAL 和 SHM 文件
+        const walPath = dbPath + '-wal'
+        const shmPath = dbPath + '-shm'
+        if (fs.existsSync(walPath)) {
+          fs.unlinkSync(walPath)
+        }
+        if (fs.existsSync(shmPath)) {
+          fs.unlinkSync(shmPath)
+        }
+      } catch (cleanupError) {
+        logError('清理失败的数据库文件时出错', cleanupError instanceof Error ? cleanupError : undefined)
+      }
+    }
   }
+
+  // 返回结果（移到 try-catch-finally 之外）
+  if (importError) {
+    return { success: false, error: importError }
+  }
+  return { success: true, sessionId }
 }
 
 /** 流式解析文件信息的返回结果 */
