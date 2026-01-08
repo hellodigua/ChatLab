@@ -106,6 +106,29 @@ export enum ChatType {
   PRIVATE = 'private', // 私聊
 }
 
+// ==================== 成员角色 ====================
+
+/**
+ * 成员角色
+ * 一个成员可以有多个角色（如 Discord 的多角色系统）
+ */
+export interface MemberRole {
+  /** 角色标识：标准角色使用 "owner" | "admin"，自定义角色使用任意字符串 */
+  id: string
+  /** 角色显示名称（自定义角色需要，标准角色可省略） */
+  name?: string
+}
+
+/**
+ * 标准角色 ID
+ */
+export const STANDARD_ROLE_IDS = {
+  /** 群主/创建者 */
+  OWNER: 'owner',
+  /** 管理员 */
+  ADMIN: 'admin',
+} as const
+
 // ==================== 数据库模型 ====================
 
 /**
@@ -131,6 +154,7 @@ export interface DbMember {
   group_nickname: string | null // 群昵称（sendMemberName，可为空）
   aliases: string // 用户自定义别名（JSON数组格式）
   avatar: string | null // 头像（base64 Data URL）
+  roles: string // 成员角色（JSON数组格式，如 '[{"id":"owner"}]'）
 }
 
 /**
@@ -156,6 +180,7 @@ export interface ParsedMember {
   accountName: string // 账号名称（QQ原始昵称 sendNickName）
   groupNickname?: string // 群昵称（sendMemberName，可为空）
   avatar?: string // 头像（base64 Data URL，可为空）
+  roles?: MemberRole[] // 成员角色（可为空）
 }
 
 /**

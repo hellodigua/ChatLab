@@ -34,7 +34,7 @@ export interface MigrationInfo {
 }
 
 /** 当前 schema 版本（最新迁移的版本号） */
-export const CURRENT_SCHEMA_VERSION = 1
+export const CURRENT_SCHEMA_VERSION = 2
 
 /**
  * 迁移脚本列表
@@ -54,15 +54,19 @@ const migrations: Migration[] = [
       }
     },
   },
-  // 未来的迁移示例：
-  // {
-  //   version: 2,
-  //   description: '添加 xxx 字段',
-  //   userMessage: '新功能说明',
-  //   up: (db) => {
-  //     db.exec('ALTER TABLE xxx ADD COLUMN yyy TEXT')
-  //   },
-  // },
+  {
+    version: 2,
+    description: '添加 roles 字段到 member 表',
+    userMessage: '支持成员角色（群主、管理员等）',
+    up: (db) => {
+      // 检查 roles 列是否已存在（防止重复执行）
+      const tableInfo = db.prepare('PRAGMA table_info(member)').all() as Array<{ name: string }>
+      const hasRolesColumn = tableInfo.some((col) => col.name === 'roles')
+      if (!hasRolesColumn) {
+        db.exec("ALTER TABLE member ADD COLUMN roles TEXT DEFAULT '[]'")
+      }
+    },
+  },
 ]
 
 /**

@@ -73,6 +73,7 @@ interface ChatLabMember {
   groupNickname?: string // 群昵称
   aliases?: string[]
   avatar?: string // 头像（base64 Data URL）
+  roles?: Array<{ id: string; name?: string }> // 成员角色
 }
 
 // ==================== 解析器实现 ====================
@@ -159,6 +160,7 @@ async function* parseChatLab(options: ParseOptions): AsyncGenerator<ParseEvent, 
           accountName: m.accountName,
           groupNickname: m.groupNickname,
           avatar: m.avatar,
+          roles: m.roles,
         })
       }
     }

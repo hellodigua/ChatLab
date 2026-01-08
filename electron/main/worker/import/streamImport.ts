@@ -150,7 +150,7 @@ function createDatabaseWithoutIndexes(sessionId: string): Database.Database {
       group_id TEXT,
       group_avatar TEXT,
       owner_id TEXT,
-      schema_version INTEGER DEFAULT 1
+      schema_version INTEGER DEFAULT 2
     );
 
     CREATE TABLE IF NOT EXISTS member (
@@ -159,7 +159,8 @@ function createDatabaseWithoutIndexes(sessionId: string): Database.Database {
       account_name TEXT,
       group_nickname TEXT,
       aliases TEXT DEFAULT '[]',
-      avatar TEXT
+      avatar TEXT,
+      roles TEXT DEFAULT '[]'
     );
 
     CREATE TABLE IF NOT EXISTS member_name_history (
@@ -263,7 +264,7 @@ export async function streamImport(filePath: string, requestId: string): Promise
     INSERT INTO meta (name, platform, type, imported_at, group_id, group_avatar, owner_id) VALUES (?, ?, ?, ?, ?, ?, ?)
   `)
   const insertMember = db.prepare(`
-    INSERT OR IGNORE INTO member (platform_id, account_name, group_nickname, avatar) VALUES (?, ?, ?, ?)
+    INSERT OR IGNORE INTO member (platform_id, account_name, group_nickname, avatar, roles) VALUES (?, ?, ?, ?, ?)
   `)
   const getMemberId = db.prepare(`SELECT id FROM member WHERE platform_id = ?`)
   const insertMessage = db.prepare(`
@@ -400,7 +401,8 @@ export async function streamImport(filePath: string, requestId: string): Promise
             member.platformId,
             member.accountName || null,
             member.groupNickname || null,
-            member.avatar || null
+            member.avatar || null,
+            member.roles ? JSON.stringify(member.roles) : '[]'
           )
           const row = getMemberId.get(member.platformId) as { id: number } | undefined
           if (row) {
@@ -434,8 +436,8 @@ export async function streamImport(filePath: string, requestId: string): Promise
           // 确保成员存在
           let t0 = Date.now()
           if (!memberIdMap.has(msg.senderPlatformId)) {
-            // 消息中没有头像信息，设为 null
-            insertMember.run(msg.senderPlatformId, msg.senderAccountName || null, msg.senderGroupNickname || null, null)
+            // 消息中没有头像和角色信息，设为默认值
+            insertMember.run(msg.senderPlatformId, msg.senderAccountName || null, msg.senderGroupNickname || null, null, '[]')
             const row = getMemberId.get(msg.senderPlatformId) as { id: number } | undefined
             if (row) {
               memberIdMap.set(msg.senderPlatformId, row.id)

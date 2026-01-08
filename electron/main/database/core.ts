@@ -84,7 +84,8 @@ function createDatabase(sessionId: string): Database.Database {
       account_name TEXT,
       group_nickname TEXT,
       aliases TEXT DEFAULT '[]',
-      avatar TEXT
+      avatar TEXT,
+      roles TEXT DEFAULT '[]'
     );
 
     CREATE TABLE IF NOT EXISTS member_name_history (
@@ -174,7 +175,7 @@ export function importData(parseResult: ParseResult): string {
       )
 
       const insertMember = db.prepare(`
-        INSERT OR IGNORE INTO member (platform_id, account_name, group_nickname, avatar) VALUES (?, ?, ?, ?)
+        INSERT OR IGNORE INTO member (platform_id, account_name, group_nickname, avatar, roles) VALUES (?, ?, ?, ?, ?)
       `)
       const getMemberId = db.prepare(`
         SELECT id FROM member WHERE platform_id = ?
@@ -187,7 +188,8 @@ export function importData(parseResult: ParseResult): string {
           member.platformId,
           member.accountName || null,
           member.groupNickname || null,
-          member.avatar || null
+          member.avatar || null,
+          member.roles ? JSON.stringify(member.roles) : '[]'
         )
         const row = getMemberId.get(member.platformId) as { id: number }
         memberIdMap.set(member.platformId, row.id)

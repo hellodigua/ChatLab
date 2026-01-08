@@ -3,7 +3,7 @@
  * 包含：ChatLab 专属格式、合并相关、聊天记录查看器
  */
 
-import type { ChatPlatform, ChatType, MessageType } from './base'
+import type { ChatPlatform, ChatType, MessageType, MemberRole } from './base'
 
 // ==================== ChatLab 专属格式类型 ====================
 
@@ -48,6 +48,7 @@ export interface ChatLabMember {
   groupNickname?: string // 群昵称（可选）
   aliases?: string[] // 用户自定义别名（可选）
   avatar?: string // 头像（base64 Data URL，可选）
+  roles?: MemberRole[] // 成员角色（可选，可多个）
 }
 
 /**
