@@ -65,6 +65,7 @@ interface ChatLabMessage {
   timestamp: number // 秒级时间戳
   type: number // MessageType
   content: string | null
+  replyToMessageId?: string // 回复的目标消息 ID（平台原始 ID）
 }
 
 interface ChatLabMember {
@@ -204,6 +205,7 @@ async function* parseChatLab(options: ParseOptions): AsyncGenerator<ParseEvent, 
         timestamp: msg.timestamp,
         type: msg.type,
         content: msg.content,
+        replyToMessageId: msg.replyToMessageId,
       })
 
       messagesProcessed++

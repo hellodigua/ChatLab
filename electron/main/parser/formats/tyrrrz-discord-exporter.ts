@@ -387,6 +387,7 @@ async function* parseDiscordExporter(options: ParseOptions): AsyncGenerator<Pars
         timestamp: parseTimestamp(msg.timestamp),
         type: messageType,
         content: content || null,
+        replyToMessageId: msg.reference?.messageId || undefined,
       })
 
       messagesProcessed++

@@ -168,6 +168,7 @@ export interface DbMessage {
   ts: number // 时间戳（秒）
   type: MessageType // 消息类型
   content: string | null // 纯文本内容
+  reply_to_message_id: string | null // 回复的目标消息 ID（平台原始 ID）
 }
 
 // ==================== Parser 解析结果 ====================
@@ -187,12 +188,14 @@ export interface ParsedMember {
  * 解析后的消息
  */
 export interface ParsedMessage {
+  platformMessageId?: string // 消息的平台原始 ID（用于回复关联查询）
   senderPlatformId: string // 发送者平台ID
   senderAccountName: string // 发送时的账号名称
   senderGroupNickname?: string // 发送时的群昵称（可为空）
   timestamp: number // 时间戳（秒）
   type: MessageType // 消息类型
   content: string | null // 内容
+  replyToMessageId?: string // 回复的目标消息 ID（平台原始 ID，可为空）
 }
 
 /**

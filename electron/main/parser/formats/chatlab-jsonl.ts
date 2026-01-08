@@ -73,6 +73,7 @@ interface JsonlMessage {
   timestamp: number
   type: number
   content: string | null
+  replyToMessageId?: string
 }
 
 /** 任意 JSONL 行 */
@@ -215,6 +216,7 @@ async function* parseChatLabJsonl(options: ParseOptions): AsyncGenerator<ParseEv
           timestamp: parsed.timestamp,
           type: parsed.type as MessageType,
           content: parsed.content,
+          replyToMessageId: parsed.replyToMessageId,
         })
         messagesProcessed++
 

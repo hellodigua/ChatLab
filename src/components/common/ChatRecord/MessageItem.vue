@@ -250,6 +250,19 @@ function highlightContent(content: string): string {
             class="relative inline-block rounded-lg px-3 py-2 transition-shadow"
             :class="[bubbleColor, isTarget ? 'ring-2 ring-yellow-400 dark:ring-yellow-500' : '']"
           >
+            <!-- 回复引用样式 -->
+            <div
+              v-if="message.replyToMessageId"
+              class="mb-2 border-l-2 border-gray-300 dark:border-gray-600 pl-2 text-xs text-gray-500 dark:text-gray-400"
+            >
+              <span class="font-medium">{{ t('replyTo') }}</span>
+              <span v-if="message.replyToSenderName" class="ml-1 text-gray-600 dark:text-gray-300">
+                {{ message.replyToSenderName }}
+              </span>
+              <p v-if="message.replyToContent" class="mt-0.5 line-clamp-2 italic">
+                {{ message.replyToContent }}
+              </p>
+            </div>
             <p
               class="whitespace-pre-wrap break-words text-sm text-gray-700 dark:text-gray-200"
               v-html="highlightContent(message.content || '')"
@@ -320,12 +333,14 @@ function highlightContent(content: string): string {
   "zh-CN": {
     "viewContext": "查看上下文",
     "contextTitle": "消息上下文（前后各10条）",
-    "noContext": "暂无上下文"
+    "noContext": "暂无上下文",
+    "replyTo": "回复"
   },
   "en-US": {
     "viewContext": "View Context",
     "contextTitle": "Message Context (10 before and after)",
-    "noContext": "No context available"
+    "noContext": "No context available",
+    "replyTo": "Reply to"
   }
 }
 </i18n>

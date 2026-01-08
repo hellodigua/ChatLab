@@ -106,11 +106,14 @@ function createDatabase(sessionId: string): Database.Database {
       ts INTEGER NOT NULL,
       type INTEGER NOT NULL,
       content TEXT,
+      reply_to_message_id TEXT DEFAULT NULL,
+      platform_message_id TEXT DEFAULT NULL,
       FOREIGN KEY(sender_id) REFERENCES member(id)
     );
 
     CREATE INDEX IF NOT EXISTS idx_message_ts ON message(ts);
     CREATE INDEX IF NOT EXISTS idx_message_sender ON message(sender_id);
+    CREATE INDEX IF NOT EXISTS idx_message_platform_id ON message(platform_message_id);
     CREATE INDEX IF NOT EXISTS idx_member_name_history_member_id ON member_name_history(member_id);
   `)
 
@@ -201,8 +204,8 @@ export function importData(parseResult: ParseResult): string {
       const groupNicknameTracker = new Map<string, { currentName: string; lastSeenTs: number }>()
 
       const insertMessage = db.prepare(`
-        INSERT INTO message (sender_id, sender_account_name, sender_group_nickname, ts, type, content)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO message (sender_id, sender_account_name, sender_group_nickname, ts, type, content, reply_to_message_id, platform_message_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `)
       const insertNameHistory = db.prepare(`
         INSERT INTO member_name_history (member_id, name_type, name, start_ts, end_ts)
@@ -230,7 +233,9 @@ export function importData(parseResult: ParseResult): string {
           msg.senderGroupNickname || null,
           msg.timestamp,
           msg.type,
-          msg.content
+          msg.content,
+          msg.replyToMessageId || null,
+          msg.platformMessageId || null
         )
 
         // 追踪 account_name 变化

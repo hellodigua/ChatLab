@@ -56,14 +56,36 @@ const migrations: Migration[] = [
   },
   {
     version: 2,
-    description: '添加 roles 字段到 member 表',
-    userMessage: '支持成员角色（群主、管理员等）',
+    description: '添加 roles、reply_to_message_id、platform_message_id 字段',
+    userMessage: '支持成员角色、消息回复关系和回复内容预览',
     up: (db) => {
       // 检查 roles 列是否已存在（防止重复执行）
-      const tableInfo = db.prepare('PRAGMA table_info(member)').all() as Array<{ name: string }>
-      const hasRolesColumn = tableInfo.some((col) => col.name === 'roles')
+      const memberTableInfo = db.prepare('PRAGMA table_info(member)').all() as Array<{ name: string }>
+      const hasRolesColumn = memberTableInfo.some((col) => col.name === 'roles')
       if (!hasRolesColumn) {
         db.exec("ALTER TABLE member ADD COLUMN roles TEXT DEFAULT '[]'")
+      }
+
+      // 检查 message 表的列
+      const messageTableInfo = db.prepare('PRAGMA table_info(message)').all() as Array<{ name: string }>
+
+      // 检查 reply_to_message_id 列是否已存在
+      const hasReplyColumn = messageTableInfo.some((col) => col.name === 'reply_to_message_id')
+      if (!hasReplyColumn) {
+        db.exec('ALTER TABLE message ADD COLUMN reply_to_message_id TEXT DEFAULT NULL')
+      }
+
+      // 添加 platform_message_id 列（存储平台原始消息 ID，用于回复关联查询）
+      const hasPlatformMsgIdColumn = messageTableInfo.some((col) => col.name === 'platform_message_id')
+      if (!hasPlatformMsgIdColumn) {
+        db.exec('ALTER TABLE message ADD COLUMN platform_message_id TEXT DEFAULT NULL')
+      }
+
+      // 创建索引以加速回复查询
+      try {
+        db.exec('CREATE INDEX IF NOT EXISTS idx_message_platform_id ON message(platform_message_id)')
+      } catch {
+        // 索引可能已存在
       }
     },
   },

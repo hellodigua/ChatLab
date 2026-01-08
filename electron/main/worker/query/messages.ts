@@ -21,6 +21,9 @@ export interface MessageResult {
   content: string
   timestamp: number
   type: number
+  replyToMessageId: string | null
+  replyToContent: string | null
+  replyToSenderName: string | null
 }
 
 /**
@@ -53,6 +56,9 @@ interface DbMessageRow {
   content: string
   timestamp: number
   type: number
+  reply_to_message_id: string | null
+  replyToContent: string | null
+  replyToSenderName: string | null
 }
 
 /**
@@ -79,6 +85,9 @@ function sanitizeMessageRow(row: DbMessageRow): MessageResult {
     content: row.content != null ? String(row.content) : '',
     timestamp: Number(row.timestamp),
     type: Number(row.type),
+    replyToMessageId: row.reply_to_message_id || null,
+    replyToContent: row.replyToContent || null,
+    replyToSenderName: row.replyToSenderName || null,
   }
 }
 
@@ -156,9 +165,14 @@ export function getRecentMessages(
       m.avatar,
       msg.content,
       msg.ts as timestamp,
-      msg.type
+      msg.type,
+      msg.reply_to_message_id,
+      reply_msg.content as replyToContent,
+      COALESCE(reply_m.group_nickname, reply_m.account_name, reply_m.platform_id) as replyToSenderName
     FROM message msg
     JOIN member m ON msg.sender_id = m.id
+    LEFT JOIN message reply_msg ON msg.reply_to_message_id = reply_msg.platform_message_id
+    LEFT JOIN member reply_m ON reply_msg.sender_id = reply_m.id
     WHERE 1=1
     ${timeCondition}
     ${SYSTEM_FILTER}
@@ -218,9 +232,14 @@ export function getAllRecentMessages(
       m.avatar,
       msg.content,
       msg.ts as timestamp,
-      msg.type
+      msg.type,
+      msg.reply_to_message_id,
+      reply_msg.content as replyToContent,
+      COALESCE(reply_m.group_nickname, reply_m.account_name, reply_m.platform_id) as replyToSenderName
     FROM message msg
     JOIN member m ON msg.sender_id = m.id
+    LEFT JOIN message reply_msg ON msg.reply_to_message_id = reply_msg.platform_message_id
+    LEFT JOIN member reply_m ON reply_msg.sender_id = reply_m.id
     WHERE 1=1
     ${timeCondition}
     ORDER BY msg.ts DESC
@@ -296,9 +315,14 @@ export function searchMessages(
       m.avatar,
       msg.content,
       msg.ts as timestamp,
-      msg.type
+      msg.type,
+      msg.reply_to_message_id,
+      reply_msg.content as replyToContent,
+      COALESCE(reply_m.group_nickname, reply_m.account_name, reply_m.platform_id) as replyToSenderName
     FROM message msg
     JOIN member m ON msg.sender_id = m.id
+    LEFT JOIN message reply_msg ON msg.reply_to_message_id = reply_msg.platform_message_id
+    LEFT JOIN member reply_m ON reply_msg.sender_id = reply_m.id
     WHERE ${keywordCondition}
     ${timeCondition}
     ${senderCondition}
@@ -381,9 +405,14 @@ export function getMessageContext(
       m.avatar,
       msg.content,
       msg.ts as timestamp,
-      msg.type
+      msg.type,
+      msg.reply_to_message_id,
+      reply_msg.content as replyToContent,
+      COALESCE(reply_m.group_nickname, reply_m.account_name, reply_m.platform_id) as replyToSenderName
     FROM message msg
     JOIN member m ON msg.sender_id = m.id
+    LEFT JOIN message reply_msg ON msg.reply_to_message_id = reply_msg.platform_message_id
+    LEFT JOIN member reply_m ON reply_msg.sender_id = reply_m.id
     WHERE msg.id IN (${placeholders})
     ORDER BY msg.id ASC
   `
@@ -435,9 +464,14 @@ export function getMessagesBefore(
       m.avatar,
       msg.content,
       msg.ts as timestamp,
-      msg.type
+      msg.type,
+      msg.reply_to_message_id,
+      reply_msg.content as replyToContent,
+      COALESCE(reply_m.group_nickname, reply_m.account_name, reply_m.platform_id) as replyToSenderName
     FROM message msg
     JOIN member m ON msg.sender_id = m.id
+    LEFT JOIN message reply_msg ON msg.reply_to_message_id = reply_msg.platform_message_id
+    LEFT JOIN member reply_m ON reply_msg.sender_id = reply_m.id
     WHERE msg.id < ?
     ${timeCondition}
     ${keywordCondition}
@@ -500,9 +534,14 @@ export function getMessagesAfter(
       m.avatar,
       msg.content,
       msg.ts as timestamp,
-      msg.type
+      msg.type,
+      msg.reply_to_message_id,
+      reply_msg.content as replyToContent,
+      COALESCE(reply_m.group_nickname, reply_m.account_name, reply_m.platform_id) as replyToSenderName
     FROM message msg
     JOIN member m ON msg.sender_id = m.id
+    LEFT JOIN message reply_msg ON msg.reply_to_message_id = reply_msg.platform_message_id
+    LEFT JOIN member reply_m ON reply_msg.sender_id = reply_m.id
     WHERE msg.id > ?
     ${timeCondition}
     ${keywordCondition}
@@ -585,9 +624,14 @@ export function getConversationBetween(
       m.avatar,
       msg.content,
       msg.ts as timestamp,
-      msg.type
+      msg.type,
+      msg.reply_to_message_id,
+      reply_msg.content as replyToContent,
+      COALESCE(reply_m.group_nickname, reply_m.account_name, reply_m.platform_id) as replyToSenderName
     FROM message msg
     JOIN member m ON msg.sender_id = m.id
+    LEFT JOIN message reply_msg ON msg.reply_to_message_id = reply_msg.platform_message_id
+    LEFT JOIN member reply_m ON reply_msg.sender_id = reply_m.id
     WHERE msg.sender_id IN (?, ?)
     ${timeCondition}
     AND msg.content IS NOT NULL AND msg.content != ''

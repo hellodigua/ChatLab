@@ -182,4 +182,7 @@ export interface ChatRecordMessage {
   content: string
   timestamp: number
   type: number
+  replyToMessageId: string | null // 回复的目标消息 ID（平台原始 ID）
+  replyToContent: string | null // 被回复消息的内容预览
+  replyToSenderName: string | null // 被回复消息的发送者名称
 }
