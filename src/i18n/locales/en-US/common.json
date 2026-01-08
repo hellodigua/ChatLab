@@ -14,6 +14,14 @@
     "general": "Operation failed, please try again",
     "network": "Network error"
   },
+  "attachment": {
+    "image": "Image",
+    "video": "Video",
+    "audio": "Audio",
+    "file": "File",
+    "sticker": "Sticker",
+    "link": "Link"
+  },
   "unit": {
     "messages": "messages",
     "members": "members",

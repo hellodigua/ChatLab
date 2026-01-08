@@ -14,6 +14,14 @@
     "general": "操作失败，请重试",
     "network": "网络错误"
   },
+  "attachment": {
+    "image": "图片",
+    "video": "视频",
+    "audio": "音频",
+    "file": "文件",
+    "sticker": "贴纸",
+    "link": "链接"
+  },
   "unit": {
     "messages": "条消息",
     "members": "个成员",
