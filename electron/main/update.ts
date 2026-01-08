@@ -23,7 +23,19 @@ function configureUpdateProxy(): void {
   }
 }
 
+/**
+ * 判断版本号是否为预发布版本
+ * 预发布版本格式：0.3.0-beta.1, 0.4.2-alpha.23, 1.0.0-rc.1 等
+ * 标准版本格式：0.3.0, 1.0.0, 2.1.3 等
+ */
+function isPreReleaseVersion(version: string): boolean {
+  // 预发布版本包含连字符后跟预发布标识（alpha, beta, rc, dev, canary 等）
+  return /-/.test(version)
+}
+
 let isFirstShow = true
+// 标记是否为手动检查更新（手动检查时即使是预发布版本也显示弹窗）
+let isManualCheck = false
 const checkUpdate = (win) => {
   // 配置代理
   configureUpdateProxy()
@@ -45,6 +57,17 @@ const checkUpdate = (win) => {
   autoUpdater.on('update-available', (info) => {
     // win.webContents.send('show-message', 'electron:发现新版本')
     if (showUpdateMessageBox) return
+
+    // 检查是否为预发布版本
+    const isPreRelease = isPreReleaseVersion(info.version)
+
+    // 预发布版本仅在手动检查时显示更新弹窗
+    if (isPreRelease && !isManualCheck) {
+      console.log(`[Update] 发现预发布版本 ${info.version}，跳过自动更新提示`)
+      logger.info(`[Update] 发现预发布版本 ${info.version}，跳过自动更新提示（需手动检查更新）`)
+      return
+    }
+
     showUpdateMessageBox = true
 
     // 解析更新日志
@@ -155,10 +178,28 @@ const checkUpdate = (win) => {
 
   // 等待 3 秒再检查更新，确保窗口准备完成，用户进入系统
   setTimeout(() => {
+    isManualCheck = false // 自动检查
     autoUpdater.checkForUpdates().catch((err) => {
       console.log('[Update] 检查更新失败:', err)
     })
   }, 3000)
+}
+
+/**
+ * 手动检查更新
+ * 手动检查时，即使是预发布版本也会显示更新弹窗
+ */
+const manualCheckForUpdates = () => {
+  // 配置代理
+  configureUpdateProxy()
+
+  isManualCheck = true // 手动检查
+  isFirstShow = false // 手动检查时，无论结果都显示提示
+
+  autoUpdater.checkForUpdates().catch((err) => {
+    console.log('[Update] 手动检查更新失败:', err)
+    logger.error(`[Update] 手动检查更新失败: ${err}`)
+  })
 }
 
 /**
@@ -190,4 +231,4 @@ const simulateUpdateDialog = (win) => {
   })
 }
 
-export { checkUpdate, simulateUpdateDialog }
+export { checkUpdate, simulateUpdateDialog, manualCheckForUpdates }
