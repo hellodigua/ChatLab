@@ -444,14 +444,20 @@ async function* parseEchotrace(options: ParseOptions): AsyncGenerator<ParseEvent
       // 转换消息类型
       const type = convertMessageType(msg.type)
 
+      // 确保 content 是字符串类型（防止某些消息类型的 content 是对象）
+      let content: string | null = null
+      if (msg.content != null) {
+        content = typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
+      }
+
       return {
         senderPlatformId: platformId,
         senderAccountName: accountName,
-        // echotrace 格式没有单独的群昵称字段
-        senderGroupNickname: undefined,
+        // echotrace 格式没有单独的群昵称字段，使用 null 而非 undefined（SQLite 兼容）
+        senderGroupNickname: null,
         timestamp: msg.createTime,
         type,
-        content: msg.content || null,
+        content,
       }
     }
 
