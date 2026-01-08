@@ -79,15 +79,8 @@ onMounted(() => {
               <p class="mt-1 text-xs text-gray-400">{{ t('settings.about.version') }} {{ appVersion }}</p>
             </div>
           </div>
-          <UButton
-            :loading="isCheckingUpdate"
-            :disabled="isCheckingUpdate"
-            color="primary"
-            variant="soft"
-            size="sm"
-            @click="checkUpdate"
-          >
-            <UIcon name="i-heroicons-arrow-path" class="mr-1 h-4 w-4" />
+          <UButton :disabled="isCheckingUpdate" color="primary" variant="soft" size="sm" @click="checkUpdate">
+            <UIcon name="i-heroicons-arrow-path" class="mr-1 h-4 w-4" :class="{ 'animate-spin': isCheckingUpdate }" />
             {{ isCheckingUpdate ? t('settings.about.checking') : t('settings.about.checkUpdate') }}
           </UButton>
         </div>
