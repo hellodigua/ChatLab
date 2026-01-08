@@ -104,14 +104,25 @@ export const useSessionStore = defineStore(
     /**
      * 选择文件并导入
      */
-    async function importFile(): Promise<{ success: boolean; error?: string }> {
+    async function importFile(): Promise<{
+      success: boolean
+      error?: string
+      diagnosisSuggestion?: string
+    }> {
       try {
-        const result = await window.chatApi.selectFile()
-        if (!result || !result.filePath) {
+      const result = await window.chatApi.selectFile()
+      // 用户取消选择
+        if (!result) {
           return { success: false, error: 'error.no_file_selected' }
         }
+        // 有错误（如格式不识别）- 优先检查错误，因为此时可能没有 filePath
         if (result.error) {
-          return { success: false, error: result.error }
+          const diagnosisSuggestion = result.diagnosis?.suggestion
+          return { success: false, error: result.error, diagnosisSuggestion }
+        }
+        // 没有文件路径（用户取消）
+        if (!result.filePath) {
+          return { success: false, error: 'error.no_file_selected' }
         }
         return await importFileFromPath(result.filePath)
       } catch (error) {
@@ -122,7 +133,11 @@ export const useSessionStore = defineStore(
     /**
      * 从指定路径执行导入（支持拖拽）
      */
-    async function importFileFromPath(filePath: string): Promise<{ success: boolean; error?: string }> {
+    async function importFileFromPath(filePath: string): Promise<{
+      success: boolean
+      error?: string
+      diagnosisSuggestion?: string
+    }> {
       try {
         isImporting.value = true
         importProgress.value = {
@@ -190,7 +205,13 @@ export const useSessionStore = defineStore(
           currentSessionId.value = importResult.sessionId
           return { success: true }
         } else {
-          return { success: false, error: importResult.error || 'error.import_failed' }
+          // 传递诊断信息（如果有）
+          const diagnosisSuggestion = importResult.diagnosis?.suggestion
+          return {
+            success: false,
+            error: importResult.error || 'error.import_failed',
+            diagnosisSuggestion,
+          }
         }
       } catch (error) {
         return { success: false, error: String(error) }
