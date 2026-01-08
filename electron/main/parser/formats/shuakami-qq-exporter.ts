@@ -60,6 +60,7 @@ interface V4RawMessage {
 }
 
 interface V4Message {
+  messageId?: string // 消息的唯一 ID
   timestamp: string
   sender: {
     uid?: string
@@ -73,6 +74,12 @@ interface V4Message {
     text: string
     resources?: Array<{ type: string }>
     emojis?: Array<{ type: string }>
+    reply?: {
+      messageId?: string
+      referencedMessageId?: string // 被引用消息的 ID
+      senderName?: string
+      content?: string
+    }
   }
   rawMessage?: V4RawMessage
 }
@@ -323,12 +330,14 @@ async function* parseV4(options: ParseOptions): AsyncGenerator<ParseEvent, void,
       if (value.isRecalled) textContent = '[已撤回] ' + textContent
 
       messageBatch.push({
+        platformMessageId: value.messageId, // 消息的平台原始 ID
         senderPlatformId: platformId,
         senderAccountName: accountName,
         senderGroupNickname: groupNickname,
         timestamp,
         type,
         content: textContent || null,
+        replyToMessageId: value.content?.reply?.referencedMessageId, // 被引用消息的 ID
       })
 
       messagesProcessed++

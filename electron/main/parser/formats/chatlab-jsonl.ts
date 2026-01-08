@@ -68,6 +68,7 @@ interface JsonlMember {
 interface JsonlMessage {
   _type: 'message'
   sender: string
+  platformMessageId?: string
   accountName: string
   groupNickname?: string
   timestamp: number
@@ -216,6 +217,7 @@ async function* parseChatLabJsonl(options: ParseOptions): AsyncGenerator<ParseEv
           timestamp: parsed.timestamp,
           type: parsed.type as MessageType,
           content: parsed.content,
+          platformMessageId: parsed.platformMessageId,
           replyToMessageId: parsed.replyToMessageId,
         })
         messagesProcessed++

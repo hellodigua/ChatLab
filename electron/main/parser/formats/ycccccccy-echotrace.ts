@@ -451,6 +451,7 @@ async function* parseEchotrace(options: ParseOptions): AsyncGenerator<ParseEvent
       }
 
       return {
+        platformMessageId: String(msg.localId), // 消息的平台原始 ID（用于回复关联查询）
         senderPlatformId: platformId,
         senderAccountName: accountName,
         // echotrace 格式没有单独的群昵称字段，使用 null 而非 undefined（SQLite 兼容）
@@ -458,6 +459,7 @@ async function* parseEchotrace(options: ParseOptions): AsyncGenerator<ParseEvent
         timestamp: msg.createTime,
         type,
         content,
+        // 注意：echotrace 导出格式不包含被引用消息的 ID，所以 replyToMessageId 为空
       }
     }
 

@@ -59,6 +59,7 @@ export const feature: FormatFeature = {
 // ==================== 消息结构 ====================
 
 interface ChatLabMessage {
+  platformMessageId?: string // 消息的平台原始 ID（用于回复关联查询）
   sender: string // platformId
   accountName: string // 发送时的账号名称
   groupNickname?: string // 发送时的群昵称
@@ -205,6 +206,7 @@ async function* parseChatLab(options: ParseOptions): AsyncGenerator<ParseEvent, 
         timestamp: msg.timestamp,
         type: msg.type,
         content: msg.content,
+        platformMessageId: msg.platformMessageId,
         replyToMessageId: msg.replyToMessageId,
       })
 

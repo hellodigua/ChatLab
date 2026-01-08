@@ -381,6 +381,7 @@ async function* parseDiscordExporter(options: ParseOptions): AsyncGenerator<Pars
       }
 
       batchCollector.push({
+        platformMessageId: msg.id, // 消息的平台原始 ID
         senderPlatformId: author.id,
         senderAccountName: author.name,
         senderGroupNickname: author.nickname || null,
