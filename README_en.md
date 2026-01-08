@@ -6,7 +6,7 @@ ChatLab is a free, open-source, and local-first application dedicated to analyzi
 
 We refuse to upload your privacy to the cloud; instead, we bring powerful analytics directly to your computer.
 
-Currently supported: Chat record analysis for **WeChat, QQ, and WhatsApp**. Upcoming support: **iMessage, Discord, and LINE**.
+Currently supported: Chat record analysis for **WeChat, QQ, WhatsApp and Discord**. Upcoming support: **iMessage, and LINE**.
 
 The project is still in early iteration, so there are many bugs and unfinished features. If you encounter any issues, feel free to provide feedback.
 
