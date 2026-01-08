@@ -37,10 +37,13 @@ const UNSET_VALUE = '__UNSET__'
 const memberOptions = computed(() => {
   return [
     { label: t('unset'), value: UNSET_VALUE },
-    ...props.members.map((m) => ({
-      label: `${getDisplayName(m)} (${m.platformId})`,
-      value: m.platformId,
-    })),
+    ...props.members
+      // 过滤掉 platformId 为空的成员（USelect 不允许空字符串作为 value）
+      .filter((m) => m.platformId && m.platformId.trim() !== '')
+      .map((m) => ({
+        label: `${getDisplayName(m)} (${m.platformId})`,
+        value: m.platformId,
+      })),
   ]
 })
 
