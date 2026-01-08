@@ -5,8 +5,8 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import { app } from 'electron'
 import { randomUUID } from 'crypto'
+import { getAiDataDir, ensureDir } from '../../paths'
 import type {
   LLMConfig,
   LLMProvider,
@@ -102,14 +102,7 @@ let CONFIG_PATH: string | null = null
 
 function getConfigPath(): string {
   if (CONFIG_PATH) return CONFIG_PATH
-
-  try {
-    const docPath = app.getPath('documents')
-    CONFIG_PATH = path.join(docPath, 'ChatLab', 'ai', 'llm-config.json')
-  } catch {
-    CONFIG_PATH = path.join(process.cwd(), 'ai', 'llm-config.json')
-  }
-
+  CONFIG_PATH = path.join(getAiDataDir(), 'llm-config.json')
   return CONFIG_PATH
 }
 

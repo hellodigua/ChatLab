@@ -6,8 +6,8 @@
 import { Worker } from 'worker_threads'
 import { app } from 'electron'
 import * as path from 'path'
-import * as fs from 'fs'
 import type { ParseProgress } from '../parser'
+import { getDatabaseDir, ensureDir } from '../paths'
 
 // Worker 实例
 let worker: Worker | null = null
@@ -25,29 +25,13 @@ const pendingRequests = new Map<
 // 请求 ID 计数器
 let requestIdCounter = 0
 
-// 数据库目录
-let dbDir: string | null = null
-
 /**
  * 获取数据库目录
  */
 function getDbDir(): string {
-  if (dbDir) return dbDir
-
-  try {
-    const docPath = app.getPath('documents')
-    dbDir = path.join(docPath, 'ChatLab', 'databases')
-  } catch (error) {
-    console.error('[WorkerManager] Error getting documents path:', error)
-    dbDir = path.join(process.cwd(), 'databases')
-  }
-
-  // 确保目录存在
-  if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true })
-  }
-
-  return dbDir
+  const dir = getDatabaseDir()
+  ensureDir(dir)
+  return dir
 }
 
 /**

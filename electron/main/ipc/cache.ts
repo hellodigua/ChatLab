@@ -4,18 +4,14 @@ import * as fs from 'fs/promises'
 import * as fsSync from 'fs'
 import * as path from 'path'
 import type { IpcContext } from './types'
-
-/**
- * 获取 ChatLab 数据目录
- */
-function getChatLabDir(): string {
-  try {
-    const docPath = app.getPath('documents')
-    return path.join(docPath, 'ChatLab')
-  } catch {
-    return path.join(process.cwd(), 'ChatLab')
-  }
-}
+import {
+  getAppDataDir,
+  getDatabaseDir,
+  getAiDataDir,
+  getLogsDir,
+  getDownloadsDir,
+  ensureDir,
+} from '../paths'
 
 /**
  * 递归计算目录大小
@@ -73,15 +69,15 @@ export function registerCacheHandlers(_context: IpcContext): void {
    * 获取所有缓存目录信息
    */
   ipcMain.handle('cache:getInfo', async () => {
-    const chatLabDir = getChatLabDir()
+    const appDataDir = getAppDataDir()
 
-    // 定义缓存目录
+    // 定义缓存目录（应用数据目录下的子目录）
     const cacheDirectories = [
       {
         id: 'databases',
         name: 'settings.storage.cache.databases.name',
         description: 'settings.storage.cache.databases.description',
-        path: path.join(chatLabDir, 'databases'),
+        path: getDatabaseDir(),
         icon: 'i-heroicons-circle-stack',
         canClear: false, // 不允许一键清理，因为是重要数据
       },
@@ -89,24 +85,16 @@ export function registerCacheHandlers(_context: IpcContext): void {
         id: 'ai',
         name: 'settings.storage.cache.ai.name',
         description: 'settings.storage.cache.ai.description',
-        path: path.join(chatLabDir, 'ai'),
+        path: getAiDataDir(),
         icon: 'i-heroicons-sparkles',
         canClear: false, // 不允许一键清理
       },
       // 临时文件已有自动清理机制（应用启动时、合并完成后），无需暴露给用户
       {
-        id: 'downloads',
-        name: 'settings.storage.cache.downloads.name',
-        description: 'settings.storage.cache.downloads.description',
-        path: path.join(chatLabDir, 'downloads'),
-        icon: 'i-heroicons-arrow-down-tray',
-        canClear: true, // 可以清理
-      },
-      {
         id: 'logs',
         name: 'settings.storage.cache.logs.name',
         description: 'settings.storage.cache.logs.description',
-        path: path.join(chatLabDir, 'logs'),
+        path: getLogsDir(),
         icon: 'i-heroicons-document-text',
         canClear: true, // 可以清理
       },
@@ -129,7 +117,7 @@ export function registerCacheHandlers(_context: IpcContext): void {
     )
 
     return {
-      baseDir: chatLabDir,
+      baseDir: appDataDir,
       directories: results,
       totalSize: results.reduce((sum, dir) => sum + dir.size, 0),
     }
@@ -139,12 +127,9 @@ export function registerCacheHandlers(_context: IpcContext): void {
    * 清理指定缓存目录
    */
   ipcMain.handle('cache:clear', async (_, cacheId: string) => {
-    const chatLabDir = getChatLabDir()
-
-    // 只允许清理 downloads 和 logs（temp 由系统自动清理）
+    // 只允许清理 logs（temp 由系统自动清理，downloads 已改为系统下载目录）
     const allowedDirs: Record<string, string> = {
-      downloads: path.join(chatLabDir, 'downloads'),
-      logs: path.join(chatLabDir, 'logs'),
+      logs: getLogsDir(),
     }
 
     const dirPath = allowedDirs[cacheId]
@@ -179,20 +164,17 @@ export function registerCacheHandlers(_context: IpcContext): void {
   })
 
   /**
-   * 保存文件到下载目录
+   * 保存文件到系统下载目录
    * 支持两种 data URL 格式：
    * 1. base64: data:image/png;base64,xxx
    * 2. URL 编码: data:text/plain;charset=utf-8,xxx
    */
   ipcMain.handle('cache:saveToDownloads', async (_, filename: string, dataUrl: string) => {
-    const chatLabDir = getChatLabDir()
-    const downloadsDir = path.join(chatLabDir, 'downloads')
+    const downloadsDir = getDownloadsDir()
 
     try {
-      // 确保目录存在
-      if (!fsSync.existsSync(downloadsDir)) {
-        await fs.mkdir(downloadsDir, { recursive: true })
-      }
+      // 系统下载目录应该已存在，但以防万一还是确保一下
+      ensureDir(downloadsDir)
 
       let buffer: Buffer
 
@@ -228,14 +210,12 @@ export function registerCacheHandlers(_context: IpcContext): void {
    * 在文件管理器中打开缓存目录
    */
   ipcMain.handle('cache:openDir', async (_, cacheId: string) => {
-    const chatLabDir = getChatLabDir()
-
     const dirPaths: Record<string, string> = {
-      base: chatLabDir,
-      databases: path.join(chatLabDir, 'databases'),
-      downloads: path.join(chatLabDir, 'downloads'),
-      ai: path.join(chatLabDir, 'ai'),
-      logs: path.join(chatLabDir, 'logs'),
+      base: getAppDataDir(),
+      databases: getDatabaseDir(),
+      ai: getAiDataDir(),
+      logs: getLogsDir(),
+      downloads: getDownloadsDir(), // 系统下载目录
     }
 
     const dirPath = dirPaths[cacheId]
@@ -244,7 +224,7 @@ export function registerCacheHandlers(_context: IpcContext): void {
     }
 
     try {
-      // 确保目录存在
+      // 确保目录存在（系统下载目录应该已存在）
       if (!fsSync.existsSync(dirPath)) {
         await fs.mkdir(dirPath, { recursive: true })
       }
@@ -261,8 +241,7 @@ export function registerCacheHandlers(_context: IpcContext): void {
    * 获取最新的导入日志文件路径
    */
   ipcMain.handle('cache:getLatestImportLog', async () => {
-    const chatLabDir = getChatLabDir()
-    const importLogDir = path.join(chatLabDir, 'logs', 'import')
+    const importLogDir = path.join(getLogsDir(), 'import')
 
     try {
       if (!fsSync.existsSync(importLogDir)) {

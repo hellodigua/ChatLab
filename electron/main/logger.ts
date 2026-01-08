@@ -1,20 +1,15 @@
 /**
  * 简单的日志工具
- * 日志保存到 Documents/ChatLab/logs/ 目录
+ * 日志保存到 userData/logs/ 目录
  */
 
-import { app } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
+import { getLogsDir, ensureDir } from './paths'
 
-// 日志目录（与 cache.ts 保持一致）
+// 日志目录
 function getLogDir(): string {
-  try {
-    const docPath = app.getPath('documents')
-    return path.join(docPath, 'ChatLab', 'logs')
-  } catch {
-    return path.join(process.cwd(), 'ChatLab', 'logs')
-  }
+  return getLogsDir()
 }
 
 // 日志文件路径
@@ -24,10 +19,7 @@ function getLogPath(): string {
 
 // 确保日志目录存在
 function ensureLogDir(): void {
-  const logDir = getLogDir()
-  if (!fs.existsSync(logDir)) {
-    fs.mkdirSync(logDir, { recursive: true })
-  }
+  ensureDir(getLogDir())
 }
 
 // 格式化时间

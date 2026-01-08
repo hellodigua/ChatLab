@@ -4,40 +4,24 @@
  */
 
 import Database from 'better-sqlite3'
-import { app } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
 import type { DbMeta, ParseResult, AnalysisSession } from '../../../src/types/base'
 import { migrateDatabase, needsMigration, CURRENT_SCHEMA_VERSION } from './migrations'
-
-// 数据库存储目录
-let DB_DIR: string | null = null
+import { getDatabaseDir, ensureDir } from '../paths'
 
 /**
- * 获取数据库目录（懒加载）
+ * 获取数据库目录
  */
 function getDbDir(): string {
-  if (DB_DIR) return DB_DIR
-
-  try {
-    const docPath = app.getPath('documents')
-    DB_DIR = path.join(docPath, 'ChatLab', 'databases')
-  } catch (error) {
-    console.error('[Database] Error getting userData path:', error)
-    DB_DIR = path.join(process.cwd(), 'databases')
-  }
-
-  return DB_DIR
+  return getDatabaseDir()
 }
 
 /**
  * 确保数据库目录存在
  */
 function ensureDbDir(): void {
-  const dir = getDbDir()
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true })
-  }
+  ensureDir(getDbDir())
 }
 
 /**

@@ -6,6 +6,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { app, session } from 'electron'
+import { getSettingsDir } from '../paths'
 
 // 代理配置接口
 export interface ProxyConfig {
@@ -24,14 +25,7 @@ let CONFIG_PATH: string | null = null
 
 function getConfigPath(): string {
   if (CONFIG_PATH) return CONFIG_PATH
-
-  try {
-    const docPath = app.getPath('documents')
-    CONFIG_PATH = path.join(docPath, 'ChatLab', 'settings', 'proxy.json')
-  } catch {
-    CONFIG_PATH = path.join(process.cwd(), 'settings', 'proxy.json')
-  }
-
+  CONFIG_PATH = path.join(getSettingsDir(), 'proxy.json')
   return CONFIG_PATH
 }
 

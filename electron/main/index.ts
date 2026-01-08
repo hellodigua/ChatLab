@@ -1,11 +1,11 @@
 import { app, shell, BrowserWindow, protocol, nativeTheme } from 'electron'
 import { join } from 'path'
 import { optimizer, is, platform } from '@electron-toolkit/utils'
-import * as fs from 'fs/promises'
 import { checkUpdate } from './update'
 import mainIpcMain from './ipcMain'
 import { initAnalytics, trackDailyActive } from './analytics'
 import { initProxy } from './network/proxy'
+import { needsLegacyMigration, migrateFromLegacyDir, ensureAppDirs } from './paths'
 
 class MainProcess {
   mainWindow: BrowserWindow | null
@@ -47,6 +47,13 @@ class MainProcess {
   // 初始化程序
   async init() {
     initAnalytics()
+
+    // 执行数据目录迁移（从 Documents/ChatLab 迁移到 userData）
+    this.migrateDataIfNeeded()
+
+    // 确保应用目录存在
+    ensureAppDirs()
+
     initProxy() // 初始化代理配置
 
     // 注册应用协议
@@ -57,6 +64,21 @@ class MainProcess {
 
     // 主应用程序事件
     this.mainAppEvents()
+  }
+
+  // 从旧目录迁移数据（静默迁移）
+  migrateDataIfNeeded() {
+    if (needsLegacyMigration()) {
+      console.log('[Main] Legacy data migration needed, starting migration...')
+      const result = migrateFromLegacyDir()
+      if (result.success) {
+        console.log(`[Main] Migration completed. Migrated: ${result.migratedDirs.join(', ')}`)
+      } else {
+        console.error('[Main] Migration failed:', result.error)
+      }
+    } else {
+      console.log('[Main] No legacy data migration needed')
+    }
   }
 
   // 创建主窗口
