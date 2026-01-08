@@ -49,8 +49,10 @@ export const feature: FormatFeature = {
   priority: 1, // 最高优先级
   extensions: ['.json'],
   signatures: {
+    // 只要求 chatlab 字段在文件头（8KB），其他字段在解析时验证
+    // 这样可以正确识别格式化后的大文件（meta/messages 可能超出 8KB）
     head: [/"chatlab"\s*:\s*\{/, /"version"\s*:\s*"/],
-    requiredFields: ['chatlab', 'meta', 'messages'],
+    requiredFields: ['chatlab'],
   },
 }
 
