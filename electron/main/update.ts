@@ -61,9 +61,13 @@ const checkUpdate = (win) => {
         .replace(/\n{2,}/g, '\n')
         .trim()
 
-      // 如果包含"下载说明"，截断该部分及之后的内容
-      const downloadGuideIndex = releaseNotes.indexOf('下载说明')
-      if (downloadGuideIndex > 0) {
+      // 如果包含下载说明章节，截断该部分及之后的内容（匹配二级标题，支持中英文）
+      const downloadGuideIndex = Math.min(
+        ...[releaseNotes.indexOf('## Download'), releaseNotes.indexOf('## 下载说明')]
+          .filter((i) => i > 0)
+          .concat([Infinity])
+      )
+      if (downloadGuideIndex < Infinity) {
         releaseNotes = releaseNotes.substring(0, downloadGuideIndex).trim()
       }
     }

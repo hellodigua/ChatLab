@@ -208,13 +208,13 @@ jobs:
 
             echo "---"
             echo ""
-            echo "## 下载说明"
+            echo "## Download"
             echo ""
-            echo "| 平台 | 文件 |"
-            echo "|------|------|"
-            echo "| Mac 苹果芯片 | \`ChatLab-${VERSION_NUMBER}-arm64.dmg\` |"
-            echo "| Mac Intel 芯片 | \`ChatLab-${VERSION_NUMBER}-x64.dmg\` |"
-            echo "| Windows | \`ChatLab-${VERSION_NUMBER}-setup.exe\` |"
+            echo "| Platform | File |"
+            echo "|-----------------|-------------|"
+            echo "| Mac (Apple Silicon) | [ChatLab-${VERSION_NUMBER}-arm64.dmg](https://github.com/hellodigua/ChatLab/releases/download/v${VERSION_NUMBER}/ChatLab-${VERSION_NUMBER}-arm64.dmg) |"
+            echo "| Mac (Intel) | [ChatLab-${VERSION_NUMBER}-x64.dmg](https://github.com/hellodigua/ChatLab/releases/download/v${VERSION_NUMBER}/ChatLab-${VERSION_NUMBER}-x64.dmg) |"
+            echo "| Windows | [ChatLab-${VERSION_NUMBER}-setup.exe](https://github.com/hellodigua/ChatLab/releases/download/v${VERSION_NUMBER}/ChatLab-${VERSION_NUMBER}-setup.exe) |"
           } > release_notes.md
 
           echo "Generated release notes:"
