@@ -41,9 +41,28 @@ interface MigrationCheckResult {
   pendingMigrations: MigrationInfo[]
 }
 
+// 格式诊断信息（简化版，用于前端显示）
+interface FormatDiagnosisSimple {
+  suggestion: string
+  partialMatches: Array<{
+    formatName: string
+    missingFields: string[]
+  }>
+}
+
 interface ChatApi {
-  selectFile: () => Promise<{ filePath?: string; format?: string; error?: string } | null>
-  import: (filePath: string) => Promise<{ success: boolean; sessionId?: string; error?: string }>
+  selectFile: () => Promise<{
+    filePath?: string
+    format?: string
+    error?: string
+    diagnosis?: FormatDiagnosisSimple
+  } | null>
+  import: (filePath: string) => Promise<{
+    success: boolean
+    sessionId?: string
+    error?: string
+    diagnosis?: FormatDiagnosisSimple
+  }>
   getSessions: () => Promise<AnalysisSession[]>
   getSession: (sessionId: string) => Promise<AnalysisSession | null>
   deleteSession: (sessionId: string) => Promise<boolean>

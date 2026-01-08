@@ -11,6 +11,7 @@ const sessionStore = useSessionStore()
 const { isImporting, importProgress } = storeToRefs(sessionStore)
 
 const importError = ref<string | null>(null)
+const diagnosisSuggestion = ref<string | null>(null)
 const hasImportLog = ref(false)
 
 const router = useRouter()
@@ -48,11 +49,16 @@ async function checkImportLog() {
 // 处理文件选择（点击选择）
 async function handleClickImport() {
   importError.value = null
+  diagnosisSuggestion.value = null
   hasImportLog.value = false
   const result = await sessionStore.importFile()
   // Skip showing error if user just cancelled the file dialog
   if (!result.success && result.error && result.error !== 'error.no_file_selected') {
     importError.value = translateError(result.error)
+    // 保存诊断建议（如果有）
+    if (result.diagnosisSuggestion) {
+      diagnosisSuggestion.value = result.diagnosisSuggestion
+    }
     await checkImportLog()
   } else if (result.success && sessionStore.currentSessionId) {
     await navigateToSession(sessionStore.currentSessionId)
@@ -67,10 +73,15 @@ async function handleFileDrop({ paths }: { files: File[]; paths: string[] }) {
   }
 
   importError.value = null
+  diagnosisSuggestion.value = null
   hasImportLog.value = false
   const result = await sessionStore.importFileFromPath(paths[0])
   if (!result.success && result.error) {
     importError.value = translateError(result.error)
+    // 保存诊断建议（如果有）
+    if (result.diagnosisSuggestion) {
+      diagnosisSuggestion.value = result.diagnosisSuggestion
+    }
     await checkImportLog()
   } else if (result.success && sessionStore.currentSessionId) {
     await navigateToSession(sessionStore.currentSessionId)
@@ -187,10 +198,23 @@ function getProgressDetail(): string {
     </FileDropZone>
 
     <!-- Error Message -->
-    <div v-if="importError" class="flex flex-col items-center gap-3 rounded-lg bg-red-50 px-4 py-4 dark:bg-red-900/20">
+    <div
+      v-if="importError"
+      class="flex max-w-lg flex-col items-center gap-3 rounded-lg bg-red-50 px-4 py-4 dark:bg-red-900/20"
+    >
       <div class="flex items-center gap-2 text-sm text-red-600 dark:text-red-400">
         <UIcon name="i-heroicons-exclamation-circle" class="h-5 w-5 shrink-0" />
         <span>{{ importError }}</span>
+      </div>
+      <!-- 诊断建议（如果有） -->
+      <div
+        v-if="diagnosisSuggestion"
+        class="w-full rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-900/30 dark:text-amber-200"
+      >
+        <div class="flex items-start gap-2">
+          <UIcon name="i-heroicons-light-bulb" class="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{{ diagnosisSuggestion }}</span>
+        </div>
       </div>
       <UButton v-if="hasImportLog" size="xs" @click="openLatestImportLog">{{ t('home.import.viewLog') }}</UButton>
     </div>
