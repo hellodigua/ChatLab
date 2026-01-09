@@ -1,6 +1,6 @@
 {
   "title": "ChatLab",
-  "subtitle": "你的本地聊天分析实验室ヾ(*ゝω・*)ノ",
+  "subtitle": "你的本地聊天分析实验室 ヾ(*ゝω・*)ノ",
   "features": {
     "privacy": {
       "title": "隐私至上",
@@ -11,7 +11,7 @@
       "description": "从群榜单到群语录，全方位解读群聊数据，发现隐藏的趣味。"
     },
     "ai": {
-      "title": "AI 洞察",
+      "title": "智能 Agent",
       "description": "内置 AI Agent，智能回答关于群聊的一切疑问，挖掘数据背后的趣事。"
     }
   },
@@ -48,4 +48,3 @@
     "failed": "迁移失败"
   }
 }
-

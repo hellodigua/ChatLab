@@ -9,28 +9,16 @@ const { t } = useI18n()
 
 const features = computed(() => [
   {
-    icon: '🔒',
     title: t('home.features.privacy.title'),
-    desc: t('home.features.privacy.description'),
-    color: 'text-green-500',
-    bg: 'bg-green-50',
-    delay: '200ms',
+    color: 'text-pink-500',
   },
   {
-    icon: '📊',
     title: t('home.features.analysis.title'),
-    desc: t('home.features.analysis.description'),
-    color: 'text-blue-500',
-    bg: 'bg-blue-50',
-    delay: '100ms',
+    color: 'text-pink-500',
   },
   {
-    icon: '🤖',
     title: t('home.features.ai.title'),
-    desc: t('home.features.ai.description'),
-    color: 'text-purple-500',
-    bg: 'bg-purple-50',
-    delay: '300ms',
+    color: 'text-pink-500',
   },
 ])
 </script>
@@ -54,9 +42,11 @@ const features = computed(() => [
     <div class="relative h-full w-full overflow-y-auto">
       <div class="flex min-h-full w-full flex-col items-center justify-center px-4 py-12">
         <!-- Hero Section -->
-        <div class="xl:mb-16 mb-8 text-center">
+        <div class="xl:mb-6 mb-4 text-center">
           <!-- Title -->
-          <h1 class="mb-4 text-6xl sm:text-7xl lg:text-8xl font-black tracking-tight text-pink-500">{{ t('home.title') }}</h1>
+          <h1 class="mb-4 text-6xl sm:text-7xl lg:text-8xl font-black tracking-tight text-pink-500">
+            {{ t('home.title') }}
+          </h1>
           <!-- Description -->
           <div class="relative inline-block mb-8">
             <p class="text-lg sm:text-2xl text-gray-600 dark:text-gray-400 font-medium">
@@ -66,29 +56,22 @@ const features = computed(() => [
           </div>
         </div>
 
-        <!-- Feature Cards -->
-        <div class="xl:mb-16 mb-8 grid max-w-4xl grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 px-4">
-          <div
-            v-for="feature in features"
-            :key="feature.title"
-            class="group relative overflow-hidden rounded-3xl border border-transparent p-4 transition-all duration-500"
-          >
-            <div class="relative">
-              <div class="mb-3 flex items-center">
-                <div
-                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3"
-                >
-                  <span class="text-xl filter drop-shadow-sm">{{ feature.icon }}</span>
-                </div>
-                <h3 class="text-lg font-bold text-gray-900 dark:text-white">
-                  {{ feature.title }}
-                </h3>
-              </div>
-              <p class="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-                {{ feature.desc }}
-              </p>
+        <!-- Feature Text -->
+        <div class="xl:mb-16 mb-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 px-4">
+          <template v-for="(feature, index) in features" :key="feature.title">
+            <div class="group flex items-center gap-2 cursor-default">
+              <UIcon
+                name="i-heroicons-check-circle"
+                class="h-5 w-5 transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-md"
+                :class="feature.color"
+              />
+              <span
+                class="text-sm sm:text-base font-medium tracking-tight text-gray-600 dark:text-gray-300 transition-colors duration-300 group-hover:text-gray-900 dark:group-hover:text-white"
+              >
+                {{ feature.title }}
+              </span>
             </div>
-          </div>
+          </template>
         </div>
 
         <!-- Import Area -->
