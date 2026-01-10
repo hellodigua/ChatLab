@@ -1,9 +1,11 @@
 {
-  "title": "全局设置",
+  "title": "设置",
   "tabs": {
     "basic": "基础设置",
+    "ai": "AI 设置",
     "aiConfig": "模型配置",
-    "aiPrompt": "AI 对话配置",
+    "aiPrompt": "对话配置",
+    "aiPreset": "提示词配置",
     "storage": "存储管理",
     "about": "关于"
   },
@@ -42,6 +44,7 @@
     }
   },
   "aiConfig": {
+    "title": "模型配置",
     "loading": "加载中...",
     "inUse": "使用中",
     "defaultModel": "默认模型",
@@ -129,7 +132,12 @@
     }
   },
   "aiPrompt": {
-    "title": "对话设置",
+    "chatSettings": {
+      "title": "对话设置"
+    },
+    "exportSettings": {
+      "title": "导出设置"
+    },
     "maxMessages": {
       "title": "发送条数限制",
       "description": "每次提交给 AI 的最大消息数，数值越大 Token 消耗越多，分析也更准确（建议2000）"

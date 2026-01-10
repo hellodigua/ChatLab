@@ -2,8 +2,10 @@
   "title": "Settings",
   "tabs": {
     "basic": "General",
+    "ai": "AI Settings",
     "aiConfig": "AI Models",
-    "aiPrompt": "AI Chat Config",
+    "aiPrompt": "Chat Config",
+    "aiPreset": "Prompts",
     "storage": "Storage",
     "about": "About"
   },
@@ -42,6 +44,7 @@
     }
   },
   "aiConfig": {
+    "title": "Model Configuration",
     "loading": "Loading...",
     "inUse": "Active",
     "defaultModel": "Default Model",
@@ -129,7 +132,12 @@
     }
   },
   "aiPrompt": {
-    "title": "Chat Settings",
+    "chatSettings": {
+      "title": "Chat Settings"
+    },
+    "exportSettings": {
+      "title": "Export Settings"
+    },
     "maxMessages": {
       "title": "Max Messages per Request",
       "description": "Max number of messages sent to AI per request. Higher values consume more tokens but provide more accurate context (recommended: 2000)."

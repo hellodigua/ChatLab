@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import AIConfigEditModal from './AIConfigEditModal.vue'
+import AIModelEditModal from './AIModelEditModal.vue'
 import AlertTips from './AlertTips.vue'
 
 const { t } = useI18n()
@@ -148,6 +148,11 @@ onMounted(() => {
 
   <!-- 配置列表视图 -->
   <div v-else class="space-y-4">
+    <!-- 标题 -->
+    <h4 class="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
+      <UIcon name="i-heroicons-sparkles" class="h-4 w-4 text-violet-500" />
+      {{ t('settings.aiConfig.title') }}
+    </h4>
     <AlertTips v-if="configs.length === 0 && aiTips.configTab?.show" :content="aiTips.configTab?.content" />
     <!-- 配置列表 -->
     <div v-if="configs.length > 0" class="space-y-2">
@@ -198,12 +203,14 @@ onMounted(() => {
 
         <!-- 操作按钮 -->
         <div class="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100" @click.stop>
-          <UButton size="xs" color="gray" variant="ghost" @click="openEditModal(config)">
-            {{ t('settings.aiConfig.edit') }}
-          </UButton>
-          <UButton size="xs" color="error" variant="ghost" @click="deleteConfig(config.id)">
-            {{ t('settings.aiConfig.delete') }}
-          </UButton>
+          <UButton
+            size="xs"
+            color="neutral"
+            variant="ghost"
+            icon="i-heroicons-pencil-square"
+            @click="openEditModal(config)"
+          />
+          <UButton size="xs" color="error" variant="ghost" icon="i-heroicons-trash" @click="deleteConfig(config.id)" />
         </div>
       </div>
     </div>
@@ -228,7 +235,7 @@ onMounted(() => {
   </div>
 
   <!-- 编辑/添加弹窗 -->
-  <AIConfigEditModal
+  <AIModelEditModal
     v-model:open="showEditModal"
     :mode="editMode"
     :config="editingConfig"

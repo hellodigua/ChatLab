@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import type { PromptPreset } from '@/types/ai'
@@ -11,7 +11,7 @@ const { t } = useI18n()
 
 // Store
 const promptStore = usePromptStore()
-const { groupPresets, privatePresets, aiPromptSettings, aiGlobalSettings } = storeToRefs(promptStore)
+const { groupPresets, privatePresets, aiPromptSettings } = storeToRefs(promptStore)
 
 // Emits
 const emit = defineEmits<{
@@ -24,56 +24,6 @@ const showImportModal = ref(false)
 const editMode = ref<'add' | 'edit'>('add')
 const editingPreset = ref<PromptPreset | null>(null)
 const defaultChatType = ref<'group' | 'private'>('group')
-
-// 发送条数限制
-const globalMaxMessages = computed({
-  get: () => aiGlobalSettings.value.maxMessagesPerRequest,
-  set: (val: number) => {
-    const clampedVal = Math.max(10, Math.min(10000, val || 200))
-    promptStore.updateAIGlobalSettings({ maxMessagesPerRequest: clampedVal })
-    emit('config-changed')
-  },
-})
-
-// AI上下文限制
-const globalMaxHistoryRounds = computed({
-  get: () => aiGlobalSettings.value.maxHistoryRounds ?? 10,
-  set: (val: number) => {
-    const clampedVal = Math.max(1, Math.min(50, val || 10))
-    promptStore.updateAIGlobalSettings({ maxHistoryRounds: clampedVal })
-    emit('config-changed')
-  },
-})
-
-// 导出格式选项（AI 对话）
-const exportFormatTabs = computed(() => [
-  { label: 'Markdown', value: 'markdown' },
-  { label: t('settings.aiPrompt.exportFormat.txtLabel'), value: 'txt' },
-])
-
-// 当前选中的导出格式（AI 对话）
-const exportFormat = computed({
-  get: () => aiGlobalSettings.value.exportFormat ?? 'markdown',
-  set: (val: string) => {
-    promptStore.updateAIGlobalSettings({ exportFormat: val as 'markdown' | 'txt' })
-    emit('config-changed')
-  },
-})
-
-// SQL Lab 导出格式选项
-const sqlExportFormatTabs = computed(() => [
-  { label: 'CSV', value: 'csv' },
-  { label: 'JSON', value: 'json' },
-])
-
-// 当前选中的 SQL Lab 导出格式
-const sqlExportFormat = computed({
-  get: () => aiGlobalSettings.value.sqlExportFormat ?? 'csv',
-  set: (val: string) => {
-    promptStore.updateAIGlobalSettings({ sqlExportFormat: val as 'csv' | 'json' })
-    emit('config-changed')
-  },
-})
 
 /** 打开新增预设弹窗 */
 function openAddModal(chatType: 'group' | 'private') {
@@ -134,70 +84,6 @@ function handleImportPresetAdded() {
 
 <template>
   <div class="space-y-6">
-    <!-- 对话设置 -->
-    <div>
-      <h4 class="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
-        <UIcon name="i-heroicons-adjustments-horizontal" class="h-4 w-4 text-green-500" />
-        {{ t('settings.aiPrompt.title') }}
-      </h4>
-      <div class="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
-        <!-- 发送条数限制 -->
-        <div class="flex items-center justify-between">
-          <div class="flex-1 pr-4">
-            <p class="text-sm font-medium text-gray-900 dark:text-white">
-              {{ t('settings.aiPrompt.maxMessages.title') }}
-            </p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">
-              {{ t('settings.aiPrompt.maxMessages.description') }}
-            </p>
-          </div>
-          <UInput v-model.number="globalMaxMessages" type="number" min="1" max="10000" class="w-24" />
-        </div>
-
-        <!-- AI上下文限制 -->
-        <div class="flex items-center justify-between">
-          <div class="flex-1 pr-4">
-            <p class="text-sm font-medium text-gray-900 dark:text-white">
-              {{ t('settings.aiPrompt.maxHistory.title') }}
-            </p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">
-              {{ t('settings.aiPrompt.maxHistory.description') }}
-            </p>
-          </div>
-          <UInput v-model.number="globalMaxHistoryRounds" type="number" min="1" max="50" class="w-24" />
-        </div>
-
-        <!-- 导出格式（AI 对话） -->
-        <div class="flex items-center justify-between">
-          <div class="flex-1 pr-4">
-            <p class="text-sm font-medium text-gray-900 dark:text-white">
-              {{ t('settings.aiPrompt.exportFormat.title') }}
-            </p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">
-              {{ t('settings.aiPrompt.exportFormat.description') }}
-            </p>
-          </div>
-          <UTabs v-model="exportFormat" :items="exportFormatTabs" size="xs" />
-        </div>
-
-        <!-- SQL Lab 导出格式 -->
-        <div class="flex items-center justify-between">
-          <div class="flex-1 pr-4">
-            <p class="text-sm font-medium text-gray-900 dark:text-white">
-              {{ t('settings.aiPrompt.sqlExportFormat.title') }}
-            </p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">
-              {{ t('settings.aiPrompt.sqlExportFormat.description') }}
-            </p>
-          </div>
-          <UTabs v-model="sqlExportFormat" :items="sqlExportFormatTabs" size="xs" />
-        </div>
-      </div>
-    </div>
-
-    <!-- 分隔线 -->
-    <div class="border-t border-gray-200 dark:border-gray-700"></div>
-
     <!-- 系统提示词标题和导入按钮 -->
     <div class="flex items-center justify-between">
       <h4 class="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
@@ -210,8 +96,8 @@ function handleImportPresetAdded() {
       </UButton>
     </div>
 
-    <!-- 群聊和私聊系统提示词并排 -->
-    <div class="grid grid-cols-2 gap-4">
+    <!-- 群聊和私聊系统提示词 -->
+    <div class="space-y-6">
       <!-- 群聊预设组 -->
       <div>
         <div class="mb-3 flex items-center justify-between">
@@ -261,21 +147,28 @@ function handleImportPresetAdded() {
 
             <!-- 操作按钮 -->
             <div class="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100" @click.stop>
-              <UButton color="gray" variant="ghost" size="xs" @click="openEditModal(preset)">
-                {{ preset.isBuiltIn ? t('settings.aiPrompt.preset.view') : t('settings.aiPrompt.preset.edit') }}
-              </UButton>
-              <UButton color="gray" variant="ghost" size="xs" @click="duplicatePreset(preset.id)">
-                {{ t('settings.aiPrompt.preset.copy') }}
-              </UButton>
+              <UButton
+                color="neutral"
+                variant="ghost"
+                size="xs"
+                :icon="preset.isBuiltIn ? 'i-heroicons-eye' : 'i-heroicons-pencil-square'"
+                @click="openEditModal(preset)"
+              />
+              <UButton
+                color="neutral"
+                variant="ghost"
+                size="xs"
+                icon="i-heroicons-document-duplicate"
+                @click="duplicatePreset(preset.id)"
+              />
               <UButton
                 v-if="!preset.isBuiltIn"
                 color="error"
                 variant="ghost"
                 size="xs"
+                icon="i-heroicons-trash"
                 @click="deletePreset(preset.id)"
-              >
-                {{ t('settings.aiPrompt.preset.delete') }}
-              </UButton>
+              />
             </div>
           </div>
         </div>
@@ -330,21 +223,28 @@ function handleImportPresetAdded() {
 
             <!-- 操作按钮 -->
             <div class="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100" @click.stop>
-              <UButton color="gray" variant="ghost" size="xs" @click="openEditModal(preset)">
-                {{ preset.isBuiltIn ? t('settings.aiPrompt.preset.view') : t('settings.aiPrompt.preset.edit') }}
-              </UButton>
-              <UButton color="gray" variant="ghost" size="xs" @click="duplicatePreset(preset.id)">
-                {{ t('settings.aiPrompt.preset.copy') }}
-              </UButton>
+              <UButton
+                color="neutral"
+                variant="ghost"
+                size="xs"
+                :icon="preset.isBuiltIn ? 'i-heroicons-eye' : 'i-heroicons-pencil-square'"
+                @click="openEditModal(preset)"
+              />
+              <UButton
+                color="neutral"
+                variant="ghost"
+                size="xs"
+                icon="i-heroicons-document-duplicate"
+                @click="duplicatePreset(preset.id)"
+              />
               <UButton
                 v-if="!preset.isBuiltIn"
                 color="error"
                 variant="ghost"
                 size="xs"
+                icon="i-heroicons-trash"
                 @click="deletePreset(preset.id)"
-              >
-                {{ t('settings.aiPrompt.preset.delete') }}
-              </UButton>
+              />
             </div>
           </div>
         </div>

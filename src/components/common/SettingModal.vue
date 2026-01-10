@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import AIConfigTab from './settings/AIConfigTab.vue'
-import AIPromptConfigTab from './settings/AIPromptConfigTab.vue'
+import AISettingsTab from './settings/AISettingsTab.vue'
 import BasicSettingsTab from './settings/BasicSettingsTab.vue'
 import StorageTab from './settings/StorageTab.vue'
 import AboutTab from './settings/AboutTab.vue'
+import SubTabs from '@/components/UI/SubTabs.vue'
 
 const { t } = useI18n()
 
@@ -23,18 +23,15 @@ const emit = defineEmits<{
 // Tab 配置（使用 computed 以便语言切换时自动更新）
 const tabs = computed(() => [
   { id: 'settings', label: t('settings.tabs.basic'), icon: 'i-heroicons-cog-6-tooth' },
-  { id: 'ai-config', label: t('settings.tabs.aiConfig'), icon: 'i-heroicons-sparkles' },
-  { id: 'ai-prompt', label: t('settings.tabs.aiPrompt'), icon: 'i-heroicons-document-text' },
+  { id: 'ai', label: t('settings.tabs.ai'), icon: 'i-heroicons-sparkles' },
   { id: 'storage', label: t('settings.tabs.storage'), icon: 'i-heroicons-folder-open' },
   { id: 'about', label: t('settings.tabs.about'), icon: 'i-heroicons-information-circle' },
 ])
 
 const activeTab = ref('settings')
 // Template refs - used via ref="xxx" in template
-const aiConfigRef = ref<InstanceType<typeof AIConfigTab> | null>(null)
 const storageTabRef = ref<InstanceType<typeof StorageTab> | null>(null)
 // Ensure refs are tracked for vue-tsc
-void aiConfigRef
 void storageTabRef
 
 // AI 配置变更回调
@@ -81,23 +78,8 @@ watch(
         </div>
 
         <!-- Tab 导航 -->
-        <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
-          <div class="flex gap-1">
-            <button
-              v-for="tab in tabs"
-              :key="tab.id"
-              class="flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors"
-              :class="[
-                activeTab === tab.id
-                  ? 'border-primary-500 text-primary-600 dark:text-primary-400'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
-              ]"
-              @click="activeTab = tab.id"
-            >
-              <UIcon :name="tab.icon" class="h-4 w-4" />
-              <span>{{ tab.label }}</span>
-            </button>
-          </div>
+        <div class="mb-6 -mx-6">
+          <SubTabs v-model="activeTab" :items="tabs" />
         </div>
 
         <!-- Tab 内容 -->
@@ -106,14 +88,10 @@ watch(
           <div v-show="activeTab === 'settings'">
             <BasicSettingsTab />
           </div>
-          <!-- 模型配置 -->
-          <div v-show="activeTab === 'ai-config'">
-            <AIConfigTab ref="aiConfigRef" @config-changed="handleAIConfigChanged" />
-          </div>
 
-          <!-- AI对话配置 -->
-          <div v-show="activeTab === 'ai-prompt'">
-            <AIPromptConfigTab @config-changed="handleAIConfigChanged" />
+          <!-- AI 设置 -->
+          <div v-show="activeTab === 'ai'" class="h-full">
+            <AISettingsTab @config-changed="handleAIConfigChanged" />
           </div>
 
           <!-- 存储管理 -->
