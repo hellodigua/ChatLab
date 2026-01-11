@@ -48,10 +48,6 @@ const i18nContent = {
 5. 关注两人之间的互动模式和对话特点`,
     },
     lockedSection: {
-      chatTypeDesc: {
-        group: '群聊记录',
-        private: '私聊记录',
-      },
       chatContext: {
         group: '群聊',
         private: '对话',
@@ -73,17 +69,6 @@ const i18nContent = {
 - 当用户提到"对方"、"他/她"时，通过 get_group_members 获取另一方信息`,
       },
       currentDatePrefix: '当前日期是',
-      toolsDescription: (chatTypeDesc: string) =>
-        `你可以使用以下工具来获取${chatTypeDesc}数据：
-
-1. search_messages - 根据关键词搜索聊天记录，支持时间筛选和发送者筛选
-2. get_recent_messages - 获取指定时间段的聊天消息
-3. get_member_stats - 获取成员活跃度统计
-4. get_time_stats - 获取时间分布统计
-5. get_group_members - 获取成员列表，包括 id、QQ号、账号名称、昵称、别名和消息统计
-6. get_member_name_history - 获取成员的昵称变更历史，需要先通过 get_group_members 获取成员 ID
-7. get_conversation_between - 获取两个成员之间的对话记录，需要先通过 get_group_members 获取两人的成员 ID
-8. get_message_context - 根据消息 ID 获取前后的上下文消息，支持批量查询，消息 ID 可从其他搜索工具的返回结果中获取`,
       timeParamsTemplate: (year: number, prevYear: number) =>
         `时间参数：按用户提到的精度组合 year/month/day/hour
 - "10月" → year: ${year}, month: 10
@@ -124,10 +109,6 @@ Note: This is a private conversation with only two participants. Your analysis s
 5. Focus on the interaction patterns and conversation characteristics between the two parties`,
     },
     lockedSection: {
-      chatTypeDesc: {
-        group: 'group chat records',
-        private: 'private chat records',
-      },
       chatContext: {
         group: 'group chat',
         private: 'conversation',
@@ -149,17 +130,6 @@ Note: This is a private conversation with only two participants. Your analysis s
 - When the user mentions "the other person" or "he/she", use get_group_members to get the other party's information`,
       },
       currentDatePrefix: 'The current date is',
-      toolsDescription: (chatTypeDesc: string) =>
-        `You can use the following tools to retrieve ${chatTypeDesc} data:
-
-1. search_messages - Search chat records by keywords, supports time and sender filtering
-2. get_recent_messages - Get chat messages for a specified time period
-3. get_member_stats - Get member activity statistics
-4. get_time_stats - Get time distribution statistics
-5. get_group_members - Get member list, including id, QQ number, account name, nickname, aliases, and message statistics
-6. get_member_name_history - Get member's nickname change history, requires member ID from get_group_members first
-7. get_conversation_between - Get conversation records between two members, requires member IDs from get_group_members first
-8. get_message_context - Get context messages before/after a message ID, supports batch queries, message IDs can be obtained from other search tool results`,
       timeParamsTemplate: (year: number, prevYear: number) =>
         `Time parameters: Combine year/month/day/hour based on user's specified precision
 - "October" → year: ${year}, month: 10
@@ -290,7 +260,6 @@ export function getLockedPromptSectionPreview(
     weekday: 'long',
   })
 
-  const chatTypeDesc = content.lockedSection.chatTypeDesc[chatType]
   const chatContext = content.lockedSection.chatContext[chatType]
 
   // Owner 说明（当用户设置了"我是谁"时）
@@ -302,8 +271,6 @@ export function getLockedPromptSectionPreview(
 
   return `${content.lockedSection.currentDatePrefix} ${currentDate}。
 ${ownerNote}
-${content.lockedSection.toolsDescription(chatTypeDesc)}
-
 ${memberNote}
 
 ${content.lockedSection.timeParamsTemplate(year, prevYear)}

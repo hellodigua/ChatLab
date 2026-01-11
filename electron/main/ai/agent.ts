@@ -157,17 +157,6 @@ const i18nContent = {
 - 通过 get_group_members 的 search 参数可以模糊搜索这三种名称
 - 找到成员后，使用其 id 字段作为 search_messages 的 sender_id 参数来获取该成员的发言
 `,
-    toolsIntro: (chatTypeDesc: string) => `你可以使用以下工具来获取${chatTypeDesc}数据：`,
-    toolDescriptions: [
-      'search_messages - 根据关键词搜索聊天记录，支持时间筛选和发送者筛选',
-      'get_recent_messages - 获取指定时间段的聊天消息',
-      'get_member_stats - 获取成员活跃度统计',
-      'get_time_stats - 获取时间分布统计',
-      'get_group_members - 获取成员列表，包括 id、QQ号、账号名称、昵称、别名和消息统计',
-      'get_member_name_history - 获取成员的昵称变更历史，需要先通过 get_group_members 获取成员 ID',
-      'get_conversation_between - 获取两个成员之间的对话记录，需要先通过 get_group_members 获取两人的成员 ID',
-      'get_message_context - 根据消息 ID 获取前后的上下文消息，支持批量查询，消息 ID 可从其他搜索工具的返回结果中获取',
-    ],
     timeParamsIntro: '时间参数：按用户提到的精度组合 year/month/day/hour',
     timeParamExample1: (year: number) => `"10月" → year: ${year}, month: 10`,
     timeParamExample2: (year: number) => `"10月1号" → year: ${year}, month: 10, day: 1`,
@@ -200,17 +189,6 @@ const i18nContent = {
 - The search parameter of get_group_members can be used for fuzzy searching these three names
 - Once a member is found, use their id field as the sender_id parameter for search_messages to retrieve their messages
 `,
-    toolsIntro: (chatTypeDesc: string) => `You can use the following tools to get ${chatTypeDesc} data:`,
-    toolDescriptions: [
-      'search_messages - Search chat records by keywords, supports time and sender filtering',
-      'get_recent_messages - Get chat messages for a specified time period',
-      'get_member_stats - Get member activity statistics',
-      'get_time_stats - Get time distribution statistics',
-      'get_group_members - Get member list, including ID, QQ number, account name, nickname, aliases, and message statistics',
-      'get_member_name_history - Get member nickname change history, requires member ID from get_group_members first',
-      'get_conversation_between - Get conversation records between two members, requires member IDs from get_group_members first',
-      'get_message_context - Get context messages before and after a message ID, supports batch queries, message ID can be obtained from other search tool results',
-    ],
     timeParamsIntro: 'Time parameters: combine year/month/day/hour based on user mention',
     timeParamExample1: (year: number) => `"October" → year: ${year}, month: 10`,
     timeParamExample2: (year: number) => `"October 1st" → year: ${year}, month: 10, day: 1`,
@@ -229,7 +207,11 @@ Your task is to help users understand and analyze their ${chatType} data.`,
 }
 
 /**
- * 获取系统锁定部分的提示词（工具说明、时间处理等）
+ * 获取系统锁定部分的提示词（策略说明、时间处理等）
+ *
+ * 注意：工具定义通过 Function Calling 的 tools 参数传递给 LLM，
+ * 无需在 System Prompt 中重复描述，以节省 Token。
+ *
  * @param chatType 聊天类型 ('group' | 'private')
  * @param ownerInfo Owner 信息（当前用户在对话中的身份）
  * @param locale 语言设置
@@ -250,7 +232,6 @@ function getLockedPromptSection(
   })
 
   const isPrivate = chatType === 'private'
-  const chatTypeDesc = content.chatTypeDesc[chatType]
   const chatContext = content.chatContext[chatType]
 
   // Owner 说明（当用户设置了"我是谁"时）
@@ -259,16 +240,11 @@ function getLockedPromptSection(
   // 成员说明（私聊只有2人）
   const memberNote = isPrivate ? content.memberNotePrivate : content.memberNoteGroup
 
-  const toolsList = content.toolDescriptions.map((desc, i) => `${i + 1}. ${desc}`).join('\n')
   const year = now.getFullYear()
   const prevYear = year - 1
 
   return `${content.currentDateIs} ${currentDate}。
 ${ownerNote}
-${content.toolsIntro(chatTypeDesc)}
-
-${toolsList}
-
 ${memberNote}
 ${content.timeParamsIntro}
 - ${content.timeParamExample1(year)}
