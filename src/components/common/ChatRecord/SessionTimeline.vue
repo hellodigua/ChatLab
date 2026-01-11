@@ -3,7 +3,7 @@
  * 会话时间线组件
  * 使用 @tanstack/vue-virtual 实现虚拟滚动
  */
-import { ref, computed, watch, onMounted, nextTick, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useVirtualizer } from '@tanstack/vue-virtual'
 
@@ -167,9 +167,7 @@ function scrollToBottom() {
 
 // 滚动到指定会话
 function scrollToSession(sessionId: number) {
-  const index = flatList.value.findIndex(
-    (item) => item.type === 'session' && item.session.id === sessionId
-  )
+  const index = flatList.value.findIndex((item) => item.type === 'session' && item.session.id === sessionId)
   if (index !== -1) {
     virtualizer.value.scrollToIndex(index, { align: 'center' })
   }
@@ -249,7 +247,7 @@ onMounted(() => {
       <div class="relative w-full" :style="{ height: `${totalSize}px` }">
         <div
           v-for="virtualItem in virtualItems"
-          :key="virtualItem.key"
+          :key="String(virtualItem.key)"
           :ref="(el) => measureElement(el as Element)"
           class="absolute left-0 top-0 w-full"
           :style="{ transform: `translateY(${virtualItem.start}px)` }"

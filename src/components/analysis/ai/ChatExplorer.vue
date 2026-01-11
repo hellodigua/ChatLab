@@ -43,36 +43,29 @@ const {
 
 // Store
 const promptStore = usePromptStore()
-const { groupPresets, privatePresets, aiPromptSettings } = storeToRefs(promptStore)
+const { aiPromptSettings, activePreset } = storeToRefs(promptStore)
 
 // 当前聊天类型
 const currentChatType = computed(() => props.chatType ?? 'group')
 
-// 当前类型对应的预设列表
-const currentPresets = computed(() => (currentChatType.value === 'group' ? groupPresets.value : privatePresets.value))
+// 当前类型对应的预设列表（根据 applicableTo 过滤）
+const currentPresets = computed(() => promptStore.getPresetsForChatType(currentChatType.value))
 
 // 当前激活的预设 ID
-const currentActivePresetId = computed(() =>
-  currentChatType.value === 'group'
-    ? aiPromptSettings.value.activeGroupPresetId
-    : aiPromptSettings.value.activePrivatePresetId
-)
+const currentActivePresetId = computed(() => aiPromptSettings.value.activePresetId)
 
-// 当前激活的预设
-const currentActivePreset = computed(
-  () => currentPresets.value.find((p) => p.id === currentActivePresetId.value) || currentPresets.value[0]
-)
+// 当前激活的预设（如果当前激活的预设不适用于当前类型，使用第一个可用预设）
+const currentActivePreset = computed(() => {
+  const activeInList = currentPresets.value.find((p) => p.id === currentActivePresetId.value)
+  return activeInList || activePreset.value
+})
 
 // 预设下拉菜单状态
 const isPresetPopoverOpen = ref(false)
 
 // 设置激活预设
 function setActivePreset(presetId: string) {
-  if (currentChatType.value === 'group') {
-    promptStore.setActiveGroupPreset(presetId)
-  } else {
-    promptStore.setActivePrivatePreset(presetId)
-  }
+  promptStore.setActivePreset(presetId)
   // 关闭下拉菜单
   isPresetPopoverOpen.value = false
 }

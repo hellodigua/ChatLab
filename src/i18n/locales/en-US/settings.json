@@ -182,18 +182,14 @@
     },
     "presets": {
       "title": "System Prompts",
-      "import": "Import Presets"
-    },
-    "group": {
-      "title": "Group Chat System Prompts",
-      "add": "Add"
-    },
-    "private": {
-      "title": "Private Chat System Prompts",
-      "add": "Add"
+      "add": "Add Preset",
+      "import": "Import Presets",
+      "description": "Prompts are used for both group and private chat analysis, system adjusts content based on analysis type"
     },
     "preset": {
       "builtIn": "Built-in",
+      "groupOnly": "Group Only",
+      "privateOnly": "Private Only",
       "view": "View",
       "edit": "Edit",
       "copy": "Copy",

@@ -120,14 +120,13 @@ export function useAIChat(
   // 获取 chat store 中的提示词配置和全局设置
   const promptStore = usePromptStore()
   const sessionStore = useSessionStore()
-  const { activeGroupPreset, activePrivatePreset, aiGlobalSettings } = storeToRefs(promptStore)
+  const { activePreset, aiGlobalSettings } = storeToRefs(promptStore)
 
-  // 获取当前聊天类型对应的提示词配置
+  // 获取当前聊天类型对应的提示词配置（使用统一的激活预设）
   const currentPromptConfig = computed(() => {
-    const preset = chatType === 'group' ? activeGroupPreset.value : activePrivatePreset.value
     return {
-      roleDefinition: preset.roleDefinition,
-      responseRules: preset.responseRules,
+      roleDefinition: activePreset.value.roleDefinition,
+      responseRules: activePreset.value.responseRules,
     }
   })
 

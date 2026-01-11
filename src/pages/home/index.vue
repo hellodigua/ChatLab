@@ -58,7 +58,7 @@ const features = computed(() => [
 
         <!-- Feature Text -->
         <div class="xl:mb-16 mb-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 px-4">
-          <template v-for="(feature, index) in features" :key="feature.title">
+          <template v-for="feature in features" :key="feature.title">
             <div class="group flex items-center gap-2 cursor-default">
               <UIcon
                 name="i-heroicons-check-circle"

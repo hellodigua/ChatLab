@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onUnmounted, type Ref, type ComputedRef } from 'vue'
+import { ref, onMounted, onUnmounted, type Ref, type ComputedRef } from 'vue'
 
 /**
  * 导航项配置
@@ -102,4 +102,3 @@ export function useSubTabsScroll(navItems: ComputedRef<SubTabNavItem[]> | Ref<Su
     handleNavChange,
   }
 }
-

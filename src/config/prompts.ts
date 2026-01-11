@@ -2,11 +2,11 @@
  * AI 提示词统一配置
  *
  * 本文件集中管理所有 AI 提示词相关的配置：
- * - 内置预设定义
+ * - 内置预设定义（统一版本，不再区分群聊/私聊）
  * - 默认角色定义/回答要求
  * - 锁定部分说明（用于前端预览）
  *
- * 主进程 (agent.ts) 的锁定部分逻辑需要独立维护，因为包含动态日期
+ * 注意：群聊/私聊的差异化内容（如成员查询策略）由后端 agent.ts 根据运行时 chatType 自动处理。
  */
 
 import type { PromptPreset } from '@/types/ai'
@@ -19,34 +19,14 @@ export type LocaleType = 'zh-CN' | 'en-US'
 
 const i18nContent = {
   'zh-CN': {
-    presetNames: {
-      group: '默认群聊分析',
-      private: '默认私聊分析',
-    },
-    roleDefinition: {
-      group: `你是一个专业的群聊记录分析助手。
-你的任务是帮助用户理解和分析他们的群聊记录数据。`,
-      private: `你是一个专业的私聊记录分析助手。
-你的任务是帮助用户理解和分析他们的私聊记录数据。
-
-注意：这是一个私聊对话，只有两个人参与。你的分析应该关注：
-- 两人之间的对话互动
-- 谁更主动、谁回复更多
-- 对话的主题和内容变化
-- 不要使用"群"这个词，使用"对话"或"聊天"`,
-    },
-    responseRules: {
-      group: `1. 基于工具返回的数据回答，不要编造信息
+    presetName: '默认分析助手',
+    roleDefinition: `你是一个专业的聊天记录分析助手。
+你的任务是帮助用户理解和分析他们的聊天记录数据。`,
+    responseRules: `1. 基于工具返回的数据回答，不要编造信息
 2. 如果数据不足以回答问题，请说明
 3. 回答要简洁明了，使用 Markdown 格式
 4. 可以引用具体的发言作为证据
 5. 对于统计数据，可以适当总结趋势和特点`,
-      private: `1. 基于工具返回的数据回答，不要编造信息
-2. 如果数据不足以回答问题，请说明
-3. 回答要简洁明了，使用 Markdown 格式
-4. 可以引用具体的发言作为证据
-5. 关注两人之间的互动模式和对话特点`,
-    },
     lockedSection: {
       chatContext: {
         group: '群聊',
@@ -80,34 +60,14 @@ const i18nContent = {
     },
   },
   'en-US': {
-    presetNames: {
-      group: 'Default Group Analysis',
-      private: 'Default Private Analysis',
-    },
-    roleDefinition: {
-      group: `You are a professional group chat analysis assistant.
-Your task is to help users understand and analyze their group chat records.`,
-      private: `You are a professional private chat analysis assistant.
-Your task is to help users understand and analyze their private chat records.
-
-Note: This is a private conversation with only two participants. Your analysis should focus on:
-- The interaction between the two parties
-- Who initiates more, who responds more
-- Changes in conversation topics and content
-- Do not use the word "group", use "conversation" or "chat" instead`,
-    },
-    responseRules: {
-      group: `1. Answer based on data returned by tools, do not fabricate information
+    presetName: 'Default Analysis Assistant',
+    roleDefinition: `You are a professional chat analysis assistant.
+Your task is to help users understand and analyze their chat records.`,
+    responseRules: `1. Answer based on data returned by tools, do not fabricate information
 2. If data is insufficient to answer the question, explain
 3. Keep answers concise and clear, use Markdown format
 4. Quote specific messages as evidence when possible
 5. For statistics, summarize trends and characteristics appropriately`,
-      private: `1. Answer based on data returned by tools, do not fabricate information
-2. If data is insufficient to answer the question, explain
-3. Keep answers concise and clear, use Markdown format
-4. Quote specific messages as evidence when possible
-5. Focus on the interaction patterns and conversation characteristics between the two parties`,
-    },
     lockedSection: {
       chatContext: {
         group: 'group chat',
@@ -136,7 +96,8 @@ Note: This is a private conversation with only two participants. Your analysis s
 - "October 1st" → year: ${year}, month: 10, day: 1
 - "October 1st 3pm" → year: ${year}, month: 10, day: 1, hour: 15
 Default to ${year} if year not specified, use ${prevYear} if the month hasn't arrived yet`,
-      conclusion: 'Based on the user\'s question, select appropriate tools to retrieve data, then provide an answer based on the data.',
+      conclusion:
+        "Based on the user's question, select appropriate tools to retrieve data, then provide an answer based on the data.",
       responseRulesLabel: 'Response requirements:',
     },
   },
@@ -144,41 +105,41 @@ Default to ${year} if year not specified, use ${prevYear} if the month hasn't ar
 
 // ==================== 预设 ID 常量 ====================
 
-/** 默认群聊预设ID */
-export const DEFAULT_GROUP_PRESET_ID = 'builtin-group-default'
-/** 默认私聊预设ID */
-export const DEFAULT_PRIVATE_PRESET_ID = 'builtin-private-default'
+/** 默认预设ID */
+export const DEFAULT_PRESET_ID = 'builtin-default'
+
+/** @deprecated 使用 DEFAULT_PRESET_ID 代替 */
+export const DEFAULT_GROUP_PRESET_ID = DEFAULT_PRESET_ID
+/** @deprecated 使用 DEFAULT_PRESET_ID 代替 */
+export const DEFAULT_PRIVATE_PRESET_ID = DEFAULT_PRESET_ID
 
 // ==================== 默认提示词内容 ====================
 
 /**
  * 获取默认角色定义
- * @param chatType 聊天类型
  * @param locale 语言设置
  */
-export function getDefaultRoleDefinition(chatType: 'group' | 'private', locale: LocaleType = 'zh-CN'): string {
+export function getDefaultRoleDefinition(locale: LocaleType = 'zh-CN'): string {
   const content = i18nContent[locale] || i18nContent['zh-CN']
-  return content.roleDefinition[chatType]
+  return content.roleDefinition
 }
 
 /**
  * 获取默认回答要求
- * @param chatType 聊天类型
  * @param locale 语言设置
  */
-export function getDefaultResponseRules(chatType: 'group' | 'private', locale: LocaleType = 'zh-CN'): string {
+export function getDefaultResponseRules(locale: LocaleType = 'zh-CN'): string {
   const content = i18nContent[locale] || i18nContent['zh-CN']
-  return content.responseRules[chatType]
+  return content.responseRules
 }
 
 /**
  * 获取内置预设名称
- * @param chatType 聊天类型
  * @param locale 语言设置
  */
-export function getBuiltinPresetName(chatType: 'group' | 'private', locale: LocaleType = 'zh-CN'): string {
+export function getBuiltinPresetName(locale: LocaleType = 'zh-CN'): string {
   const content = i18nContent[locale] || i18nContent['zh-CN']
-  return content.presetNames[chatType]
+  return content.presetName
 }
 
 // ==================== 内置预设定义 ====================
@@ -190,29 +151,17 @@ export function getBuiltinPresetName(chatType: 'group' | 'private', locale: Loca
 export function getBuiltinPresets(locale: LocaleType = 'zh-CN'): PromptPreset[] {
   const now = Date.now()
 
-  const BUILTIN_GROUP_DEFAULT: PromptPreset = {
-    id: DEFAULT_GROUP_PRESET_ID,
-    name: getBuiltinPresetName('group', locale),
-    chatType: 'group',
-    roleDefinition: getDefaultRoleDefinition('group', locale),
-    responseRules: getDefaultResponseRules('group', locale),
+  const BUILTIN_DEFAULT: PromptPreset = {
+    id: DEFAULT_PRESET_ID,
+    name: getBuiltinPresetName(locale),
+    roleDefinition: getDefaultRoleDefinition(locale),
+    responseRules: getDefaultResponseRules(locale),
     isBuiltIn: true,
     createdAt: now,
     updatedAt: now,
   }
 
-  const BUILTIN_PRIVATE_DEFAULT: PromptPreset = {
-    id: DEFAULT_PRIVATE_PRESET_ID,
-    name: getBuiltinPresetName('private', locale),
-    chatType: 'private',
-    roleDefinition: getDefaultRoleDefinition('private', locale),
-    responseRules: getDefaultResponseRules('private', locale),
-    isBuiltIn: true,
-    createdAt: now,
-    updatedAt: now,
-  }
-
-  return [BUILTIN_GROUP_DEFAULT, BUILTIN_PRIVATE_DEFAULT]
+  return [BUILTIN_DEFAULT]
 }
 
 /** 所有内置预设（原始版本，用于重置）- 默认中文 */
@@ -237,14 +186,14 @@ export interface OwnerInfoPreview {
 
 /**
  * 获取锁定部分的提示词预览
- * 注意：实际执行时由主进程 agent.ts 生成，包含动态日期
+ * 注意：实际执行时由主进程 agent.ts 生成，包含动态日期和差异化内容
  *
- * @param chatType 聊天类型
+ * @param chatType 聊天类型（用于展示对应的成员策略）
  * @param ownerInfo Owner 信息（可选，用于预览时显示）
  * @param locale 语言设置
  */
 export function getLockedPromptSectionPreview(
-  chatType: 'group' | 'private',
+  chatType: 'group' | 'private' = 'group',
   ownerInfo?: OwnerInfoPreview,
   locale: LocaleType = 'zh-CN'
 ): string {
@@ -282,14 +231,14 @@ ${content.lockedSection.conclusion}`
  * 构建完整提示词预览（用于前端展示）
  * @param roleDefinition 角色定义
  * @param responseRules 回答要求
- * @param chatType 聊天类型
+ * @param chatType 聊天类型（用于展示对应的锁定部分）
  * @param ownerInfo Owner 信息（可选）
  * @param locale 语言设置
  */
 export function buildPromptPreview(
   roleDefinition: string,
   responseRules: string,
-  chatType: 'group' | 'private',
+  chatType: 'group' | 'private' = 'group',
   ownerInfo?: OwnerInfoPreview,
   locale: LocaleType = 'zh-CN'
 ): string {

@@ -182,18 +182,14 @@
     },
     "presets": {
       "title": "系统提示词",
-      "import": "导入预设"
-    },
-    "group": {
-      "title": "群聊系统提示词",
-      "add": "添加"
-    },
-    "private": {
-      "title": "私聊系统提示词",
-      "add": "添加"
+      "add": "添加预设",
+      "import": "导入预设",
+      "description": "提示词同时用于群聊和私聊分析，系统会自动根据分析类型调整相关内容"
     },
     "preset": {
       "builtIn": "内置",
+      "groupOnly": "仅群聊",
+      "privateOnly": "仅私聊",
       "view": "查看",
       "edit": "编辑",
       "copy": "复制",

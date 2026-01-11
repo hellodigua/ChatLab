@@ -5,7 +5,7 @@
  */
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import dayjs from 'dayjs'
+
 import type { ChatRecordMessage } from './types'
 import { useSessionStore } from '@/stores/session'
 
