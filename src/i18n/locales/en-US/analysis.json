@@ -25,6 +25,7 @@
     "year": "{year}"
   },
   "tooltip": {
-    "chatViewer": "Chat Record Viewer"
+    "chatViewer": "Chat Record Viewer",
+    "sessionIndex": "Session Index"
   }
 }

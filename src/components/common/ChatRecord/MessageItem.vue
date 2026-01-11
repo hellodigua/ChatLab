@@ -177,20 +177,6 @@ const avatarLetter = computed(() => {
   return '?'
 })
 
-// 格式化时间（筛选模式显示完整时间，普通模式显示简短时间）
-function formatTime(timestamp: number): string {
-  // 筛选模式下显示完整时间
-  if (props.isFiltered) {
-    return dayjs.unix(timestamp).format('YYYY-MM-DD HH:mm:ss')
-  }
-  // 普通模式显示简短时间
-  return dayjs.unix(timestamp).format('HH:mm')
-}
-
-function formatFullTime(timestamp: number): string {
-  return dayjs.unix(timestamp).format('YYYY-MM-DD HH:mm:ss')
-}
-
 // 高亮关键词
 function highlightContent(content: string): string {
   if (!props.highlightKeywords?.length || !content) return content
@@ -229,17 +215,10 @@ function highlightContent(content: string): string {
 
       <!-- 消息内容区 -->
       <div class="min-w-0 flex-1" :class="isOwner ? 'flex flex-col items-end' : ''">
-        <!-- 发送者和时间 -->
+        <!-- 发送者名称 -->
         <div class="mb-1 flex items-center gap-2" :class="isOwner ? 'flex-row-reverse' : ''">
           <span class="text-sm font-medium" :class="nameColor">
             {{ displayName }}
-          </span>
-          <span
-            class="text-xs text-gray-400 transition-opacity"
-            :class="isFiltered ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
-            :title="formatFullTime(message.timestamp)"
-          >
-            {{ formatTime(message.timestamp) }}
           </span>
         </div>
 

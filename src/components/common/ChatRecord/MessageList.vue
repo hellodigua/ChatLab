@@ -1,13 +1,18 @@
 <script setup lang="ts">
 /**
  * 消息列表组件
- * 支持无限滚动加载
+ * 使用 @tanstack/vue-virtual 实现虚拟滚动
  */
-import { ref, watch, nextTick, toRaw, computed } from 'vue'
+import { ref, watch, nextTick, toRaw, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useVirtualizer } from '@tanstack/vue-virtual'
+import dayjs from 'dayjs'
 import MessageItem from './MessageItem.vue'
 import type { ChatRecordMessage, ChatRecordQuery } from './types'
 import { useSessionStore } from '@/stores/session'
+
+// 时间分隔阈值（秒）：消息间隔超过此值则显示时间分隔线
+const TIME_SEPARATOR_THRESHOLD = 5 * 60 // 5 分钟
 
 const { t } = useI18n()
 
@@ -19,6 +24,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   /** 消息数量变化 */
   (e: 'count-change', count: number): void
+  /** 当前可见消息变化（用于联动时间线） */
+  (e: 'visible-message-change', messageId: number): void
 }>()
 
 const sessionStore = useSessionStore()
@@ -45,6 +52,29 @@ const searchOffset = ref(0)
 // 滚动容器引用
 const scrollContainerRef = ref<HTMLElement | null>(null)
 
+// 待滚动到的目标消息 ID（用于初始加载后定位）
+const pendingScrollToId = ref<number | null>(null)
+
+// 估算的消息高度（用于虚拟滚动初始化）
+const ESTIMATED_MESSAGE_HEIGHT = 80
+
+// 虚拟化器实例
+const virtualizer = useVirtualizer(
+  computed(() => ({
+    count: messages.value.length,
+    getScrollElement: () => scrollContainerRef.value,
+    estimateSize: () => ESTIMATED_MESSAGE_HEIGHT,
+    overscan: 10, // 额外渲染的项目数（上下各 10 个）
+    getItemKey: (index: number) => messages.value[index]?.id ?? index,
+  }))
+)
+
+// 虚拟化后的消息项
+const virtualItems = computed(() => virtualizer.value.getVirtualItems())
+
+// 总高度（用于滚动容器的占位）
+const totalSize = computed(() => virtualizer.value.getTotalSize())
+
 // 构建筛选参数
 function buildFilterParams(query: ChatRecordQuery) {
   return {
@@ -65,6 +95,7 @@ async function loadInitialMessages() {
 
   isLoading.value = true
   messages.value = []
+  pendingScrollToId.value = null
 
   try {
     const query = toRaw(props.query)
@@ -87,11 +118,8 @@ async function loadInitialMessages() {
       hasMoreBefore.value = beforeResult.hasMore
       hasMoreAfter.value = afterResult.hasMore
 
-      // 滚动到目标消息（延时确保 DOM 完全渲染）
-      await nextTick()
-      setTimeout(() => {
-        scrollToMessage(targetId)
-      }, 100)
+      // 设置待滚动的目标
+      pendingScrollToId.value = targetId
     } else if (keywords && keywords.length > 0) {
       // 有关键词，使用搜索功能
       isSearchMode.value = true
@@ -114,12 +142,26 @@ async function loadInitialMessages() {
       hasMoreBefore.value = result.messages.length >= 100
       hasMoreAfter.value = false
 
-      // 滚动到顶部
+      // 滚动到底部（最新消息在下面）
+      // 需要延时确保虚拟化器完成初始化和高度计算
       await nextTick()
-      scrollToTop()
+      setTimeout(() => {
+        scrollToBottom()
+      }, 50)
     }
 
     emit('count-change', messages.value.length)
+
+    // 处理待滚动的目标
+    if (pendingScrollToId.value) {
+      await nextTick()
+      setTimeout(() => {
+        if (pendingScrollToId.value) {
+          scrollToMessage(pendingScrollToId.value)
+          pendingScrollToId.value = null
+        }
+      }, 100)
+    }
   } catch (e) {
     console.error('加载消息失败:', e)
     messages.value = []
@@ -131,10 +173,24 @@ async function loadInitialMessages() {
 
 // 滚动到顶部
 function scrollToTop() {
-  const container = scrollContainerRef.value
-  if (container) {
-    container.scrollTop = 0
-  }
+  virtualizer.value.scrollToOffset(0)
+}
+
+// 滚动到底部
+function scrollToBottom() {
+  if (messages.value.length === 0) return
+
+  // 使用 scrollToIndex 定位到最后一条消息，对齐到底部
+  virtualizer.value.scrollToIndex(messages.value.length - 1, { align: 'end' })
+
+  // 额外确保：直接设置容器滚动位置到最底部
+  // 这是为了处理虚拟化器初始化时高度可能还未准确的情况
+  requestAnimationFrame(() => {
+    const container = scrollContainerRef.value
+    if (container) {
+      container.scrollTop = container.scrollHeight
+    }
+  })
 }
 
 // 加载更早的消息（向上滚动）
@@ -155,19 +211,19 @@ async function loadMoreBefore() {
     const result = await window.aiApi.getMessagesBefore(sessionId, firstMessage.id, 50, filter, senderId, keywords)
 
     if (result.messages.length > 0) {
-      // 记录当前滚动位置
-      const container = scrollContainerRef.value
-      const oldScrollHeight = container?.scrollHeight || 0
+      // 记录当前的第一个可见项索引
+      const currentOffset = virtualizer.value.scrollOffset ?? 0
 
       // prepend 消息
-      messages.value = [...result.messages, ...messages.value]
+      const newMessages = [...result.messages, ...messages.value]
+      messages.value = newMessages
 
-      // 恢复滚动位置
+      // 虚拟化器会自动处理滚动位置，但需要调整 offset
+      // 新增的消息高度需要补偿
       await nextTick()
-      if (container) {
-        const newScrollHeight = container.scrollHeight
-        container.scrollTop = newScrollHeight - oldScrollHeight
-      }
+      const addedCount = result.messages.length
+      const estimatedAddedHeight = addedCount * ESTIMATED_MESSAGE_HEIGHT
+      virtualizer.value.scrollToOffset(currentOffset + estimatedAddedHeight)
 
       emit('count-change', messages.value.length)
     }
@@ -227,35 +283,124 @@ async function loadMoreAfter() {
 
 // 滚动到指定消息
 function scrollToMessage(messageId: number) {
-  const container = scrollContainerRef.value
-  if (!container) return
-
-  const messageEl = container.querySelector(`[data-message-id="${messageId}"]`)
-  if (messageEl) {
-    messageEl.scrollIntoView({ block: 'center', behavior: 'auto' })
+  const index = messages.value.findIndex((m) => m.id === messageId)
+  if (index !== -1) {
+    virtualizer.value.scrollToIndex(index, { align: 'center' })
   }
 }
 
-// 处理滚动事件（检测边界）
+// 处理滚动事件（检测边界）- 仅处理加载更多逻辑
 function handleScroll() {
   const container = scrollContainerRef.value
-  if (!container || isLoadingMore.value) return
+  if (!container) return
 
-  // 接近顶部时加载更多
-  if (container.scrollTop < 100 && hasMoreBefore.value) {
-    loadMoreBefore()
+  // 检测加载更多
+  if (!isLoadingMore.value) {
+    // 接近顶部时加载更多
+    if (container.scrollTop < 100 && hasMoreBefore.value) {
+      loadMoreBefore()
+    }
+
+    // 接近底部时加载更多
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
+    if (distanceFromBottom < 100 && hasMoreAfter.value) {
+      loadMoreAfter()
+    }
   }
 
-  // 接近底部时加载更多
-  const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
-  if (distanceFromBottom < 100 && hasMoreAfter.value) {
-    loadMoreAfter()
+  // 使用防抖处理联动（避免频繁计算）
+  scheduleVisibleMessageUpdate()
+}
+
+// 防抖定时器
+let visibleMessageTimer: ReturnType<typeof setTimeout> | null = null
+let lastEmittedMessageId = 0
+
+// 防抖调度可见消息更新
+function scheduleVisibleMessageUpdate() {
+  if (visibleMessageTimer) return // 已有待处理的更新
+
+  visibleMessageTimer = setTimeout(() => {
+    visibleMessageTimer = null
+    updateVisibleMessage()
+  }, 150) // 150ms 防抖
+}
+
+// 更新可见消息（使用虚拟化器的可见项）
+function updateVisibleMessage() {
+  const items = virtualItems.value
+  if (items.length === 0) return
+
+  // 取中间可见项作为当前消息
+  const middleIndex = Math.floor(items.length / 2)
+  const middleItem = items[middleIndex]
+  if (!middleItem) return
+
+  const message = messages.value[middleItem.index]
+  if (message && message.id !== lastEmittedMessageId) {
+    lastEmittedMessageId = message.id
+    emit('visible-message-change', message.id)
   }
 }
 
 // 判断是否是目标消息
 function isTargetMessage(msgId: number): boolean {
   return msgId === props.query.scrollToMessageId
+}
+
+/**
+ * 判断是否需要在消息前显示时间分隔线
+ * @param index 当前消息在数组中的索引
+ * @returns 需要显示时返回格式化的时间字符串，否则返回 null
+ */
+function getTimeSeparator(index: number): string | null {
+  const currentMsg = messages.value[index]
+  if (!currentMsg) return null
+
+  const prevMsg = index > 0 ? messages.value[index - 1] : null
+
+  // 第一条消息始终显示时间
+  if (!prevMsg) {
+    return formatSeparatorTime(currentMsg.timestamp)
+  }
+
+  const currentTs = currentMsg.timestamp
+  const prevTs = prevMsg.timestamp
+  const gap = currentTs - prevTs
+
+  // 检查是否跨天
+  const currentDay = dayjs.unix(currentTs).startOf('day')
+  const prevDay = dayjs.unix(prevTs).startOf('day')
+  const isDifferentDay = !currentDay.isSame(prevDay)
+
+  // 跨天或间隔超过阈值时显示时间分隔线
+  if (isDifferentDay || gap >= TIME_SEPARATOR_THRESHOLD) {
+    return formatSeparatorTime(currentTs)
+  }
+
+  return null
+}
+
+/**
+ * 格式化时间分隔线的时间显示
+ * - 当天消息：HH:mm
+ * - 非当天消息：YYYY-MM-DD HH:mm
+ */
+function formatSeparatorTime(timestamp: number): string {
+  const msgTime = dayjs.unix(timestamp)
+  const today = dayjs().startOf('day')
+
+  if (msgTime.isSame(today, 'day')) {
+    return msgTime.format('HH:mm')
+  }
+  return msgTime.format('YYYY-MM-DD HH:mm')
+}
+
+// 测量元素高度的回调（用于动态高度）
+function measureElement(el: Element | null) {
+  if (el) {
+    virtualizer.value.measureElement(el)
+  }
 }
 
 // 监听查询变化
@@ -267,14 +412,23 @@ watch(
   { deep: true }
 )
 
-// 暴露刷新方法
+// 清理定时器
+onUnmounted(() => {
+  if (visibleMessageTimer) {
+    clearTimeout(visibleMessageTimer)
+    visibleMessageTimer = null
+  }
+})
+
+// 暴露方法
 defineExpose({
   refresh: loadInitialMessages,
+  scrollToMessage,
 })
 </script>
 
 <template>
-  <div class="flex-1 overflow-hidden">
+  <div class="flex h-full flex-col overflow-hidden">
     <!-- 加载中 -->
     <div v-if="isLoading" class="flex h-full items-center justify-center">
       <div class="text-center">
@@ -292,7 +446,7 @@ defineExpose({
       </div>
     </div>
 
-    <!-- 消息滚动容器 -->
+    <!-- 虚拟滚动容器 -->
     <div v-else ref="scrollContainerRef" class="h-full overflow-y-auto" @scroll="handleScroll">
       <!-- 顶部加载指示器 -->
       <div v-if="hasMoreBefore" class="flex justify-center py-2">
@@ -303,17 +457,39 @@ defineExpose({
         <span v-else class="text-xs text-gray-400">{{ t('scrollUpForMore') }}</span>
       </div>
 
-      <!-- 消息列表 -->
-      <div class="space-y-1 py-2">
-        <MessageItem
-          v-for="msg in messages"
-          :key="msg.id"
-          :data-message-id="msg.id"
-          :message="msg"
-          :is-target="isTargetMessage(msg.id)"
-          :highlight-keywords="query.highlightKeywords"
-          :is-filtered="isFiltered"
-        />
+      <!-- 虚拟滚动列表 -->
+      <div class="relative w-full" :style="{ height: `${totalSize}px` }">
+        <div
+          v-for="virtualItem in virtualItems"
+          :key="virtualItem.key"
+          :ref="(el) => measureElement(el as Element)"
+          class="absolute left-0 top-0 w-full"
+          :style="{
+            transform: `translateY(${virtualItem.start}px)`,
+          }"
+          :data-index="virtualItem.index"
+        >
+          <!-- 时间分隔线 -->
+          <div
+            v-if="getTimeSeparator(virtualItem.index)"
+            class="flex items-center justify-center py-2"
+          >
+            <div class="flex items-center gap-2 text-xs text-gray-400">
+              <div class="h-px w-8 bg-gray-200 dark:bg-gray-700" />
+              <span>{{ getTimeSeparator(virtualItem.index) }}</span>
+              <div class="h-px w-8 bg-gray-200 dark:bg-gray-700" />
+            </div>
+          </div>
+
+          <!-- 消息项 -->
+          <MessageItem
+            :data-message-id="messages[virtualItem.index]?.id"
+            :message="messages[virtualItem.index]!"
+            :is-target="isTargetMessage(messages[virtualItem.index]?.id ?? 0)"
+            :highlight-keywords="query.highlightKeywords"
+            :is-filtered="isFiltered"
+          />
+        </div>
       </div>
 
       <!-- 底部加载指示器 -->
