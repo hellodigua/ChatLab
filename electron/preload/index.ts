@@ -563,6 +563,81 @@ const aiApi = {
     return ipcRenderer.invoke('ai:getMessagesAfter', sessionId, afterId, limit, filter, senderId, keywords)
   },
 
+  // ==================== 自定义筛选 ====================
+
+  /**
+   * 按条件筛选消息并扩充上下文
+   */
+  filterMessagesWithContext: (
+    sessionId: string,
+    keywords?: string[],
+    timeFilter?: { startTs: number; endTs: number },
+    senderIds?: number[],
+    contextSize?: number
+  ): Promise<{
+    blocks: Array<{
+      startTs: number
+      endTs: number
+      messages: Array<{
+        id: number
+        senderName: string
+        senderPlatformId: string
+        senderAliases: string[]
+        senderAvatar: string | null
+        content: string
+        timestamp: number
+        type: number
+        replyToMessageId: string | null
+        replyToContent: string | null
+        replyToSenderName: string | null
+        isHit: boolean
+      }>
+      hitCount: number
+    }>
+    stats: {
+      totalMessages: number
+      hitMessages: number
+      totalChars: number
+    }
+  }> => {
+    return ipcRenderer.invoke('ai:filterMessagesWithContext', sessionId, keywords, timeFilter, senderIds, contextSize)
+  },
+
+  /**
+   * 获取多个会话的完整消息
+   */
+  getMultipleSessionsMessages: (
+    sessionId: string,
+    chatSessionIds: number[]
+  ): Promise<{
+    blocks: Array<{
+      startTs: number
+      endTs: number
+      messages: Array<{
+        id: number
+        senderName: string
+        senderPlatformId: string
+        senderAliases: string[]
+        senderAvatar: string | null
+        content: string
+        timestamp: number
+        type: number
+        replyToMessageId: string | null
+        replyToContent: string | null
+        replyToSenderName: string | null
+        isHit: boolean
+      }>
+      hitCount: number
+    }>
+    stats: {
+      totalMessages: number
+      hitMessages: number
+      totalChars: number
+    }
+  }> => {
+    return ipcRenderer.invoke('ai:getMultipleSessionsMessages', sessionId, chatSessionIds)
+  },
+
   /**
    * 创建 AI 对话
    */

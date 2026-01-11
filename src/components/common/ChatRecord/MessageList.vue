@@ -16,10 +16,23 @@ const TIME_SEPARATOR_THRESHOLD = 5 * 60 // 5 分钟
 
 const { t } = useI18n()
 
-const props = defineProps<{
-  /** 当前查询条件 */
-  query: ChatRecordQuery
-}>()
+const props = withDefaults(
+  defineProps<{
+    /** 当前查询条件 */
+    query: ChatRecordQuery
+    /** 外部传入的消息列表（可选，传入后不自动加载） */
+    externalMessages?: ChatRecordMessage[]
+    /** 外部传入时需要高亮的消息 ID 列表（命中的消息） */
+    hitMessageIds?: number[]
+    /** 外部消息变化时的滚动行为：top=滚动到顶部，preserve=保持当前位置 */
+    externalScrollBehavior?: 'top' | 'preserve'
+  }>(),
+  {
+    externalMessages: undefined,
+    hitMessageIds: () => [],
+    externalScrollBehavior: 'top',
+  }
+)
 
 const emit = defineEmits<{
   /** 消息数量变化 */
@@ -28,13 +41,22 @@ const emit = defineEmits<{
   (e: 'visible-message-change', messageId: number): void
   /** 跳转到指定消息（用于查看上下文） */
   (e: 'jump-to-message', messageId: number): void
+  /** 滚动到底部（外部模式专用，用于加载下一个块） */
+  (e: 'reach-bottom'): void
+  /** 滚动到顶部（外部模式专用，用于加载上一个块） */
+  (e: 'reach-top'): void
 }>()
 
 const sessionStore = useSessionStore()
 
+// 判断是否使用外部传入的消息
+const isExternalMode = computed(() => !!props.externalMessages?.length)
+
 // 判断是否处于筛选模式（有筛选条件且消息不连贯时显示上下文按钮）
 // 注意：通过消息 ID 定位时上下文是连贯的，不需要显示
+// 外部模式下不显示上下文按钮（数据已经处理好）
 const isFiltered = computed(() => {
+  if (isExternalMode.value) return false
   const q = props.query
   // 只有关键词、成员筛选时才需要显示上下文按钮
   return !!(q.memberId || q.keywords?.length)
@@ -96,8 +118,35 @@ function mapMessages(messages: any[]): ChatRecordMessage[] {
   })) as ChatRecordMessage[]
 }
 
+// 记录上一次消息数量（用于判断是扩展还是替换）
+let previousExternalMessageCount = 0
+
 // 初始加载消息
 async function loadInitialMessages() {
+  // 外部模式：直接使用外部消息
+  if (isExternalMode.value) {
+    const currentCount = props.externalMessages!.length
+    const isExpanding = previousExternalMessageCount > 0 && currentCount > previousExternalMessageCount
+
+    messages.value = props.externalMessages!
+    hasMoreBefore.value = false
+    hasMoreAfter.value = false
+    isSearchMode.value = false
+    emit('count-change', messages.value.length)
+
+    previousExternalMessageCount = currentCount
+
+    await nextTick()
+
+    // 根据滚动行为 prop 和是否是扩展来决定滚动位置
+    if (props.externalScrollBehavior === 'preserve' && isExpanding) {
+      // 保持当前位置（不做任何滚动操作）
+    } else {
+      scrollToTop()
+    }
+    return
+  }
+
   const sessionId = sessionStore.currentSessionId
   if (!sessionId) {
     messages.value = []
@@ -306,15 +355,26 @@ function handleScroll() {
   const container = scrollContainerRef.value
   if (!container) return
 
-  // 检测加载更多
-  if (!isLoadingMore.value) {
+  const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
+
+  // 外部模式：通知到达边界
+  if (isExternalMode.value) {
+    if (container.scrollTop < 50) {
+      emit('reach-top')
+    }
+    if (distanceFromBottom < 50) {
+      emit('reach-bottom')
+    }
+  }
+
+  // 检测加载更多（非外部模式）
+  if (!isExternalMode.value && !isLoadingMore.value) {
     // 接近顶部时加载更多
     if (container.scrollTop < 100 && hasMoreBefore.value) {
       loadMoreBefore()
     }
 
     // 接近底部时加载更多
-    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
     if (distanceFromBottom < 100 && hasMoreAfter.value) {
       loadMoreAfter()
     }
@@ -355,8 +415,12 @@ function updateVisibleMessage() {
   }
 }
 
-// 判断是否是目标消息
+// 判断是否是目标消息（高亮显示）
 function isTargetMessage(msgId: number): boolean {
+  // 外部模式：检查是否在命中列表中
+  if (isExternalMode.value && props.hitMessageIds?.length) {
+    return props.hitMessageIds.includes(msgId)
+  }
   return msgId === props.query.scrollToMessageId
 }
 
@@ -419,9 +483,22 @@ function measureElement(el: Element | null) {
 watch(
   () => props.query,
   () => {
-    loadInitialMessages()
+    if (!isExternalMode.value) {
+      loadInitialMessages()
+    }
   },
   { deep: true }
+)
+
+// 监听外部消息变化
+watch(
+  () => props.externalMessages,
+  () => {
+    if (isExternalMode.value) {
+      loadInitialMessages()
+    }
+  },
+  { deep: true, immediate: true }
 )
 
 // 清理定时器

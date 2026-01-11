@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { SubTabs } from '@/components/UI'
 import ChatExplorer from './ai/ChatExplorer.vue'
 import SQLLabTab from './SQLLabTab.vue'
+import FilterTab from './Filter/FilterTab.vue'
 
 const { t, locale } = useI18n()
 
@@ -41,13 +42,13 @@ const groupOnlyTabs = ['mbti', 'cyber-friend', 'campus']
 // 所有子 Tab 配置
 const allSubTabs = computed(() => [
   { id: 'chat-explorer', label: t('chatExplorer'), icon: 'i-heroicons-chat-bubble-left-ellipsis' },
-  { id: 'sql-lab', label: t('sqlLab'), icon: 'i-heroicons-command-line' },
   {
     id: 'manual',
     label: t('filterAnalysis'),
     desc: t('filterAnalysisDesc'),
     icon: 'i-heroicons-adjustments-horizontal',
   },
+  { id: 'sql-lab', label: t('sqlLab'), icon: 'i-heroicons-command-line' },
 ])
 
 // 根据聊天类型过滤显示的子 Tab
@@ -94,10 +95,14 @@ defineExpose({
           :time-filter="timeFilter"
           :chat-type="chatType"
         />
+        <!-- 自定义筛选 -->
+        <FilterTab v-else-if="activeSubTab === 'manual'" class="h-full" />
+        <!-- SQL 实验室 -->
+        <SQLLabTab v-else-if="activeSubTab === 'sql-lab'" class="h-full" :session-id="props.sessionId" />
 
         <!-- 暂未实现的功能 -->
         <div
-          v-else-if="['manual', 'mbti', 'cyber-friend', 'campus'].includes(activeSubTab)"
+          v-else-if="['mbti', 'cyber-friend', 'campus'].includes(activeSubTab)"
           class="main-content flex h-full items-center justify-center p-6"
         >
           <div
@@ -127,9 +132,6 @@ defineExpose({
             </div>
           </div>
         </div>
-
-        <!-- SQL 实验室 -->
-        <SQLLabTab v-else-if="activeSubTab === 'sql-lab'" class="h-full" :session-id="props.sessionId" />
       </Transition>
     </div>
   </div>
@@ -152,7 +154,7 @@ defineExpose({
   "zh-CN": {
     "chatExplorer": "对话式探索",
     "sqlLab": "SQL实验室",
-    "filterAnalysis": "筛选分析",
+    "filterAnalysis": "自定义筛选",
     "filterAnalysisDesc": "计划实现高级筛选功能，可以先按人/按时间/按搜索内容手动筛选，然后再进行AI分析",
     "featureInDev": "{name}功能开发中",
     "comingSoon": "敬请期待...",

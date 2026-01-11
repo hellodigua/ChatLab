@@ -618,3 +618,65 @@ export async function getSessionMessages(
 ): Promise<SessionMessagesResult | null> {
   return sendToWorker('getSessionMessages', { sessionId, chatSessionId, limit })
 }
+
+// ==================== 自定义筛选 API ====================
+
+/**
+ * 筛选消息类型（完整信息）
+ */
+export interface FilterMessage {
+  id: number
+  senderName: string
+  senderPlatformId: string
+  senderAliases: string[]
+  senderAvatar: string | null
+  content: string
+  timestamp: number
+  type: number
+  replyToMessageId: string | null
+  replyToContent: string | null
+  replyToSenderName: string | null
+  isHit: boolean
+}
+
+/**
+ * 上下文块类型
+ */
+export interface ContextBlock {
+  startTs: number
+  endTs: number
+  messages: FilterMessage[]
+  hitCount: number
+}
+
+/**
+ * 筛选结果类型
+ */
+export interface FilterResult {
+  blocks: ContextBlock[]
+  stats: {
+    totalMessages: number
+    hitMessages: number
+    totalChars: number
+  }
+}
+
+/**
+ * 按条件筛选消息并扩充上下文
+ */
+export async function filterMessagesWithContext(
+  sessionId: string,
+  keywords?: string[],
+  timeFilter?: { startTs: number; endTs: number },
+  senderIds?: number[],
+  contextSize?: number
+): Promise<FilterResult> {
+  return sendToWorker('filterMessagesWithContext', { sessionId, keywords, timeFilter, senderIds, contextSize })
+}
+
+/**
+ * 获取多个会话的完整消息
+ */
+export async function getMultipleSessionsMessages(sessionId: string, chatSessionIds: number[]): Promise<FilterResult> {
+  return sendToWorker('getMultipleSessionsMessages', { sessionId, chatSessionIds })
+}

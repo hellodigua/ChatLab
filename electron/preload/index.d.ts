@@ -146,6 +146,37 @@ interface SearchMessageResult {
   type: number
 }
 
+interface FilterMessage {
+  id: number
+  senderName: string
+  senderPlatformId: string
+  senderAliases: string[]
+  senderAvatar: string | null
+  content: string
+  timestamp: number
+  type: number
+  replyToMessageId: string | null
+  replyToContent: string | null
+  replyToSenderName: string | null
+  isHit: boolean
+}
+
+interface ContextBlock {
+  startTs: number
+  endTs: number
+  messages: FilterMessage[]
+  hitCount: number
+}
+
+interface FilterResult {
+  blocks: ContextBlock[]
+  stats: {
+    totalMessages: number
+    hitMessages: number
+    totalChars: number
+  }
+}
+
 interface AIConversation {
   id: string
   sessionId: string
@@ -239,7 +270,17 @@ interface AiApi {
     contentBlocks?: AIContentBlock[]
   ) => Promise<AIMessage>
   getMessages: (conversationId: string) => Promise<AIMessage[]>
+  getMessages: (conversationId: string) => Promise<AIMessage[]>
   deleteMessage: (messageId: string) => Promise<boolean>
+  // 自定义筛选
+  filterMessagesWithContext: (
+    sessionId: string,
+    keywords?: string[],
+    timeFilter?: TimeFilter,
+    senderIds?: number[],
+    contextSize?: number
+  ) => Promise<FilterResult>
+  getMultipleSessionsMessages: (sessionId: string, chatSessionIds: number[]) => Promise<FilterResult>
 }
 
 // LLM 相关类型
@@ -504,4 +545,7 @@ export {
   TokenUsage,
   CacheDirectoryInfo,
   CacheInfo,
+  FilterMessage,
+  ContextBlock,
+  FilterResult,
 }

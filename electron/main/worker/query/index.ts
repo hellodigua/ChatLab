@@ -65,5 +65,15 @@ export {
   searchSessions,
   getSessionMessages,
   DEFAULT_SESSION_GAP_THRESHOLD,
+  // 自定义筛选
+  filterMessagesWithContext,
+  getMultipleSessionsMessages,
 } from './session'
-export type { ChatSessionItem, SessionSearchResultItem, SessionMessagesResult } from './session'
+export type {
+  ChatSessionItem,
+  SessionSearchResultItem,
+  SessionMessagesResult,
+  ContextBlock,
+  FilterResult,
+  FilterMessage,
+} from './session'

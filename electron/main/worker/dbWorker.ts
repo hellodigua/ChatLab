@@ -56,6 +56,9 @@ import {
   getSessions,
   searchSessions,
   getSessionMessages,
+  // 自定义筛选
+  filterMessagesWithContext,
+  getMultipleSessionsMessages,
 } from './query'
 import { streamImport, streamParseFileInfo } from './import'
 
@@ -134,6 +137,11 @@ const syncHandlers: Record<string, (payload: any) => any> = {
   getSessions: (p) => getSessions(p.sessionId),
   searchSessions: (p) => searchSessions(p.sessionId, p.keywords, p.timeFilter, p.limit, p.previewCount),
   getSessionMessages: (p) => getSessionMessages(p.sessionId, p.chatSessionId, p.limit),
+
+  // 自定义筛选
+  filterMessagesWithContext: (p) =>
+    filterMessagesWithContext(p.sessionId, p.keywords, p.timeFilter, p.senderIds, p.contextSize),
+  getMultipleSessionsMessages: (p) => getMultipleSessionsMessages(p.sessionId, p.chatSessionIds),
 }
 
 // 异步消息处理器（流式操作）
