@@ -9,6 +9,7 @@ import type { FormatModule } from '../types'
 import chatlab from './chatlab'
 import chatlabJsonl from './chatlab-jsonl'
 import shuakamiQqExporter from './shuakami-qq-exporter'
+import shuakamiQqExporterChunked from './shuakami-qq-exporter-chunked'
 import yccccccyEchotrace from './ycccccccy-echotrace'
 import tyrrrzDiscordExporter from './tyrrrz-discord-exporter'
 import whatsappNativeTxt from './whatsapp-native-txt'
@@ -20,6 +21,7 @@ import qqNativeTxt from './qq-native-txt'
 export const formats: FormatModule[] = [
   chatlab, // 优先级 1 - ChatLab JSON
   chatlabJsonl, // 优先级 2 - ChatLab JSONL（流式格式，支持超大文件）
+  shuakamiQqExporterChunked, // 优先级 5 - shuakami/qq-chat-exporter chunked-jsonl
   shuakamiQqExporter, // 优先级 10 - shuakami/qq-chat-exporter
   yccccccyEchotrace, // 优先级 15 - ycccccccy/echotrace
   tyrrrzDiscordExporter, // 优先级 20 - Tyrrrz/DiscordChatExporter
@@ -32,6 +34,7 @@ export {
   chatlab,
   chatlabJsonl,
   shuakamiQqExporter,
+  shuakamiQqExporterChunked,
   yccccccyEchotrace,
   tyrrrzDiscordExporter,
   qqNativeTxt,
