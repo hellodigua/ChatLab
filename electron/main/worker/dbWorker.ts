@@ -54,6 +54,8 @@ import {
   getSessionStats,
   updateSessionGapThreshold,
   getSessions,
+  searchSessions,
+  getSessionMessages,
 } from './query'
 import { streamImport, streamParseFileInfo } from './import'
 
@@ -130,6 +132,8 @@ const syncHandlers: Record<string, (payload: any) => any> = {
   getSessionStats: (p) => getSessionStats(p.sessionId),
   updateSessionGapThreshold: (p) => updateSessionGapThreshold(p.sessionId, p.gapThreshold),
   getSessions: (p) => getSessions(p.sessionId),
+  searchSessions: (p) => searchSessions(p.sessionId, p.keywords, p.timeFilter, p.limit, p.previewCount),
+  getSessionMessages: (p) => getSessionMessages(p.sessionId, p.chatSessionId, p.limit),
 }
 
 // 异步消息处理器（流式操作）

@@ -62,6 +62,8 @@ export {
   getSessionStats,
   updateSessionGapThreshold,
   getSessions,
+  searchSessions,
+  getSessionMessages,
   DEFAULT_SESSION_GAP_THRESHOLD,
 } from './session'
-export type { ChatSessionItem } from './session'
+export type { ChatSessionItem, SessionSearchResultItem, SessionMessagesResult } from './session'

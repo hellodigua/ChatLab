@@ -751,6 +751,171 @@ async function getMessageContextExecutor(
   }
 }
 
+// ==================== 会话相关工具 ====================
+
+/**
+ * 搜索会话工具
+ * 根据关键词和时间范围搜索会话
+ */
+const searchSessionsTool: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'search_sessions',
+    description:
+      '搜索聊天会话（对话段落）。会话是根据消息时间间隔自动切分的对话单元。适用于查找特定话题的讨论、了解某个时间段内发生了几次对话等场景。返回匹配的会话列表及每个会话的前5条消息预览。',
+    parameters: {
+      type: 'object',
+      properties: {
+        keywords: {
+          type: 'array',
+          description: '可选的搜索关键词列表，只返回包含这些关键词的会话（OR 逻辑匹配）',
+          items: { type: 'string' },
+        },
+        limit: {
+          type: 'number',
+          description: '返回会话数量限制，默认 20',
+        },
+        year: {
+          type: 'number',
+          description: '筛选指定年份的会话，如 2024',
+        },
+        month: {
+          type: 'number',
+          description: '筛选指定月份的会话（1-12），需要配合 year 使用',
+        },
+        day: {
+          type: 'number',
+          description: '筛选指定日期的会话（1-31），需要配合 year 和 month 使用',
+        },
+        start_time: {
+          type: 'string',
+          description: '开始时间，格式 "YYYY-MM-DD HH:mm"，如 "2024-03-15 14:00"',
+        },
+        end_time: {
+          type: 'string',
+          description: '结束时间，格式 "YYYY-MM-DD HH:mm"，如 "2024-03-15 18:30"',
+        },
+      },
+    },
+  },
+}
+
+async function searchSessionsExecutor(
+  params: {
+    keywords?: string[]
+    limit?: number
+    year?: number
+    month?: number
+    day?: number
+    start_time?: string
+    end_time?: string
+  },
+  context: ToolContext
+): Promise<unknown> {
+  const { sessionId, timeFilter: contextTimeFilter, locale } = context
+  const limit = params.limit || 20
+
+  // 使用扩展的时间参数解析
+  const effectiveTimeFilter = parseExtendedTimeParams(params, contextTimeFilter)
+
+  const sessions = await workerManager.searchSessions(
+    sessionId,
+    params.keywords,
+    effectiveTimeFilter,
+    limit,
+    5 // 预览5条消息
+  )
+
+  if (sessions.length === 0) {
+    return {
+      total: 0,
+      message: isChineseLocale(locale) ? '未找到匹配的会话' : 'No matching sessions found',
+    }
+  }
+
+  const localeStr = isChineseLocale(locale) ? 'zh-CN' : 'en-US'
+  const msgSuffix = isChineseLocale(locale) ? '条消息' : ' messages'
+  const completeLabel = isChineseLocale(locale) ? '完整会话' : 'complete'
+
+  return {
+    total: sessions.length,
+    timeRange: formatTimeRange(effectiveTimeFilter, locale),
+    sessions: sessions.map((s) => {
+      const startTime = new Date(s.startTs * 1000).toLocaleString(localeStr)
+      const endTime = new Date(s.endTs * 1000).toLocaleString(localeStr)
+      const completeTag = s.isComplete ? ` [${completeLabel}]` : ''
+
+      return {
+        sessionId: s.id,
+        time: `${startTime} ~ ${endTime}`,
+        messageCount: `${s.messageCount}${msgSuffix}${completeTag}`,
+        preview: s.previewMessages.map((m) => formatMessageCompact(m, locale)),
+      }
+    }),
+  }
+}
+
+/**
+ * 获取会话消息工具
+ * 获取指定会话的完整消息列表
+ */
+const getSessionMessagesTool: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'get_session_messages',
+    description:
+      '获取指定会话的完整消息列表。用于在 search_sessions 找到相关会话后，获取该会话的完整上下文。返回会话的所有消息及参与者信息。',
+    parameters: {
+      type: 'object',
+      properties: {
+        session_id: {
+          type: 'number',
+          description: '会话 ID，可以从 search_sessions 的返回结果中获取',
+        },
+        limit: {
+          type: 'number',
+          description: '返回消息数量限制，默认 500。对于超长会话可以限制返回数量以节省 token',
+        },
+      },
+      required: ['session_id'],
+    },
+  },
+}
+
+async function getSessionMessagesExecutor(
+  params: {
+    session_id: number
+    limit?: number
+  },
+  context: ToolContext
+): Promise<unknown> {
+  const { sessionId, maxMessagesLimit, locale } = context
+  // 用户配置优先
+  const limit = maxMessagesLimit || params.limit || 500
+
+  const result = await workerManager.getSessionMessages(sessionId, params.session_id, limit)
+
+  if (!result) {
+    return {
+      error: isChineseLocale(locale) ? '未找到指定的会话' : 'Session not found',
+      sessionId: params.session_id,
+    }
+  }
+
+  const localeStr = isChineseLocale(locale) ? 'zh-CN' : 'en-US'
+  const startTime = new Date(result.startTs * 1000).toLocaleString(localeStr)
+  const endTime = new Date(result.endTs * 1000).toLocaleString(localeStr)
+
+  return {
+    sessionId: result.sessionId,
+    time: `${startTime} ~ ${endTime}`,
+    messageCount: result.messageCount,
+    returnedCount: result.returnedCount,
+    participants: result.participants,
+    messages: result.messages.map((m) => formatMessageCompact(m, locale)),
+  }
+}
+
 // ==================== 注册工具 ====================
 
 registerTool(searchMessagesTool, searchMessagesExecutor)
@@ -761,3 +926,5 @@ registerTool(getGroupMembersTool, getGroupMembersExecutor)
 registerTool(getMemberNameHistoryTool, getMemberNameHistoryExecutor)
 registerTool(getConversationBetweenTool, getConversationBetweenExecutor)
 registerTool(getMessageContextTool, getMessageContextExecutor)
+registerTool(searchSessionsTool, searchSessionsExecutor)
+registerTool(getSessionMessagesTool, getSessionMessagesExecutor)
