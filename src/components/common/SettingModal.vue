@@ -95,7 +95,7 @@ watch(
           </div>
 
           <!-- 存储管理 -->
-          <div v-show="activeTab === 'storage'">
+          <div v-show="activeTab === 'storage'" class="h-full">
             <StorageTab ref="storageTabRef" />
           </div>
 

@@ -6,7 +6,9 @@
     "aiConfig": "AI Models",
     "aiPrompt": "Chat Config",
     "aiPreset": "Prompts",
-    "storage": "Storage",
+    "storage": "Data & Storage",
+    "storageManage": "Storage",
+    "sessionManage": "Sessions",
     "about": "About"
   },
   "basic": {
@@ -129,6 +131,29 @@
         "name": "Log Files",
         "description": "App logs including import, AI, error logs"
       }
+    },
+    "session": {
+      "title": "Session Index Settings",
+      "description": "Session index splits chat history into conversation segments by time gaps for better AI analysis",
+      "defaultThreshold": "Default Gap Threshold",
+      "thresholdUnit": "minutes",
+      "thresholdHelp": "Messages exceeding this time gap will be split into a new session",
+      "notGenerated": "Session index not generated",
+      "generateHint": "Generate index to help AI better understand conversation context",
+      "generate": "Generate Index",
+      "regenerate": "Regenerate",
+      "generating": "Generating",
+      "sessionCount": "{count} sessions",
+      "generated": "Session index generated",
+      "generateSuccess": "Session index generated successfully, {count} sessions created",
+      "generateError": "Generation failed",
+      "batchTitle": "Batch Generate Index",
+      "totalSessions": "{count} chats total",
+      "generatedCount": "{count} generated",
+      "notGeneratedCount": "{count} not generated",
+      "loadingStatus": "Loading...",
+      "batchGenerate": "Generate Missing",
+      "batchRegenerate": "Regenerate All"
     }
   },
   "aiPrompt": {

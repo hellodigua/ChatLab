@@ -6,7 +6,9 @@
     "aiConfig": "模型配置",
     "aiPrompt": "对话配置",
     "aiPreset": "提示词配置",
-    "storage": "存储管理",
+    "storage": "数据和存储",
+    "storageManage": "存储管理",
+    "sessionManage": "会话管理",
     "about": "关于"
   },
   "basic": {
@@ -129,6 +131,29 @@
         "name": "日志文件",
         "description": "软件的运行日志，包含导入、AI、错误等日志"
       }
+    },
+    "session": {
+      "title": "会话索引设置",
+      "description": "会话索引将聊天记录按时间间隔自动分割为对话段落，便于AI分析和浏览",
+      "defaultThreshold": "默认分割间隔",
+      "thresholdUnit": "分钟",
+      "thresholdHelp": "超过该时间间隔的消息将被分到新的会话段落",
+      "notGenerated": "尚未生成会话索引",
+      "generateHint": "生成索引后可让 AI 更精准地理解对话上下文",
+      "generate": "生成索引",
+      "regenerate": "重新生成",
+      "generating": "正在生成",
+      "sessionCount": "{count} 个会话",
+      "generated": "已生成会话索引",
+      "generateSuccess": "会话索引生成成功，共 {count} 个会话",
+      "generateError": "生成失败",
+      "batchTitle": "批量生成索引",
+      "totalSessions": "共 {count} 个聊天",
+      "generatedCount": "已生成 {count} 个",
+      "notGeneratedCount": "未生成 {count} 个",
+      "loadingStatus": "加载中...",
+      "batchGenerate": "生成未索引",
+      "batchRegenerate": "全部重新生成"
     }
   },
   "aiPrompt": {

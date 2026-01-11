@@ -1,207 +1,57 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+/**
+ * 数据和存储设置 Tab
+ * 包含存储管理和会话管理两个子 Tab
+ */
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import StorageManageSection from './DataStorage/StorageManageSection.vue'
+import SessionIndexSection from './DataStorage/SessionIndexSection.vue'
+import SubTabs from '@/components/UI/SubTabs.vue'
+import { useSubTabsScroll } from '@/composables/useSubTabsScroll'
 
 const { t } = useI18n()
 
-// 缓存目录信息类型
-interface CacheDirectoryInfo {
-  id: string
-  name: string
-  description: string
-  path: string
-  icon: string
-  canClear: boolean
-  size: number
-  fileCount: number
-  exists: boolean
-}
+// 导航配置
+const navItems = computed(() => [
+  { id: 'storage', label: t('settings.tabs.storageManage') },
+  { id: 'session', label: t('settings.tabs.sessionManage') },
+])
 
-interface CacheInfo {
-  baseDir: string
-  directories: CacheDirectoryInfo[]
-  totalSize: number
-}
+// 使用二级导航滚动联动 composable
+const { activeNav, scrollContainerRef, setSectionRef, handleNavChange } = useSubTabsScroll(navItems)
+void scrollContainerRef // 在模板中通过 ref="scrollContainerRef" 使用
 
-// 状态
-const cacheInfo = ref<CacheInfo | null>(null)
-const isLoading = ref(false)
-const clearingId = ref<string | null>(null)
-
-// 格式化文件大小
-function formatSize(bytes: number): string {
-  if (bytes === 0) return '0 B'
-  const units = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(1024))
-  const size = (bytes / Math.pow(1024, i)).toFixed(i > 0 ? 1 : 0)
-  return `${size} ${units[i]}`
-}
-
-// 计算总大小
-const totalSizeFormatted = computed(() => {
-  if (!cacheInfo.value) return '0 B'
-  return formatSize(cacheInfo.value.totalSize)
-})
-
-// 加载缓存信息
-async function loadCacheInfo() {
-  isLoading.value = true
-  try {
-    cacheInfo.value = await window.cacheApi.getInfo()
-  } catch (error) {
-    console.error('获取缓存信息失败:', error)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-// 清理缓存
-async function clearCache(cacheId: string) {
-  clearingId.value = cacheId
-  try {
-    const result = await window.cacheApi.clear(cacheId)
-    if (result.success) {
-      // 刷新缓存信息
-      await loadCacheInfo()
-    } else {
-      console.error('清理缓存失败:', result.error)
-    }
-  } catch (error) {
-    console.error('清理缓存失败:', error)
-  } finally {
-    clearingId.value = null
-  }
-}
-
-// 打开目录
-async function openDirectory(cacheId: string) {
-  try {
-    await window.cacheApi.openDir(cacheId)
-  } catch (error) {
-    console.error('打开目录失败:', error)
-  }
-}
-
-// 组件挂载时加载数据
-onMounted(() => {
-  loadCacheInfo()
-})
+// Template refs
+const storageManageRef = ref<InstanceType<typeof StorageManageSection> | null>(null)
 
 // 暴露刷新方法
 defineExpose({
-  refresh: loadCacheInfo,
+  refresh: () => storageManageRef.value?.refresh(),
 })
 </script>
 
 <template>
-  <div class="space-y-6">
-    <!-- 标题和总览 -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h3 class="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
-          <UIcon name="i-heroicons-folder-open" class="h-4 w-4 text-amber-500" />
-          {{ t('settings.storage.title') }}
-        </h3>
-        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ t('settings.storage.description') }}</p>
-      </div>
-      <div class="flex items-center gap-2">
-        <!-- 总大小 -->
-        <div class="rounded-lg bg-gray-100 px-3 py-1.5 dark:bg-gray-800">
-          <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('settings.storage.totalUsage') }}</span>
-          <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ totalSizeFormatted }}</span>
+  <div class="flex h-full gap-6">
+    <!-- 左侧锚点导航 -->
+    <div class="w-28 shrink-0">
+      <SubTabs v-model="activeNav" :items="navItems" orientation="vertical" @change="handleNavChange" />
+    </div>
+
+    <!-- 右侧内容区域 -->
+    <div ref="scrollContainerRef" class="min-w-0 flex-1 overflow-y-auto">
+      <div class="space-y-8">
+        <!-- 存储管理 -->
+        <div :ref="(el) => setSectionRef('storage', el as HTMLElement)">
+          <StorageManageSection ref="storageManageRef" />
         </div>
-        <!-- 刷新按钮 -->
-        <UButton icon="i-heroicons-arrow-path" variant="ghost" size="sm" :loading="isLoading" @click="loadCacheInfo" />
-      </div>
-    </div>
 
-    <!-- 加载状态 -->
-    <div v-if="isLoading && !cacheInfo" class="flex items-center justify-center py-8">
-      <UIcon name="i-heroicons-arrow-path" class="h-5 w-5 animate-spin text-gray-400" />
-      <span class="ml-2 text-sm text-gray-500">{{ t('settings.storage.loading') }}</span>
-    </div>
+        <!-- 分隔线 -->
+        <div class="border-t border-gray-200 dark:border-gray-700" />
 
-    <!-- 缓存目录列表 -->
-    <div v-else-if="cacheInfo" class="space-y-2">
-      <div
-        v-for="dir in cacheInfo.directories"
-        :key="dir.id"
-        class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:bg-gray-800"
-      >
-        <div class="flex items-center justify-between">
-          <!-- 左侧信息 -->
-          <div class="flex items-center gap-3">
-            <div
-              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-              :class="{
-                'bg-green-100 dark:bg-green-900/30': dir.id === 'databases',
-                'bg-violet-100 dark:bg-violet-900/30': dir.id === 'ai',
-                'bg-amber-100 dark:bg-amber-900/30': dir.id === 'downloads',
-                'bg-blue-100 dark:bg-blue-900/30': dir.id === 'logs',
-              }"
-            >
-              <UIcon
-                :name="dir.icon"
-                class="h-4 w-4"
-                :class="{
-                  'text-green-600 dark:text-green-400': dir.id === 'databases',
-                  'text-violet-600 dark:text-violet-400': dir.id === 'ai',
-                  'text-amber-600 dark:text-amber-400': dir.id === 'downloads',
-                  'text-blue-600 dark:text-blue-400': dir.id === 'logs',
-                }"
-              />
-            </div>
-            <div>
-              <div class="flex items-center gap-2">
-                <h4 class="text-sm font-medium text-gray-900 dark:text-white">{{ t(dir.name) }}</h4>
-                <UBadge v-if="!dir.exists" variant="soft" color="gray" size="xs">
-                  {{ t('settings.storage.notExist') }}
-                </UBadge>
-              </div>
-              <p class="text-xs text-gray-500 dark:text-gray-400">{{ t(dir.description) }}</p>
-            </div>
-          </div>
-
-          <!-- 右侧信息和操作按钮 -->
-          <div class="flex items-center">
-            <!-- 文件数和大小（固定宽度对齐） -->
-            <div class="flex items-center gap-2 text-xs text-gray-400">
-              <span class="w-14 text-right">{{ dir.fileCount }} {{ t('settings.storage.files') }}</span>
-              <span class="w-16 text-right">{{ formatSize(dir.size) }}</span>
-            </div>
-            <!-- 操作按钮（固定宽度） -->
-            <div class="ml-4 flex w-36 shrink-0 items-center justify-end gap-1">
-              <UButton
-                v-if="dir.canClear && dir.size > 0"
-                icon="i-heroicons-trash"
-                variant="soft"
-                color="red"
-                size="xs"
-                :loading="clearingId === dir.id"
-                :disabled="clearingId !== null"
-                @click="clearCache(dir.id)"
-              >
-                {{ t('settings.storage.clear') }}
-              </UButton>
-              <UButton icon="i-heroicons-folder-open" variant="ghost" size="xs" @click="openDirectory(dir.id)">
-                {{ t('settings.storage.open') }}
-              </UButton>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 提示信息 -->
-    <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800/50 dark:bg-amber-900/20">
-      <div class="flex items-start gap-2">
-        <UIcon name="i-heroicons-exclamation-triangle" class="h-4 w-4 shrink-0 text-amber-500" />
-        <div class="text-xs text-amber-700 dark:text-amber-400">
-          <p class="font-medium">{{ t('settings.storage.notes.title') }}</p>
-          <ul class="mt-1 list-inside list-disc space-y-0.5 text-amber-600 dark:text-amber-500">
-            <li>{{ t('settings.storage.notes.logSafe') }}</li>
-            <li>{{ t('settings.storage.notes.noRecover') }}</li>
-          </ul>
+        <!-- 会话管理 -->
+        <div :ref="(el) => setSectionRef('session', el as HTMLElement)">
+          <SessionIndexSection />
         </div>
       </div>
     </div>
