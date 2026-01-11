@@ -25,6 +25,7 @@
     "year": "{year}年"
   },
   "tooltip": {
-    "chatViewer": "聊天记录查看器"
+    "chatViewer": "聊天记录查看器",
+    "sessionIndex": "会话索引"
   }
 }
