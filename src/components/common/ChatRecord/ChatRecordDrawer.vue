@@ -84,6 +84,14 @@ function handleSessionSelect(_sessionId: number, firstMessageId: number) {
   }
 }
 
+// 处理跳转到消息（查看上下文）
+function handleJumpToMessage(messageId: number) {
+  // 清空筛选条件，只保留 scrollToMessageId
+  localQuery.value = {
+    scrollToMessageId: messageId,
+  }
+}
+
 // 加载会话列表缓存
 async function loadSessionsCache() {
   if (!currentSessionId.value) return
@@ -166,6 +174,7 @@ watch(
               :query="localQuery"
               @count-change="handleCountChange"
               @visible-message-change="handleVisibleMessageChange"
+              @jump-to-message="handleJumpToMessage"
             />
           </div>
         </div>

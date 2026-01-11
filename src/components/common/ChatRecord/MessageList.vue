@@ -3,7 +3,7 @@
  * 消息列表组件
  * 使用 @tanstack/vue-virtual 实现虚拟滚动
  */
-import { ref, watch, nextTick, toRaw, computed, onMounted, onUnmounted } from 'vue'
+import { ref, watch, nextTick, toRaw, computed, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useVirtualizer } from '@tanstack/vue-virtual'
 import dayjs from 'dayjs'
@@ -26,6 +26,8 @@ const emit = defineEmits<{
   (e: 'count-change', count: number): void
   /** 当前可见消息变化（用于联动时间线） */
   (e: 'visible-message-change', messageId: number): void
+  /** 跳转到指定消息（用于查看上下文） */
+  (e: 'jump-to-message', messageId: number): void
 }>()
 
 const sessionStore = useSessionStore()
@@ -84,6 +86,16 @@ function buildFilterParams(query: ChatRecordQuery) {
   }
 }
 
+// 映射消息类型（补充缺失字段）
+function mapMessages(messages: any[]): ChatRecordMessage[] {
+  return messages.map((m) => ({
+    ...m,
+    replyToMessageId: m.replyToMessageId ?? null,
+    replyToContent: m.replyToContent ?? null,
+    replyToSenderName: m.replyToSenderName ?? null,
+  })) as ChatRecordMessage[]
+}
+
 // 初始加载消息
 async function loadInitialMessages() {
   const sessionId = sessionStore.currentSessionId
@@ -113,7 +125,7 @@ async function loadInitialMessages() {
       const targetMessages = await window.aiApi.getMessageContext(sessionId, targetId, 0)
 
       // 合并消息列表
-      messages.value = [...beforeResult.messages, ...targetMessages, ...afterResult.messages]
+      messages.value = mapMessages([...beforeResult.messages, ...targetMessages, ...afterResult.messages])
 
       hasMoreBefore.value = beforeResult.hasMore
       hasMoreAfter.value = afterResult.hasMore
@@ -125,7 +137,7 @@ async function loadInitialMessages() {
       isSearchMode.value = true
       searchOffset.value = 0
       const result = await window.aiApi.searchMessages(sessionId, keywords, filter, 100, 0, senderId)
-      messages.value = result.messages
+      messages.value = mapMessages(result.messages)
       hasMoreBefore.value = false // 搜索结果从最新开始，没有更早的
       hasMoreAfter.value = result.messages.length >= 100
       searchOffset.value = result.messages.length
@@ -138,7 +150,7 @@ async function loadInitialMessages() {
       isSearchMode.value = false
       searchOffset.value = 0
       const result = await window.aiApi.getAllRecentMessages(sessionId, filter, 100)
-      messages.value = result.messages
+      messages.value = mapMessages(result.messages)
       hasMoreBefore.value = result.messages.length >= 100
       hasMoreAfter.value = false
 
@@ -215,7 +227,7 @@ async function loadMoreBefore() {
       const currentOffset = virtualizer.value.scrollOffset ?? 0
 
       // prepend 消息
-      const newMessages = [...result.messages, ...messages.value]
+      const newMessages = [...mapMessages(result.messages), ...messages.value]
       messages.value = newMessages
 
       // 虚拟化器会自动处理滚动位置，但需要调整 offset
@@ -254,7 +266,7 @@ async function loadMoreAfter() {
       const result = await window.aiApi.searchMessages(sessionId, keywords, filter, 50, searchOffset.value, senderId)
 
       if (result.messages.length > 0) {
-        messages.value = [...messages.value, ...result.messages]
+        messages.value = [...messages.value, ...mapMessages(result.messages)]
         searchOffset.value += result.messages.length
         emit('count-change', messages.value.length)
       }
@@ -268,7 +280,7 @@ async function loadMoreAfter() {
       const result = await window.aiApi.getMessagesAfter(sessionId, lastMessage.id, 50, filter, senderId, keywords)
 
       if (result.messages.length > 0) {
-        messages.value = [...messages.value, ...result.messages]
+        messages.value = [...messages.value, ...mapMessages(result.messages)]
         emit('count-change', messages.value.length)
       }
 
@@ -461,7 +473,7 @@ defineExpose({
       <div class="relative w-full" :style="{ height: `${totalSize}px` }">
         <div
           v-for="virtualItem in virtualItems"
-          :key="virtualItem.key"
+          :key="String(virtualItem.key)"
           :ref="(el) => measureElement(el as Element)"
           class="absolute left-0 top-0 w-full"
           :style="{
@@ -470,10 +482,7 @@ defineExpose({
           :data-index="virtualItem.index"
         >
           <!-- 时间分隔线 -->
-          <div
-            v-if="getTimeSeparator(virtualItem.index)"
-            class="flex items-center justify-center py-2"
-          >
+          <div v-if="getTimeSeparator(virtualItem.index)" class="flex items-center justify-center py-2">
             <div class="flex items-center gap-2 text-xs text-gray-400">
               <div class="h-px w-8 bg-gray-200 dark:bg-gray-700" />
               <span>{{ getTimeSeparator(virtualItem.index) }}</span>
@@ -488,6 +497,7 @@ defineExpose({
             :is-target="isTargetMessage(messages[virtualItem.index]?.id ?? 0)"
             :highlight-keywords="query.highlightKeywords"
             :is-filtered="isFiltered"
+            @view-context="(id) => emit('jump-to-message', id)"
           />
         </div>
       </div>
