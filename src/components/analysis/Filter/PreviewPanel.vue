@@ -9,6 +9,7 @@ import { computed, ref, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useVirtualizer } from '@tanstack/vue-virtual'
 import MessageList from '@/components/common/ChatRecord/MessageList.vue'
+import LoadingState from '@/components/UI/LoadingState.vue'
 import type { ChatRecordMessage } from '@/types/format'
 
 const { t } = useI18n()
@@ -299,10 +300,7 @@ watch(pendingScrollToMessageId, async (messageId) => {
     <!-- 主内容区：左右结构 -->
     <div class="flex-1 min-h-0 flex overflow-hidden">
       <!-- 加载状态 -->
-      <div v-if="isLoading" class="w-full h-full flex items-center flex-col justify-center">
-        <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-primary-500 mb-2" />
-        <p class="text-gray-500">{{ t('analysis.filter.filtering') }}</p>
-      </div>
+      <LoadingState v-if="isLoading" variant="page" :text="t('analysis.filter.filtering')" />
 
       <!-- 空状态 -->
       <div v-else-if="!result" class="w-full h-full flex items-center justify-center">

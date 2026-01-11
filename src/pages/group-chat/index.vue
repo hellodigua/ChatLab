@@ -15,6 +15,7 @@ import QuotesTab from './components/QuotesTab.vue'
 import MemberTab from './components/MemberTab.vue'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import SessionIndexModal from '@/components/analysis/SessionIndexModal.vue'
+import LoadingState from '@/components/UI/LoadingState.vue'
 import { useSessionStore } from '@/stores/session'
 import { useLayoutStore } from '@/stores/layout'
 import { isFeatureSupported, type LocaleType } from '@/i18n'
@@ -250,12 +251,7 @@ onMounted(() => {
 <template>
   <div class="flex h-full flex-col bg-gray-50 dark:bg-gray-950">
     <!-- Loading State -->
-    <div v-if="isInitialLoad" class="flex h-full items-center justify-center">
-      <div class="flex flex-col items-center justify-center text-center">
-        <UIcon name="i-heroicons-arrow-path" class="h-8 w-8 animate-spin text-pink-500" />
-        <p class="mt-2 text-sm text-gray-500">{{ t('analysis.groupChat.loading') }}</p>
-      </div>
-    </div>
+    <LoadingState v-if="isInitialLoad" variant="page" :text="t('analysis.groupChat.loading')" />
 
     <!-- Content -->
     <template v-else-if="session">
@@ -325,12 +321,7 @@ onMounted(() => {
       <!-- Tab Content -->
       <div class="relative flex-1 overflow-y-auto">
         <!-- Loading Overlay -->
-        <div
-          v-if="isLoading"
-          class="absolute inset-0 z-10 flex items-center justify-center bg-white/50 backdrop-blur-sm dark:bg-gray-950/50"
-        >
-          <UIcon name="i-heroicons-arrow-path" class="h-8 w-8 animate-spin text-pink-500" />
-        </div>
+        <LoadingState v-if="isLoading" variant="overlay" />
 
         <div class="h-full">
           <Transition name="tab-slide" mode="out-in">
