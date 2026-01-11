@@ -47,6 +47,13 @@ import {
   // SQL 实验室
   executeRawSQL,
   getSchema,
+  // 会话索引
+  generateSessions,
+  clearSessions,
+  hasSessionIndex,
+  getSessionStats,
+  updateSessionGapThreshold,
+  getSessions,
 } from './query'
 import { streamImport, streamParseFileInfo } from './import'
 
@@ -115,6 +122,14 @@ const syncHandlers: Record<string, (payload: any) => any> = {
   // SQL 实验室
   executeRawSQL: (p) => executeRawSQL(p.sessionId, p.sql),
   getSchema: (p) => getSchema(p.sessionId),
+
+  // 会话索引
+  generateSessions: (p) => generateSessions(p.sessionId, p.gapThreshold),
+  clearSessions: (p) => clearSessions(p.sessionId),
+  hasSessionIndex: (p) => hasSessionIndex(p.sessionId),
+  getSessionStats: (p) => getSessionStats(p.sessionId),
+  updateSessionGapThreshold: (p) => updateSessionGapThreshold(p.sessionId, p.gapThreshold),
+  getSessions: (p) => getSessions(p.sessionId),
 }
 
 // 异步消息处理器（流式操作）

@@ -440,6 +440,30 @@ interface NetworkApi {
   testProxyConnection: (proxyUrl: string) => Promise<{ success: boolean; error?: string }>
 }
 
+// Session Index API 类型 - 会话索引功能
+interface SessionStats {
+  sessionCount: number
+  hasIndex: boolean
+  gapThreshold: number
+}
+
+interface ChatSessionItem {
+  id: number
+  startTs: number
+  endTs: number
+  messageCount: number
+  firstMessageId: number
+}
+
+interface SessionApi {
+  generate: (sessionId: string, gapThreshold?: number) => Promise<number>
+  hasIndex: (sessionId: string) => Promise<boolean>
+  getStats: (sessionId: string) => Promise<SessionStats>
+  clear: (sessionId: string) => Promise<boolean>
+  updateGapThreshold: (sessionId: string, gapThreshold: number | null) => Promise<boolean>
+  getSessions: (sessionId: string) => Promise<ChatSessionItem[]>
+}
+
 declare global {
   interface Window {
     electron: ElectronAPI
@@ -451,6 +475,7 @@ declare global {
     agentApi: AgentApi
     cacheApi: CacheApi
     networkApi: NetworkApi
+    sessionApi: SessionApi
   }
 }
 

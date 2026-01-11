@@ -142,6 +142,7 @@ export interface DbMeta {
   group_id: string | null // 群ID（群聊类型有值，私聊为空）
   group_avatar: string | null // 群头像（base64 Data URL）
   owner_id: string | null // 所有者/导出者的 platformId
+  session_gap_threshold: number | null // 会话切分阈值（秒），null 表示使用全局配置
 }
 
 /**
@@ -253,4 +254,47 @@ export interface ImportResult {
   success: boolean
   sessionId?: string // 成功时返回会话ID
   error?: string // 失败时返回错误信息
+}
+
+// ==================== 会话索引类型 ====================
+
+/**
+ * 会话（时间切分的对话段落）
+ */
+export interface ChatSession {
+  id: number // 自增ID
+  startTs: number // 会话开始时间戳（秒）
+  endTs: number // 会话结束时间戳（秒）
+  messageCount: number // 该会话包含的消息数
+  isManual: boolean // 是否用户手动合并/修改过
+  summary: string | null // AI 生成的会话简报（预留）
+}
+
+/**
+ * 消息上下文索引
+ */
+export interface MessageContext {
+  messageId: number // 关联 message.id
+  sessionId: number // 关联 chat_session.id
+  topicId: number | null // 关联 chat_topic.id（预留）
+}
+
+/**
+ * 会话索引配置
+ */
+export interface SessionConfig {
+  /** 默认切分阈值（秒） */
+  defaultGapThreshold: number
+}
+
+/**
+ * 会话统计信息
+ */
+export interface SessionStats {
+  /** 会话总数 */
+  sessionCount: number
+  /** 是否已生成会话索引 */
+  hasIndex: boolean
+  /** 当前使用的阈值（秒） */
+  gapThreshold: number
 }

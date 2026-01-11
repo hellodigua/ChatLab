@@ -203,6 +203,17 @@ export const useSessionStore = defineStore(
         if (importResult.success && importResult.sessionId) {
           await loadSessions()
           currentSessionId.value = importResult.sessionId
+
+          // 自动生成会话索引
+          try {
+            const savedThreshold = localStorage.getItem('sessionGapThreshold')
+            const gapThreshold = savedThreshold ? parseInt(savedThreshold, 10) : 1800 // 默认30分钟
+            await window.sessionApi.generate(importResult.sessionId, gapThreshold)
+          } catch (error) {
+            console.error('自动生成会话索引失败:', error)
+            // 不阻断导入流程，用户可以手动生成
+          }
+
           return { success: true }
         } else {
           // 传递诊断信息（如果有）

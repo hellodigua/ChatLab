@@ -13,6 +13,7 @@ import OverviewTab from './components/OverviewTab.vue'
 import QuotesTab from './components/QuotesTab.vue'
 import MemberTab from './components/MemberTab.vue'
 import PageHeader from '@/components/layout/PageHeader.vue'
+import SessionIndexModal from '@/components/analysis/SessionIndexModal.vue'
 import { useSessionStore } from '@/stores/session'
 import { useLayoutStore } from '@/stores/layout'
 
@@ -23,6 +24,9 @@ const router = useRouter()
 const sessionStore = useSessionStore()
 const layoutStore = useLayoutStore()
 const { currentSessionId } = storeToRefs(sessionStore)
+
+// 会话索引弹窗状态
+const showSessionIndexModal = ref(false)
 
 // 打开聊天记录查看器
 function openChatRecordViewer() {
@@ -250,6 +254,15 @@ onMounted(() => {
               @click="openChatRecordViewer"
             />
           </UTooltip>
+          <UTooltip :text="t('analysis.tooltip.sessionIndex')">
+            <UButton
+              icon="i-heroicons-clock"
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              @click="showSessionIndexModal = true"
+            />
+          </UTooltip>
           <CaptureButton />
         </template>
         <!-- Tabs -->
@@ -330,6 +343,9 @@ onMounted(() => {
     <div v-else class="flex h-full items-center justify-center">
       <p class="text-gray-500">{{ t('analysis.privateChat.loadError') }}</p>
     </div>
+
+    <!-- 会话索引弹窗（内部自动检测并弹出） -->
+    <SessionIndexModal v-if="currentSessionId" v-model="showSessionIndexModal" :session-id="currentSessionId" />
   </div>
 </template>
 

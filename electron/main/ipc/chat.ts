@@ -623,4 +623,80 @@ export function registerChatHandlers(ctx: IpcContext): void {
       return []
     }
   })
+
+  // ==================== 会话索引 ====================
+
+  /**
+   * 生成会话索引
+   */
+  ipcMain.handle('session:generate', async (_, sessionId: string, gapThreshold?: number) => {
+    try {
+      return await worker.generateSessions(sessionId, gapThreshold)
+    } catch (error) {
+      console.error('生成会话索引失败：', error)
+      throw error
+    }
+  })
+
+  /**
+   * 检查是否已生成会话索引
+   */
+  ipcMain.handle('session:hasIndex', async (_, sessionId: string) => {
+    try {
+      return await worker.hasSessionIndex(sessionId)
+    } catch (error) {
+      console.error('检查会话索引失败：', error)
+      return false
+    }
+  })
+
+  /**
+   * 获取会话索引统计信息
+   */
+  ipcMain.handle('session:getStats', async (_, sessionId: string) => {
+    try {
+      return await worker.getSessionStats(sessionId)
+    } catch (error) {
+      console.error('获取会话统计失败：', error)
+      return { sessionCount: 0, hasIndex: false, gapThreshold: 1800 }
+    }
+  })
+
+  /**
+   * 清空会话索引
+   */
+  ipcMain.handle('session:clear', async (_, sessionId: string) => {
+    try {
+      await worker.clearSessions(sessionId)
+      return true
+    } catch (error) {
+      console.error('清空会话索引失败：', error)
+      return false
+    }
+  })
+
+  /**
+   * 更新会话切分阈值
+   */
+  ipcMain.handle('session:updateGapThreshold', async (_, sessionId: string, gapThreshold: number | null) => {
+    try {
+      await worker.updateSessionGapThreshold(sessionId, gapThreshold)
+      return true
+    } catch (error) {
+      console.error('更新阈值失败：', error)
+      return false
+    }
+  })
+
+  /**
+   * 获取会话列表（用于时间线导航）
+   */
+  ipcMain.handle('session:getSessions', async (_, sessionId: string) => {
+    try {
+      return await worker.getSessions(sessionId)
+    } catch (error) {
+      console.error('获取会话列表失败：', error)
+      return []
+    }
+  })
 }

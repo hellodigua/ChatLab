@@ -53,3 +53,15 @@ export type { MessageResult, PaginatedMessages, MessagesWithTotal } from './mess
 // SQL 实验室
 export { executeRawSQL, getSchema } from './sql'
 export type { SQLResult, TableSchema } from './sql'
+
+// 会话索引
+export {
+  generateSessions,
+  clearSessions,
+  hasSessionIndex,
+  getSessionStats,
+  updateSessionGapThreshold,
+  getSessions,
+  DEFAULT_SESSION_GAP_THRESHOLD,
+} from './session'
+export type { ChatSessionItem } from './session'

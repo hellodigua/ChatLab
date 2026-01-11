@@ -150,7 +150,8 @@ function createDatabaseWithoutIndexes(sessionId: string): Database.Database {
       group_id TEXT,
       group_avatar TEXT,
       owner_id TEXT,
-      schema_version INTEGER DEFAULT 2
+      schema_version INTEGER DEFAULT 3,
+      session_gap_threshold INTEGER
     );
 
     CREATE TABLE IF NOT EXISTS member (
@@ -185,6 +186,21 @@ function createDatabaseWithoutIndexes(sessionId: string): Database.Database {
       platform_message_id TEXT DEFAULT NULL,
       FOREIGN KEY(sender_id) REFERENCES member(id)
     );
+
+    CREATE TABLE IF NOT EXISTS chat_session (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      start_ts INTEGER NOT NULL,
+      end_ts INTEGER NOT NULL,
+      message_count INTEGER DEFAULT 0,
+      is_manual INTEGER DEFAULT 0,
+      summary TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS message_context (
+      message_id INTEGER PRIMARY KEY,
+      session_id INTEGER NOT NULL,
+      topic_id INTEGER
+    );
   `)
 
   return db
@@ -199,6 +215,8 @@ function createIndexes(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_message_sender ON message(sender_id);
     CREATE INDEX IF NOT EXISTS idx_message_platform_id ON message(platform_message_id);
     CREATE INDEX IF NOT EXISTS idx_member_name_history_member_id ON member_name_history(member_id);
+    CREATE INDEX IF NOT EXISTS idx_session_time ON chat_session(start_ts, end_ts);
+    CREATE INDEX IF NOT EXISTS idx_context_session ON message_context(session_id);
   `)
 }
 
@@ -440,7 +458,13 @@ export async function streamImport(filePath: string, requestId: string): Promise
           let t0 = Date.now()
           if (!memberIdMap.has(msg.senderPlatformId)) {
             // 消息中没有头像和角色信息，设为默认值
-            insertMember.run(msg.senderPlatformId, msg.senderAccountName || null, msg.senderGroupNickname || null, null, '[]')
+            insertMember.run(
+              msg.senderPlatformId,
+              msg.senderAccountName || null,
+              msg.senderGroupNickname || null,
+              null,
+              '[]'
+            )
             const row = getMemberId.get(msg.senderPlatformId) as { id: number } | undefined
             if (row) {
               memberIdMap.set(msg.senderPlatformId, row.id)

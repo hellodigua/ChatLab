@@ -494,3 +494,66 @@ export async function executeRawSQL(sessionId: string, sql: string): Promise<SQL
 export async function getSchema(sessionId: string): Promise<TableSchema[]> {
   return sendToWorker('getSchema', { sessionId })
 }
+
+// ==================== 会话索引 API ====================
+
+export interface SessionStats {
+  sessionCount: number
+  hasIndex: boolean
+  gapThreshold: number
+}
+
+/**
+ * 生成会话索引
+ * @param sessionId 数据库会话ID
+ * @param gapThreshold 时间间隔阈值（秒）
+ */
+export async function generateSessions(sessionId: string, gapThreshold?: number): Promise<number> {
+  return sendToWorker('generateSessions', { sessionId, gapThreshold })
+}
+
+/**
+ * 清空会话索引
+ */
+export async function clearSessions(sessionId: string): Promise<void> {
+  return sendToWorker('clearSessions', { sessionId })
+}
+
+/**
+ * 检查是否已生成会话索引
+ */
+export async function hasSessionIndex(sessionId: string): Promise<boolean> {
+  return sendToWorker('hasSessionIndex', { sessionId })
+}
+
+/**
+ * 获取会话索引统计信息
+ */
+export async function getSessionStats(sessionId: string): Promise<SessionStats> {
+  return sendToWorker('getSessionStats', { sessionId })
+}
+
+/**
+ * 更新单个聊天的会话切分阈值
+ */
+export async function updateSessionGapThreshold(sessionId: string, gapThreshold: number | null): Promise<void> {
+  return sendToWorker('updateSessionGapThreshold', { sessionId, gapThreshold })
+}
+
+/**
+ * 会话列表项类型
+ */
+export interface ChatSessionItem {
+  id: number
+  startTs: number
+  endTs: number
+  messageCount: number
+  firstMessageId: number
+}
+
+/**
+ * 获取会话列表（用于时间线导航）
+ */
+export async function getSessions(sessionId: string): Promise<ChatSessionItem[]> {
+  return sendToWorker('getSessions', { sessionId })
+}

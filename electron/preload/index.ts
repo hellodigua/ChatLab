@@ -1051,6 +1051,68 @@ const cacheApi = {
   },
 }
 
+// Session Index API - 会话索引功能
+interface SessionStats {
+  sessionCount: number
+  hasIndex: boolean
+  gapThreshold: number
+}
+
+interface ChatSessionItem {
+  id: number
+  startTs: number
+  endTs: number
+  messageCount: number
+  firstMessageId: number
+}
+
+const sessionApi = {
+  /**
+   * 生成会话索引
+   * @param sessionId 数据库会话ID
+   * @param gapThreshold 时间间隔阈值（秒）
+   * @returns 生成的会话数量
+   */
+  generate: (sessionId: string, gapThreshold?: number): Promise<number> => {
+    return ipcRenderer.invoke('session:generate', sessionId, gapThreshold)
+  },
+
+  /**
+   * 检查是否已生成会话索引
+   */
+  hasIndex: (sessionId: string): Promise<boolean> => {
+    return ipcRenderer.invoke('session:hasIndex', sessionId)
+  },
+
+  /**
+   * 获取会话索引统计信息
+   */
+  getStats: (sessionId: string): Promise<SessionStats> => {
+    return ipcRenderer.invoke('session:getStats', sessionId)
+  },
+
+  /**
+   * 清空会话索引
+   */
+  clear: (sessionId: string): Promise<boolean> => {
+    return ipcRenderer.invoke('session:clear', sessionId)
+  },
+
+  /**
+   * 更新会话切分阈值
+   */
+  updateGapThreshold: (sessionId: string, gapThreshold: number | null): Promise<boolean> => {
+    return ipcRenderer.invoke('session:updateGapThreshold', sessionId, gapThreshold)
+  },
+
+  /**
+   * 获取会话列表（用于时间线导航）
+   */
+  getSessions: (sessionId: string): Promise<ChatSessionItem[]> => {
+    return ipcRenderer.invoke('session:getSessions', sessionId)
+  },
+}
+
 // 扩展 api，添加 dialog、clipboard 和应用功能
 const extendedApi = {
   ...api,
@@ -1122,6 +1184,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('agentApi', agentApi)
     contextBridge.exposeInMainWorld('cacheApi', cacheApi)
     contextBridge.exposeInMainWorld('networkApi', networkApi)
+    contextBridge.exposeInMainWorld('sessionApi', sessionApi)
   } catch (error) {
     console.error(error)
   }
@@ -1144,4 +1207,6 @@ if (process.contextIsolated) {
   window.cacheApi = cacheApi
   // @ts-ignore (define in dts)
   window.networkApi = networkApi
+  // @ts-ignore (define in dts)
+  window.sessionApi = sessionApi
 }

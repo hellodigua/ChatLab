@@ -59,7 +59,8 @@ function createDatabase(sessionId: string): Database.Database {
       group_id TEXT,
       group_avatar TEXT,
       owner_id TEXT,
-      schema_version INTEGER DEFAULT ${CURRENT_SCHEMA_VERSION}
+      schema_version INTEGER DEFAULT ${CURRENT_SCHEMA_VERSION},
+      session_gap_threshold INTEGER
     );
 
     CREATE TABLE IF NOT EXISTS member (
@@ -95,10 +96,27 @@ function createDatabase(sessionId: string): Database.Database {
       FOREIGN KEY(sender_id) REFERENCES member(id)
     );
 
+    CREATE TABLE IF NOT EXISTS chat_session (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      start_ts INTEGER NOT NULL,
+      end_ts INTEGER NOT NULL,
+      message_count INTEGER DEFAULT 0,
+      is_manual INTEGER DEFAULT 0,
+      summary TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS message_context (
+      message_id INTEGER PRIMARY KEY,
+      session_id INTEGER NOT NULL,
+      topic_id INTEGER
+    );
+
     CREATE INDEX IF NOT EXISTS idx_message_ts ON message(ts);
     CREATE INDEX IF NOT EXISTS idx_message_sender ON message(sender_id);
     CREATE INDEX IF NOT EXISTS idx_message_platform_id ON message(platform_message_id);
     CREATE INDEX IF NOT EXISTS idx_member_name_history_member_id ON member_name_history(member_id);
+    CREATE INDEX IF NOT EXISTS idx_session_time ON chat_session(start_ts, end_ts);
+    CREATE INDEX IF NOT EXISTS idx_context_session ON message_context(session_id);
   `)
 
   return db
@@ -424,7 +442,12 @@ export function checkMigrationNeeded(): {
     }
   }
 
-  return { count: needsMigrationList.length, sessionIds: needsMigrationList, lowestVersion, forceRepairIds: forceRepairList }
+  return {
+    count: needsMigrationList.length,
+    sessionIds: needsMigrationList,
+    lowestVersion,
+    forceRepairIds: forceRepairList,
+  }
 }
 
 /**

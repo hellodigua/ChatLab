@@ -34,7 +34,7 @@ export interface MigrationInfo {
 }
 
 /** 当前 schema 版本（最新迁移的版本号） */
-export const CURRENT_SCHEMA_VERSION = 2
+export const CURRENT_SCHEMA_VERSION = 3
 
 /**
  * 迁移脚本列表
@@ -86,6 +86,54 @@ const migrations: Migration[] = [
         db.exec('CREATE INDEX IF NOT EXISTS idx_message_platform_id ON message(platform_message_id)')
       } catch {
         // 索引可能已存在
+      }
+    },
+  },
+  {
+    version: 3,
+    description: '添加会话索引相关表（chat_session、message_context）和 session_gap_threshold 字段',
+    userMessage: '支持会话时间轴浏览和 AI 增强分析功能',
+    up: (db) => {
+      // 创建 chat_session 会话表
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS chat_session (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          start_ts INTEGER NOT NULL,
+          end_ts INTEGER NOT NULL,
+          message_count INTEGER DEFAULT 0,
+          is_manual INTEGER DEFAULT 0,
+          summary TEXT
+        )
+      `)
+
+      // 创建会话时间索引
+      try {
+        db.exec('CREATE INDEX IF NOT EXISTS idx_session_time ON chat_session(start_ts, end_ts)')
+      } catch {
+        // 索引可能已存在
+      }
+
+      // 创建 message_context 消息上下文表（预留 topic_id）
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS message_context (
+          message_id INTEGER PRIMARY KEY,
+          session_id INTEGER NOT NULL,
+          topic_id INTEGER
+        )
+      `)
+
+      // 创建 session_id 索引
+      try {
+        db.exec('CREATE INDEX IF NOT EXISTS idx_context_session ON message_context(session_id)')
+      } catch {
+        // 索引可能已存在
+      }
+
+      // 检查 meta 表是否已有 session_gap_threshold 列
+      const tableInfo = db.prepare('PRAGMA table_info(meta)').all() as Array<{ name: string }>
+      const hasGapThresholdColumn = tableInfo.some((col) => col.name === 'session_gap_threshold')
+      if (!hasGapThresholdColumn) {
+        db.exec('ALTER TABLE meta ADD COLUMN session_gap_threshold INTEGER')
       }
     },
   },
@@ -149,9 +197,7 @@ export function migrateDatabase(db: Database.Database, forceRepair = false): boo
 
   // 获取需要执行的迁移
   // 如果是强制修复，从 version 0 开始执行所有迁移
-  const pendingMigrations = forceRepair
-    ? migrations
-    : migrations.filter((m) => m.version > currentVersion)
+  const pendingMigrations = forceRepair ? migrations : migrations.filter((m) => m.version > currentVersion)
 
   if (pendingMigrations.length === 0) {
     return false
