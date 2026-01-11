@@ -212,22 +212,37 @@ ChatLab 定义了一套标准的聊天记录数据交换格式，用于支持多
 
 ## 头像格式说明
 
-头像字段 `avatar` 和 `groupAvatar` 使用 **Data URL** 格式：
+头像字段 `avatar` 和 `groupAvatar` 支持两种格式：
+
+### 1. Data URL
+
+嵌入式格式，图片数据直接编码在文件中，离线可用：
 
 ```
 data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...
 ```
 
-支持的图片格式：
+支持的图片 MIME 类型：
 
 - `image/jpeg` - JPEG 格式（推荐，体积较小）
 - `image/png` - PNG 格式
 - `image/gif` - GIF 格式
 - `image/webp` - WebP 格式
 
+### 2. 网络 URL
+
+外链格式，图片存储在网络服务器，体积更小但需网络访问：
+
+```
+https://example.com/avatars/user123.jpg
+```
+
 ::: tip 建议
-导出时建议将头像压缩为 100×100 像素以内，以减小文件体积。
-:::
+
+- 如果需要离线使用或长期存档，推荐使用 Data URL 格式
+- 导出 Data URL 时建议将头像压缩为 100×100 像素以内，以减小文件体积
+- 如果头像来自可靠的长期有效的 CDN，可使用网络 URL 以减小文件体积
+  :::
 
 ## 完整示例
 
