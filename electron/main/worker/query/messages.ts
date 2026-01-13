@@ -21,6 +21,9 @@ export interface MessageResult {
   content: string
   timestamp: number
   type: number
+  replyToMessageId: string | null
+  replyToContent: string | null
+  replyToSenderName: string | null
 }
 
 /**
@@ -53,6 +56,9 @@ interface DbMessageRow {
   content: string
   timestamp: number
   type: number
+  reply_to_message_id: string | null
+  replyToContent: string | null
+  replyToSenderName: string | null
 }
 
 /**
@@ -79,6 +85,9 @@ function sanitizeMessageRow(row: DbMessageRow): MessageResult {
     content: row.content != null ? String(row.content) : '',
     timestamp: Number(row.timestamp),
     type: Number(row.type),
+    replyToMessageId: row.reply_to_message_id || null,
+    replyToContent: row.replyToContent || null,
+    replyToSenderName: row.replyToSenderName || null,
   }
 }
 
@@ -108,29 +117,25 @@ function buildKeywordCondition(keywords?: string[]): { condition: string; params
 const SYSTEM_FILTER = "AND COALESCE(m.account_name, '') != '系统消息'"
 
 // 只获取文本消息的过滤条件
-const TEXT_ONLY_FILTER = 'AND msg.type = 0 AND msg.content IS NOT NULL AND msg.content != \'\''
+const TEXT_ONLY_FILTER = "AND msg.type = 0 AND msg.content IS NOT NULL AND msg.content != ''"
 
 // ==================== 查询函数 ====================
 
 /**
- * 获取最近的消息
+ * 获取最近的消息（AI Agent 专用，只返回文本消息）
  * @param sessionId 会话 ID
  * @param filter 时间过滤器
  * @param limit 返回数量限制
  */
-export function getRecentMessages(
-  sessionId: string,
-  filter?: TimeFilter,
-  limit: number = 100
-): MessagesWithTotal {
+export function getRecentMessages(sessionId: string, filter?: TimeFilter, limit: number = 100): MessagesWithTotal {
   // 确保数据库有 avatar 字段（兼容旧数据库）
   ensureAvatarColumn(sessionId)
 
   const db = openDatabase(sessionId)
   if (!db) return { messages: [], total: 0 }
 
-  // 构建时间过滤条件
-  const { clause: timeClause, params: timeParams } = buildTimeFilter(filter)
+  // 构建时间过滤条件（使用 'msg' 表别名避免多表 JOIN 时的列名歧义）
+  const { clause: timeClause, params: timeParams } = buildTimeFilter(filter, 'msg')
   const timeCondition = timeClause ? timeClause.replace('WHERE', 'AND') : ''
 
   // 查询总数
@@ -156,13 +161,79 @@ export function getRecentMessages(
       m.avatar,
       msg.content,
       msg.ts as timestamp,
-      msg.type
+      msg.type,
+      msg.reply_to_message_id,
+      reply_msg.content as replyToContent,
+      COALESCE(reply_m.group_nickname, reply_m.account_name, reply_m.platform_id) as replyToSenderName
     FROM message msg
     JOIN member m ON msg.sender_id = m.id
+    LEFT JOIN message reply_msg ON msg.reply_to_message_id = reply_msg.platform_message_id
+    LEFT JOIN member reply_m ON reply_msg.sender_id = reply_m.id
     WHERE 1=1
     ${timeCondition}
     ${SYSTEM_FILTER}
     ${TEXT_ONLY_FILTER}
+    ORDER BY msg.ts DESC
+    LIMIT ?
+  `
+
+  const rows = db.prepare(sql).all(...timeParams, limit) as DbMessageRow[]
+
+  // 返回时按时间正序排列（便于阅读）
+  return {
+    messages: rows.map(sanitizeMessageRow).reverse(),
+    total,
+  }
+}
+
+/**
+ * 获取所有最近的消息（消息查看器专用，包含所有类型消息）
+ * @param sessionId 会话 ID
+ * @param filter 时间过滤器
+ * @param limit 返回数量限制
+ */
+export function getAllRecentMessages(sessionId: string, filter?: TimeFilter, limit: number = 100): MessagesWithTotal {
+  // 确保数据库有 avatar 字段（兼容旧数据库）
+  ensureAvatarColumn(sessionId)
+
+  const db = openDatabase(sessionId)
+  if (!db) return { messages: [], total: 0 }
+
+  // 构建时间过滤条件（使用 'msg' 表别名避免多表 JOIN 时的列名歧义）
+  const { clause: timeClause, params: timeParams } = buildTimeFilter(filter, 'msg')
+  const timeCondition = timeClause ? timeClause.replace('WHERE', 'AND') : ''
+
+  // 查询总数
+  const countSql = `
+    SELECT COUNT(*) as total
+    FROM message msg
+    JOIN member m ON msg.sender_id = m.id
+    WHERE 1=1
+    ${timeCondition}
+  `
+  const totalRow = db.prepare(countSql).get(...timeParams) as { total: number }
+  const total = totalRow?.total || 0
+
+  // 查询最近消息（按时间降序）
+  const sql = `
+    SELECT
+      msg.id,
+      COALESCE(m.group_nickname, m.account_name, m.platform_id) as senderName,
+      m.platform_id as senderPlatformId,
+      m.aliases,
+      m.avatar,
+      msg.content,
+      msg.ts as timestamp,
+      msg.type,
+      msg.reply_to_message_id,
+      reply_msg.content as replyToContent,
+      COALESCE(reply_m.group_nickname, reply_m.account_name, reply_m.platform_id) as replyToSenderName
+    FROM message msg
+    JOIN member m ON msg.sender_id = m.id
+    LEFT JOIN message reply_msg ON msg.reply_to_message_id = reply_msg.platform_message_id
+    LEFT JOIN member reply_m ON reply_msg.sender_id = reply_m.id
+    WHERE 1=1
+    ${timeCondition}
     ORDER BY msg.ts DESC
     LIMIT ?
   `
@@ -207,8 +278,8 @@ export function searchMessages(
     keywordParams.push(...keywords.map((k) => `%${k}%`))
   }
 
-  // 构建时间过滤条件
-  const { clause: timeClause, params: timeParams } = buildTimeFilter(filter)
+  // 构建时间过滤条件（使用 'msg' 表别名避免多表 JOIN 时的列名歧义）
+  const { clause: timeClause, params: timeParams } = buildTimeFilter(filter, 'msg')
   const timeCondition = timeClause ? timeClause.replace('WHERE', 'AND') : ''
 
   // 构建发送者筛选条件
@@ -221,7 +292,6 @@ export function searchMessages(
     JOIN member m ON msg.sender_id = m.id
     WHERE ${keywordCondition}
     ${timeCondition}
-    ${SYSTEM_FILTER}
     ${senderCondition}
   `
   const totalRow = db.prepare(countSql).get(...keywordParams, ...timeParams, ...senderParams) as { total: number }
@@ -237,12 +307,16 @@ export function searchMessages(
       m.avatar,
       msg.content,
       msg.ts as timestamp,
-      msg.type
+      msg.type,
+      msg.reply_to_message_id,
+      reply_msg.content as replyToContent,
+      COALESCE(reply_m.group_nickname, reply_m.account_name, reply_m.platform_id) as replyToSenderName
     FROM message msg
     JOIN member m ON msg.sender_id = m.id
+    LEFT JOIN message reply_msg ON msg.reply_to_message_id = reply_msg.platform_message_id
+    LEFT JOIN member reply_m ON reply_msg.sender_id = reply_m.id
     WHERE ${keywordCondition}
     ${timeCondition}
-    ${SYSTEM_FILTER}
     ${senderCondition}
     ORDER BY msg.ts DESC
     LIMIT ? OFFSET ?
@@ -323,9 +397,14 @@ export function getMessageContext(
       m.avatar,
       msg.content,
       msg.ts as timestamp,
-      msg.type
+      msg.type,
+      msg.reply_to_message_id,
+      reply_msg.content as replyToContent,
+      COALESCE(reply_m.group_nickname, reply_m.account_name, reply_m.platform_id) as replyToSenderName
     FROM message msg
     JOIN member m ON msg.sender_id = m.id
+    LEFT JOIN message reply_msg ON msg.reply_to_message_id = reply_msg.platform_message_id
+    LEFT JOIN member reply_m ON reply_msg.sender_id = reply_m.id
     WHERE msg.id IN (${placeholders})
     ORDER BY msg.id ASC
   `
@@ -358,8 +437,8 @@ export function getMessagesBefore(
   const db = openDatabase(sessionId)
   if (!db) return { messages: [], hasMore: false }
 
-  // 构建时间过滤条件
-  const { clause: timeClause, params: timeParams } = buildTimeFilter(filter)
+  // 构建时间过滤条件（使用 'msg' 表别名避免多表 JOIN 时的列名歧义）
+  const { clause: timeClause, params: timeParams } = buildTimeFilter(filter, 'msg')
   const timeCondition = timeClause ? timeClause.replace('WHERE', 'AND') : ''
 
   // 构建关键词条件
@@ -377,19 +456,25 @@ export function getMessagesBefore(
       m.avatar,
       msg.content,
       msg.ts as timestamp,
-      msg.type
+      msg.type,
+      msg.reply_to_message_id,
+      reply_msg.content as replyToContent,
+      COALESCE(reply_m.group_nickname, reply_m.account_name, reply_m.platform_id) as replyToSenderName
     FROM message msg
     JOIN member m ON msg.sender_id = m.id
+    LEFT JOIN message reply_msg ON msg.reply_to_message_id = reply_msg.platform_message_id
+    LEFT JOIN member reply_m ON reply_msg.sender_id = reply_m.id
     WHERE msg.id < ?
     ${timeCondition}
     ${keywordCondition}
     ${senderCondition}
-    ${SYSTEM_FILTER}
     ORDER BY msg.id DESC
     LIMIT ?
   `
 
-  const rows = db.prepare(sql).all(beforeId, ...timeParams, ...keywordParams, ...senderParams, limit + 1) as DbMessageRow[]
+  const rows = db
+    .prepare(sql)
+    .all(beforeId, ...timeParams, ...keywordParams, ...senderParams, limit + 1) as DbMessageRow[]
 
   const hasMore = rows.length > limit
   const resultRows = hasMore ? rows.slice(0, limit) : rows
@@ -424,8 +509,8 @@ export function getMessagesAfter(
   const db = openDatabase(sessionId)
   if (!db) return { messages: [], hasMore: false }
 
-  // 构建时间过滤条件
-  const { clause: timeClause, params: timeParams } = buildTimeFilter(filter)
+  // 构建时间过滤条件（使用 'msg' 表别名避免多表 JOIN 时的列名歧义）
+  const { clause: timeClause, params: timeParams } = buildTimeFilter(filter, 'msg')
   const timeCondition = timeClause ? timeClause.replace('WHERE', 'AND') : ''
 
   // 构建关键词条件
@@ -443,19 +528,25 @@ export function getMessagesAfter(
       m.avatar,
       msg.content,
       msg.ts as timestamp,
-      msg.type
+      msg.type,
+      msg.reply_to_message_id,
+      reply_msg.content as replyToContent,
+      COALESCE(reply_m.group_nickname, reply_m.account_name, reply_m.platform_id) as replyToSenderName
     FROM message msg
     JOIN member m ON msg.sender_id = m.id
+    LEFT JOIN message reply_msg ON msg.reply_to_message_id = reply_msg.platform_message_id
+    LEFT JOIN member reply_m ON reply_msg.sender_id = reply_m.id
     WHERE msg.id > ?
     ${timeCondition}
     ${keywordCondition}
     ${senderCondition}
-    ${SYSTEM_FILTER}
     ORDER BY msg.id ASC
     LIMIT ?
   `
 
-  const rows = db.prepare(sql).all(afterId, ...timeParams, ...keywordParams, ...senderParams, limit + 1) as DbMessageRow[]
+  const rows = db
+    .prepare(sql)
+    .all(afterId, ...timeParams, ...keywordParams, ...senderParams, limit + 1) as DbMessageRow[]
 
   const hasMore = rows.length > limit
   const resultRows = hasMore ? rows.slice(0, limit) : rows
@@ -489,22 +580,30 @@ export function getConversationBetween(
   if (!db) return { messages: [], total: 0, member1Name: '', member2Name: '' }
 
   // 获取成员名称
-  const member1 = db.prepare(`
+  const member1 = db
+    .prepare(
+      `
     SELECT COALESCE(group_nickname, account_name, platform_id) as name
     FROM member WHERE id = ?
-  `).get(memberId1) as { name: string } | undefined
+  `
+    )
+    .get(memberId1) as { name: string } | undefined
 
-  const member2 = db.prepare(`
+  const member2 = db
+    .prepare(
+      `
     SELECT COALESCE(group_nickname, account_name, platform_id) as name
     FROM member WHERE id = ?
-  `).get(memberId2) as { name: string } | undefined
+  `
+    )
+    .get(memberId2) as { name: string } | undefined
 
   if (!member1 || !member2) {
     return { messages: [], total: 0, member1Name: '', member2Name: '' }
   }
 
-  // 构建时间过滤条件
-  const { clause: timeClause, params: timeParams } = buildTimeFilter(filter)
+  // 构建时间过滤条件（使用 'msg' 表别名避免多表 JOIN 时的列名歧义）
+  const { clause: timeClause, params: timeParams } = buildTimeFilter(filter, 'msg')
   const timeCondition = timeClause ? timeClause.replace('WHERE', 'AND') : ''
 
   // 查询两人之间的所有消息
@@ -529,9 +628,14 @@ export function getConversationBetween(
       m.avatar,
       msg.content,
       msg.ts as timestamp,
-      msg.type
+      msg.type,
+      msg.reply_to_message_id,
+      reply_msg.content as replyToContent,
+      COALESCE(reply_m.group_nickname, reply_m.account_name, reply_m.platform_id) as replyToSenderName
     FROM message msg
     JOIN member m ON msg.sender_id = m.id
+    LEFT JOIN message reply_msg ON msg.reply_to_message_id = reply_msg.platform_message_id
+    LEFT JOIN member reply_m ON reply_msg.sender_id = reply_m.id
     WHERE msg.sender_id IN (?, ?)
     ${timeCondition}
     AND msg.content IS NOT NULL AND msg.content != ''
@@ -549,4 +653,3 @@ export function getConversationBetween(
     member2Name: member2.name,
   }
 }
-

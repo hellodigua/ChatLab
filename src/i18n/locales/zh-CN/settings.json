@@ -1,0 +1,212 @@
+{
+  "title": "设置",
+  "tabs": {
+    "basic": "基础设置",
+    "ai": "AI 设置",
+    "aiConfig": "模型配置",
+    "aiPrompt": "对话配置",
+    "aiPreset": "提示词配置",
+    "storage": "数据和存储",
+    "storageManage": "存储管理",
+    "sessionManage": "会话管理",
+    "about": "关于"
+  },
+  "basic": {
+    "language": {
+      "title": "语言",
+      "description": "选择软件显示语言"
+    },
+    "appearance": {
+      "title": "外观设置",
+      "themeMode": "主题模式",
+      "auto": "跟随系统",
+      "light": "浅色模式",
+      "dark": "深色模式"
+    },
+    "screenshot": {
+      "title": "截图设置",
+      "mobileAdapt": "移动端适配",
+      "mobileAdaptDesc": "截图时自动缩放宽度，适合移动端查看"
+    },
+    "network": {
+      "title": "网络设置",
+      "enableProxy": "启用代理",
+      "enableProxyDesc": "通过代理服务器连接网络",
+      "proxyAddress": "代理地址",
+      "proxyPlaceholder": "http://127.0.0.1:7890",
+      "proxyHelp": "支持 HTTP/HTTPS 代理，格式如：http://127.0.0.1:7890",
+      "testConnection": "测试连接",
+      "testing": "测试中...",
+      "connectionSuccess": "代理连接成功！",
+      "connectionFailed": "连接失败",
+      "enterProxyFirst": "请先输入代理地址",
+      "invalidProxyUrl": "请输入有效的代理地址，格式如 http://127.0.0.1:7890",
+      "onlyHttpSupported": "仅支持 http:// 或 https:// 协议",
+      "saveFailed": "保存失败"
+    }
+  },
+  "aiConfig": {
+    "title": "模型配置",
+    "loading": "加载中...",
+    "inUse": "使用中",
+    "defaultModel": "默认模型",
+    "localService": "本地服务",
+    "customEndpoint": "自定义端点",
+    "edit": "编辑",
+    "delete": "删除",
+    "empty": {
+      "title": "还没有配置 AI 服务",
+      "description": "添加一个配置开始使用 AI 功能"
+    },
+    "addConfig": "添加新配置",
+    "maxConfigs": "已达最大配置数量（10个）",
+    "modal": {
+      "addTitle": "添加新配置",
+      "editTitle": "编辑配置",
+      "configType": {
+        "preset": "官方API",
+        "presetDesc": "DeepSeek、Gemini 等",
+        "local": "本地服务",
+        "localDesc": "Ollama 等",
+        "compatible": "OpenAI 兼容",
+        "compatibleDesc": "自定义端点"
+      },
+      "configName": "配置名称",
+      "configNameOptional": "（选填）",
+      "configNamePlaceholderPreset": "留空将使用服务商名称",
+      "configNamePlaceholderOther": "留空将使用 API 端点地址",
+      "provider": "AI 服务商",
+      "apiKey": "API Key",
+      "apiKeyPlaceholderNew": "输入你的 API Key",
+      "apiKeyPlaceholderEdit": "输入新的 API Key（留空保持原有）",
+      "validate": "验证",
+      "validationSuccess": "连接验证成功",
+      "validationFailed": "验证失败：",
+      "model": "模型",
+      "apiEndpoint": "API 端点",
+      "modelName": "模型名称",
+      "modelNamePlaceholderLocal": "如 qwen3、deepseek-r1",
+      "modelNamePlaceholderCompatible": "如 gpt-4、claude-3",
+      "modelNameHelp": "输入本地部署的模型名称",
+      "modelNameHelpCompatible": "输入 API 支持的模型名称",
+      "disableThinking": "禁用思考模式",
+      "disableThinkingDesc": "针对 Qwen3、DeepSeek-R1 等模型，禁用后使用标准工具调用格式",
+      "advancedOptions": "高级选项",
+      "apiKeyOptional": "（可选）",
+      "apiKeyLocalHelp": "如果服务设置了认证，在此输入",
+      "localNoKeyNeeded": "本地服务通常不需要",
+      "compatibleEndpointHelp": "兼容 OpenAI 格式的 API 端点",
+      "add": "添加",
+      "save": "保存"
+    }
+  },
+  "storage": {
+    "title": "本地存储管理",
+    "description": "管理 ChatLab 在本地存储的数据文件",
+    "totalUsage": "总占用：",
+    "loading": "加载中...",
+    "files": "文件",
+    "notExist": "不存在",
+    "clear": "清理",
+    "open": "打开",
+    "notes": {
+      "title": "注意事项",
+      "logSafe": "日志文件主要用于排查BUG，可以安全清理",
+      "noRecover": "所有文件清理后无法恢复，请谨慎操作"
+    },
+    "cache": {
+      "databases": {
+        "name": "聊天记录数据库",
+        "description": "导入的聊天记录分析数据"
+      },
+      "ai": {
+        "name": "AI 对话数据库",
+        "description": "AI 对话历史和配置文件"
+      },
+      "downloads": {
+        "name": "下载目录",
+        "description": "包含截屏文件、分析结果等"
+      },
+      "logs": {
+        "name": "日志文件",
+        "description": "软件的运行日志，包含导入、AI、错误等日志"
+      }
+    },
+    "session": {
+      "title": "会话索引设置",
+      "description": "会话索引将聊天记录按时间间隔自动分割为对话段落，便于AI分析和浏览",
+      "defaultThreshold": "默认分割间隔",
+      "thresholdUnit": "分钟",
+      "thresholdHelp": "超过该时间间隔的消息将被分到新的会话段落",
+      "notGenerated": "尚未生成会话索引",
+      "generateHint": "生成索引后可让 AI 更精准地理解对话上下文",
+      "generate": "生成索引",
+      "regenerate": "重新生成",
+      "generating": "正在生成",
+      "sessionCount": "{count} 个会话",
+      "generated": "已生成会话索引",
+      "generateSuccess": "会话索引生成成功，共 {count} 个会话",
+      "generateError": "生成失败",
+      "batchTitle": "批量生成索引",
+      "totalSessions": "共 {count} 个聊天",
+      "generatedCount": "已生成 {count} 个",
+      "notGeneratedCount": "未生成 {count} 个",
+      "loadingStatus": "加载中...",
+      "batchGenerate": "生成未索引",
+      "batchRegenerate": "全部重新生成"
+    }
+  },
+  "aiPrompt": {
+    "chatSettings": {
+      "title": "对话设置"
+    },
+    "exportSettings": {
+      "title": "导出设置"
+    },
+    "maxMessages": {
+      "title": "发送条数限制",
+      "description": "每次提交给 AI 的最大消息数，数值越大 Token 消耗越多，分析也更准确（建议2000）"
+    },
+    "maxHistory": {
+      "title": "AI上下文限制",
+      "description": "每次对话保留最近的对话轮数（1轮 = 用户提问 + AI回复），防止上下文过长消耗 Token"
+    },
+    "exportFormat": {
+      "title": "对话导出格式",
+      "description": "导出 AI 对话时使用的文件格式",
+      "txtLabel": "TXT"
+    },
+    "sqlExportFormat": {
+      "title": "SQL Lab 导出格式",
+      "description": "导出 SQL 查询结果时使用的文件格式"
+    },
+    "presets": {
+      "title": "系统提示词",
+      "add": "添加预设",
+      "import": "导入预设",
+      "description": "提示词同时用于群聊和私聊分析，系统会自动根据分析类型调整相关内容"
+    },
+    "preset": {
+      "builtIn": "内置",
+      "groupOnly": "仅群聊",
+      "privateOnly": "仅私聊",
+      "view": "查看",
+      "edit": "编辑",
+      "copy": "复制",
+      "delete": "删除"
+    }
+  },
+  "about": {
+    "title": "关于 ChatLab",
+    "description": "聊天记录分析工具",
+    "version": "版本",
+    "checkUpdate": "检查更新",
+    "checking": "检查中...",
+    "unknown": "未知",
+    "privacy": {
+      "title": "隐私设置",
+      "analytics": "匿名使用统计",
+      "analyticsDesc": "开启后，软件会收集版本号、操作系统版本等非敏感数据，用于帮助优化产品"
+    }
+  }
+}

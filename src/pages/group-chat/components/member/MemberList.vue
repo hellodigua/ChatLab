@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { MemberWithStats } from '@/types/analysis'
 import OwnerSelector from '@/components/analysis/member/OwnerSelector.vue'
+
+const { t } = useI18n()
 
 // Props
 const props = defineProps<{
@@ -181,9 +184,9 @@ onMounted(() => {
     <div class="mb-6">
       <div class="flex items-center gap-3">
         <div>
-          <h2 class="text-xl font-bold text-gray-900 dark:text-white">群成员管理</h2>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ t('title') }}</h2>
           <p class="text-sm text-gray-500 dark:text-gray-400">
-            共 {{ members.length }} 位成员，可为成员添加别名备注或移除成员
+            {{ t('description', { count: members.length }) }}
           </p>
         </div>
       </div>
@@ -196,7 +199,7 @@ onMounted(() => {
     <div class="mb-4">
       <UInput
         v-model="searchQuery"
-        placeholder="搜索群昵称、账号名称、ID 或别名"
+        :placeholder="t('searchPlaceholder')"
         icon="i-heroicons-magnifying-glass"
         class="w-100"
       >
@@ -217,7 +220,7 @@ onMounted(() => {
       <div v-else-if="filteredAndSortedMembers.length === 0" class="flex h-60 flex-col items-center justify-center">
         <UIcon name="i-heroicons-user-group" class="mb-3 h-12 w-12 text-gray-300 dark:text-gray-600" />
         <p class="text-gray-500 dark:text-gray-400">
-          {{ searchQuery ? '没有找到匹配的成员' : '暂无成员数据' }}
+          {{ searchQuery ? t('noMatch') : t('empty') }}
         </p>
       </div>
 
@@ -227,22 +230,22 @@ onMounted(() => {
           <table class="w-full">
             <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800">
               <tr class="text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">
-                <th class="px-4 py-4">账号名称</th>
-                <th class="px-4 py-4">群昵称</th>
+                <th class="px-4 py-4">{{ t('table.accountName') }}</th>
+                <th class="px-4 py-4">{{ t('table.groupNickname') }}</th>
                 <th class="px-4 py-4">
                   <button
                     class="flex items-center gap-1.5 hover:text-gray-700 dark:hover:text-gray-200"
                     @click="toggleSort"
                   >
-                    消息数
+                    {{ t('table.messageCount') }}
                     <UIcon
                       :name="sortOrder === 'desc' ? 'i-heroicons-arrow-down' : 'i-heroicons-arrow-up'"
                       class="h-3.5 w-3.5"
                     />
                   </button>
                 </th>
-                <th class="px-4 py-4 w-64">自定义别名</th>
-                <th class="px-4 py-4 text-right">操作</th>
+                <th class="px-4 py-4 w-64">{{ t('table.customAlias') }}</th>
+                <th class="px-4 py-4 text-right">{{ t('table.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -297,7 +300,7 @@ onMounted(() => {
                     <UInputTags
                       :model-value="member.aliases"
                       @update:model-value="(val) => updateAliases(member, val)"
-                      placeholder="输入后回车添加"
+                      :placeholder="t('aliasPlaceholder')"
                       class="w-80"
                     />
                     <!-- 保存中指示器 -->
@@ -309,7 +312,7 @@ onMounted(() => {
 
                 <!-- 操作 -->
                 <td class="px-4 py-4 text-right">
-                  <UButton label="删除" size="xs" @click="showDeleteConfirm(member)" />
+                  <UButton :label="t('delete')" size="xs" @click="showDeleteConfirm(member)" />
                 </td>
               </tr>
             </tbody>
@@ -322,9 +325,7 @@ onMounted(() => {
           class="flex items-center justify-between border-t border-gray-200 px-6 py-4 dark:border-gray-700"
         >
           <p class="text-sm text-gray-500 dark:text-gray-400">
-            显示 {{ (currentPage - 1) * pageSize + 1 }} -
-            {{ Math.min(currentPage * pageSize, filteredAndSortedMembers.length) }}
-            条，共 {{ filteredAndSortedMembers.length }} 位成员
+            {{ t('pagination', { start: (currentPage - 1) * pageSize + 1, end: Math.min(currentPage * pageSize, filteredAndSortedMembers.length), total: filteredAndSortedMembers.length }) }}
           </p>
           <div class="flex items-center gap-2">
             <UButton
@@ -354,7 +355,7 @@ onMounted(() => {
       <UIcon name="i-heroicons-exclamation-triangle" class="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
       <div>
         <p class="text-sm font-medium text-amber-800 dark:text-amber-200">
-          提示：添加别名可以更好地识别聊天记录中的对话对象，别名将用于搜索和 AI 分析中。
+          {{ t('tip') }}
         </p>
       </div>
     </div>
@@ -368,20 +369,69 @@ onMounted(() => {
           >
             <UIcon name="i-heroicons-exclamation-triangle" class="h-7 w-7 text-red-500" />
           </div>
-          <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">确认删除成员？</h3>
+          <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{ t('modal.title') }}</h3>
           <p class="mb-6 text-sm text-gray-500 dark:text-gray-400">
-            即将删除成员
-            <span class="font-medium text-gray-900 dark:text-white">
-              {{ deletingMember ? getDisplayName(deletingMember) : '' }}
-            </span>
-            及其 {{ deletingMember?.messageCount.toLocaleString() }} 条消息，此操作不可恢复。
+            {{ t('modal.content', { name: deletingMember ? getDisplayName(deletingMember) : '', count: deletingMember?.messageCount.toLocaleString() }) }}
           </p>
           <div class="flex justify-center gap-3">
-            <UButton variant="outline" @click="cancelDelete">取消</UButton>
-            <UButton color="error" :loading="isDeleting" @click="confirmDelete">确认删除</UButton>
+            <UButton variant="outline" @click="cancelDelete">{{ t('modal.cancel') }}</UButton>
+            <UButton color="error" :loading="isDeleting" @click="confirmDelete">{{ t('modal.confirm') }}</UButton>
           </div>
         </div>
       </template>
     </UModal>
   </div>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "title": "群成员管理",
+    "description": "共 {count} 位成员，可为成员添加别名备注或移除成员",
+    "searchPlaceholder": "搜索群昵称、账号名称、ID 或别名",
+    "noMatch": "没有找到匹配的成员",
+    "empty": "暂无成员数据",
+    "table": {
+      "accountName": "账号名称",
+      "groupNickname": "群昵称",
+      "messageCount": "消息数",
+      "customAlias": "自定义别名",
+      "actions": "操作"
+    },
+    "aliasPlaceholder": "输入后回车添加",
+    "delete": "删除",
+    "pagination": "显示 {start} - {end} 条，共 {total} 位成员",
+    "tip": "提示：添加别名可以更好地识别聊天记录中的对话对象，别名将用于搜索和 AI 分析中。",
+    "modal": {
+      "title": "确认删除成员？",
+      "content": "即将删除成员 {name} 及其 {count} 条消息，此操作不可恢复。",
+      "cancel": "取消",
+      "confirm": "确认删除"
+    }
+  },
+  "en-US": {
+    "title": "Group Member Management",
+    "description": "{count} members. Add aliases or remove members",
+    "searchPlaceholder": "Search nickname, account name, ID or alias",
+    "noMatch": "No matching members found",
+    "empty": "No member data available",
+    "table": {
+      "accountName": "Account Name",
+      "groupNickname": "Group Nickname",
+      "messageCount": "Messages",
+      "customAlias": "Custom Aliases",
+      "actions": "Actions"
+    },
+    "aliasPlaceholder": "Press Enter to add",
+    "delete": "Delete",
+    "pagination": "Showing {start} - {end} of {total} members",
+    "tip": "Tip: Adding aliases helps identify chat participants and improves search and AI analysis accuracy.",
+    "modal": {
+      "title": "Delete Member?",
+      "content": "This will delete member {name} and their {count} messages. This action cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Confirm Delete"
+    }
+  }
+}
+</i18n>

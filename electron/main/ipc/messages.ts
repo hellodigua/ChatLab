@@ -49,7 +49,7 @@ export function registerMessagesHandlers({ win }: IpcContext): void {
   )
 
   /**
-   * 获取最近消息
+   * 获取最近消息（AI Agent 专用）
    */
   ipcMain.handle(
     'ai:getRecentMessages',
@@ -58,6 +58,21 @@ export function registerMessagesHandlers({ win }: IpcContext): void {
         return await worker.getRecentMessages(sessionId, filter, limit)
       } catch (error) {
         console.error('获取最近消息失败：', error)
+        return { messages: [], total: 0 }
+      }
+    }
+  )
+
+  /**
+   * 获取所有最近消息（消息查看器专用）
+   */
+  ipcMain.handle(
+    'ai:getAllRecentMessages',
+    async (_, sessionId: string, filter?: { startTs?: number; endTs?: number }, limit?: number) => {
+      try {
+        return await worker.getAllRecentMessages(sessionId, filter, limit)
+      } catch (error) {
+        console.error('获取所有最近消息失败：', error)
         return { messages: [], total: 0 }
       }
     }
@@ -130,5 +145,40 @@ export function registerMessagesHandlers({ win }: IpcContext): void {
       }
     }
   )
-}
 
+  // ==================== 自定义筛选 ====================
+
+  /**
+   * 按条件筛选消息并扩充上下文
+   */
+  ipcMain.handle(
+    'ai:filterMessagesWithContext',
+    async (
+      _,
+      sessionId: string,
+      keywords?: string[],
+      timeFilter?: { startTs: number; endTs: number },
+      senderIds?: number[],
+      contextSize?: number
+    ) => {
+      try {
+        return await worker.filterMessagesWithContext(sessionId, keywords, timeFilter, senderIds, contextSize)
+      } catch (error) {
+        console.error('筛选消息失败：', error)
+        return { blocks: [], stats: { totalMessages: 0, hitMessages: 0, totalChars: 0 } }
+      }
+    }
+  )
+
+  /**
+   * 获取多个会话的完整消息
+   */
+  ipcMain.handle('ai:getMultipleSessionsMessages', async (_, sessionId: string, chatSessionIds: number[]) => {
+    try {
+      return await worker.getMultipleSessionsMessages(sessionId, chatSessionIds)
+    } catch (error) {
+      console.error('获取多个会话消息失败：', error)
+      return { blocks: [], stats: { totalMessages: 0, hitMessages: 0, totalChars: 0 } }
+    }
+  })
+}

@@ -150,7 +150,8 @@ function createDatabaseWithoutIndexes(sessionId: string): Database.Database {
       group_id TEXT,
       group_avatar TEXT,
       owner_id TEXT,
-      schema_version INTEGER DEFAULT 1
+      schema_version INTEGER DEFAULT 3,
+      session_gap_threshold INTEGER
     );
 
     CREATE TABLE IF NOT EXISTS member (
@@ -159,7 +160,8 @@ function createDatabaseWithoutIndexes(sessionId: string): Database.Database {
       account_name TEXT,
       group_nickname TEXT,
       aliases TEXT DEFAULT '[]',
-      avatar TEXT
+      avatar TEXT,
+      roles TEXT DEFAULT '[]'
     );
 
     CREATE TABLE IF NOT EXISTS member_name_history (
@@ -180,7 +182,24 @@ function createDatabaseWithoutIndexes(sessionId: string): Database.Database {
       ts INTEGER NOT NULL,
       type INTEGER NOT NULL,
       content TEXT,
+      reply_to_message_id TEXT DEFAULT NULL,
+      platform_message_id TEXT DEFAULT NULL,
       FOREIGN KEY(sender_id) REFERENCES member(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS chat_session (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      start_ts INTEGER NOT NULL,
+      end_ts INTEGER NOT NULL,
+      message_count INTEGER DEFAULT 0,
+      is_manual INTEGER DEFAULT 0,
+      summary TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS message_context (
+      message_id INTEGER PRIMARY KEY,
+      session_id INTEGER NOT NULL,
+      topic_id INTEGER
     );
   `)
 
@@ -194,7 +213,10 @@ function createIndexes(db: Database.Database): void {
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_message_ts ON message(ts);
     CREATE INDEX IF NOT EXISTS idx_message_sender ON message(sender_id);
+    CREATE INDEX IF NOT EXISTS idx_message_platform_id ON message(platform_message_id);
     CREATE INDEX IF NOT EXISTS idx_member_name_history_member_id ON member_name_history(member_id);
+    CREATE INDEX IF NOT EXISTS idx_session_time ON chat_session(start_ts, end_ts);
+    CREATE INDEX IF NOT EXISTS idx_context_session ON message_context(session_id);
   `)
 }
 
@@ -207,7 +229,7 @@ export async function streamImport(filePath: string, requestId: string): Promise
   // 检测格式
   const formatFeature = detectFormat(filePath)
   if (!formatFeature) {
-    return { success: false, error: '无法识别文件格式' }
+    return { success: false, error: 'error.unrecognized_format' }
   }
 
   // 初始化性能日志（实时写入文件）
@@ -234,14 +256,14 @@ export async function streamImport(filePath: string, requestId: string): Promise
       totalBytes: 0,
       messagesProcessed: 0,
       percentage: 0,
-      message: '预处理：精简大文件中...',
+      message: '', // Frontend translates based on stage
     })
 
     try {
       tempFilePath = await preprocessor.preprocess(filePath, (progress) => {
         sendProgress(requestId, {
           ...progress,
-          message: progress.message || '预处理中...',
+          message: '', // Frontend translates based on stage
         })
       })
       actualFilePath = tempFilePath
@@ -263,12 +285,12 @@ export async function streamImport(filePath: string, requestId: string): Promise
     INSERT INTO meta (name, platform, type, imported_at, group_id, group_avatar, owner_id) VALUES (?, ?, ?, ?, ?, ?, ?)
   `)
   const insertMember = db.prepare(`
-    INSERT OR IGNORE INTO member (platform_id, account_name, group_nickname, avatar) VALUES (?, ?, ?, ?)
+    INSERT OR IGNORE INTO member (platform_id, account_name, group_nickname, avatar, roles) VALUES (?, ?, ?, ?, ?)
   `)
   const getMemberId = db.prepare(`SELECT id FROM member WHERE platform_id = ?`)
   const insertMessage = db.prepare(`
-    INSERT INTO message (sender_id, sender_account_name, sender_group_nickname, ts, type, content)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO message (sender_id, sender_account_name, sender_group_nickname, ts, type, content, reply_to_message_id, platform_message_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `)
   const insertNameHistory = db.prepare(`
     INSERT INTO member_name_history (member_id, name_type, name, start_ts, end_ts) VALUES (?, ?, ?, ?, ?)
@@ -340,20 +362,25 @@ export async function streamImport(filePath: string, requestId: string): Promise
         lastCheckpointCount = totalMessageCount
       }
 
-      // 发送写入进度
+      // Send write progress (frontend shows messagesProcessed count)
       sendProgress(requestId, {
         stage: 'importing',
         bytesRead: 0,
         totalBytes: 0,
         messagesProcessed: totalMessageCount,
         percentage: 100,
-        message: `正在写入数据库... 已处理 ${totalMessageCount.toLocaleString()} 条`,
+        message: '', // Frontend translates based on stage and shows messagesProcessed
       })
     }
     beginTransaction()
   }
 
   beginTransaction()
+
+  // 标记是否需要在 finally 中删除数据库文件
+  // 仅在导入失败或消息数为 0 时设置为 true
+  let shouldDeleteDb = false
+  let importError: string | null = null
 
   try {
     await streamParseFile(actualFilePath, {
@@ -395,7 +422,8 @@ export async function streamImport(filePath: string, requestId: string): Promise
             member.platformId,
             member.accountName || null,
             member.groupNickname || null,
-            member.avatar || null
+            member.avatar || null,
+            member.roles ? JSON.stringify(member.roles) : '[]'
           )
           const row = getMemberId.get(member.platformId) as { id: number } | undefined
           if (row) {
@@ -429,8 +457,14 @@ export async function streamImport(filePath: string, requestId: string): Promise
           // 确保成员存在
           let t0 = Date.now()
           if (!memberIdMap.has(msg.senderPlatformId)) {
-            // 消息中没有头像信息，设为 null
-            insertMember.run(msg.senderPlatformId, msg.senderAccountName || null, msg.senderGroupNickname || null, null)
+            // 消息中没有头像和角色信息，设为默认值
+            insertMember.run(
+              msg.senderPlatformId,
+              msg.senderAccountName || null,
+              msg.senderGroupNickname || null,
+              null,
+              '[]'
+            )
             const row = getMemberId.get(msg.senderPlatformId) as { id: number } | undefined
             if (row) {
               memberIdMap.set(msg.senderPlatformId, row.id)
@@ -446,6 +480,13 @@ export async function streamImport(filePath: string, requestId: string): Promise
           if (senderId === undefined) continue
 
           // 插入消息
+          // 防御性处理：确保所有值都是 SQLite 兼容的类型
+          // SQLite 只支持: numbers, strings, bigints, buffers, null
+          let safeContent: string | null = null
+          if (msg.content != null) {
+            safeContent = typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
+          }
+
           t0 = Date.now()
           insertMessage.run(
             senderId,
@@ -453,7 +494,9 @@ export async function streamImport(filePath: string, requestId: string): Promise
             msg.senderGroupNickname || null,
             msg.timestamp,
             msg.type,
-            msg.content
+            safeContent,
+            msg.replyToMessageId || null,
+            msg.platformMessageId || null
           )
           messageInsertTime += Date.now() - t0
           messageCountInBatch++
@@ -545,7 +588,7 @@ export async function streamImport(filePath: string, requestId: string): Promise
       totalBytes: 0,
       messagesProcessed: totalMessageCount,
       percentage: 100,
-      message: '正在写入昵称历史...',
+      message: '', // Frontend translates based on stage
     })
     logPerf('开始写入昵称历史', totalMessageCount)
 
@@ -635,7 +678,7 @@ export async function streamImport(filePath: string, requestId: string): Promise
       totalBytes: 0,
       messagesProcessed: totalMessageCount,
       percentage: 100,
-      message: '正在创建索引...',
+      message: '', // Frontend translates based on stage
     })
     logPerf('开始创建索引', totalMessageCount)
     createIndexes(db)
@@ -648,7 +691,7 @@ export async function streamImport(filePath: string, requestId: string): Promise
       totalBytes: 0,
       messagesProcessed: totalMessageCount,
       percentage: 100,
-      message: '正在优化数据库...',
+      message: '', // Frontend translates based on stage
     })
     doCheckpoint()
     logPerf('WAL checkpoint 完成', totalMessageCount)
@@ -657,7 +700,13 @@ export async function streamImport(filePath: string, requestId: string): Promise
     // 写入日志摘要
     logSummary(totalMessageCount, memberIdMap.size)
 
-    return { success: true, sessionId }
+    // 检查消息数量，如果为 0 则视为导入失败
+    if (totalMessageCount === 0) {
+      logError('导入失败：未解析到任何消息，可能是文件格式不匹配或内容为空')
+      // 标记需要删除数据库文件（将在 finally 中执行，确保数据库已关闭）
+      shouldDeleteDb = true
+      importError = 'error.no_messages'
+    }
   } catch (error) {
     // 记录错误日志
     logError('导入失败', error instanceof Error ? error : undefined)
@@ -671,24 +720,45 @@ export async function streamImport(filePath: string, requestId: string): Promise
       }
     }
 
-    // 删除失败的数据库文件
-    const dbPath = getDbPath(sessionId)
-    if (fs.existsSync(dbPath)) {
-      fs.unlinkSync(dbPath)
-    }
-
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-    }
+    // 标记需要删除数据库文件（将在 finally 中执行，确保数据库已关闭）
+    shouldDeleteDb = true
+    importError = error instanceof Error ? error.message : String(error)
   } finally {
+    // 先关闭数据库连接（释放文件锁）
     db.close()
 
     // 清理临时文件
     if (tempFilePath && preprocessor) {
       preprocessor.cleanup(tempFilePath)
     }
+
+    // 删除失败的数据库文件（在数据库关闭后执行，避免 Windows 上的 EBUSY 错误）
+    if (shouldDeleteDb) {
+      const dbPath = getDbPath(sessionId)
+      try {
+        if (fs.existsSync(dbPath)) {
+          fs.unlinkSync(dbPath)
+        }
+        // 同时清理 WAL 和 SHM 文件
+        const walPath = dbPath + '-wal'
+        const shmPath = dbPath + '-shm'
+        if (fs.existsSync(walPath)) {
+          fs.unlinkSync(walPath)
+        }
+        if (fs.existsSync(shmPath)) {
+          fs.unlinkSync(shmPath)
+        }
+      } catch (cleanupError) {
+        logError('清理失败的数据库文件时出错', cleanupError instanceof Error ? cleanupError : undefined)
+      }
+    }
   }
+
+  // 返回结果（移到 try-catch-finally 之外）
+  if (importError) {
+    return { success: false, error: importError }
+  }
+  return { success: true, sessionId }
 }
 
 /** 流式解析文件信息的返回结果 */
@@ -724,7 +794,7 @@ export async function streamParseFileInfo(filePath: string, requestId: string): 
     totalBytes: fileSize,
     messagesProcessed: 0,
     percentage: 0,
-    message: '正在读取文件...',
+    message: '', // Frontend translates based on stage
   })
 
   // 创建临时数据库

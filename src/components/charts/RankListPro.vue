@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import RankList from './RankList.vue'
 import type { RankItem } from './RankList.vue'
 import CaptureButton from '@/components/common/CaptureButton.vue'
+
+const { t } = useI18n()
 
 interface Props {
   /** 完整的排行数据 */
@@ -13,13 +16,12 @@ interface Props {
   description?: string
   /** 默认显示数量，默认 10 */
   topN?: number
-  /** 单位名称，默认"条" */
+  /** 单位名称 */
   unit?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   topN: 10,
-  unit: '条',
 })
 
 // 控制弹窗
@@ -50,11 +52,11 @@ const showViewAll = computed(() => {
 
       <div class="no-capture flex items-center gap-1">
         <!-- 卡片截屏按钮 -->
-        <CaptureButton tooltip="截取当前卡片" size="xs" type="element" :target-element="cardRef" />
+        <CaptureButton size="xs" type="element" :target-element="cardRef" />
 
         <!-- 完整排行榜 Dialog -->
         <UModal v-model:open="isOpen" :ui="{ content: 'md:w-full max-w-3xl' }">
-          <UButton v-if="showViewAll" icon="i-heroicons-list-bullet" variant="ghost">完整排行</UButton>
+          <UButton v-if="showViewAll" icon="i-heroicons-list-bullet" variant="ghost">{{ t('fullRanking') }}</UButton>
           <template #content>
             <div ref="modalBodyRef" class="section-content flex flex-col">
               <!-- Header -->
@@ -63,9 +65,9 @@ const showViewAll = computed(() => {
               >
                 <div class="flex items-center gap-2">
                   <h3 class="text-lg font-semibold text-gray-900 whitespace-nowrap dark:text-white">{{ title }}</h3>
-                  <span class="text-sm text-gray-500">（共 {{ members.length }} 位成员）</span>
+                  <span class="text-sm text-gray-500">（{{ t('memberCount', { count: members.length }) }}）</span>
                 </div>
-                <CaptureButton tooltip="截取完整排行" size="xs" type="element" :target-element="modalBodyRef" />
+                <CaptureButton size="xs" type="element" :target-element="modalBodyRef" />
               </div>
               <!-- Body -->
               <div class="max-h-[60vh] p-4 overflow-y-auto">
@@ -80,3 +82,16 @@ const showViewAll = computed(() => {
     <RankList :members="topNData" :unit="unit" />
   </div>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "fullRanking": "完整排行",
+    "memberCount": "共 {count} 位成员"
+  },
+  "en-US": {
+    "fullRanking": "Full Ranking",
+    "memberCount": "{count} members"
+  }
+}
+</i18n>

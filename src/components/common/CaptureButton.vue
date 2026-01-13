@@ -3,16 +3,17 @@ import { useScreenCapture } from '@/composables'
 import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useLayoutStore } from '@/stores/layout'
+import { useI18n } from 'vue-i18n'
 
 /**
  * 通用截屏按钮组件
  * 支持页面截屏和元素截屏两种模式
  */
 
+const { t } = useI18n()
+
 const props = withDefaults(
   defineProps<{
-    /** 按钮提示文字 */
-    tooltip?: string
     /** 按钮显示文字（不传则只显示图标） */
     label?: string
     /** 按钮尺寸 */
@@ -25,7 +26,6 @@ const props = withDefaults(
     targetSelector?: string
   }>(),
   {
-    tooltip: '截屏',
     size: 'sm',
     type: 'page',
   }
@@ -69,7 +69,7 @@ async function handleCapture(event: Event) {
 </script>
 
 <template>
-  <UTooltip :text="tooltip" class="no-capture">
+  <UTooltip :text="t('common.capture')" class="no-capture">
     <UButton
       :id="buttonId"
       icon="i-heroicons-camera"

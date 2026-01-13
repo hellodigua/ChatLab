@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { SchemaPanel, AIGenerateModal, AIHistoryModal, ResultTable } from './SQLLab'
 import type { AIHistory, SQLResult, TableSchema } from './SQLLab'
+
+const { t } = useI18n()
 
 // Props
 const props = defineProps<{
@@ -74,7 +77,7 @@ function deleteHistory(id: string) {
 // 执行 SQL
 async function executeSQL() {
   if (!sql.value.trim()) {
-    error.value = '请输入 SQL 语句'
+    error.value = t('errorEmptySQL')
     return
   }
 
@@ -161,7 +164,7 @@ onMounted(() => {
           <textarea
             v-model="sql"
             class="h-32 w-full resize-none rounded-lg border border-gray-300 bg-white p-3 font-mono text-sm text-gray-800 focus:border-pink-500 focus:outline-none focus:ring-1 focus:ring-pink-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"
-            placeholder="输入 SQL 查询语句..."
+            :placeholder="t('placeholder')"
             spellcheck="false"
             @keydown="handleKeyDown"
           />
@@ -169,22 +172,22 @@ onMounted(() => {
           <!-- 工具栏 -->
           <div class="mt-3 flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <span class="text-xs text-gray-400">提示：双击左侧列名可插入到 SQL</span>
+              <span class="text-xs text-gray-400">{{ t('tip') }}</span>
             </div>
             <div class="flex items-center gap-2">
               <UButton variant="ghost" size="sm" :disabled="aiHistory.length === 0" @click="showHistoryModal = true">
                 <UIcon name="i-heroicons-clock" class="mr-1 h-4 w-4" />
-                历史
+                {{ t('history') }}
                 <span v-if="aiHistory.length > 0" class="ml-1 text-xs text-gray-400">({{ aiHistory.length }})</span>
               </UButton>
               <UButton variant="outline" size="sm" @click="showAIModal = true">
                 <UIcon name="i-heroicons-sparkles" class="mr-1 h-4 w-4" />
-                AI 生成
+                {{ t('aiGenerate') }}
               </UButton>
-              <span class="text-xs text-gray-400">Ctrl/⌘ + Enter 执行</span>
+              <span class="text-xs text-gray-400">{{ t('shortcut') }}</span>
               <UButton color="primary" size="sm" :loading="isExecuting" @click="executeSQL">
                 <UIcon name="i-heroicons-play" class="mr-1 h-4 w-4" />
-                运行
+                {{ t('run') }}
               </UButton>
             </div>
           </div>
@@ -213,3 +216,26 @@ onMounted(() => {
     />
   </div>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "errorEmptySQL": "请输入 SQL 语句",
+    "placeholder": "输入 SQL 查询语句...",
+    "tip": "提示：双击左侧列名可插入到 SQL",
+    "history": "历史",
+    "aiGenerate": "AI 生成",
+    "shortcut": "Ctrl/⌘ + Enter 执行",
+    "run": "运行"
+  },
+  "en-US": {
+    "errorEmptySQL": "Please enter an SQL statement",
+    "placeholder": "Enter SQL query...",
+    "tip": "Tip: Double-click column names to insert into SQL",
+    "history": "History",
+    "aiGenerate": "AI Generate",
+    "shortcut": "Ctrl/⌘ + Enter to run",
+    "run": "Run"
+  }
+}
+</i18n>

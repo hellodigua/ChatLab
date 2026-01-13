@@ -182,7 +182,6 @@ jobs:
 
           # 生成 release notes
           {
-            echo "## 更新内容"
             echo ""
 
             # 提取 feat commits
@@ -209,13 +208,13 @@ jobs:
 
             echo "---"
             echo ""
-            echo "## 下载说明"
+            echo "## Download"
             echo ""
-            echo "| 平台 | 文件 |"
-            echo "|------|------|"
-            echo "| Mac 苹果芯片 | \`ChatLab-${VERSION_NUMBER}-arm64.dmg\` |"
-            echo "| Mac Intel 芯片 | \`ChatLab-${VERSION_NUMBER}-x64.dmg\` |"
-            echo "| Windows | \`ChatLab-${VERSION_NUMBER}-setup.exe\` |"
+            echo "| Platform | File |"
+            echo "|-----------------|-------------|"
+            echo "| Mac (Apple Silicon) | [ChatLab-${VERSION_NUMBER}-arm64.dmg](https://github.com/hellodigua/ChatLab/releases/download/v${VERSION_NUMBER}/ChatLab-${VERSION_NUMBER}-arm64.dmg) |"
+            echo "| Mac (Intel) | [ChatLab-${VERSION_NUMBER}-x64.dmg](https://github.com/hellodigua/ChatLab/releases/download/v${VERSION_NUMBER}/ChatLab-${VERSION_NUMBER}-x64.dmg) |"
+            echo "| Windows | [ChatLab-${VERSION_NUMBER}-setup.exe](https://github.com/hellodigua/ChatLab/releases/download/v${VERSION_NUMBER}/ChatLab-${VERSION_NUMBER}-setup.exe) |"
           } > release_notes.md
 
           echo "Generated release notes:"
@@ -235,3 +234,60 @@ jobs:
             dist/*.blockmap
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 同步到 Cloudflare R2（国内镜像）
+      - name: Get version for R2 upload
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "tag=v${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
+      # 上传所有文件到版本目录
+      - name: Upload to Cloudflare R2 (version directory)
+        uses: ryand56/r2-upload-action@latest
+        with:
+          r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
+          r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+          r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          r2-bucket: ${{ secrets.R2_BUCKET_NAME }}
+          source-dir: dist
+          destination-dir: releases/download/${{ steps.version.outputs.tag }}
+
+      # 准备 yml 文件用于根目录上传
+      # 需要修改 yml 中的 path/url 为包含版本号的完整路径
+      - name: Prepare yml files for root upload
+        run: |
+          mkdir -p dist-yml
+          VERSION_TAG="${{ steps.version.outputs.tag }}"
+
+          # 处理所有 yml 文件
+          for yml_file in dist/*.yml; do
+            filename=$(basename "$yml_file")
+            echo "Processing $filename..."
+
+            # 使用 sed 修改 path 和 url 字段，添加版本目录前缀
+            # path: ChatLab-x.x.x-arm64.dmg → path: vx.x.x/ChatLab-x.x.x-arm64.dmg
+            # url: ChatLab-x.x.x-arm64.dmg → url: vx.x.x/ChatLab-x.x.x-arm64.dmg
+            sed -E "s|^(path: )(.+)|\1${VERSION_TAG}/\2|g; s|^(  - url: )(.+)|\1${VERSION_TAG}/\2|g" "$yml_file" > "dist-yml/$filename"
+
+            echo "Original:"
+            cat "$yml_file"
+            echo ""
+            echo "Modified:"
+            cat "dist-yml/$filename"
+            echo "---"
+          done
+
+      # 上传 yml 文件到根目录（覆盖旧版本，electron-updater 从这里检测更新）
+      - name: Upload yml files to Cloudflare R2 (root directory)
+        uses: ryand56/r2-upload-action@latest
+        with:
+          r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
+          r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+          r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          r2-bucket: ${{ secrets.R2_BUCKET_NAME }}
+          source-dir: dist-yml
+          destination-dir: releases/download

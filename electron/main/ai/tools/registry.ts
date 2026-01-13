@@ -8,6 +8,50 @@ import type { ToolDefinition } from '../llm/types'
 import type { ToolContext } from './types'
 import * as workerManager from '../../worker/workerManager'
 
+// ==================== 国际化辅助函数 ====================
+
+/**
+ * 判断是否使用中文
+ * 中文环境返回 true，其他语言（包括英文）返回 false
+ */
+function isChineseLocale(locale?: string): boolean {
+  return locale === 'zh-CN'
+}
+
+/**
+ * 工具返回结果的国际化文本
+ */
+const i18nTexts = {
+  allTime: { zh: '全部时间', en: 'All time' },
+  noContent: { zh: '[无内容]', en: '[No content]' },
+  memberNotFound: { zh: '未找到该成员', en: 'Member not found' },
+  untilNow: { zh: '至今', en: 'Present' },
+  noChangeRecord: { zh: '无变更记录', en: 'No change record' },
+  noConversation: { zh: '未找到这两人之间的对话', en: 'No conversation found between these two members' },
+  noMessageContext: { zh: '未找到指定的消息或上下文', en: 'Message or context not found' },
+  messages: { zh: '条', en: '' },
+  alias: { zh: '别名', en: 'Alias' },
+  weekdays: {
+    zh: ['', '周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+    en: ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+  },
+  dailySummary: {
+    zh: (days: number, total: number, avg: number) => `最近${days}天共${total}条，日均${avg}条`,
+    en: (days: number, total: number, avg: number) => `Last ${days} days: ${total} messages, avg ${avg}/day`,
+  },
+}
+
+/**
+ * 获取国际化文本
+ */
+function t(key: keyof typeof i18nTexts, locale?: string): string | string[] {
+  const text = i18nTexts[key]
+  if (typeof text === 'object' && 'zh' in text && 'en' in text) {
+    return isChineseLocale(locale) ? text.zh : text.en
+  }
+  return ''
+}
+
 // ==================== 时间参数辅助函数 ====================
 
 /**
@@ -19,7 +63,7 @@ interface ExtendedTimeParams {
   day?: number
   hour?: number
   start_time?: string // 格式: "YYYY-MM-DD HH:mm"
-  end_time?: string   // 格式: "YYYY-MM-DD HH:mm"
+  end_time?: string // 格式: "YYYY-MM-DD HH:mm"
 }
 
 /**
@@ -99,11 +143,15 @@ function parseExtendedTimeParams(
 /**
  * 格式化时间范围用于返回结果
  */
-function formatTimeRange(timeFilter?: { startTs: number; endTs: number }): string | { start: string; end: string } {
-  if (!timeFilter) return '全部时间'
+function formatTimeRange(
+  timeFilter?: { startTs: number; endTs: number },
+  locale?: string
+): string | { start: string; end: string } {
+  if (!timeFilter) return t('allTime', locale) as string
+  const localeStr = isChineseLocale(locale) ? 'zh-CN' : 'en-US'
   return {
-    start: new Date(timeFilter.startTs * 1000).toLocaleString('zh-CN'),
-    end: new Date(timeFilter.endTs * 1000).toLocaleString('zh-CN'),
+    start: new Date(timeFilter.startTs * 1000).toLocaleString(localeStr),
+    end: new Date(timeFilter.endTs * 1000).toLocaleString(localeStr),
   }
 }
 
@@ -115,14 +163,18 @@ const MAX_MESSAGE_CONTENT_LENGTH = 200
  * 输出格式: "2025/3/3 07:25:04 张三: 消息内容"
  * 超长内容会被截断
  */
-function formatMessageCompact(msg: {
-  id?: number
-  senderName: string
-  content: string | null
-  timestamp: number
-}): string {
-  const time = new Date(msg.timestamp * 1000).toLocaleString('zh-CN')
-  let content = msg.content || '[无内容]'
+function formatMessageCompact(
+  msg: {
+    id?: number
+    senderName: string
+    content: string | null
+    timestamp: number
+  },
+  locale?: string
+): string {
+  const localeStr = isChineseLocale(locale) ? 'zh-CN' : 'en-US'
+  const time = new Date(msg.timestamp * 1000).toLocaleString(localeStr)
+  let content = msg.content || (t('noContent', locale) as string)
 
   // 截断超长消息内容
   if (content.length > MAX_MESSAGE_CONTENT_LENGTH) {
@@ -142,7 +194,8 @@ const searchMessagesTool: ToolDefinition = {
   type: 'function',
   function: {
     name: 'search_messages',
-    description: '根据关键词搜索群聊记录。适用于用户想要查找特定话题、关键词相关的聊天内容。可以指定时间范围和发送者来筛选消息。支持精确到分钟级别的时间查询。',
+    description:
+      '根据关键词搜索群聊记录。适用于用户想要查找特定话题、关键词相关的聊天内容。可以指定时间范围和发送者来筛选消息。支持精确到分钟级别的时间查询。',
     parameters: {
       type: 'object',
       properties: {
@@ -177,11 +230,13 @@ const searchMessagesTool: ToolDefinition = {
         },
         start_time: {
           type: 'string',
-          description: '开始时间，格式 "YYYY-MM-DD HH:mm"，如 "2024-03-15 14:00"。指定后会覆盖 year/month/day/hour 参数',
+          description:
+            '开始时间，格式 "YYYY-MM-DD HH:mm"，如 "2024-03-15 14:00"。指定后会覆盖 year/month/day/hour 参数',
         },
         end_time: {
           type: 'string',
-          description: '结束时间，格式 "YYYY-MM-DD HH:mm"，如 "2024-03-15 18:30"。指定后会覆盖 year/month/day/hour 参数',
+          description:
+            '结束时间，格式 "YYYY-MM-DD HH:mm"，如 "2024-03-15 18:30"。指定后会覆盖 year/month/day/hour 参数',
         },
       },
       required: ['keywords'],
@@ -203,7 +258,7 @@ async function searchMessagesExecutor(
   },
   context: ToolContext
 ): Promise<unknown> {
-  const { sessionId, timeFilter: contextTimeFilter, maxMessagesLimit } = context
+  const { sessionId, timeFilter: contextTimeFilter, maxMessagesLimit, locale } = context
   // 用户配置优先：如果用户设置了 maxMessagesLimit，使用它；否则使用 LLM 指定的值或默认值 100，上限 5000
   const limit = Math.min(maxMessagesLimit || params.limit || 100, 5000)
 
@@ -223,8 +278,8 @@ async function searchMessagesExecutor(
   return {
     total: result.total,
     returned: result.messages.length,
-    timeRange: formatTimeRange(effectiveTimeFilter),
-    messages: result.messages.map((m) => formatMessageCompact(m)),
+    timeRange: formatTimeRange(effectiveTimeFilter, locale),
+    messages: result.messages.map((m) => formatMessageCompact(m, locale)),
   }
 }
 
@@ -236,7 +291,8 @@ const getRecentMessagesTool: ToolDefinition = {
   type: 'function',
   function: {
     name: 'get_recent_messages',
-    description: '获取指定时间段内的群聊消息。适用于回答"最近大家聊了什么"、"X月群里聊了什么"等概览性问题。支持精确到分钟级别的时间查询。',
+    description:
+      '获取指定时间段内的群聊消息。适用于回答"最近大家聊了什么"、"X月群里聊了什么"等概览性问题。支持精确到分钟级别的时间查询。',
     parameters: {
       type: 'object',
       properties: {
@@ -262,11 +318,13 @@ const getRecentMessagesTool: ToolDefinition = {
         },
         start_time: {
           type: 'string',
-          description: '开始时间，格式 "YYYY-MM-DD HH:mm"，如 "2024-03-15 14:00"。指定后会覆盖 year/month/day/hour 参数',
+          description:
+            '开始时间，格式 "YYYY-MM-DD HH:mm"，如 "2024-03-15 14:00"。指定后会覆盖 year/month/day/hour 参数',
         },
         end_time: {
           type: 'string',
-          description: '结束时间，格式 "YYYY-MM-DD HH:mm"，如 "2024-03-15 18:30"。指定后会覆盖 year/month/day/hour 参数',
+          description:
+            '结束时间，格式 "YYYY-MM-DD HH:mm"，如 "2024-03-15 18:30"。指定后会覆盖 year/month/day/hour 参数',
         },
       },
     },
@@ -285,7 +343,7 @@ async function getRecentMessagesExecutor(
   },
   context: ToolContext
 ): Promise<unknown> {
-  const { sessionId, timeFilter: contextTimeFilter, maxMessagesLimit } = context
+  const { sessionId, timeFilter: contextTimeFilter, maxMessagesLimit, locale } = context
   // 用户配置优先：如果用户设置了 maxMessagesLimit，使用它；否则使用 LLM 指定的值或默认值 100（节省 token）
   const limit = maxMessagesLimit || params.limit || 100
 
@@ -297,8 +355,8 @@ async function getRecentMessagesExecutor(
   return {
     total: result.total,
     returned: result.messages.length,
-    timeRange: formatTimeRange(effectiveTimeFilter),
-    messages: result.messages.map((m) => formatMessageCompact(m)),
+    timeRange: formatTimeRange(effectiveTimeFilter, locale),
+    messages: result.messages.map((m) => formatMessageCompact(m, locale)),
   }
 }
 
@@ -322,11 +380,8 @@ const getMemberStatsTool: ToolDefinition = {
   },
 }
 
-async function getMemberStatsExecutor(
-  params: { top_n?: number },
-  context: ToolContext
-): Promise<unknown> {
-  const { sessionId, timeFilter } = context
+async function getMemberStatsExecutor(params: { top_n?: number }, context: ToolContext): Promise<unknown> {
+  const { sessionId, timeFilter, locale } = context
   const topN = params.top_n || 10
 
   const result = await workerManager.getMemberActivity(sessionId, timeFilter)
@@ -335,11 +390,10 @@ async function getMemberStatsExecutor(
   const topMembers = result.slice(0, topN)
 
   // 格式化为简洁文本：排名. 名字 消息数(百分比)
+  const msgSuffix = isChineseLocale(locale) ? '条' : ''
   return {
     totalMembers: result.length,
-    topMembers: topMembers.map((m, index) =>
-      `${index + 1}. ${m.name} ${m.messageCount}条(${m.percentage}%)`
-    ),
+    topMembers: topMembers.map((m, index) => `${index + 1}. ${m.name} ${m.messageCount}${msgSuffix}(${m.percentage}%)`),
   }
 }
 
@@ -369,29 +423,26 @@ async function getTimeStatsExecutor(
   params: { type: 'hourly' | 'weekday' | 'daily' },
   context: ToolContext
 ): Promise<unknown> {
-  const { sessionId, timeFilter } = context
+  const { sessionId, timeFilter, locale } = context
+  const msgSuffix = isChineseLocale(locale) ? '条' : ''
 
   switch (params.type) {
     case 'hourly': {
       const result = await workerManager.getHourlyActivity(sessionId, timeFilter)
-      const peak = result.reduce((max, curr) =>
-        curr.messageCount > max.messageCount ? curr : max
-      )
+      const peak = result.reduce((max, curr) => (curr.messageCount > max.messageCount ? curr : max))
       // 格式化为简洁文本：时间 消息数
       return {
-        peakHour: `${peak.hour}:00 (${peak.messageCount}条)`,
-        distribution: result.map((h) => `${h.hour}:00 ${h.messageCount}条`),
+        peakHour: `${peak.hour}:00 (${peak.messageCount}${msgSuffix})`,
+        distribution: result.map((h) => `${h.hour}:00 ${h.messageCount}${msgSuffix}`),
       }
     }
     case 'weekday': {
-      const weekdayNames = ['', '周一', '周二', '周三', '周四', '周五', '周六', '周日']
+      const weekdayNames = t('weekdays', locale) as string[]
       const result = await workerManager.getWeekdayActivity(sessionId, timeFilter)
-      const peak = result.reduce((max, curr) =>
-        curr.messageCount > max.messageCount ? curr : max
-      )
+      const peak = result.reduce((max, curr) => (curr.messageCount > max.messageCount ? curr : max))
       return {
-        peakDay: `${weekdayNames[peak.weekday]} (${peak.messageCount}条)`,
-        distribution: result.map((w) => `${weekdayNames[w.weekday]} ${w.messageCount}条`),
+        peakDay: `${weekdayNames[peak.weekday]} (${peak.messageCount}${msgSuffix})`,
+        distribution: result.map((w) => `${weekdayNames[w.weekday]} ${w.messageCount}${msgSuffix}`),
       }
     }
     case 'daily': {
@@ -400,9 +451,10 @@ async function getTimeStatsExecutor(
       const recent = result.slice(-30)
       const total = recent.reduce((sum, d) => sum + d.messageCount, 0)
       const avg = Math.round(total / recent.length)
+      const summaryFn = i18nTexts.dailySummary[isChineseLocale(locale) ? 'zh' : 'en']
       return {
-        summary: `最近${recent.length}天共${total}条，日均${avg}条`,
-        trend: recent.map((d) => `${d.date} ${d.messageCount}条`),
+        summary: summaryFn(recent.length, total, avg),
+        trend: recent.map((d) => `${d.date} ${d.messageCount}${msgSuffix}`),
       }
     }
   }
@@ -416,7 +468,8 @@ const getGroupMembersTool: ToolDefinition = {
   type: 'function',
   function: {
     name: 'get_group_members',
-    description: '获取群成员列表，包括成员的基本信息、别名和消息统计。适用于查询"群里有哪些人"、"某人的别名是什么"、"谁的QQ号是xxx"等问题。',
+    description:
+      '获取群成员列表，包括成员的基本信息、别名和消息统计。适用于查询"群里有哪些人"、"某人的别名是什么"、"谁的QQ号是xxx"等问题。',
     parameters: {
       type: 'object',
       properties: {
@@ -437,7 +490,7 @@ async function getGroupMembersExecutor(
   params: { search?: string; limit?: number },
   context: ToolContext
 ): Promise<unknown> {
-  const { sessionId } = context
+  const { sessionId, locale } = context
 
   const members = await workerManager.getMembers(sessionId)
 
@@ -464,13 +517,15 @@ async function getGroupMembersExecutor(
   }
 
   // 格式化为简洁文本：id|QQ号|显示名(群昵称)|消息数
+  const msgSuffix = isChineseLocale(locale) ? '条' : ''
+  const aliasLabel = t('alias', locale) as string
   return {
     totalMembers: members.length,
     returnedMembers: filteredMembers.length,
     members: filteredMembers.map((m) => {
       const displayName = m.groupNickname || m.accountName || m.platformId
-      const aliasStr = m.aliases.length > 0 ? `|别名:${m.aliases.join(',')}` : ''
-      return `${m.id}|${m.platformId}|${displayName}|${m.messageCount}条${aliasStr}`
+      const aliasStr = m.aliases.length > 0 ? `|${aliasLabel}:${m.aliases.join(',')}` : ''
+      return `${m.id}|${m.platformId}|${displayName}|${m.messageCount}${msgSuffix}${aliasStr}`
     }),
   }
 }
@@ -483,7 +538,8 @@ const getMemberNameHistoryTool: ToolDefinition = {
   type: 'function',
   function: {
     name: 'get_member_name_history',
-    description: '获取成员的昵称变更历史记录。适用于回答"某人以前叫什么名字"、"某人的昵称变化"、"某人曾用名"等问题。需要先通过 get_group_members 工具获取成员 ID。',
+    description:
+      '获取成员的昵称变更历史记录。适用于回答"某人以前叫什么名字"、"某人的昵称变化"、"某人曾用名"等问题。需要先通过 get_group_members 工具获取成员 ID。',
     parameters: {
       type: 'object',
       properties: {
@@ -497,11 +553,8 @@ const getMemberNameHistoryTool: ToolDefinition = {
   },
 }
 
-async function getMemberNameHistoryExecutor(
-  params: { member_id: number },
-  context: ToolContext
-): Promise<unknown> {
-  const { sessionId } = context
+async function getMemberNameHistoryExecutor(params: { member_id: number }, context: ToolContext): Promise<unknown> {
+  const { sessionId, locale } = context
 
   // 先获取成员基本信息
   const members = await workerManager.getMembers(sessionId)
@@ -509,7 +562,7 @@ async function getMemberNameHistoryExecutor(
 
   if (!member) {
     return {
-      error: '未找到该成员',
+      error: t('memberNotFound', locale) as string,
       member_id: params.member_id,
     }
   }
@@ -518,27 +571,27 @@ async function getMemberNameHistoryExecutor(
   const history = await workerManager.getMemberNameHistory(sessionId, params.member_id)
 
   // 格式化历史记录为简洁文本
+  const localeStr = isChineseLocale(locale) ? 'zh-CN' : 'en-US'
+  const untilNow = t('untilNow', locale) as string
   const formatHistory = (h: { name: string; startTs: number; endTs: number | null }) => {
-    const start = new Date(h.startTs * 1000).toLocaleDateString('zh-CN')
-    const end = h.endTs ? new Date(h.endTs * 1000).toLocaleDateString('zh-CN') : '至今'
+    const start = new Date(h.startTs * 1000).toLocaleDateString(localeStr)
+    const end = h.endTs ? new Date(h.endTs * 1000).toLocaleDateString(localeStr) : untilNow
     return `${h.name} (${start} ~ ${end})`
   }
 
-  const accountNames = history
-    .filter((h: { nameType: string }) => h.nameType === 'account_name')
-    .map(formatHistory)
+  const accountNames = history.filter((h: { nameType: string }) => h.nameType === 'account_name').map(formatHistory)
 
-  const groupNicknames = history
-    .filter((h: { nameType: string }) => h.nameType === 'group_nickname')
-    .map(formatHistory)
+  const groupNicknames = history.filter((h: { nameType: string }) => h.nameType === 'group_nickname').map(formatHistory)
 
   const displayName = member.groupNickname || member.accountName || member.platformId
-  const aliasStr = member.aliases.length > 0 ? `|别名:${member.aliases.join(',')}` : ''
+  const aliasLabel = t('alias', locale) as string
+  const aliasStr = member.aliases.length > 0 ? `|${aliasLabel}:${member.aliases.join(',')}` : ''
+  const noChangeRecord = t('noChangeRecord', locale) as string
 
   return {
     member: `${member.id}|${member.platformId}|${displayName}${aliasStr}`,
-    accountNameHistory: accountNames.length > 0 ? accountNames : '无变更记录',
-    groupNicknameHistory: groupNicknames.length > 0 ? groupNicknames : '无变更记录',
+    accountNameHistory: accountNames.length > 0 ? accountNames : noChangeRecord,
+    groupNicknameHistory: groupNicknames.length > 0 ? groupNicknames : noChangeRecord,
   }
 }
 
@@ -549,7 +602,8 @@ const getConversationBetweenTool: ToolDefinition = {
   type: 'function',
   function: {
     name: 'get_conversation_between',
-    description: '获取两个群成员之间的对话记录。适用于回答"A和B之间聊了什么"、"查看两人的对话"等问题。需要先通过 get_group_members 获取成员 ID。支持精确到分钟级别的时间查询。',
+    description:
+      '获取两个群成员之间的对话记录。适用于回答"A和B之间聊了什么"、"查看两人的对话"等问题。需要先通过 get_group_members 获取成员 ID。支持精确到分钟级别的时间查询。',
     parameters: {
       type: 'object',
       properties: {
@@ -583,11 +637,13 @@ const getConversationBetweenTool: ToolDefinition = {
         },
         start_time: {
           type: 'string',
-          description: '开始时间，格式 "YYYY-MM-DD HH:mm"，如 "2024-03-15 14:00"。指定后会覆盖 year/month/day/hour 参数',
+          description:
+            '开始时间，格式 "YYYY-MM-DD HH:mm"，如 "2024-03-15 14:00"。指定后会覆盖 year/month/day/hour 参数',
         },
         end_time: {
           type: 'string',
-          description: '结束时间，格式 "YYYY-MM-DD HH:mm"，如 "2024-03-15 18:30"。指定后会覆盖 year/month/day/hour 参数',
+          description:
+            '结束时间，格式 "YYYY-MM-DD HH:mm"，如 "2024-03-15 18:30"。指定后会覆盖 year/month/day/hour 参数',
         },
       },
       required: ['member_id_1', 'member_id_2'],
@@ -609,7 +665,7 @@ async function getConversationBetweenExecutor(
   },
   context: ToolContext
 ): Promise<unknown> {
-  const { sessionId, timeFilter: contextTimeFilter, maxMessagesLimit } = context
+  const { sessionId, timeFilter: contextTimeFilter, maxMessagesLimit, locale } = context
   // 用户配置优先：如果用户设置了 maxMessagesLimit，使用它；否则使用 LLM 指定的值或默认值 100（节省 token）
   const limit = maxMessagesLimit || params.limit || 100
 
@@ -626,7 +682,7 @@ async function getConversationBetweenExecutor(
 
   if (result.messages.length === 0) {
     return {
-      error: '未找到这两人之间的对话',
+      error: t('noConversation', locale) as string,
       member1Id: params.member_id_1,
       member2Id: params.member_id_2,
     }
@@ -637,8 +693,8 @@ async function getConversationBetweenExecutor(
     returned: result.messages.length,
     member1: result.member1Name,
     member2: result.member2Name,
-    timeRange: formatTimeRange(effectiveTimeFilter),
-    conversation: result.messages.map((m) => formatMessageCompact(m)),
+    timeRange: formatTimeRange(effectiveTimeFilter, locale),
+    conversation: result.messages.map((m) => formatMessageCompact(m, locale)),
   }
 }
 
@@ -650,13 +706,15 @@ const getMessageContextTool: ToolDefinition = {
   type: 'function',
   function: {
     name: 'get_message_context',
-    description: '根据消息 ID 获取前后的上下文消息。适用于需要查看某条消息前后聊天内容的场景，比如"这条消息的前后在聊什么"、"查看某条消息的上下文"等。支持单个或批量消息 ID。',
+    description:
+      '根据消息 ID 获取前后的上下文消息。适用于需要查看某条消息前后聊天内容的场景，比如"这条消息的前后在聊什么"、"查看某条消息的上下文"等。支持单个或批量消息 ID。',
     parameters: {
       type: 'object',
       properties: {
         message_ids: {
           type: 'array',
-          description: '要查询上下文的消息 ID 列表，可以是单个 ID 或多个 ID。消息 ID 可以从 search_messages 等工具的返回结果中获取',
+          description:
+            '要查询上下文的消息 ID 列表，可以是单个 ID 或多个 ID。消息 ID 可以从 search_messages 等工具的返回结果中获取',
           items: { type: 'number' },
         },
         context_size: {
@@ -673,18 +731,14 @@ async function getMessageContextExecutor(
   params: { message_ids: number[]; context_size?: number },
   context: ToolContext
 ): Promise<unknown> {
-  const { sessionId } = context
+  const { sessionId, locale } = context
   const contextSize = params.context_size || 20
 
-  const messages = await workerManager.getMessageContext(
-    sessionId,
-    params.message_ids,
-    contextSize
-  )
+  const messages = await workerManager.getMessageContext(sessionId, params.message_ids, contextSize)
 
   if (messages.length === 0) {
     return {
-      error: '未找到指定的消息或上下文',
+      error: t('noMessageContext', locale) as string,
       messageIds: params.message_ids,
     }
   }
@@ -693,7 +747,172 @@ async function getMessageContextExecutor(
     totalMessages: messages.length,
     contextSize: contextSize,
     requestedMessageIds: params.message_ids,
-    messages: messages.map((m) => formatMessageCompact(m)),
+    messages: messages.map((m) => formatMessageCompact(m, locale)),
+  }
+}
+
+// ==================== 会话相关工具 ====================
+
+/**
+ * 搜索会话工具
+ * 根据关键词和时间范围搜索会话
+ */
+const searchSessionsTool: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'search_sessions',
+    description:
+      '搜索聊天会话（对话段落）。会话是根据消息时间间隔自动切分的对话单元。适用于查找特定话题的讨论、了解某个时间段内发生了几次对话等场景。返回匹配的会话列表及每个会话的前5条消息预览。',
+    parameters: {
+      type: 'object',
+      properties: {
+        keywords: {
+          type: 'array',
+          description: '可选的搜索关键词列表，只返回包含这些关键词的会话（OR 逻辑匹配）',
+          items: { type: 'string' },
+        },
+        limit: {
+          type: 'number',
+          description: '返回会话数量限制，默认 20',
+        },
+        year: {
+          type: 'number',
+          description: '筛选指定年份的会话，如 2024',
+        },
+        month: {
+          type: 'number',
+          description: '筛选指定月份的会话（1-12），需要配合 year 使用',
+        },
+        day: {
+          type: 'number',
+          description: '筛选指定日期的会话（1-31），需要配合 year 和 month 使用',
+        },
+        start_time: {
+          type: 'string',
+          description: '开始时间，格式 "YYYY-MM-DD HH:mm"，如 "2024-03-15 14:00"',
+        },
+        end_time: {
+          type: 'string',
+          description: '结束时间，格式 "YYYY-MM-DD HH:mm"，如 "2024-03-15 18:30"',
+        },
+      },
+    },
+  },
+}
+
+async function searchSessionsExecutor(
+  params: {
+    keywords?: string[]
+    limit?: number
+    year?: number
+    month?: number
+    day?: number
+    start_time?: string
+    end_time?: string
+  },
+  context: ToolContext
+): Promise<unknown> {
+  const { sessionId, timeFilter: contextTimeFilter, locale } = context
+  const limit = params.limit || 20
+
+  // 使用扩展的时间参数解析
+  const effectiveTimeFilter = parseExtendedTimeParams(params, contextTimeFilter)
+
+  const sessions = await workerManager.searchSessions(
+    sessionId,
+    params.keywords,
+    effectiveTimeFilter,
+    limit,
+    5 // 预览5条消息
+  )
+
+  if (sessions.length === 0) {
+    return {
+      total: 0,
+      message: isChineseLocale(locale) ? '未找到匹配的会话' : 'No matching sessions found',
+    }
+  }
+
+  const localeStr = isChineseLocale(locale) ? 'zh-CN' : 'en-US'
+  const msgSuffix = isChineseLocale(locale) ? '条消息' : ' messages'
+  const completeLabel = isChineseLocale(locale) ? '完整会话' : 'complete'
+
+  return {
+    total: sessions.length,
+    timeRange: formatTimeRange(effectiveTimeFilter, locale),
+    sessions: sessions.map((s) => {
+      const startTime = new Date(s.startTs * 1000).toLocaleString(localeStr)
+      const endTime = new Date(s.endTs * 1000).toLocaleString(localeStr)
+      const completeTag = s.isComplete ? ` [${completeLabel}]` : ''
+
+      return {
+        sessionId: s.id,
+        time: `${startTime} ~ ${endTime}`,
+        messageCount: `${s.messageCount}${msgSuffix}${completeTag}`,
+        preview: s.previewMessages.map((m) => formatMessageCompact(m, locale)),
+      }
+    }),
+  }
+}
+
+/**
+ * 获取会话消息工具
+ * 获取指定会话的完整消息列表
+ */
+const getSessionMessagesTool: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'get_session_messages',
+    description:
+      '获取指定会话的完整消息列表。用于在 search_sessions 找到相关会话后，获取该会话的完整上下文。返回会话的所有消息及参与者信息。',
+    parameters: {
+      type: 'object',
+      properties: {
+        session_id: {
+          type: 'number',
+          description: '会话 ID，可以从 search_sessions 的返回结果中获取',
+        },
+        limit: {
+          type: 'number',
+          description: '返回消息数量限制，默认 500。对于超长会话可以限制返回数量以节省 token',
+        },
+      },
+      required: ['session_id'],
+    },
+  },
+}
+
+async function getSessionMessagesExecutor(
+  params: {
+    session_id: number
+    limit?: number
+  },
+  context: ToolContext
+): Promise<unknown> {
+  const { sessionId, maxMessagesLimit, locale } = context
+  // 用户配置优先
+  const limit = maxMessagesLimit || params.limit || 500
+
+  const result = await workerManager.getSessionMessages(sessionId, params.session_id, limit)
+
+  if (!result) {
+    return {
+      error: isChineseLocale(locale) ? '未找到指定的会话' : 'Session not found',
+      sessionId: params.session_id,
+    }
+  }
+
+  const localeStr = isChineseLocale(locale) ? 'zh-CN' : 'en-US'
+  const startTime = new Date(result.startTs * 1000).toLocaleString(localeStr)
+  const endTime = new Date(result.endTs * 1000).toLocaleString(localeStr)
+
+  return {
+    sessionId: result.sessionId,
+    time: `${startTime} ~ ${endTime}`,
+    messageCount: result.messageCount,
+    returnedCount: result.returnedCount,
+    participants: result.participants,
+    messages: result.messages.map((m) => formatMessageCompact(m, locale)),
   }
 }
 
@@ -707,4 +926,5 @@ registerTool(getGroupMembersTool, getGroupMembersExecutor)
 registerTool(getMemberNameHistoryTool, getMemberNameHistoryExecutor)
 registerTool(getConversationBetweenTool, getConversationBetweenExecutor)
 registerTool(getMessageContextTool, getMessageContextExecutor)
-
+registerTool(searchSessionsTool, searchSessionsExecutor)
+registerTool(getSessionMessagesTool, getSessionMessagesExecutor)

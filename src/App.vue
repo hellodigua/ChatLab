@@ -2,6 +2,8 @@
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import TitleBar from '@/components/common/TitleBar.vue'
 import Sidebar from '@/components/common/Sidebar.vue'
 import SettingModal from '@/components/common/SettingModal.vue'
 import ScreenCaptureModal from '@/components/common/ScreenCaptureModal.vue'
@@ -9,10 +11,14 @@ import { ChatRecordDrawer } from '@/components/common/ChatRecord'
 import { useSessionStore } from '@/stores/session'
 import { useLayoutStore } from '@/stores/layout'
 import { usePromptStore } from '@/stores/prompt'
+import { useSettingsStore } from '@/stores/settings'
+
+const { t } = useI18n()
 
 const sessionStore = useSessionStore()
 const layoutStore = useLayoutStore()
 const promptStore = usePromptStore()
+const settingsStore = useSettingsStore()
 const { isInitialized } = storeToRefs(sessionStore)
 const route = useRoute()
 
@@ -20,26 +26,32 @@ const tooltip = {
   delayDuration: 100,
 }
 
-// 应用启动时从数据库加载会话列表
+// 应用启动时初始化
 onMounted(async () => {
+  // 初始化语言设置（同步 i18n 和 dayjs）
+  settingsStore.initLocale()
+  // 从数据库加载会话列表
   await sessionStore.loadSessions()
 })
 </script>
 
 <template>
   <UApp :tooltip="tooltip">
-    <div class="flex h-screen w-full overflow-hidden bg-white dark:bg-gray-950">
+    <!-- 自定义标题栏 - 拖拽区域 + 窗口控制按钮 -->
+    <TitleBar />
+    <div class="relative flex h-screen w-full overflow-hidden bg-gray-50 dark:bg-gray-900">
+      <!-- 主内容区域 -->
       <template v-if="!isInitialized">
         <div class="flex h-full w-full items-center justify-center">
           <div class="flex flex-col items-center justify-center text-center">
             <UIcon name="i-heroicons-arrow-path" class="h-8 w-8 animate-spin text-pink-500" />
-            <p class="mt-2 text-sm text-gray-500">加载中...</p>
+            <p class="mt-2 text-sm text-gray-500">{{ t('common.initializing') }}</p>
           </div>
         </div>
       </template>
       <template v-else>
         <Sidebar />
-        <main class="flex-1 overflow-hidden">
+        <main class="relative flex-1 overflow-hidden">
           <router-view v-slot="{ Component }">
             <Transition name="page-fade" mode="out-in">
               <component :is="Component" :key="route.path" />
@@ -48,10 +60,7 @@ onMounted(async () => {
         </main>
       </template>
     </div>
-    <SettingModal
-      v-model:open="layoutStore.showSettingModal"
-      @ai-config-saved="promptStore.notifyAIConfigChanged"
-    />
+    <SettingModal v-model:open="layoutStore.showSettingModal" @ai-config-saved="promptStore.notifyAIConfigChanged" />
     <ScreenCaptureModal
       :open="layoutStore.showScreenCaptureModal"
       :image-data="layoutStore.screenCaptureImage"

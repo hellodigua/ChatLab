@@ -1,26 +1,33 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { storeToRefs } from 'pinia'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useLayoutStore } from '@/stores/layout'
 import DynamicIcon from './DynamicIcon.vue'
+import SidebarButton from './SidebarButton.vue'
 import { defaultFooterLinks, type FooterLinkConfig } from '@/types/sidebar'
 
+const { t, locale } = useI18n()
 const layoutStore = useLayoutStore()
-const { isSidebarCollapsed: isCollapsed } = storeToRefs(layoutStore)
 
-// 配置常量
-const CONFIG_URL = 'https://chatlab.fun/config.json'
-const STORAGE_KEY = 'chatlab_app_config'
+// 配置 URL 根据语言动态获取
+const CONFIG_BASE_URL = 'https://chatlab.fun'
+const configUrl = computed(() => {
+  const langPath = locale.value === 'zh-CN' ? 'cn' : 'en'
+  return `${CONFIG_BASE_URL}/${langPath}/config.json`
+})
+
+// 存储 key 也根据语言区分
+const storageKey = computed(() => `chatlab_app_config_${locale.value}`)
 
 // Footer 链接配置
-const footerLinks = ref<FooterLinkConfig[]>(loadCachedConfig() || defaultFooterLinks)
+const footerLinks = ref<FooterLinkConfig[]>(defaultFooterLinks)
 
 /**
  * 从 localStorage 加载缓存配置
  */
 function loadCachedConfig(): FooterLinkConfig[] | null {
   try {
-    const cached = localStorage.getItem(STORAGE_KEY)
+    const cached = localStorage.getItem(storageKey.value)
     if (cached) {
       const config = JSON.parse(cached)
       return config.footerLinkConfig || null
@@ -33,13 +40,19 @@ function loadCachedConfig(): FooterLinkConfig[] | null {
  * 获取远程配置
  */
 async function fetchConfig(): Promise<void> {
+  // 先加载缓存
+  const cached = loadCachedConfig()
+  if (cached) {
+    footerLinks.value = cached
+  }
+
   try {
-    const result = await window.api.app.fetchRemoteConfig(CONFIG_URL)
+    const result = await window.api.app.fetchRemoteConfig(configUrl.value)
     if (!result.success || !result.data) return
 
     // 保存整个配置对象（包括 footerLinkConfig、AITips 等）
     const config = result.data as Record<string, unknown>
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(config))
+    localStorage.setItem(storageKey.value, JSON.stringify(config))
 
     // 更新 footerLinks
     if (config.footerLinkConfig && Array.isArray(config.footerLinkConfig)) {
@@ -52,24 +65,18 @@ async function fetchConfig(): Promise<void> {
 onMounted(() => {
   fetchConfig()
 })
+
+// 语言切换时重新获取配置
+watch(locale, () => {
+  fetchConfig()
+})
 </script>
 
 <template>
-  <div class="px-4 py-2 dark:border-gray-800 space-y-2 mb-4">
+  <div class="px-4 py-2 dark:border-gray-800 space-y-2 mb-2">
     <!-- 帮助和反馈 -->
     <UPopover :popper="{ placement: 'right' }">
-      <UTooltip :text="isCollapsed ? '反馈和帮助' : ''" :popper="{ placement: 'right' }">
-        <UButton
-          :block="!isCollapsed"
-          class="transition-all rounded-full hover:bg-gray-200/60 dark:hover:bg-gray-800 h-12 cursor-pointer"
-          :class="[isCollapsed ? 'flex w-12 items-center justify-center px-0' : 'justify-start pl-4']"
-          color="gray"
-          variant="ghost"
-        >
-          <UIcon name="i-heroicons-information-circle" class="h-5 w-5 shrink-0" :class="[isCollapsed ? '' : 'mr-2']" />
-          <span v-if="!isCollapsed" class="truncate">反馈和帮助</span>
-        </UButton>
-      </UTooltip>
+      <SidebarButton icon="i-heroicons-information-circle" :title="t('sidebar.footer.helpAndFeedback')" />
 
       <template #content>
         <div class="flex flex-col p-2 min-w-[200px] gap-1">
@@ -96,18 +103,10 @@ onMounted(() => {
     </UPopover>
 
     <!-- 设置 -->
-    <UTooltip :text="isCollapsed ? '设置' : ''" :popper="{ placement: 'right' }">
-      <UButton
-        :block="!isCollapsed"
-        class="transition-all rounded-full hover:bg-gray-200/60 dark:hover:bg-gray-800 h-12 cursor-pointer"
-        :class="[isCollapsed ? 'flex w-12 items-center justify-center px-0' : 'justify-start pl-4']"
-        color="gray"
-        variant="ghost"
-        @click="layoutStore.showSettingModal = true"
-      >
-        <UIcon name="i-heroicons-cog-6-tooth" class="h-5 w-5 shrink-0" :class="[isCollapsed ? '' : 'mr-2']" />
-        <span v-if="!isCollapsed" class="truncate">设置</span>
-      </UButton>
-    </UTooltip>
+    <SidebarButton
+      icon="i-heroicons-cog-6-tooth"
+      :title="t('sidebar.footer.settings')"
+      @click="layoutStore.showSettingModal = true"
+    />
   </div>
 </template>

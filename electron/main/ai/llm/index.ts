@@ -5,8 +5,8 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import { app } from 'electron'
 import { randomUUID } from 'crypto'
+import { getAiDataDir, ensureDir } from '../../paths'
 import type {
   LLMConfig,
   LLMProvider,
@@ -78,10 +78,10 @@ const DOUBAO_INFO: ProviderInfo = {
   description: '字节跳动豆包 AI 大语言模型',
   defaultBaseUrl: 'https://ark.cn-beijing.volces.com/api/v3',
   models: [
-    { id: 'doubao-seed-1-6-lite-251015', name: '性价比豆包1.6', description: '性价比豆包1.6模型' },
-    { id: 'doubao-seed-1-6-251015', name: '更强豆包1.6', description: '更强豆包1.6模型' },
-    { id: 'doubao-seed-1-6-flash-250828', name: '更快豆包1.6', description: '更快豆包1.6模型' },
-    { id: 'doubao-1-5-lite-32k-250115', name: '豆包1.5Pro', description: '豆包1.5Pro模型' },
+    { id: 'doubao-seed-1-6-lite-251015', name: '豆包1.6-lite', description: '豆包1.6模型，性价比' },
+    { id: 'doubao-seed-1-6-251015', name: '豆包1.6', description: '更强豆包1.6模型' },
+    { id: 'doubao-seed-1-6-flash-250828', name: '豆包1.6-flash', description: '更快的豆包1.6模型' },
+    { id: 'doubao-1-5-lite-32k-250115', name: '豆包1.5-lite', description: '豆包1.5Pro模型模型' },
   ],
 }
 
@@ -102,14 +102,7 @@ let CONFIG_PATH: string | null = null
 
 function getConfigPath(): string {
   if (CONFIG_PATH) return CONFIG_PATH
-
-  try {
-    const docPath = app.getPath('documents')
-    CONFIG_PATH = path.join(docPath, 'ChatLab', 'ai', 'llm-config.json')
-  } catch {
-    CONFIG_PATH = path.join(process.cwd(), 'ai', 'llm-config.json')
-  }
-
+  CONFIG_PATH = path.join(getAiDataDir(), 'llm-config.json')
   return CONFIG_PATH
 }
 

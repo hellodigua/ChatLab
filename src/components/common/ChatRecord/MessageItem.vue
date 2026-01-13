@@ -3,10 +3,13 @@
  * 单条消息展示组件 - 气泡样式
  * 支持 Owner 消息显示在右侧（类似聊天界面）
  */
-import { computed, ref, nextTick } from 'vue'
-import dayjs from 'dayjs'
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
 import type { ChatRecordMessage } from './types'
 import { useSessionStore } from '@/stores/session'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   /** 消息数据 */
@@ -19,6 +22,10 @@ const props = defineProps<{
   isFiltered?: boolean
 }>()
 
+const emit = defineEmits<{
+  (e: 'view-context', messageId: number): void
+}>()
+
 const sessionStore = useSessionStore()
 
 // 判断当前消息是否是 Owner 发送的
@@ -27,71 +34,6 @@ const isOwner = computed(() => {
   if (!ownerId) return false
   return props.message.senderPlatformId === ownerId
 })
-
-// 上下文相关状态
-const showContextPopover = ref(false)
-const contextMessages = ref<ChatRecordMessage[]>([])
-const isLoadingContext = ref(false)
-
-// 加载上下文消息
-async function loadContext() {
-  if (isLoadingContext.value) return
-
-  const sessionId = sessionStore.currentSessionId
-  if (!sessionId) return
-
-  isLoadingContext.value = true
-
-  try {
-    // 获取前后各 10 条消息
-    const result = await window.aiApi.getMessageContext(sessionId, props.message.id, 10)
-    contextMessages.value = result
-
-    // 等待 DOM 渲染后滚动到中间位置（延时确保 popover 内容渲染完成）
-    await nextTick()
-    setTimeout(() => {
-      scrollToContextCenter()
-    }, 100)
-  } catch (e) {
-    console.error('加载上下文失败:', e)
-    contextMessages.value = []
-  } finally {
-    isLoadingContext.value = false
-  }
-}
-
-// 滚动到当前消息（居中显示）
-function scrollToContextCenter() {
-  // 使用更具体的选择器，在当前组件内查找
-  const containers = document.querySelectorAll('.context-popover-content')
-  // 找到最后一个（当前打开的）
-  const container = containers[containers.length - 1]
-  if (!container) return
-
-  const targetEl = container.querySelector('[data-is-current="true"]')
-  if (targetEl) {
-    targetEl.scrollIntoView({ block: 'center', behavior: 'auto' })
-  }
-}
-
-// 打开上下文 popover
-function openContextPopover() {
-  showContextPopover.value = true
-  loadContext()
-}
-
-// 关闭上下文 popover 时清空数据（释放内存）
-function handlePopoverClose(isOpen: boolean) {
-  showContextPopover.value = isOpen
-  if (!isOpen) {
-    // 延迟清空，避免闪烁
-    setTimeout(() => {
-      if (!showContextPopover.value) {
-        contextMessages.value = []
-      }
-    }, 300)
-  }
-}
 
 // 基于发送者名称生成一致的颜色索引
 const colorIndex = computed(() => {
@@ -174,20 +116,6 @@ const avatarLetter = computed(() => {
   return '?'
 })
 
-// 格式化时间（筛选模式显示完整时间，普通模式显示简短时间）
-function formatTime(timestamp: number): string {
-  // 筛选模式下显示完整时间
-  if (props.isFiltered) {
-    return dayjs.unix(timestamp).format('YYYY-MM-DD HH:mm:ss')
-  }
-  // 普通模式显示简短时间
-  return dayjs.unix(timestamp).format('HH:mm')
-}
-
-function formatFullTime(timestamp: number): string {
-  return dayjs.unix(timestamp).format('YYYY-MM-DD HH:mm:ss')
-}
-
 // 高亮关键词
 function highlightContent(content: string): string {
   if (!props.highlightKeywords?.length || !content) return content
@@ -226,17 +154,10 @@ function highlightContent(content: string): string {
 
       <!-- 消息内容区 -->
       <div class="min-w-0 flex-1" :class="isOwner ? 'flex flex-col items-end' : ''">
-        <!-- 发送者和时间 -->
+        <!-- 发送者名称 -->
         <div class="mb-1 flex items-center gap-2" :class="isOwner ? 'flex-row-reverse' : ''">
           <span class="text-sm font-medium" :class="nameColor">
             {{ displayName }}
-          </span>
-          <span
-            class="text-xs text-gray-400 transition-opacity"
-            :class="isFiltered ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
-            :title="formatFullTime(message.timestamp)"
-          >
-            {{ formatTime(message.timestamp) }}
           </span>
         </div>
 
@@ -247,6 +168,19 @@ function highlightContent(content: string): string {
             class="relative inline-block rounded-lg px-3 py-2 transition-shadow"
             :class="[bubbleColor, isTarget ? 'ring-2 ring-yellow-400 dark:ring-yellow-500' : '']"
           >
+            <!-- 回复引用样式 -->
+            <div
+              v-if="message.replyToMessageId"
+              class="mb-2 border-l-2 border-gray-300 dark:border-gray-600 pl-2 text-xs text-gray-500 dark:text-gray-400"
+            >
+              <span class="font-medium">{{ t('replyTo') }}</span>
+              <span v-if="message.replyToSenderName" class="ml-1 text-gray-600 dark:text-gray-300">
+                {{ message.replyToSenderName }}
+              </span>
+              <p v-if="message.replyToContent" class="mt-0.5 line-clamp-2 italic">
+                {{ message.replyToContent }}
+              </p>
+            </div>
             <p
               class="whitespace-pre-wrap break-words text-sm text-gray-700 dark:text-gray-200"
               v-html="highlightContent(message.content || '')"
@@ -254,60 +188,33 @@ function highlightContent(content: string): string {
           </div>
 
           <!-- 上下文查看按钮 -->
-          <UPopover
+          <button
             v-if="isFiltered"
-            :open="showContextPopover"
-            :popper="{ placement: isOwner ? 'left-start' : 'right-start' }"
-            @update:open="handlePopoverClose"
+            class="mt-1 flex h-6 w-6 items-center justify-center rounded opacity-0 transition-opacity hover:bg-gray-200 group-hover:opacity-100 dark:hover:bg-gray-700"
+            :title="t('viewContext')"
+            @click="$emit('view-context', message.id)"
           >
-            <button
-              class="mt-1 flex h-6 w-6 items-center justify-center rounded opacity-0 transition-opacity hover:bg-gray-200 group-hover:opacity-100 dark:hover:bg-gray-700"
-              title="查看上下文"
-              @click="openContextPopover"
-            >
-              <UIcon name="i-heroicons-chat-bubble-left-ellipsis" class="h-4 w-4 text-gray-400" />
-            </button>
-
-            <template #content>
-              <div class="context-popover-content w-80 max-h-96 overflow-y-auto">
-                <div class="px-3 py-2 border-b border-gray-200 dark:border-gray-700">
-                  <span class="text-xs font-medium text-gray-500">消息上下文（前后各10条）</span>
-                </div>
-
-                <div v-if="isLoadingContext" class="flex items-center justify-center py-8">
-                  <UIcon name="i-heroicons-arrow-path" class="h-5 w-5 animate-spin text-gray-400" />
-                </div>
-
-                <div v-else-if="contextMessages.length === 0" class="py-8 text-center text-sm text-gray-400">
-                  暂无上下文
-                </div>
-
-                <div v-else class="divide-y divide-gray-100 dark:divide-gray-800">
-                  <div
-                    v-for="ctx in contextMessages"
-                    :key="ctx.id"
-                    class="px-3 py-2"
-                    :class="ctx.id === message.id ? 'bg-yellow-50 dark:bg-yellow-900/20' : ''"
-                    :data-is-current="ctx.id === message.id"
-                  >
-                    <div class="flex items-center justify-between mb-1">
-                      <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
-                        {{ ctx.senderName }}
-                      </span>
-                      <span class="text-xs text-gray-400">
-                        {{ dayjs.unix(ctx.timestamp).format('HH:mm:ss') }}
-                      </span>
-                    </div>
-                    <p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-3">
-                      {{ ctx.content }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </template>
-          </UPopover>
+            <UIcon name="i-heroicons-chat-bubble-left-ellipsis" class="h-4 w-4 text-gray-400" />
+          </button>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "viewContext": "查看上下文",
+    "contextTitle": "消息上下文（前后各10条）",
+    "noContext": "暂无上下文",
+    "replyTo": "回复"
+  },
+  "en-US": {
+    "viewContext": "View Context",
+    "contextTitle": "Message Context (10 before and after)",
+    "noContext": "No context available",
+    "replyTo": "Reply to"
+  }
+}
+</i18n>

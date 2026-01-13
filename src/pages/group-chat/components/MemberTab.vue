@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { SubTabs } from '@/components/UI'
 import MemberList from './member/MemberList.vue'
 import NicknameHistory from './member/NicknameHistory.vue'
 import Relationships from './member/Relationships.vue'
+
+const { t } = useI18n()
 
 interface TimeFilter {
   startTs?: number
@@ -22,11 +25,11 @@ const emit = defineEmits<{
 }>()
 
 // 子 Tab 配置
-const subTabs = [
-  { id: 'list', label: '成员列表', icon: 'i-heroicons-users' },
-  { id: 'relationships', label: '群关系', icon: 'i-heroicons-heart' },
-  { id: 'history', label: '昵称变更', icon: 'i-heroicons-clock' },
-]
+const subTabs = computed(() => [
+  { id: 'list', label: t('memberList'), icon: 'i-heroicons-users' },
+  { id: 'relationships', label: t('relationships'), icon: 'i-heroicons-heart' },
+  { id: 'history', label: t('nicknameHistory'), icon: 'i-heroicons-clock' },
+])
 
 const activeSubTab = ref('list')
 
@@ -71,3 +74,18 @@ function handleDataChanged() {
   opacity: 0;
 }
 </style>
+
+<i18n>
+{
+  "zh-CN": {
+    "memberList": "成员列表",
+    "relationships": "群关系",
+    "nicknameHistory": "昵称变更"
+  },
+  "en-US": {
+    "memberList": "Member List",
+    "relationships": "Relationships",
+    "nicknameHistory": "Nickname History"
+  }
+}
+</i18n>

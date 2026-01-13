@@ -49,20 +49,24 @@ export const feature: FormatFeature = {
   priority: 1, // 最高优先级
   extensions: ['.json'],
   signatures: {
+    // 只要求 chatlab 字段在文件头（8KB），其他字段在解析时验证
+    // 这样可以正确识别格式化后的大文件（meta/messages 可能超出 8KB）
     head: [/"chatlab"\s*:\s*\{/, /"version"\s*:\s*"/],
-    requiredFields: ['chatlab', 'meta', 'messages'],
+    requiredFields: ['chatlab'],
   },
 }
 
 // ==================== 消息结构 ====================
 
 interface ChatLabMessage {
+  platformMessageId?: string // 消息的平台原始 ID（用于回复关联查询）
   sender: string // platformId
   accountName: string // 发送时的账号名称
   groupNickname?: string // 发送时的群昵称
   timestamp: number // 秒级时间戳
   type: number // MessageType
   content: string | null
+  replyToMessageId?: string // 回复的目标消息 ID（平台原始 ID）
 }
 
 interface ChatLabMember {
@@ -71,6 +75,7 @@ interface ChatLabMember {
   groupNickname?: string // 群昵称
   aliases?: string[]
   avatar?: string // 头像（base64 Data URL）
+  roles?: Array<{ id: string; name?: string }> // 成员角色
 }
 
 // ==================== 解析器实现 ====================
@@ -83,7 +88,7 @@ async function* parseChatLab(options: ParseOptions): AsyncGenerator<ParseEvent, 
   let messagesProcessed = 0
 
   // 发送初始进度
-  const initialProgress = createProgress('parsing', 0, totalBytes, 0, '开始解析...')
+  const initialProgress = createProgress('parsing', 0, totalBytes, 0, '')
   yield { type: 'progress', data: initialProgress }
   onProgress?.(initialProgress)
 
@@ -157,6 +162,7 @@ async function* parseChatLab(options: ParseOptions): AsyncGenerator<ParseEvent, 
           accountName: m.accountName,
           groupNickname: m.groupNickname,
           avatar: m.avatar,
+          roles: m.roles,
         })
       }
     }
@@ -200,6 +206,8 @@ async function* parseChatLab(options: ParseOptions): AsyncGenerator<ParseEvent, 
         timestamp: msg.timestamp,
         type: msg.type,
         content: msg.content,
+        platformMessageId: msg.platformMessageId,
+        replyToMessageId: msg.replyToMessageId,
       })
 
       messagesProcessed++
@@ -245,7 +253,7 @@ async function* parseChatLab(options: ParseOptions): AsyncGenerator<ParseEvent, 
   }
 
   // 完成
-  const doneProgress = createProgress('done', totalBytes, totalBytes, messagesProcessed, '解析完成')
+  const doneProgress = createProgress('done', totalBytes, totalBytes, messagesProcessed, '')
   yield { type: 'progress', data: doneProgress }
   onProgress?.(doneProgress)
 

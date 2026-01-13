@@ -36,6 +36,7 @@ import {
   searchMessages,
   getMessageContext,
   getRecentMessages,
+  getAllRecentMessages,
   getConversationBetween,
   getMessagesBefore,
   getMessagesAfter,
@@ -46,6 +47,18 @@ import {
   // SQL 实验室
   executeRawSQL,
   getSchema,
+  // 会话索引
+  generateSessions,
+  clearSessions,
+  hasSessionIndex,
+  getSessionStats,
+  updateSessionGapThreshold,
+  getSessions,
+  searchSessions,
+  getSessionMessages,
+  // 自定义筛选
+  filterMessagesWithContext,
+  getMultipleSessionsMessages,
 } from './query'
 import { streamImport, streamParseFileInfo } from './import'
 
@@ -106,6 +119,7 @@ const syncHandlers: Record<string, (payload: any) => any> = {
   searchMessages: (p) => searchMessages(p.sessionId, p.keywords, p.filter, p.limit, p.offset, p.senderId),
   getMessageContext: (p) => getMessageContext(p.sessionId, p.messageIds, p.contextSize),
   getRecentMessages: (p) => getRecentMessages(p.sessionId, p.filter, p.limit),
+  getAllRecentMessages: (p) => getAllRecentMessages(p.sessionId, p.filter, p.limit),
   getConversationBetween: (p) => getConversationBetween(p.sessionId, p.memberId1, p.memberId2, p.filter, p.limit),
   getMessagesBefore: (p) => getMessagesBefore(p.sessionId, p.beforeId, p.limit, p.filter, p.senderId, p.keywords),
   getMessagesAfter: (p) => getMessagesAfter(p.sessionId, p.afterId, p.limit, p.filter, p.senderId, p.keywords),
@@ -113,6 +127,21 @@ const syncHandlers: Record<string, (payload: any) => any> = {
   // SQL 实验室
   executeRawSQL: (p) => executeRawSQL(p.sessionId, p.sql),
   getSchema: (p) => getSchema(p.sessionId),
+
+  // 会话索引
+  generateSessions: (p) => generateSessions(p.sessionId, p.gapThreshold),
+  clearSessions: (p) => clearSessions(p.sessionId),
+  hasSessionIndex: (p) => hasSessionIndex(p.sessionId),
+  getSessionStats: (p) => getSessionStats(p.sessionId),
+  updateSessionGapThreshold: (p) => updateSessionGapThreshold(p.sessionId, p.gapThreshold),
+  getSessions: (p) => getSessions(p.sessionId),
+  searchSessions: (p) => searchSessions(p.sessionId, p.keywords, p.timeFilter, p.limit, p.previewCount),
+  getSessionMessages: (p) => getSessionMessages(p.sessionId, p.chatSessionId, p.limit),
+
+  // 自定义筛选
+  filterMessagesWithContext: (p) =>
+    filterMessagesWithContext(p.sessionId, p.keywords, p.timeFilter, p.senderIds, p.contextSize),
+  getMultipleSessionsMessages: (p) => getMultipleSessionsMessages(p.sessionId, p.chatSessionIds),
 }
 
 // 异步消息处理器（流式操作）

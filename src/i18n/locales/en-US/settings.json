@@ -1,0 +1,212 @@
+{
+  "title": "Settings",
+  "tabs": {
+    "basic": "General",
+    "ai": "AI Settings",
+    "aiConfig": "AI Models",
+    "aiPrompt": "Chat Config",
+    "aiPreset": "Prompts",
+    "storage": "Data & Storage",
+    "storageManage": "Storage",
+    "sessionManage": "Sessions",
+    "about": "About"
+  },
+  "basic": {
+    "language": {
+      "title": "Language",
+      "description": "Choose language"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "themeMode": "Theme Mode",
+      "auto": "System",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "screenshot": {
+      "title": "Screenshot",
+      "mobileAdapt": "Mobile Adaptation",
+      "mobileAdaptDesc": "Auto-scale width when taking screenshots for mobile viewing"
+    },
+    "network": {
+      "title": "Network",
+      "enableProxy": "Enable Proxy",
+      "enableProxyDesc": "Connect via proxy server",
+      "proxyAddress": "Proxy Address",
+      "proxyPlaceholder": "http://127.0.0.1:7890",
+      "proxyHelp": "Supports HTTP/HTTPS proxy, e.g.: http://127.0.0.1:7890",
+      "testConnection": "Test Connection",
+      "testing": "Testing...",
+      "connectionSuccess": "Proxy connection successful!",
+      "connectionFailed": "Connection failed",
+      "enterProxyFirst": "Please enter proxy address first",
+      "invalidProxyUrl": "Please enter a valid proxy address, e.g. http://127.0.0.1:7890",
+      "onlyHttpSupported": "Only http:// or https:// protocols are supported",
+      "saveFailed": "Save failed"
+    }
+  },
+  "aiConfig": {
+    "title": "Model Configuration",
+    "loading": "Loading...",
+    "inUse": "Active",
+    "defaultModel": "Default Model",
+    "localService": "Local Service",
+    "customEndpoint": "Custom Endpoint",
+    "edit": "Edit",
+    "delete": "Delete",
+    "empty": {
+      "title": "No AI service configured",
+      "description": "Add a configuration to start using AI features"
+    },
+    "addConfig": "Add Configuration",
+    "maxConfigs": "Maximum configurations reached (10)",
+    "modal": {
+      "addTitle": "Add New Configuration",
+      "editTitle": "Edit Configuration",
+      "configType": {
+        "preset": "Official API",
+        "presetDesc": "DeepSeek, Gemini, etc.",
+        "local": "Local Service",
+        "localDesc": "Ollama, etc.",
+        "compatible": "OpenAI Compatible",
+        "compatibleDesc": "Custom Endpoint"
+      },
+      "configName": "Configuration Name",
+      "configNameOptional": " (Optional)",
+      "configNamePlaceholderPreset": "Leave empty to use provider name",
+      "configNamePlaceholderOther": "Leave empty to use API endpoint",
+      "provider": "AI Provider",
+      "apiKey": "API Key",
+      "apiKeyPlaceholderNew": "Enter your API Key",
+      "apiKeyPlaceholderEdit": "Enter new API Key (leave empty to keep current)",
+      "validate": "Validate",
+      "validationSuccess": "Connection validated successfully",
+      "validationFailed": "Validation failed: ",
+      "model": "Model",
+      "apiEndpoint": "API Endpoint",
+      "modelName": "Model Name",
+      "modelNamePlaceholderLocal": "e.g. qwen3, deepseek-r1",
+      "modelNamePlaceholderCompatible": "e.g. gpt-4, claude-3",
+      "modelNameHelp": "Enter the locally deployed model name",
+      "modelNameHelpCompatible": "Enter the model name supported by the API",
+      "disableThinking": "Disable Thinking Mode",
+      "disableThinkingDesc": "For models like Qwen3, DeepSeek-R1; uses standard tool calling format when disabled",
+      "advancedOptions": "Advanced Options",
+      "apiKeyOptional": " (Optional)",
+      "apiKeyLocalHelp": "Enter here if service requires authentication",
+      "localNoKeyNeeded": "Usually not needed for local services",
+      "compatibleEndpointHelp": "OpenAI-compatible API endpoint",
+      "add": "Add",
+      "save": "Save"
+    }
+  },
+  "storage": {
+    "title": "Local Storage Management",
+    "description": "Manage data files stored locally by ChatLab",
+    "totalUsage": "Total: ",
+    "loading": "Loading...",
+    "files": "files",
+    "notExist": "Not exist",
+    "clear": "Clear",
+    "open": "Open",
+    "notes": {
+      "title": "Notes",
+      "logSafe": "Log files are mainly for debugging and can be safely cleared",
+      "noRecover": "All cleared files cannot be recovered, please proceed with caution"
+    },
+    "cache": {
+      "databases": {
+        "name": "Chat Databases",
+        "description": "Imported chat analysis data"
+      },
+      "ai": {
+        "name": "AI Chat Databases",
+        "description": "AI chat history and config files"
+      },
+      "downloads": {
+        "name": "Downloads",
+        "description": "Screenshots, analysis results, etc."
+      },
+      "logs": {
+        "name": "Log Files",
+        "description": "App logs including import, AI, error logs"
+      }
+    },
+    "session": {
+      "title": "Session Index Settings",
+      "description": "Session index splits chat history into conversation segments by time gaps for better AI analysis",
+      "defaultThreshold": "Default Gap Threshold",
+      "thresholdUnit": "minutes",
+      "thresholdHelp": "Messages exceeding this time gap will be split into a new session",
+      "notGenerated": "Session index not generated",
+      "generateHint": "Generate index to help AI better understand conversation context",
+      "generate": "Generate Index",
+      "regenerate": "Regenerate",
+      "generating": "Generating",
+      "sessionCount": "{count} sessions",
+      "generated": "Session index generated",
+      "generateSuccess": "Session index generated successfully, {count} sessions created",
+      "generateError": "Generation failed",
+      "batchTitle": "Batch Generate Index",
+      "totalSessions": "{count} chats total",
+      "generatedCount": "{count} generated",
+      "notGeneratedCount": "{count} not generated",
+      "loadingStatus": "Loading...",
+      "batchGenerate": "Generate Missing",
+      "batchRegenerate": "Regenerate All"
+    }
+  },
+  "aiPrompt": {
+    "chatSettings": {
+      "title": "Chat Settings"
+    },
+    "exportSettings": {
+      "title": "Export Settings"
+    },
+    "maxMessages": {
+      "title": "Max Messages per Request",
+      "description": "Max number of messages sent to AI per request. Higher values consume more tokens but provide more accurate context (recommended: 2000)."
+    },
+    "maxHistory": {
+      "title": "Context Limit",
+      "description": "Number of recent conversation rounds to keep (1 round = User + AI). Prevents excessive token usage."
+    },
+    "exportFormat": {
+      "title": "Export Format",
+      "description": "File format for exporting AI conversations",
+      "txtLabel": "TXT"
+    },
+    "sqlExportFormat": {
+      "title": "SQL Lab Export Format",
+      "description": "File format for exporting SQL query results"
+    },
+    "presets": {
+      "title": "System Prompts",
+      "add": "Add Preset",
+      "import": "Import Presets",
+      "description": "Prompts are used for both group and private chat analysis, system adjusts content based on analysis type"
+    },
+    "preset": {
+      "builtIn": "Built-in",
+      "groupOnly": "Group Only",
+      "privateOnly": "Private Only",
+      "view": "View",
+      "edit": "Edit",
+      "copy": "Copy",
+      "delete": "Delete"
+    }
+  },
+  "about": {
+    "title": "About ChatLab",
+    "description": "Chat records analysis tool",
+    "version": "Version",
+    "checkUpdate": "Check for Updates",
+    "checking": "Checking...",
+    "unknown": "Unknown",
+    "privacy": {
+      "title": "Privacy Settings",
+      "analytics": "Anonymous Usage Statistics",
+      "analyticsDesc": "When enabled, the app collects non-sensitive data like version number and OS version to help improve the product"
+    }
+  }
+}

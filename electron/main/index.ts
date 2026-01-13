@@ -1,10 +1,12 @@
 import { app, shell, BrowserWindow, protocol, nativeTheme } from 'electron'
 import { join } from 'path'
 import { optimizer, is, platform } from '@electron-toolkit/utils'
-import * as fs from 'fs/promises'
 import { checkUpdate } from './update'
-import mainIpcMain from './ipcMain'
+import mainIpcMain, { cleanup } from './ipcMain'
 import { initAnalytics, trackDailyActive } from './analytics'
+import { initProxy } from './network/proxy'
+import { needsLegacyMigration, migrateFromLegacyDir, ensureAppDirs } from './paths'
+import { migrateAllDatabases, checkMigrationNeeded } from './database/core'
 
 class MainProcess {
   mainWindow: BrowserWindow | null
@@ -47,6 +49,17 @@ class MainProcess {
   async init() {
     initAnalytics()
 
+    // 执行数据目录迁移（从 Documents/ChatLab 迁移到 userData）
+    this.migrateDataIfNeeded()
+
+    // 确保应用目录存在
+    ensureAppDirs()
+
+    // 执行数据库 schema 迁移（确保所有数据库在 Worker 查询前已是最新 schema）
+    this.migrateDatabasesIfNeeded()
+
+    initProxy() // 初始化代理配置
+
     // 注册应用协议
     app.setAsDefaultProtocolClient('chatlab')
 
@@ -57,13 +70,44 @@ class MainProcess {
     this.mainAppEvents()
   }
 
+  // 从旧目录迁移数据（静默迁移）
+  migrateDataIfNeeded() {
+    if (needsLegacyMigration()) {
+      console.log('[Main] Legacy data migration needed, starting migration...')
+      const result = migrateFromLegacyDir()
+      if (result.success) {
+        console.log(`[Main] Migration completed. Migrated: ${result.migratedDirs.join(', ')}`)
+      } else {
+        console.error('[Main] Migration failed:', result.error)
+      }
+    } else {
+      console.log('[Main] No legacy data migration needed')
+    }
+  }
+
+  // 执行数据库 schema 迁移（静默迁移）
+  migrateDatabasesIfNeeded() {
+    try {
+      const { count } = checkMigrationNeeded()
+      if (count > 0) {
+        const result = migrateAllDatabases()
+        if (!result.success) {
+          console.error('[Main] Database schema migration failed:', result.error)
+        }
+      }
+    } catch (error) {
+      console.error('[Main] Error in migrateDatabasesIfNeeded:', error)
+    }
+  }
+
   // 创建主窗口
   async createWindow() {
-    this.mainWindow = new BrowserWindow({
+    // 平台差异化窗口配置
+    const windowOptions: Electron.BrowserWindowConstructorOptions = {
       width: 1180,
-      height: 800,
+      height: 752,
       minWidth: 1180,
-      minHeight: 800,
+      minHeight: 752,
       show: false,
       autoHideMenuBar: true,
       webPreferences: {
@@ -71,10 +115,17 @@ class MainProcess {
         sandbox: false,
         devTools: true,
       },
-    })
+    }
 
-    // 设置默认日间模式
-    nativeTheme.themeSource = 'light'
+    // macOS: 使用 hiddenInset 保留红绿灯按钮
+    // Windows/Linux: 完全移除系统标题栏
+    if (platform.isMacOS) {
+      windowOptions.titleBarStyle = 'hiddenInset'
+    } else {
+      windowOptions.frame = false
+    }
+
+    this.mainWindow = new BrowserWindow(windowOptions)
 
     this.mainWindow.once('ready-to-show', () => {
       this.mainWindow?.show()
@@ -163,6 +214,11 @@ class MainProcess {
       app.on('before-quit', () => {
         // @ts-ignore
         app.isQuiting = true
+      })
+
+      // 退出前清理资源
+      app.on('will-quit', () => {
+        cleanup()
       })
     })
   }

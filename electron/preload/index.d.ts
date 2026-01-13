@@ -27,13 +27,51 @@ interface TimeFilter {
   endTs?: number
 }
 
+// 迁移相关类型
+interface MigrationInfo {
+  version: number
+  description: string
+  userMessage: string
+}
+
+interface MigrationCheckResult {
+  needsMigration: boolean
+  count: number
+  currentVersion: number
+  pendingMigrations: MigrationInfo[]
+}
+
+// 格式诊断信息（简化版，用于前端显示）
+interface FormatDiagnosisSimple {
+  suggestion: string
+  partialMatches: Array<{
+    formatName: string
+    missingFields: string[]
+  }>
+}
+
 interface ChatApi {
-  selectFile: () => Promise<{ filePath?: string; format?: string; error?: string } | null>
-  import: (filePath: string) => Promise<{ success: boolean; sessionId?: string; error?: string }>
+  selectFile: () => Promise<{
+    filePath?: string
+    format?: string
+    error?: string
+    diagnosis?: FormatDiagnosisSimple
+  } | null>
+  import: (filePath: string) => Promise<{
+    success: boolean
+    sessionId?: string
+    error?: string
+    diagnosis?: FormatDiagnosisSimple
+  }>
   getSessions: () => Promise<AnalysisSession[]>
   getSession: (sessionId: string) => Promise<AnalysisSession | null>
   deleteSession: (sessionId: string) => Promise<boolean>
   renameSession: (sessionId: string, newName: string) => Promise<boolean>
+  // 迁移相关
+  checkMigration: () => Promise<MigrationCheckResult>
+  runMigration: () => Promise<{ success: boolean; error?: string }>
+  // 会话所有者
+  updateSessionOwnerId: (sessionId: string, ownerId: string | null) => Promise<boolean>
   getAvailableYears: (sessionId: string) => Promise<number[]>
   getMemberActivity: (sessionId: string, filter?: TimeFilter) => Promise<MemberActivity[]>
   getMemberNameHistory: (sessionId: string, memberId: number) => Promise<MemberNameHistory[]>
@@ -72,6 +110,7 @@ interface Api {
   send: (channel: string, data?: unknown) => void
   receive: (channel: string, func: (...args: unknown[]) => void) => void
   removeListener: (channel: string, func: (...args: unknown[]) => void) => void
+  setThemeSource: (mode: 'system' | 'light' | 'dark') => void
   dialog: {
     showOpenDialog: (options: Electron.OpenDialogOptions) => Promise<Electron.OpenDialogReturnValue>
   }
@@ -106,6 +145,37 @@ interface SearchMessageResult {
   content: string
   timestamp: number
   type: number
+}
+
+interface FilterMessage {
+  id: number
+  senderName: string
+  senderPlatformId: string
+  senderAliases: string[]
+  senderAvatar: string | null
+  content: string
+  timestamp: number
+  type: number
+  replyToMessageId: string | null
+  replyToContent: string | null
+  replyToSenderName: string | null
+  isHit: boolean
+}
+
+interface ContextBlock {
+  startTs: number
+  endTs: number
+  messages: FilterMessage[]
+  hitCount: number
+}
+
+interface FilterResult {
+  blocks: ContextBlock[]
+  stats: {
+    totalMessages: number
+    hitMessages: number
+    totalChars: number
+  }
 }
 
 interface AIConversation {
@@ -159,6 +229,11 @@ interface AiApi {
     filter?: TimeFilter,
     limit?: number
   ) => Promise<{ messages: SearchMessageResult[]; total: number }>
+  getAllRecentMessages: (
+    sessionId: string,
+    filter?: TimeFilter,
+    limit?: number
+  ) => Promise<{ messages: SearchMessageResult[]; total: number }>
   getConversationBetween: (
     sessionId: string,
     memberId1: number,
@@ -196,7 +271,17 @@ interface AiApi {
     contentBlocks?: AIContentBlock[]
   ) => Promise<AIMessage>
   getMessages: (conversationId: string) => Promise<AIMessage[]>
+  getMessages: (conversationId: string) => Promise<AIMessage[]>
   deleteMessage: (messageId: string) => Promise<boolean>
+  // 自定义筛选
+  filterMessagesWithContext: (
+    sessionId: string,
+    keywords?: string[],
+    timeFilter?: TimeFilter,
+    senderIds?: number[],
+    contextSize?: number
+  ) => Promise<FilterResult>
+  getMultipleSessionsMessages: (sessionId: string, chatSessionIds: number[]) => Promise<FilterResult>
 }
 
 // LLM 相关类型
@@ -348,7 +433,8 @@ interface AgentApi {
     onChunk?: (chunk: AgentStreamChunk) => void,
     historyMessages?: Array<{ role: 'user' | 'assistant'; content: string }>,
     chatType?: 'group' | 'private',
-    promptConfig?: PromptConfig
+    promptConfig?: PromptConfig,
+    locale?: string
   ) => { requestId: string; promise: Promise<{ success: boolean; result?: AgentResult; error?: string }> }
   abort: (requestId: string) => Promise<{ success: boolean; error?: string }>
 }
@@ -380,6 +466,44 @@ interface CacheApi {
     filename: string,
     dataUrl: string
   ) => Promise<{ success: boolean; filePath?: string; error?: string }>
+  getLatestImportLog: () => Promise<{ success: boolean; path?: string; name?: string; error?: string }>
+  showInFolder: (filePath: string) => Promise<{ success: boolean; error?: string }>
+}
+
+// Network API 类型 - 网络代理配置
+interface ProxyConfig {
+  enabled: boolean
+  url: string
+}
+
+interface NetworkApi {
+  getProxyConfig: () => Promise<ProxyConfig>
+  saveProxyConfig: (config: ProxyConfig) => Promise<{ success: boolean; error?: string }>
+  testProxyConnection: (proxyUrl: string) => Promise<{ success: boolean; error?: string }>
+}
+
+// Session Index API 类型 - 会话索引功能
+interface SessionStats {
+  sessionCount: number
+  hasIndex: boolean
+  gapThreshold: number
+}
+
+interface ChatSessionItem {
+  id: number
+  startTs: number
+  endTs: number
+  messageCount: number
+  firstMessageId: number
+}
+
+interface SessionApi {
+  generate: (sessionId: string, gapThreshold?: number) => Promise<number>
+  hasIndex: (sessionId: string) => Promise<boolean>
+  getStats: (sessionId: string) => Promise<SessionStats>
+  clear: (sessionId: string) => Promise<boolean>
+  updateGapThreshold: (sessionId: string, gapThreshold: number | null) => Promise<boolean>
+  getSessions: (sessionId: string) => Promise<ChatSessionItem[]>
 }
 
 declare global {
@@ -392,6 +516,8 @@ declare global {
     llmApi: LlmApi
     agentApi: AgentApi
     cacheApi: CacheApi
+    networkApi: NetworkApi
+    sessionApi: SessionApi
   }
 }
 
@@ -403,11 +529,12 @@ export {
   LlmApi,
   AgentApi,
   CacheApi,
+  NetworkApi,
+  ProxyConfig,
   SearchMessageResult,
   AIConversation,
   AIMessage,
   LLMProviderInfo,
-  LLMConfig,
   AIServiceConfigDisplay,
   LLMChatMessage,
   LLMChatOptions,
@@ -419,4 +546,7 @@ export {
   TokenUsage,
   CacheDirectoryInfo,
   CacheInfo,
+  FilterMessage,
+  ContextBlock,
+  FilterResult,
 }

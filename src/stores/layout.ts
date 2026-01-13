@@ -15,6 +15,12 @@ export const useLayoutStore = defineStore(
     const showChatRecordDrawer = ref(false)
     const chatRecordQuery = ref<ChatRecordQuery | null>(null)
 
+    // 设置弹窗定位目标（用于从外部跳转到设置的特定位置）
+    const settingTarget = ref<{
+      tab: 'settings' | 'ai' | 'storage' | 'about'
+      section?: string // AI tab 下的子锚点，如 'model', 'chat', 'preset'
+    } | null>(null)
+
     // 截图设置
     const screenshotMobileAdapt = ref(true) // 截图时开启移动端适配，默认开启
 
@@ -61,6 +67,23 @@ export const useLayoutStore = defineStore(
       }, 300)
     }
 
+    /**
+     * 打开设置弹窗并定位到指定位置
+     * @param tab 要跳转的 Tab（settings, ai, storage, about）
+     * @param section 子锚点（仅 ai tab 支持：model, chat, preset）
+     */
+    function openSettingAt(tab: 'settings' | 'ai' | 'storage' | 'about', section?: string) {
+      settingTarget.value = { tab, section }
+      showSettingModal.value = true
+    }
+
+    /**
+     * 清空设置目标（弹窗关闭后调用）
+     */
+    function clearSettingTarget() {
+      settingTarget.value = null
+    }
+
     return {
       isSidebarCollapsed,
       showSettingModal,
@@ -68,12 +91,15 @@ export const useLayoutStore = defineStore(
       screenCaptureImage,
       showChatRecordDrawer,
       chatRecordQuery,
+      settingTarget,
       screenshotMobileAdapt,
       toggleSidebar,
       openScreenCaptureModal,
       closeScreenCaptureModal,
       openChatRecordDrawer,
       closeChatRecordDrawer,
+      openSettingAt,
+      clearSettingTarget,
     }
   },
   {

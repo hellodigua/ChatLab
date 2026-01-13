@@ -1,0 +1,48 @@
+{
+  "confirm": "OK",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "save": "Save",
+  "edit": "Edit",
+  "add": "Add",
+  "rename": "Rename",
+  "capture": "Capture",
+  "close": "Close",
+  "loading": "Loading...",
+  "initializing": "Initializing...",
+  "noData": "No data",
+  "error": {
+    "general": "Operation failed, please try again",
+    "network": "Network error"
+  },
+  "attachment": {
+    "image": "Image",
+    "video": "Video",
+    "audio": "Audio",
+    "file": "File",
+    "sticker": "Sticker",
+    "link": "Link"
+  },
+  "unit": {
+    "messages": "messages",
+    "members": "members",
+    "days": "days"
+  },
+  "weekday": {
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat",
+    "sun": "Sun"
+  },
+  "agreement": {
+    "title": "Privacy Policy & User Agreement",
+    "subtitle": "Please read carefully before use",
+    "disagree": "I Disagree",
+    "agree": "I Have Read and Agree",
+    "countdown": "Please read ({seconds}s)",
+    "updateNotice": "The agreement has important updates. Please read and confirm again."
+  }
+}

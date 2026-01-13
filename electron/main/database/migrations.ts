@@ -34,7 +34,7 @@ export interface MigrationInfo {
 }
 
 /** 当前 schema 版本（最新迁移的版本号） */
-export const CURRENT_SCHEMA_VERSION = 1
+export const CURRENT_SCHEMA_VERSION = 3
 
 /**
  * 迁移脚本列表
@@ -54,15 +54,89 @@ const migrations: Migration[] = [
       }
     },
   },
-  // 未来的迁移示例：
-  // {
-  //   version: 2,
-  //   description: '添加 xxx 字段',
-  //   userMessage: '新功能说明',
-  //   up: (db) => {
-  //     db.exec('ALTER TABLE xxx ADD COLUMN yyy TEXT')
-  //   },
-  // },
+  {
+    version: 2,
+    description: '添加 roles、reply_to_message_id、platform_message_id 字段',
+    userMessage: '支持成员角色、消息回复关系和回复内容预览',
+    up: (db) => {
+      // 检查 roles 列是否已存在（防止重复执行）
+      const memberTableInfo = db.prepare('PRAGMA table_info(member)').all() as Array<{ name: string }>
+      const hasRolesColumn = memberTableInfo.some((col) => col.name === 'roles')
+      if (!hasRolesColumn) {
+        db.exec("ALTER TABLE member ADD COLUMN roles TEXT DEFAULT '[]'")
+      }
+
+      // 检查 message 表的列
+      const messageTableInfo = db.prepare('PRAGMA table_info(message)').all() as Array<{ name: string }>
+
+      // 检查 reply_to_message_id 列是否已存在
+      const hasReplyColumn = messageTableInfo.some((col) => col.name === 'reply_to_message_id')
+      if (!hasReplyColumn) {
+        db.exec('ALTER TABLE message ADD COLUMN reply_to_message_id TEXT DEFAULT NULL')
+      }
+
+      // 添加 platform_message_id 列（存储平台原始消息 ID，用于回复关联查询）
+      const hasPlatformMsgIdColumn = messageTableInfo.some((col) => col.name === 'platform_message_id')
+      if (!hasPlatformMsgIdColumn) {
+        db.exec('ALTER TABLE message ADD COLUMN platform_message_id TEXT DEFAULT NULL')
+      }
+
+      // 创建索引以加速回复查询
+      try {
+        db.exec('CREATE INDEX IF NOT EXISTS idx_message_platform_id ON message(platform_message_id)')
+      } catch {
+        // 索引可能已存在
+      }
+    },
+  },
+  {
+    version: 3,
+    description: '添加会话索引相关表（chat_session、message_context）和 session_gap_threshold 字段',
+    userMessage: '支持会话时间轴浏览和 AI 增强分析功能',
+    up: (db) => {
+      // 创建 chat_session 会话表
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS chat_session (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          start_ts INTEGER NOT NULL,
+          end_ts INTEGER NOT NULL,
+          message_count INTEGER DEFAULT 0,
+          is_manual INTEGER DEFAULT 0,
+          summary TEXT
+        )
+      `)
+
+      // 创建会话时间索引
+      try {
+        db.exec('CREATE INDEX IF NOT EXISTS idx_session_time ON chat_session(start_ts, end_ts)')
+      } catch {
+        // 索引可能已存在
+      }
+
+      // 创建 message_context 消息上下文表（预留 topic_id）
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS message_context (
+          message_id INTEGER PRIMARY KEY,
+          session_id INTEGER NOT NULL,
+          topic_id INTEGER
+        )
+      `)
+
+      // 创建 session_id 索引
+      try {
+        db.exec('CREATE INDEX IF NOT EXISTS idx_context_session ON message_context(session_id)')
+      } catch {
+        // 索引可能已存在
+      }
+
+      // 检查 meta 表是否已有 session_gap_threshold 列
+      const tableInfo = db.prepare('PRAGMA table_info(meta)').all() as Array<{ name: string }>
+      const hasGapThresholdColumn = tableInfo.some((col) => col.name === 'session_gap_threshold')
+      if (!hasGapThresholdColumn) {
+        db.exec('ALTER TABLE meta ADD COLUMN session_gap_threshold INTEGER')
+      }
+    },
+  },
 ]
 
 /**
@@ -106,43 +180,70 @@ function setSchemaVersion(db: Database.Database, version: number): void {
 }
 
 /**
+ * 检查数据库结构是否完整（meta 表必须存在）
+ * 如果 meta 表不存在，说明数据库损坏或不完整
+ */
+function checkDatabaseIntegrity(db: Database.Database): { valid: boolean; error?: string } {
+  try {
+    const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='meta'").all() as Array<{
+      name: string
+    }>
+
+    if (tables.length === 0) {
+      return {
+        valid: false,
+        error: '数据库结构不完整：缺少 meta 表。建议删除此数据库文件后重新导入。',
+      }
+    }
+    return { valid: true }
+  } catch (error) {
+    return {
+      valid: false,
+      error: `数据库检查失败: ${error instanceof Error ? error.message : String(error)}`,
+    }
+  }
+}
+
+/**
  * 执行数据库迁移
  * 自动检测当前版本并执行所有需要的迁移
  *
  * @param db 数据库连接
+ * @param forceRepair 是否强制修复（即使版本号已是最新也重新执行迁移脚本）
  * @returns 是否执行了迁移
+ * @throws 如果数据库结构不完整
  */
-export function migrateDatabase(db: Database.Database): boolean {
+export function migrateDatabase(db: Database.Database, forceRepair = false): boolean {
+  // 首先检查数据库结构完整性
+  const integrity = checkDatabaseIntegrity(db)
+  if (!integrity.valid) {
+    throw new Error(integrity.error)
+  }
+
   const currentVersion = getSchemaVersion(db)
 
-  // 已是最新版本，无需迁移
-  if (currentVersion >= CURRENT_SCHEMA_VERSION) {
+  // 如果不是强制修复模式，检查版本号
+  if (!forceRepair && currentVersion >= CURRENT_SCHEMA_VERSION) {
     return false
   }
 
   // 获取需要执行的迁移
-  const pendingMigrations = migrations.filter((m) => m.version > currentVersion)
+  // 如果是强制修复，从 version 0 开始执行所有迁移
+  const pendingMigrations = forceRepair ? migrations : migrations.filter((m) => m.version > currentVersion)
 
   if (pendingMigrations.length === 0) {
     return false
   }
 
-  console.log(
-    `[Migration] 数据库版本 ${currentVersion} -> ${CURRENT_SCHEMA_VERSION}，执行 ${pendingMigrations.length} 个迁移`
-  )
-
   // 在事务中执行所有迁移
   const migrate = db.transaction(() => {
     for (const migration of pendingMigrations) {
-      console.log(`[Migration] 执行迁移 v${migration.version}: ${migration.description}`)
       migration.up(db)
       setSchemaVersion(db, migration.version)
     }
   })
 
   migrate()
-
-  console.log(`[Migration] 迁移完成，当前版本: ${CURRENT_SCHEMA_VERSION}`)
   return true
 }
 

@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { SubTabs } from '@/components/UI'
 import { CatchphraseTab, KeywordAnalysis } from '@/components/analysis/quotes'
+
+const { t } = useI18n()
 
 interface TimeFilter {
   startTs?: number
@@ -14,10 +17,10 @@ const props = defineProps<{
 }>()
 
 // 子 Tab 配置（私聊只保留口头禅和关键词分析）
-const subTabs = [
-  { id: 'catchphrase', label: '口头禅', icon: 'i-heroicons-chat-bubble-bottom-center-text' },
-  { id: 'keyword', label: '关键词分析', icon: 'i-heroicons-magnifying-glass' },
-]
+const subTabs = computed(() => [
+  { id: 'catchphrase', label: t('catchphrase'), icon: 'i-heroicons-chat-bubble-bottom-center-text' },
+  { id: 'keyword', label: t('keywordAnalysis'), icon: 'i-heroicons-magnifying-glass' },
+])
 
 const activeSubTab = ref('catchphrase')
 </script>
@@ -57,3 +60,16 @@ const activeSubTab = ref('catchphrase')
   opacity: 0;
 }
 </style>
+
+<i18n>
+{
+  "zh-CN": {
+    "catchphrase": "口头禅",
+    "keywordAnalysis": "关键词分析"
+  },
+  "en-US": {
+    "catchphrase": "Catchphrases",
+    "keywordAnalysis": "Keyword Analysis"
+  }
+}
+</i18n>

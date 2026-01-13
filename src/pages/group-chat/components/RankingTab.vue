@@ -59,6 +59,8 @@ const anchors = [
 
 // 使用锚点导航 composable
 const { contentRef, activeAnchor, scrollToAnchor } = usePageAnchors(anchors, { threshold: 350 })
+// Template ref - used via ref="contentRef" in template
+void contentRef
 
 // ==================== 成员活跃度排行 ====================
 const memberRankData = computed<RankItem[]>(() => {

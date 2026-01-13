@@ -6,8 +6,8 @@
 import { Worker } from 'worker_threads'
 import { app } from 'electron'
 import * as path from 'path'
-import * as fs from 'fs'
 import type { ParseProgress } from '../parser'
+import { getDatabaseDir, ensureDir } from '../paths'
 
 // Worker 实例
 let worker: Worker | null = null
@@ -25,29 +25,13 @@ const pendingRequests = new Map<
 // 请求 ID 计数器
 let requestIdCounter = 0
 
-// 数据库目录
-let dbDir: string | null = null
-
 /**
  * 获取数据库目录
  */
 function getDbDir(): string {
-  if (dbDir) return dbDir
-
-  try {
-    const docPath = app.getPath('documents')
-    dbDir = path.join(docPath, 'ChatLab', 'databases')
-  } catch (error) {
-    console.error('[WorkerManager] Error getting documents path:', error)
-    dbDir = path.join(process.cwd(), 'databases')
-  }
-
-  // 确保目录存在
-  if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true })
-  }
-
-  return dbDir
+  const dir = getDatabaseDir()
+  ensureDir(dir)
+  return dir
 }
 
 /**
@@ -426,6 +410,17 @@ export async function getRecentMessages(
 }
 
 /**
+ * 获取所有最近消息（消息查看器专用，包含所有类型消息）
+ */
+export async function getAllRecentMessages(
+  sessionId: string,
+  filter?: any,
+  limit?: number
+): Promise<{ messages: SearchMessageResult[]; total: number }> {
+  return sendToWorker('getAllRecentMessages', { sessionId, filter, limit })
+}
+
+/**
  * 获取两个成员之间的对话
  */
 export async function getConversationBetween(
@@ -498,4 +493,190 @@ export async function executeRawSQL(sessionId: string, sql: string): Promise<SQL
  */
 export async function getSchema(sessionId: string): Promise<TableSchema[]> {
   return sendToWorker('getSchema', { sessionId })
+}
+
+// ==================== 会话索引 API ====================
+
+export interface SessionStats {
+  sessionCount: number
+  hasIndex: boolean
+  gapThreshold: number
+}
+
+/**
+ * 生成会话索引
+ * @param sessionId 数据库会话ID
+ * @param gapThreshold 时间间隔阈值（秒）
+ */
+export async function generateSessions(sessionId: string, gapThreshold?: number): Promise<number> {
+  return sendToWorker('generateSessions', { sessionId, gapThreshold })
+}
+
+/**
+ * 清空会话索引
+ */
+export async function clearSessions(sessionId: string): Promise<void> {
+  return sendToWorker('clearSessions', { sessionId })
+}
+
+/**
+ * 检查是否已生成会话索引
+ */
+export async function hasSessionIndex(sessionId: string): Promise<boolean> {
+  return sendToWorker('hasSessionIndex', { sessionId })
+}
+
+/**
+ * 获取会话索引统计信息
+ */
+export async function getSessionStats(sessionId: string): Promise<SessionStats> {
+  return sendToWorker('getSessionStats', { sessionId })
+}
+
+/**
+ * 更新单个聊天的会话切分阈值
+ */
+export async function updateSessionGapThreshold(sessionId: string, gapThreshold: number | null): Promise<void> {
+  return sendToWorker('updateSessionGapThreshold', { sessionId, gapThreshold })
+}
+
+/**
+ * 会话列表项类型
+ */
+export interface ChatSessionItem {
+  id: number
+  startTs: number
+  endTs: number
+  messageCount: number
+  firstMessageId: number
+}
+
+/**
+ * 获取会话列表（用于时间线导航）
+ */
+export async function getSessions(sessionId: string): Promise<ChatSessionItem[]> {
+  return sendToWorker('getSessions', { sessionId })
+}
+
+// ==================== AI 工具专用查询函数 ====================
+
+/**
+ * 会话搜索结果项类型（用于 AI 工具）
+ */
+export interface SessionSearchResultItem {
+  id: number
+  startTs: number
+  endTs: number
+  messageCount: number
+  isComplete: boolean
+  previewMessages: Array<{
+    id: number
+    senderName: string
+    content: string | null
+    timestamp: number
+  }>
+}
+
+/**
+ * 搜索会话（用于 AI 工具）
+ */
+export async function searchSessions(
+  sessionId: string,
+  keywords?: string[],
+  timeFilter?: { startTs: number; endTs: number },
+  limit?: number,
+  previewCount?: number
+): Promise<SessionSearchResultItem[]> {
+  return sendToWorker('searchSessions', { sessionId, keywords, timeFilter, limit, previewCount })
+}
+
+/**
+ * 会话消息结果类型（用于 AI 工具）
+ */
+export interface SessionMessagesResult {
+  sessionId: number
+  startTs: number
+  endTs: number
+  messageCount: number
+  returnedCount: number
+  participants: string[]
+  messages: Array<{
+    id: number
+    senderName: string
+    content: string | null
+    timestamp: number
+  }>
+}
+
+/**
+ * 获取会话的完整消息（用于 AI 工具）
+ */
+export async function getSessionMessages(
+  sessionId: string,
+  chatSessionId: number,
+  limit?: number
+): Promise<SessionMessagesResult | null> {
+  return sendToWorker('getSessionMessages', { sessionId, chatSessionId, limit })
+}
+
+// ==================== 自定义筛选 API ====================
+
+/**
+ * 筛选消息类型（完整信息）
+ */
+export interface FilterMessage {
+  id: number
+  senderName: string
+  senderPlatformId: string
+  senderAliases: string[]
+  senderAvatar: string | null
+  content: string
+  timestamp: number
+  type: number
+  replyToMessageId: string | null
+  replyToContent: string | null
+  replyToSenderName: string | null
+  isHit: boolean
+}
+
+/**
+ * 上下文块类型
+ */
+export interface ContextBlock {
+  startTs: number
+  endTs: number
+  messages: FilterMessage[]
+  hitCount: number
+}
+
+/**
+ * 筛选结果类型
+ */
+export interface FilterResult {
+  blocks: ContextBlock[]
+  stats: {
+    totalMessages: number
+    hitMessages: number
+    totalChars: number
+  }
+}
+
+/**
+ * 按条件筛选消息并扩充上下文
+ */
+export async function filterMessagesWithContext(
+  sessionId: string,
+  keywords?: string[],
+  timeFilter?: { startTs: number; endTs: number },
+  senderIds?: number[],
+  contextSize?: number
+): Promise<FilterResult> {
+  return sendToWorker('filterMessagesWithContext', { sessionId, keywords, timeFilter, senderIds, contextSize })
+}
+
+/**
+ * 获取多个会话的完整消息
+ */
+export async function getMultipleSessionsMessages(sessionId: string, chatSessionIds: number[]): Promise<FilterResult> {
+  return sendToWorker('getMultipleSessionsMessages', { sessionId, chatSessionIds })
 }

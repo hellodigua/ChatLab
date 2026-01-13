@@ -36,7 +36,7 @@ export const defaultFooterLinks: FooterLinkConfig[] = [
     title: '官网',
     subtitle: '下载最新版客户端',
     type: 'link',
-    url: 'https://chatlab.fun',
+    url: 'https://chatlab.fun/cn/',
   },
   {
     id: 'github',

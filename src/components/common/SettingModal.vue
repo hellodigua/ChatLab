@@ -1,10 +1,21 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import AIConfigTab from './settings/AIConfigTab.vue'
-import AIPromptConfigTab from './settings/AIPromptConfigTab.vue'
+import { ref, watch, computed, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useLayoutStore } from '@/stores/layout'
+import AISettingsTab from './settings/AISettingsTab.vue'
 import BasicSettingsTab from './settings/BasicSettingsTab.vue'
 import StorageTab from './settings/StorageTab.vue'
 import AboutTab from './settings/AboutTab.vue'
+import SubTabs from '@/components/UI/SubTabs.vue'
+
+const { t } = useI18n()
+const layoutStore = useLayoutStore()
+
+// 可滚动 Tab 的通用接口（支持 section 跳转的 Tab 需实现此接口）
+interface ScrollableTab {
+  scrollToSection?: (sectionId: string) => void
+  refresh?: () => void
+}
 
 // Props
 const props = defineProps<{
@@ -17,18 +28,25 @@ const emit = defineEmits<{
   'ai-config-saved': []
 }>()
 
-// Tab 配置
-const tabs = [
-  { id: 'settings', label: '基础设置', icon: 'i-heroicons-cog-6-tooth' },
-  { id: 'ai-config', label: '模型配置', icon: 'i-heroicons-sparkles' },
-  { id: 'ai-prompt', label: 'AI 对话配置', icon: 'i-heroicons-document-text' },
-  { id: 'storage', label: '存储管理', icon: 'i-heroicons-folder-open' },
-  { id: 'about', label: '关于', icon: 'i-heroicons-information-circle' },
-]
+// Tab 配置（使用 computed 以便语言切换时自动更新）
+const tabs = computed(() => [
+  { id: 'settings', label: t('settings.tabs.basic'), icon: 'i-heroicons-cog-6-tooth' },
+  { id: 'ai', label: t('settings.tabs.ai'), icon: 'i-heroicons-sparkles' },
+  { id: 'storage', label: t('settings.tabs.storage'), icon: 'i-heroicons-folder-open' },
+  { id: 'about', label: t('settings.tabs.about'), icon: 'i-heroicons-information-circle' },
+])
 
 const activeTab = ref('settings')
-const aiConfigRef = ref<InstanceType<typeof AIConfigTab> | null>(null)
-const storageTabRef = ref<InstanceType<typeof StorageTab> | null>(null)
+
+// 统一的 Tab 引用管理（通过 setTabRef 动态设置）
+const tabRefs = ref<Record<string, ScrollableTab | null>>({})
+
+/**
+ * 设置 Tab 引用（在模板中通过 :ref 调用）
+ */
+function setTabRef(tabId: string, el: unknown) {
+  tabRefs.value[tabId] = el as ScrollableTab | null
+}
 
 // AI 配置变更回调
 function handleAIConfigChanged() {
@@ -38,16 +56,35 @@ function handleAIConfigChanged() {
 // 关闭弹窗
 function closeModal() {
   emit('update:open', false)
+  layoutStore.clearSettingTarget()
 }
 
 // 监听打开状态
 watch(
   () => props.open,
-  (newVal) => {
+  async (newVal) => {
     if (newVal) {
-      activeTab.value = 'settings' // 默认打开基础设置 Tab
-      // 刷新存储管理（如果需要的话，或者在切换到 storage tab 时刷新）
-      storageTabRef.value?.refresh()
+      // 检查是否有指定的跳转目标
+      const target = layoutStore.settingTarget
+      if (target) {
+        activeTab.value = target.tab
+        // 如果有指定 section，等待渲染后滚动（通用逻辑）
+        if (target.section) {
+          await nextTick()
+          // 延迟一下确保目标 Tab 已渲染
+          setTimeout(() => {
+            const tabRef = tabRefs.value[target.tab]
+            tabRef?.scrollToSection?.(target.section!)
+          }, 100)
+        }
+      } else {
+        activeTab.value = 'settings' // 默认打开基础设置 Tab
+      }
+      // 刷新存储管理
+      tabRefs.value['storage']?.refresh?.()
+    } else {
+      // 弹窗关闭时清空 target
+      layoutStore.clearSettingTarget()
     }
   }
 )
@@ -56,9 +93,8 @@ watch(
 watch(
   () => activeTab.value,
   (newTab) => {
-    if (newTab === 'storage') {
-      storageTabRef.value?.refresh()
-    }
+    // 通用刷新逻辑
+    tabRefs.value[newTab]?.refresh?.()
   }
 )
 </script>
@@ -69,53 +105,33 @@ watch(
       <div class="p-6">
         <!-- Header -->
         <div class="mb-4 flex items-center justify-between">
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">全局设置</h2>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('settings.title') }}</h2>
           <UButton icon="i-heroicons-x-mark" variant="ghost" size="sm" @click="closeModal" />
         </div>
 
         <!-- Tab 导航 -->
-        <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
-          <div class="flex gap-1">
-            <button
-              v-for="tab in tabs"
-              :key="tab.id"
-              class="flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors"
-              :class="[
-                activeTab === tab.id
-                  ? 'border-primary-500 text-primary-600 dark:text-primary-400'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
-              ]"
-              @click="activeTab = tab.id"
-            >
-              <UIcon :name="tab.icon" class="h-4 w-4" />
-              <span>{{ tab.label }}</span>
-            </button>
-          </div>
+        <div class="mb-6 -mx-6">
+          <SubTabs v-model="activeTab" :items="tabs" />
         </div>
 
         <!-- Tab 内容 -->
         <div class="h-[500px] overflow-y-auto">
-          <!-- AI 配置 Tab -->
-          <div v-show="activeTab === 'ai-config'">
-            <AIConfigTab ref="aiConfigRef" @config-changed="handleAIConfigChanged" />
-          </div>
-
-          <!-- AI对话配置 Tab -->
-          <div v-show="activeTab === 'ai-prompt'">
-            <AIPromptConfigTab @config-changed="handleAIConfigChanged" />
-          </div>
-
-          <!-- 设置 Tab -->
+          <!-- 基础设置 -->
           <div v-show="activeTab === 'settings'">
             <BasicSettingsTab />
           </div>
 
-          <!-- 存储管理 Tab -->
-          <div v-show="activeTab === 'storage'">
-            <StorageTab ref="storageTabRef" />
+          <!-- AI 设置 -->
+          <div v-show="activeTab === 'ai'" class="h-full">
+            <AISettingsTab :ref="(el) => setTabRef('ai', el)" @config-changed="handleAIConfigChanged" />
           </div>
 
-          <!-- 关于 Tab -->
+          <!-- 存储管理 -->
+          <div v-show="activeTab === 'storage'" class="h-full">
+            <StorageTab :ref="(el) => setTabRef('storage', el)" />
+          </div>
+
+          <!-- 关于 -->
           <div v-show="activeTab === 'about'">
             <AboutTab />
           </div>

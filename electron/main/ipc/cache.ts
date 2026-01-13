@@ -4,18 +4,14 @@ import * as fs from 'fs/promises'
 import * as fsSync from 'fs'
 import * as path from 'path'
 import type { IpcContext } from './types'
-
-/**
- * 获取 ChatLab 数据目录
- */
-function getChatLabDir(): string {
-  try {
-    const docPath = app.getPath('documents')
-    return path.join(docPath, 'ChatLab')
-  } catch {
-    return path.join(process.cwd(), 'ChatLab')
-  }
-}
+import {
+  getAppDataDir,
+  getDatabaseDir,
+  getAiDataDir,
+  getLogsDir,
+  getDownloadsDir,
+  ensureDir,
+} from '../paths'
 
 /**
  * 递归计算目录大小
@@ -73,40 +69,32 @@ export function registerCacheHandlers(_context: IpcContext): void {
    * 获取所有缓存目录信息
    */
   ipcMain.handle('cache:getInfo', async () => {
-    const chatLabDir = getChatLabDir()
+    const appDataDir = getAppDataDir()
 
-    // 定义缓存目录
+    // 定义缓存目录（应用数据目录下的子目录）
     const cacheDirectories = [
       {
         id: 'databases',
-        name: '聊天记录数据库',
-        description: '导入的聊天记录分析数据',
-        path: path.join(chatLabDir, 'databases'),
+        name: 'settings.storage.cache.databases.name',
+        description: 'settings.storage.cache.databases.description',
+        path: getDatabaseDir(),
         icon: 'i-heroicons-circle-stack',
         canClear: false, // 不允许一键清理，因为是重要数据
       },
       {
         id: 'ai',
-        name: 'AI 对话数据库',
-        description: 'AI 对话历史和配置文件',
-        path: path.join(chatLabDir, 'ai'),
+        name: 'settings.storage.cache.ai.name',
+        description: 'settings.storage.cache.ai.description',
+        path: getAiDataDir(),
         icon: 'i-heroicons-sparkles',
         canClear: false, // 不允许一键清理
       },
       // 临时文件已有自动清理机制（应用启动时、合并完成后），无需暴露给用户
       {
-        id: 'downloads',
-        name: '下载目录',
-        description: '包含截屏文件、分析结果等',
-        path: path.join(chatLabDir, 'downloads'),
-        icon: 'i-heroicons-arrow-down-tray',
-        canClear: true, // 可以清理
-      },
-      {
         id: 'logs',
-        name: '日志文件',
-        description: '软件的运行日志，包含导入、AI、错误等日志',
-        path: path.join(chatLabDir, 'logs'),
+        name: 'settings.storage.cache.logs.name',
+        description: 'settings.storage.cache.logs.description',
+        path: getLogsDir(),
         icon: 'i-heroicons-document-text',
         canClear: true, // 可以清理
       },
@@ -129,7 +117,7 @@ export function registerCacheHandlers(_context: IpcContext): void {
     )
 
     return {
-      baseDir: chatLabDir,
+      baseDir: appDataDir,
       directories: results,
       totalSize: results.reduce((sum, dir) => sum + dir.size, 0),
     }
@@ -139,12 +127,9 @@ export function registerCacheHandlers(_context: IpcContext): void {
    * 清理指定缓存目录
    */
   ipcMain.handle('cache:clear', async (_, cacheId: string) => {
-    const chatLabDir = getChatLabDir()
-
-    // 只允许清理 downloads 和 logs（temp 由系统自动清理）
+    // 只允许清理 logs（temp 由系统自动清理，downloads 已改为系统下载目录）
     const allowedDirs: Record<string, string> = {
-      downloads: path.join(chatLabDir, 'downloads'),
-      logs: path.join(chatLabDir, 'logs'),
+      logs: getLogsDir(),
     }
 
     const dirPath = allowedDirs[cacheId]
@@ -179,21 +164,35 @@ export function registerCacheHandlers(_context: IpcContext): void {
   })
 
   /**
-   * 保存文件到下载目录
+   * 保存文件到系统下载目录
+   * 支持两种 data URL 格式：
+   * 1. base64: data:image/png;base64,xxx
+   * 2. URL 编码: data:text/plain;charset=utf-8,xxx
    */
   ipcMain.handle('cache:saveToDownloads', async (_, filename: string, dataUrl: string) => {
-    const chatLabDir = getChatLabDir()
-    const downloadsDir = path.join(chatLabDir, 'downloads')
+    const downloadsDir = getDownloadsDir()
 
     try {
-      // 确保目录存在
-      if (!fsSync.existsSync(downloadsDir)) {
-        await fs.mkdir(downloadsDir, { recursive: true })
-      }
+      // 系统下载目录应该已存在，但以防万一还是确保一下
+      ensureDir(downloadsDir)
 
-      // 从 data URL 中提取 base64 数据
-      const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, '')
-      const buffer = Buffer.from(base64Data, 'base64')
+      let buffer: Buffer
+
+      // 解析 data URL
+      if (dataUrl.includes(';base64,')) {
+        // Base64 编码格式（图片等二进制数据）
+        const base64Data = dataUrl.split(';base64,')[1]
+        buffer = Buffer.from(base64Data, 'base64')
+      } else if (dataUrl.includes('charset=utf-8,')) {
+        // URL 编码格式（文本数据）
+        const textData = dataUrl.split('charset=utf-8,')[1]
+        const decodedText = decodeURIComponent(textData)
+        buffer = Buffer.from(decodedText, 'utf-8')
+      } else {
+        // 默认尝试作为 base64 处理
+        const base64Data = dataUrl.replace(/^data:[^,]+,/, '')
+        buffer = Buffer.from(base64Data, 'base64')
+      }
 
       // 写入文件
       const filePath = path.join(downloadsDir, filename)
@@ -211,14 +210,12 @@ export function registerCacheHandlers(_context: IpcContext): void {
    * 在文件管理器中打开缓存目录
    */
   ipcMain.handle('cache:openDir', async (_, cacheId: string) => {
-    const chatLabDir = getChatLabDir()
-
     const dirPaths: Record<string, string> = {
-      base: chatLabDir,
-      databases: path.join(chatLabDir, 'databases'),
-      downloads: path.join(chatLabDir, 'downloads'),
-      ai: path.join(chatLabDir, 'ai'),
-      logs: path.join(chatLabDir, 'logs'),
+      base: getAppDataDir(),
+      databases: getDatabaseDir(),
+      ai: getAiDataDir(),
+      logs: getLogsDir(),
+      downloads: getDownloadsDir(), // 系统下载目录
     }
 
     const dirPath = dirPaths[cacheId]
@@ -227,7 +224,7 @@ export function registerCacheHandlers(_context: IpcContext): void {
     }
 
     try {
-      // 确保目录存在
+      // 确保目录存在（系统下载目录应该已存在）
       if (!fsSync.existsSync(dirPath)) {
         await fs.mkdir(dirPath, { recursive: true })
       }
@@ -236,6 +233,60 @@ export function registerCacheHandlers(_context: IpcContext): void {
       return { success: true }
     } catch (error) {
       console.error('[Cache] Error opening directory:', error)
+      return { success: false, error: String(error) }
+    }
+  })
+
+  /**
+   * 获取最新的导入日志文件路径
+   */
+  ipcMain.handle('cache:getLatestImportLog', async () => {
+    const importLogDir = path.join(getLogsDir(), 'import')
+
+    try {
+      if (!fsSync.existsSync(importLogDir)) {
+        return { success: false, error: '日志目录不存在' }
+      }
+
+      const files = await fs.readdir(importLogDir)
+      const logFiles = files.filter((f) => f.startsWith('import_') && f.endsWith('.log'))
+
+      if (logFiles.length === 0) {
+        return { success: false, error: '没有找到导入日志' }
+      }
+
+      // 按修改时间排序，获取最新的
+      const fileStats = await Promise.all(
+        logFiles.map(async (f) => {
+          const filePath = path.join(importLogDir, f)
+          const stat = await fs.stat(filePath)
+          return { name: f, path: filePath, mtime: stat.mtime.getTime() }
+        })
+      )
+
+      fileStats.sort((a, b) => b.mtime - a.mtime)
+      const latestLog = fileStats[0]
+
+      return { success: true, path: latestLog.path, name: latestLog.name }
+    } catch (error) {
+      console.error('[Cache] Error getting latest import log:', error)
+      return { success: false, error: String(error) }
+    }
+  })
+
+  /**
+   * 在文件管理器中显示并高亮文件
+   */
+  ipcMain.handle('cache:showInFolder', async (_, filePath: string) => {
+    try {
+      if (!fsSync.existsSync(filePath)) {
+        return { success: false, error: '文件不存在' }
+      }
+
+      shell.showItemInFolder(filePath)
+      return { success: true }
+    } catch (error) {
+      console.error('[Cache] Error showing file in folder:', error)
       return { success: false, error: String(error) }
     }
   })

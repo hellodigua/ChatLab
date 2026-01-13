@@ -1,0 +1,86 @@
+{
+  "groupChat": {
+    "title": "Group Chat Analysis",
+    "loading": "Loading analysis data...",
+    "loadError": "Unable to load session data",
+    "description": "{dateRange}, {memberCount} members chatted {messageCount} messages"
+  },
+  "privateChat": {
+    "title": "Private Chat Analysis",
+    "loading": "Loading analysis data...",
+    "loadError": "Unable to load session data",
+    "description": "{dateRange}, {messageCount} messages in total"
+  },
+  "tabs": {
+    "overview": "Overview",
+    "ranking": "Rankings",
+    "groupQuotes": "Quotes",
+    "quotes": "Quotes",
+    "members": "Members",
+    "member": "Members",
+    "ai": "AI Lab"
+  },
+  "yearFilter": {
+    "allTime": "All Time",
+    "year": "{year}"
+  },
+  "tooltip": {
+    "chatViewer": "Chat Record Viewer",
+    "sessionIndex": "Session Index"
+  },
+  "filter": {
+    "title": "Filter Analysis",
+    "conditionMode": "Condition Filter",
+    "sessionMode": "Session Filter",
+    "history": "History",
+    "execute": "Execute Filter",
+    "export": "Export Feed Pack",
+    "localAnalysis": "AI Analysis",
+    "keywords": "Keywords",
+    "keywordsHint": "Multiple keywords supported, OR logic",
+    "keywordPlaceholder": "Enter keyword, press Enter to add",
+    "timeRange": "Time Range",
+    "allTime": "All Time",
+    "today": "Today",
+    "lastWeek": "Last 7 Days",
+    "lastMonth": "Last Month",
+    "last3Months": "Last 3 Months",
+    "lastYear": "Last Year",
+    "customTime": "Custom",
+    "senders": "Senders",
+    "sendersHint": "Optional, leave empty for all",
+    "searchMember": "Search member...",
+    "noMembers": "No members",
+    "selectedCount": "{count} selected",
+    "contextSize": "Context Expansion",
+    "messages": "messages",
+    "searchSession": "Search date...",
+    "selectedSessions": "{count} sessions selected",
+    "noSessions": "No session index",
+    "filtering": "Filtering...",
+    "emptyHint": "Set filter conditions and click execute",
+    "noResults": "No matching messages found",
+    "blockTitle": "Context Block {index}",
+    "stats": {
+      "blocks": "Blocks",
+      "messages": "Messages",
+      "hits": "Hits",
+      "chars": "Characters",
+      "tokens": "Est. Tokens"
+    },
+    "tokenWarning": {
+      "yellow": "Token count is high, may affect AI analysis",
+      "red": "Token count too high, consider narrowing filter"
+    },
+    "historyTitle": "Filter History",
+    "noHistory": "No history records",
+    "localAnalysisTitle": "AI Analysis",
+    "presetAnalysis": "Preset Analysis",
+    "customAnalysis": "Custom Question",
+    "customPromptPlaceholder": "Enter your question...",
+    "editablePromptLabel": "Prompt (editable)",
+    "analyzing": "Analyzing...",
+    "startAnalysis": "Start Analysis",
+    "analysisResult": "Analysis Result"
+  }
+}

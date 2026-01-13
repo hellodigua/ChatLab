@@ -56,6 +56,9 @@ const api = {
   removeListener: (channel: string, func: (...args: unknown[]) => void) => {
     ipcRenderer.removeListener(channel, func)
   },
+  setThemeSource: (mode: 'system' | 'light' | 'dark') => {
+    ipcRenderer.send('window:setThemeSource', mode)
+  },
 }
 
 // Chat Analysis API
@@ -501,7 +504,7 @@ const aiApi = {
   },
 
   /**
-   * 获取最近消息
+   * 获取最近消息（AI Agent 专用）
    */
   getRecentMessages: (
     sessionId: string,
@@ -509,6 +512,17 @@ const aiApi = {
     limit?: number
   ): Promise<{ messages: SearchMessageResult[]; total: number }> => {
     return ipcRenderer.invoke('ai:getRecentMessages', sessionId, filter, limit)
+  },
+
+  /**
+   * 获取所有最近消息（消息查看器专用）
+   */
+  getAllRecentMessages: (
+    sessionId: string,
+    filter?: { startTs?: number; endTs?: number },
+    limit?: number
+  ): Promise<{ messages: SearchMessageResult[]; total: number }> => {
+    return ipcRenderer.invoke('ai:getAllRecentMessages', sessionId, filter, limit)
   },
 
   /**
@@ -550,6 +564,81 @@ const aiApi = {
     keywords?: string[]
   ): Promise<{ messages: SearchMessageResult[]; hasMore: boolean }> => {
     return ipcRenderer.invoke('ai:getMessagesAfter', sessionId, afterId, limit, filter, senderId, keywords)
+  },
+
+  // ==================== 自定义筛选 ====================
+
+  /**
+   * 按条件筛选消息并扩充上下文
+   */
+  filterMessagesWithContext: (
+    sessionId: string,
+    keywords?: string[],
+    timeFilter?: { startTs: number; endTs: number },
+    senderIds?: number[],
+    contextSize?: number
+  ): Promise<{
+    blocks: Array<{
+      startTs: number
+      endTs: number
+      messages: Array<{
+        id: number
+        senderName: string
+        senderPlatformId: string
+        senderAliases: string[]
+        senderAvatar: string | null
+        content: string
+        timestamp: number
+        type: number
+        replyToMessageId: string | null
+        replyToContent: string | null
+        replyToSenderName: string | null
+        isHit: boolean
+      }>
+      hitCount: number
+    }>
+    stats: {
+      totalMessages: number
+      hitMessages: number
+      totalChars: number
+    }
+  }> => {
+    return ipcRenderer.invoke('ai:filterMessagesWithContext', sessionId, keywords, timeFilter, senderIds, contextSize)
+  },
+
+  /**
+   * 获取多个会话的完整消息
+   */
+  getMultipleSessionsMessages: (
+    sessionId: string,
+    chatSessionIds: number[]
+  ): Promise<{
+    blocks: Array<{
+      startTs: number
+      endTs: number
+      messages: Array<{
+        id: number
+        senderName: string
+        senderPlatformId: string
+        senderAliases: string[]
+        senderAvatar: string | null
+        content: string
+        timestamp: number
+        type: number
+        replyToMessageId: string | null
+        replyToContent: string | null
+        replyToSenderName: string | null
+        isHit: boolean
+      }>
+      hitCount: number
+    }>
+    stats: {
+      totalMessages: number
+      hitMessages: number
+      totalChars: number
+    }
+  }> => {
+    return ipcRenderer.invoke('ai:getMultipleSessionsMessages', sessionId, chatSessionIds)
   },
 
   /**
@@ -854,6 +943,7 @@ const agentApi = {
    * @param historyMessages 对话历史（可选，用于上下文关联）
    * @param chatType 聊天类型（'group' | 'private'）
    * @param promptConfig 用户自定义提示词配置（可选）
+   * @param locale 语言设置（可选，默认 'zh-CN'）
    * @returns 返回 { requestId, promise }，requestId 可用于中止请求
    */
   runStream: (
@@ -862,7 +952,8 @@ const agentApi = {
     onChunk?: (chunk: AgentStreamChunk) => void,
     historyMessages?: Array<{ role: 'user' | 'assistant'; content: string }>,
     chatType?: 'group' | 'private',
-    promptConfig?: PromptConfig
+    promptConfig?: PromptConfig,
+    locale?: string
   ): { requestId: string; promise: Promise<{ success: boolean; result?: AgentResult; error?: string }> } => {
     const requestId = `agent_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
     console.log(
@@ -890,21 +981,29 @@ const agentApi = {
       }
 
       // 监听完成事件
-      const completeHandler = (_event: Electron.IpcRendererEvent, data: { requestId: string; result: AgentResult }) => {
+      const completeHandler = (
+        _event: Electron.IpcRendererEvent,
+        data: { requestId: string; result: AgentResult & { error?: string } }
+      ) => {
         if (data.requestId === requestId) {
-          console.log('[preload] Agent 完成，requestId:', requestId)
+          console.log('[preload] Agent 完成，requestId:', requestId, 'hasError:', !!data.result?.error)
           ipcRenderer.removeListener('agent:streamChunk', chunkHandler)
           ipcRenderer.removeListener('agent:complete', completeHandler)
-          resolve({ success: true, result: data.result })
+          // 如果 result 中包含 error，返回失败状态
+          if (data.result?.error) {
+            resolve({ success: false, error: data.result.error })
+          } else {
+            resolve({ success: true, result: data.result })
+          }
         }
       }
 
       ipcRenderer.on('agent:streamChunk', chunkHandler)
       ipcRenderer.on('agent:complete', completeHandler)
 
-      // 发起请求（传递历史消息、聊天类型和提示词配置）
+      // 发起请求（传递历史消息、聊天类型、提示词配置和语言设置）
       ipcRenderer
-        .invoke('agent:runStream', requestId, userMessage, context, historyMessages, chatType, promptConfig)
+        .invoke('agent:runStream', requestId, userMessage, context, historyMessages, chatType, promptConfig, locale)
         .then((result) => {
           console.log('[preload] Agent invoke 返回:', result)
           if (!result.success) {
@@ -932,6 +1031,35 @@ const agentApi = {
   abort: (requestId: string): Promise<{ success: boolean; error?: string }> => {
     console.log('[preload] Agent abort 请求，requestId:', requestId)
     return ipcRenderer.invoke('agent:abort', requestId)
+  },
+}
+
+// Network API - 网络设置
+interface ProxyConfig {
+  enabled: boolean
+  url: string
+}
+
+const networkApi = {
+  /**
+   * 获取代理配置
+   */
+  getProxyConfig: (): Promise<ProxyConfig> => {
+    return ipcRenderer.invoke('network:getProxyConfig')
+  },
+
+  /**
+   * 保存代理配置
+   */
+  saveProxyConfig: (config: ProxyConfig): Promise<{ success: boolean; error?: string }> => {
+    return ipcRenderer.invoke('network:saveProxyConfig', config)
+  },
+
+  /**
+   * 测试代理连接
+   */
+  testProxyConnection: (proxyUrl: string): Promise<{ success: boolean; error?: string }> => {
+    return ipcRenderer.invoke('network:testProxyConnection', proxyUrl)
   },
 }
 
@@ -984,6 +1112,82 @@ const cacheApi = {
     dataUrl: string
   ): Promise<{ success: boolean; filePath?: string; error?: string }> => {
     return ipcRenderer.invoke('cache:saveToDownloads', filename, dataUrl)
+  },
+
+  /**
+   * 获取最新的导入日志文件路径
+   */
+  getLatestImportLog: (): Promise<{ success: boolean; path?: string; name?: string; error?: string }> => {
+    return ipcRenderer.invoke('cache:getLatestImportLog')
+  },
+
+  /**
+   * 在文件管理器中显示并高亮文件
+   */
+  showInFolder: (filePath: string): Promise<{ success: boolean; error?: string }> => {
+    return ipcRenderer.invoke('cache:showInFolder', filePath)
+  },
+}
+
+// Session Index API - 会话索引功能
+interface SessionStats {
+  sessionCount: number
+  hasIndex: boolean
+  gapThreshold: number
+}
+
+interface ChatSessionItem {
+  id: number
+  startTs: number
+  endTs: number
+  messageCount: number
+  firstMessageId: number
+}
+
+const sessionApi = {
+  /**
+   * 生成会话索引
+   * @param sessionId 数据库会话ID
+   * @param gapThreshold 时间间隔阈值（秒）
+   * @returns 生成的会话数量
+   */
+  generate: (sessionId: string, gapThreshold?: number): Promise<number> => {
+    return ipcRenderer.invoke('session:generate', sessionId, gapThreshold)
+  },
+
+  /**
+   * 检查是否已生成会话索引
+   */
+  hasIndex: (sessionId: string): Promise<boolean> => {
+    return ipcRenderer.invoke('session:hasIndex', sessionId)
+  },
+
+  /**
+   * 获取会话索引统计信息
+   */
+  getStats: (sessionId: string): Promise<SessionStats> => {
+    return ipcRenderer.invoke('session:getStats', sessionId)
+  },
+
+  /**
+   * 清空会话索引
+   */
+  clear: (sessionId: string): Promise<boolean> => {
+    return ipcRenderer.invoke('session:clear', sessionId)
+  },
+
+  /**
+   * 更新会话切分阈值
+   */
+  updateGapThreshold: (sessionId: string, gapThreshold: number | null): Promise<boolean> => {
+    return ipcRenderer.invoke('session:updateGapThreshold', sessionId, gapThreshold)
+  },
+
+  /**
+   * 获取会话列表（用于时间线导航）
+   */
+  getSessions: (sessionId: string): Promise<ChatSessionItem[]> => {
+    return ipcRenderer.invoke('session:getSessions', sessionId)
   },
 }
 
@@ -1057,6 +1261,8 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('llmApi', llmApi)
     contextBridge.exposeInMainWorld('agentApi', agentApi)
     contextBridge.exposeInMainWorld('cacheApi', cacheApi)
+    contextBridge.exposeInMainWorld('networkApi', networkApi)
+    contextBridge.exposeInMainWorld('sessionApi', sessionApi)
   } catch (error) {
     console.error(error)
   }
@@ -1077,4 +1283,8 @@ if (process.contextIsolated) {
   window.agentApi = agentApi
   // @ts-ignore (define in dts)
   window.cacheApi = cacheApi
+  // @ts-ignore (define in dts)
+  window.networkApi = networkApi
+  // @ts-ignore (define in dts)
+  window.sessionApi = sessionApi
 }

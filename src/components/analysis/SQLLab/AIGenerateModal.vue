@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { TableSchema } from './types'
 import { getTableLabel, getColumnLabel } from './types'
+
+const { t } = useI18n()
 
 // Props
 const props = defineProps<{
@@ -69,6 +72,8 @@ ${schemaDesc}
       OR m.aliases LIKE '%人名%'
    \`\`\`
 5. 显示成员名称时，使用 COALESCE(m.group_nickname, m.account_name, m.platform_id) 来获取最佳显示名
+6. **查询具体消息时包含消息 ID**：当用户需要查看具体的聊天记录时，SELECT 应包含 msg.id 作为第一个字段，这样用户可以点击查看完整上下文。注意是 msg.id（消息 ID），不是 m.id（成员 ID）。
+7. **统计查询不需要消息 ID**：当用户需要统计分析（如"统计发言数量"、"分析活跃度"）时，不需要返回 msg.id
 
 ## 用户需求
 
@@ -104,14 +109,14 @@ function closeModal() {
 // AI 生成 SQL
 async function generateSQL() {
   if (!aiPrompt.value.trim()) {
-    aiError.value = '请输入查询需求'
+    aiError.value = t('errorEmptyPrompt')
     return
   }
 
   // 检查是否配置了 LLM
   const hasConfig = await window.llmApi.hasConfig()
   if (!hasConfig) {
-    aiError.value = '请先在设置中配置 AI 服务'
+    aiError.value = t('errorNoAIConfig')
     return
   }
 
@@ -165,7 +170,7 @@ async function generateSQL() {
         }
       }
     } else {
-      aiError.value = result.error || 'AI 生成失败'
+      aiError.value = result.error || t('errorGenerate')
     }
   } catch (err: any) {
     aiError.value = err.message || String(err)
@@ -197,18 +202,18 @@ function useAndRunSQL() {
       <div class="p-6">
         <div class="mb-4 flex items-center gap-2">
           <UIcon name="i-heroicons-sparkles" class="h-5 w-5 text-pink-500" />
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">AI 生成 SQL</h3>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('title') }}</h3>
         </div>
 
         <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
-          用自然语言描述你想查询的内容，AI 将自动生成对应的 SQL 语句。
+          {{ t('description') }}
         </p>
 
         <!-- 输入框 -->
         <textarea
           v-model="aiPrompt"
           class="mb-4 h-24 w-full resize-none rounded-lg border border-gray-300 bg-white p-3 text-sm text-gray-800 focus:border-pink-500 focus:outline-none focus:ring-1 focus:ring-pink-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"
-          placeholder="例如：查找发言最多的前 10 个成员、统计每天的消息数量、找出包含「买房」关键词的消息..."
+          :placeholder="t('placeholder')"
           :disabled="isGenerating"
         />
 
@@ -223,15 +228,15 @@ function useAndRunSQL() {
               class="h-3.5 w-3.5"
             />
             <UIcon name="i-heroicons-cpu-chip" class="h-3.5 w-3.5" />
-            AI 输出
-            <span v-if="isGenerating" class="ml-1 text-pink-500">生成中...</span>
+            {{ t('aiOutput') }}
+            <span v-if="isGenerating" class="ml-1 text-pink-500">{{ t('generating') }}</span>
           </button>
           <div
             v-show="showStreamingContent"
             class="max-h-40 overflow-y-auto rounded-lg bg-gray-50 p-3 dark:bg-gray-900"
           >
             <pre class="whitespace-pre-wrap break-all font-mono text-xs text-gray-600 dark:text-gray-400">{{
-              streamingContent || '等待 AI 响应...'
+              streamingContent || t('waitingAI')
             }}</pre>
           </div>
         </div>
@@ -247,7 +252,7 @@ function useAndRunSQL() {
           <div>
             <p class="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400">
               <UIcon name="i-heroicons-code-bracket" class="h-3.5 w-3.5" />
-              SQL 语句
+              {{ t('sqlStatement') }}
             </p>
             <div class="rounded-lg bg-gray-100 p-3 dark:bg-gray-800">
               <pre class="whitespace-pre-wrap break-all font-mono text-sm text-gray-800 dark:text-gray-200">{{
@@ -260,7 +265,7 @@ function useAndRunSQL() {
           <div v-if="generatedExplanation">
             <p class="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400">
               <UIcon name="i-heroicons-light-bulb" class="h-3.5 w-3.5" />
-              说明
+              {{ t('explanation') }}
             </p>
             <div class="rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
               <p class="text-sm text-blue-800 dark:text-blue-200">{{ generatedExplanation }}</p>
@@ -270,7 +275,7 @@ function useAndRunSQL() {
 
         <!-- 操作按钮 -->
         <div class="flex justify-end gap-2">
-          <UButton variant="ghost" @click="closeModal">取消</UButton>
+          <UButton variant="ghost" @click="closeModal">{{ t('cancel') }}</UButton>
 
           <UButton
             v-if="!generatedSQL"
@@ -280,15 +285,15 @@ function useAndRunSQL() {
             @click="generateSQL"
           >
             <UIcon name="i-heroicons-sparkles" class="mr-1 h-4 w-4" />
-            生成 SQL
+            {{ t('generateSQL') }}
           </UButton>
 
           <template v-else>
-            <UButton variant="outline" :loading="isGenerating" @click="generateSQL">重新生成</UButton>
-            <UButton variant="outline" @click="useGeneratedSQL">使用 SQL</UButton>
+            <UButton variant="outline" :loading="isGenerating" @click="generateSQL">{{ t('regenerate') }}</UButton>
+            <UButton variant="outline" @click="useGeneratedSQL">{{ t('useSQL') }}</UButton>
             <UButton color="primary" @click="useAndRunSQL">
               <UIcon name="i-heroicons-play" class="mr-1 h-4 w-4" />
-              运行
+              {{ t('run') }}
             </UButton>
           </template>
         </div>
@@ -296,3 +301,44 @@ function useAndRunSQL() {
     </template>
   </UModal>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "title": "AI 生成 SQL",
+    "description": "用自然语言描述你想查询的内容，AI 将自动生成对应的 SQL 语句。",
+    "placeholder": "例如：查找发言最多的前 10 个成员、统计每天的消息数量、找出包含「买房」关键词的消息...",
+    "errorEmptyPrompt": "请输入查询需求",
+    "errorNoAIConfig": "请先在设置中配置 AI 服务",
+    "errorGenerate": "AI 生成失败",
+    "aiOutput": "AI 输出",
+    "generating": "生成中...",
+    "waitingAI": "等待 AI 响应...",
+    "sqlStatement": "SQL 语句",
+    "explanation": "说明",
+    "cancel": "取消",
+    "generateSQL": "生成 SQL",
+    "regenerate": "重新生成",
+    "useSQL": "使用 SQL",
+    "run": "运行"
+  },
+  "en-US": {
+    "title": "AI Generate SQL",
+    "description": "Describe what you want to query in natural language, and AI will generate the corresponding SQL.",
+    "placeholder": "E.g.: Find top 10 members by message count, count daily messages, find messages containing 'keyword'...",
+    "errorEmptyPrompt": "Please enter your query requirement",
+    "errorNoAIConfig": "Please configure AI service in settings first",
+    "errorGenerate": "AI generation failed",
+    "aiOutput": "AI Output",
+    "generating": "Generating...",
+    "waitingAI": "Waiting for AI response...",
+    "sqlStatement": "SQL Statement",
+    "explanation": "Explanation",
+    "cancel": "Cancel",
+    "generateSQL": "Generate SQL",
+    "regenerate": "Regenerate",
+    "useSQL": "Use SQL",
+    "run": "Run"
+  }
+}
+</i18n>

@@ -52,8 +52,12 @@ export const feature: FormatFeature = {
   priority: 25,
   extensions: ['.txt'],
   signatures: {
-    // WhatsApp 导出文件的特征
-    head: [/消息和通话已进行端到端加密/, /WhatsApp/i],
+    // WhatsApp 导出文件的特征（中文/英文）
+    head: [
+      /消息和通话已进行端到端加密/, // 中文
+      /Messages and calls are end-to-end encrypted/i, // 英文
+      /WhatsApp/i,
+    ],
   },
 }
 
@@ -70,9 +74,12 @@ function cleanLine(line: string): string {
 
 // ==================== 消息头正则 ====================
 
-// 匹配消息行：2025/12/22 12:35 - 地瓜: 内容
-// 或系统消息：2025/12/22 12:35 - 系统消息内容
-const MESSAGE_LINE_REGEX = /^(\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}) - (.+)$/
+// 格式1：2025/12/22 12:35 - 地瓜: 内容（部分地区导出格式）
+const MESSAGE_LINE_REGEX_V1 = /^(\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}) - (.+)$/
+
+// 格式2：[6/7/25 22:44:26] 或 [10/12/25, 12:50:16]（中文/英文地区导出格式）
+// 日期和时间之间可能有逗号（英文）或没有（中文）
+const MESSAGE_LINE_REGEX_V2 = /^\[(\d{1,2}\/\d{1,2}\/\d{2},? \d{1,2}:\d{2}:\d{2})\] (.+)$/
 
 // 从消息内容中分离昵称和实际内容
 // 格式：昵称: 内容
@@ -81,6 +88,7 @@ const SENDER_CONTENT_REGEX = /^(.+?): (.*)$/
 // ==================== 系统消息识别 ====================
 
 const SYSTEM_MESSAGE_PATTERNS = [
+  // 中文系统消息
   /消息和通话已进行端到端加密/,
   /创建了此群组/,
   /加入群组/,
@@ -90,6 +98,18 @@ const SYSTEM_MESSAGE_PATTERNS = [
   /更改了本群组/,
   /已将此群组的设置更改为/,
   /这条消息已删除/,
+  /限时消息功能/,
+  /正在等待此消息/,
+  // 英文系统消息
+  /Messages and calls are end-to-end encrypted/i,
+  /created this group/i,
+  /joined the group/i,
+  /added/i,
+  /left the group/i,
+  /removed/i,
+  /changed this group/i,
+  /This message was deleted/i,
+  /disappearing messages/i,
 ]
 
 function isSystemMessage(content: string): boolean {
@@ -118,10 +138,26 @@ function detectMessageType(content: string): MessageType {
 
 /**
  * 解析 WhatsApp 时间格式为秒级时间戳
- * @param timeStr 格式：2025/12/22 12:35
+ * 支持两种格式：
+ * - 格式1：2025/12/22 12:35（YYYY/MM/DD HH:MM）
+ * - 格式2：6/7/25 22:44:26（M/D/YY HH:MM:SS）
  */
-function parseWhatsAppTime(timeStr: string): number {
-  // 将 YYYY/MM/DD HH:MM 转换为 YYYY-MM-DDTHH:MM
+function parseWhatsAppTime(timeStr: string, isV2Format: boolean = false): number {
+  if (isV2Format) {
+    // 格式2：M/D/YY HH:MM:SS 或 M/D/YY, HH:MM:SS（可选逗号）
+    // 先移除可能的逗号
+    const normalizedStr = timeStr.replace(',', '')
+    const match = normalizedStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}) (\d{1,2}):(\d{2}):(\d{2})$/)
+    if (match) {
+      const [, month, day, year, hour, minute, second] = match
+      // 将 2 位年份转换为 4 位（假设 00-99 对应 2000-2099）
+      const fullYear = 2000 + parseInt(year, 10)
+      const date = new Date(fullYear, parseInt(month, 10) - 1, parseInt(day, 10), parseInt(hour, 10), parseInt(minute, 10), parseInt(second, 10))
+      return Math.floor(date.getTime() / 1000)
+    }
+  }
+
+  // 格式1：YYYY/MM/DD HH:MM
   const normalized = timeStr.replace(/\//g, '-').replace(' ', 'T') + ':00'
   const date = new Date(normalized)
   return Math.floor(date.getTime() / 1000)
@@ -145,7 +181,7 @@ async function* parseWhatsApp(options: ParseOptions): AsyncGenerator<ParseEvent,
   let skippedLines = 0
 
   // 发送初始进度
-  const initialProgress = createProgress('parsing', 0, totalBytes, 0, '开始解析...')
+  const initialProgress = createProgress('parsing', 0, totalBytes, 0, '')
   yield { type: 'progress', data: initialProgress }
   onProgress?.(initialProgress)
 
@@ -209,8 +245,14 @@ async function* parseWhatsApp(options: ParseOptions): AsyncGenerator<ParseEvent,
     // 清理行首不可见字符
     const cleanedLine = cleanLine(line)
 
-    // 尝试匹配消息行
-    const lineMatch = cleanedLine.match(MESSAGE_LINE_REGEX)
+    // 尝试匹配消息行（两种格式）
+    let lineMatch = cleanedLine.match(MESSAGE_LINE_REGEX_V1)
+    let isV2Format = false
+    if (!lineMatch) {
+      lineMatch = cleanedLine.match(MESSAGE_LINE_REGEX_V2)
+      isV2Format = true
+    }
+
     if (lineMatch) {
       // 保存前一条消息
       saveCurrentMessage()
@@ -223,14 +265,14 @@ async function* parseWhatsApp(options: ParseOptions): AsyncGenerator<ParseEvent,
       if (senderMatch && !isSystemMessage(restContent)) {
         // 普通消息
         currentMessage = {
-          timestamp: parseWhatsAppTime(timeStr),
+          timestamp: parseWhatsAppTime(timeStr, isV2Format),
           sender: senderMatch[1].trim(),
           contentLines: [senderMatch[2]],
         }
       } else {
         // 系统消息
         currentMessage = {
-          timestamp: parseWhatsAppTime(timeStr),
+          timestamp: parseWhatsAppTime(timeStr, isV2Format),
           sender: null,
           contentLines: [restContent],
         }
@@ -293,7 +335,7 @@ async function* parseWhatsApp(options: ParseOptions): AsyncGenerator<ParseEvent,
   }
 
   // 完成
-  const doneProgress = createProgress('done', totalBytes, totalBytes, messagesProcessed, '解析完成')
+  const doneProgress = createProgress('done', totalBytes, totalBytes, messagesProcessed, '')
   yield { type: 'progress', data: doneProgress }
   onProgress?.(doneProgress)
 

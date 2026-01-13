@@ -2,6 +2,7 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import type { AnalysisSession, MessageType } from '@/types/base'
 import type { MemberActivity, HourlyActivity, DailyActivity } from '@/types/analysis'
 import { formatDateRange } from '@/utils'
@@ -12,14 +13,21 @@ import OverviewTab from './components/OverviewTab.vue'
 import QuotesTab from './components/QuotesTab.vue'
 import MemberTab from './components/MemberTab.vue'
 import PageHeader from '@/components/layout/PageHeader.vue'
+import SessionIndexModal from '@/components/analysis/SessionIndexModal.vue'
+import LoadingState from '@/components/UI/LoadingState.vue'
 import { useSessionStore } from '@/stores/session'
 import { useLayoutStore } from '@/stores/layout'
+
+const { t } = useI18n()
 
 const route = useRoute()
 const router = useRouter()
 const sessionStore = useSessionStore()
 const layoutStore = useLayoutStore()
 const { currentSessionId } = storeToRefs(sessionStore)
+
+// 会话索引弹窗状态
+const showSessionIndexModal = ref(false)
 
 // 打开聊天记录查看器
 function openChatRecordViewer() {
@@ -42,10 +50,10 @@ const isInitialLoad = ref(true) // 用于跳过初始加载时的 watch 触发�
 
 // Tab 配置 - 私聊有总览、语录、成员、AI实验室（趋势已合并到总览）
 const tabs = [
-  { id: 'overview', label: '总览', icon: 'i-heroicons-chart-pie' },
-  { id: 'quotes', label: '语录', icon: 'i-heroicons-chat-bubble-left-right' },
-  { id: 'member', label: '成员', icon: 'i-heroicons-user-group' },
-  { id: 'ai', label: 'AI实验室', icon: 'i-heroicons-sparkles' },
+  { id: 'overview', labelKey: 'analysis.tabs.overview', icon: 'i-heroicons-chart-pie' },
+  { id: 'quotes', labelKey: 'analysis.tabs.quotes', icon: 'i-heroicons-chat-bubble-left-right' },
+  { id: 'member', labelKey: 'analysis.tabs.member', icon: 'i-heroicons-user-group' },
+  { id: 'ai', labelKey: 'analysis.tabs.ai', icon: 'i-heroicons-sparkles' },
 ]
 
 const activeTab = ref((route.query.tab as string) || 'overview')
@@ -66,9 +74,9 @@ const timeFilter = computed(() => {
 
 // 年份选项
 const yearOptions = computed(() => {
-  const options = [{ label: '全部时间', value: 0 }]
+  const options = [{ label: t('analysis.yearFilter.allTime'), value: 0 }]
   for (const year of availableYears.value) {
-    options.push({ label: `${year}年`, value: year })
+    options.push({ label: t('analysis.yearFilter.year', { year }), value: year })
   }
   return options
 })
@@ -86,7 +94,7 @@ const filteredMemberCount = computed(() => {
 // 格式化时间范围显示
 const dateRangeText = computed(() => {
   if (selectedYear.value) {
-    return `${selectedYear.value}年`
+    return t('analysis.yearFilter.year', { year: selectedYear.value })
   }
   if (!timeRange.value) return ''
   return formatDateRange(timeRange.value.start, timeRange.value.end)
@@ -209,31 +217,57 @@ watch([activeTab, selectedYear], ([newTab, newYear]) => {
   })
 })
 
+// 获取对方头像
+const otherMemberAvatar = computed(() => {
+  if (!session.value || memberActivity.value.length === 0) return null
+
+  // 1. 优先尝试排除 ownerId
+  if (session.value.ownerId) {
+    const other = memberActivity.value.find((m) => m.platformId !== session.value?.ownerId)
+    if (other?.avatar) return other.avatar
+  }
+
+  // 2. 尝试匹配会话名称 (通常私聊名称就是对方昵称)
+  const sameName = memberActivity.value.find((m) => m.name === session.value?.name)
+  if (sameName?.avatar) return sameName.avatar
+
+  // 3. 如果只有两个成员，取另一个
+  if (memberActivity.value.length === 2) {
+    // 这里很难判断谁是"另一个"，因为不知道谁是"我"
+    // 但通常 memberActivity 是按消息数排序的，或者按 ID 排序
+    // 暂时不盲目取
+  }
+
+  return null
+})
+
 onMounted(() => {
   syncSession()
 })
 </script>
 
 <template>
-  <div class="flex h-full flex-col bg-gray-50 dark:bg-gray-950">
+  <div class="flex h-full flex-col bg-white pt-8 dark:bg-gray-900">
     <!-- Loading State -->
-    <div v-if="isInitialLoad" class="flex h-full items-center justify-center">
-      <div class="flex flex-col items-center justify-center text-center">
-        <UIcon name="i-heroicons-arrow-path" class="h-8 w-8 animate-spin text-pink-500" />
-        <p class="mt-2 text-sm text-gray-500">加载分析数据...</p>
-      </div>
-    </div>
+    <LoadingState v-if="isInitialLoad" variant="page" :text="t('analysis.privateChat.loading')" />
 
     <!-- Content -->
     <template v-else-if="session">
       <!-- Header -->
       <PageHeader
         :title="session.name"
-        :description="`${dateRangeText}，共 ${selectedYear ? filteredMessageCount : session.messageCount} 条消息`"
+        :description="
+          t('analysis.privateChat.description', {
+            dateRange: dateRangeText,
+            messageCount: selectedYear ? filteredMessageCount : session.messageCount,
+          })
+        "
+        :avatar="otherMemberAvatar"
         icon="i-heroicons-user"
+        icon-class="bg-pink-600 text-white dark:bg-pink-500 dark:text-white"
       >
         <template #actions>
-          <UTooltip text="聊天记录查看器">
+          <UTooltip :text="t('analysis.tooltip.chatViewer')">
             <UButton
               icon="i-heroicons-chat-bubble-bottom-center-text"
               color="neutral"
@@ -242,7 +276,16 @@ onMounted(() => {
               @click="openChatRecordViewer"
             />
           </UTooltip>
-          <CaptureButton tooltip="截屏当前页面" />
+          <UTooltip :text="t('analysis.tooltip.sessionIndex')">
+            <UButton
+              icon="i-heroicons-clock"
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              @click="showSessionIndexModal = true"
+            />
+          </UTooltip>
+          <CaptureButton />
         </template>
         <!-- Tabs -->
         <div class="mt-4 flex items-center justify-between gap-4">
@@ -259,7 +302,7 @@ onMounted(() => {
               @click="activeTab = tab.id"
             >
               <UIcon :name="tab.icon" class="h-4 w-4" />
-              <span class="whitespace-nowrap">{{ tab.label }}</span>
+              <span class="whitespace-nowrap">{{ t(tab.labelKey) }}</span>
             </button>
           </div>
           <!-- 年份选择器靠右（AI实验室时隐藏） -->
@@ -276,12 +319,7 @@ onMounted(() => {
       <!-- Tab Content -->
       <div class="relative flex-1 overflow-y-auto">
         <!-- Loading Overlay -->
-        <div
-          v-if="isLoading"
-          class="absolute inset-0 z-10 flex items-center justify-center bg-white/50 backdrop-blur-sm dark:bg-gray-950/50"
-        >
-          <UIcon name="i-heroicons-arrow-path" class="h-8 w-8 animate-spin text-pink-500" />
-        </div>
+        <LoadingState v-if="isLoading" variant="overlay" />
 
         <div class="h-full">
           <Transition name="tab-slide" mode="out-in">
@@ -320,8 +358,11 @@ onMounted(() => {
 
     <!-- Empty State -->
     <div v-else class="flex h-full items-center justify-center">
-      <p class="text-gray-500">无法加载会话数据</p>
+      <p class="text-gray-500">{{ t('analysis.privateChat.loadError') }}</p>
     </div>
+
+    <!-- 会话索引弹窗（内部自动检测并弹出） -->
+    <SessionIndexModal v-if="currentSessionId" v-model="showSessionIndexModal" :session-id="currentSessionId" />
   </div>
 </template>
 

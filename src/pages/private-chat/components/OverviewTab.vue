@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { AnalysisSession, MessageType } from '@/types/base'
 import { getMessageTypeName } from '@/types/base'
 import type { MemberActivity, HourlyActivity, DailyActivity, WeekdayActivity, MonthlyActivity } from '@/types/analysis'
@@ -12,6 +13,8 @@ import OverviewStatCards from '@/components/analysis/Overview/OverviewStatCards.
 import OverviewIdentityCard from '@/components/analysis/Overview/OverviewIdentityCard.vue'
 import ActivityTimeDistribution from '@/components/analysis/Overview/ActivityTimeDistribution.vue'
 import DailyTrendCard from '@/components/analysis/Overview/DailyTrendCard.vue'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   session: AnalysisSession
@@ -147,7 +150,7 @@ watch(
     />
 
     <!-- 双方消息对比 -->
-    <SectionCard v-if="memberComparisonData" title="消息占比" :show-divider="false">
+    <SectionCard v-if="memberComparisonData" :title="t('messageRatio')" :show-divider="false">
       <div class="p-5">
         <div class="flex items-center gap-8">
           <!-- 左侧成员 -->
@@ -174,7 +177,7 @@ watch(
               {{ memberComparisonData.member1.percentage }}%
             </p>
             <p class="text-sm text-gray-500 dark:text-gray-400">
-              {{ memberComparisonData.member1.count.toLocaleString() }} 条
+              {{ memberComparisonData.member1.count.toLocaleString() }} {{ t('messageUnit') }}
             </p>
           </div>
 
@@ -220,7 +223,7 @@ watch(
               {{ memberComparisonData.member2.percentage }}%
             </p>
             <p class="text-sm text-gray-500 dark:text-gray-400">
-              {{ memberComparisonData.member2.count.toLocaleString() }} 条
+              {{ memberComparisonData.member2.count.toLocaleString() }} {{ t('messageUnit') }}
             </p>
           </div>
         </div>
@@ -246,14 +249,14 @@ watch(
     <!-- 图表区域：消息类型 & 双方占比 -->
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <!-- 消息类型分布 -->
-      <SectionCard title="消息类型分布" :show-divider="false">
+      <SectionCard :title="t('messageTypeDistribution')" :show-divider="false">
         <div class="p-5">
           <DoughnutChart :data="typeChartData" :height="256" />
         </div>
       </SectionCard>
 
       <!-- 双方消息占比饼图 -->
-      <SectionCard v-if="memberComparisonData" title="双方消息占比" :show-divider="false">
+      <SectionCard v-if="memberComparisonData" :title="t('memberComparison')" :show-divider="false">
         <div class="p-5">
           <DoughnutChart :data="comparisonChartData" :height="256" />
         </div>
@@ -275,3 +278,20 @@ watch(
     <DailyTrendCard :daily-activity="dailyActivity" :daily-chart-data="dailyChartData" />
   </div>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "messageRatio": "消息占比",
+    "messageUnit": "条",
+    "messageTypeDistribution": "消息类型分布",
+    "memberComparison": "双方消息占比"
+  },
+  "en-US": {
+    "messageRatio": "Message Ratio",
+    "messageUnit": "messages",
+    "messageTypeDistribution": "Message Type Distribution",
+    "memberComparison": "Member Comparison"
+  }
+}
+</i18n>

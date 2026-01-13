@@ -135,7 +135,7 @@ export function trackDailyActive(): void {
     }
 
     // 上报每日活跃事件
-    trackEvent(isNew ? 'app_daily_active_new' : 'app_daily_active')
+    trackEvent(isNew ? 'app_active_new' : 'app_active')
 
     data.lastReportDate = today
     saveAnalyticsData(data)

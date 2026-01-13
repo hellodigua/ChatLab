@@ -1,13 +1,13 @@
 /**
- * ycccccccy/echotrace 微信导出格式解析器
+ * ycccccccy/echotrace 导出格式解析器
  * 适配项目: https://github.com/ycccccccy/echotrace
  *
  * 特征：
  * - 顶层包含 session 和 messages 字段
- * - session.wxid: 微信ID（群聊以 @chatroom 结尾）
+ * - session.wxid: ID（群聊以 @chatroom 结尾）
  * - session.type: "群聊" 或 "私聊"
  * - messages[].type: 中文消息类型字符串
- * - messages[].senderUsername: 发送者微信ID
+ * - messages[].senderUsername: 发送者ID
  * - messages[].senderDisplayName: 发送者显示名
  *
  * 注意：localType 字段不可信，不使用
@@ -47,7 +47,7 @@ function extractNameFromFilePath(filePath: string): string {
 
 export const feature: FormatFeature = {
   id: 'ycccccccy-echotrace',
-  name: 'ycccccccy/echotrace 微信导出',
+  name: 'ycccccccy/echotrace 导出',
   platform: KNOWN_PLATFORMS.WECHAT,
   priority: 15,
   extensions: ['.json'],
@@ -78,7 +78,7 @@ interface EchotraceMessage {
   localType: number // 不可信，不使用
   content: string
   isSend: number | null // 0=接收, 1=发送, null=系统
-  senderUsername: string // 发送者微信ID
+  senderUsername: string // 发送者ID
   senderDisplayName: string // 发送者显示名
   senderAvatarKey: string // 头像查找 key（通常与 senderUsername 相同）
   source: string
@@ -154,12 +154,12 @@ async function* parseEchotrace(options: ParseOptions): AsyncGenerator<ParseEvent
   let messagesProcessed = 0
 
   // 发送初始进度
-  const initialProgress = createProgress('parsing', 0, totalBytes, 0, '开始解析...')
+  const initialProgress = createProgress('parsing', 0, totalBytes, 0, '')
   yield { type: 'progress', data: initialProgress }
   onProgress?.(initialProgress)
 
   // 记录解析开始
-  onLog?.('info', `开始解析 Echotrace 微信导出文件，大小: ${(totalBytes / 1024 / 1024).toFixed(2)} MB`)
+  onLog?.('info', `开始解析 Echotrace 导出文件，大小: ${(totalBytes / 1024 / 1024).toFixed(2)} MB`)
 
   // 读取文件头获取 session 信息
   const headContent = readFileHeadBytes(filePath, 2000)
@@ -444,14 +444,22 @@ async function* parseEchotrace(options: ParseOptions): AsyncGenerator<ParseEvent
       // 转换消息类型
       const type = convertMessageType(msg.type)
 
+      // 确保 content 是字符串类型（防止某些消息类型的 content 是对象）
+      let content: string | null = null
+      if (msg.content != null) {
+        content = typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
+      }
+
       return {
+        platformMessageId: String(msg.localId), // 消息的平台原始 ID（用于回复关联查询）
         senderPlatformId: platformId,
         senderAccountName: accountName,
-        // echotrace 格式没有单独的群昵称字段
-        senderGroupNickname: undefined,
+        // echotrace 格式没有单独的群昵称字段，使用 null 而非 undefined（SQLite 兼容）
+        senderGroupNickname: null,
         timestamp: msg.createTime,
         type,
-        content: msg.content || null,
+        content,
+        // 注意：echotrace 导出格式不包含被引用消息的 ID，所以 replyToMessageId 为空
       }
     }
 
@@ -507,7 +515,7 @@ async function* parseEchotrace(options: ParseOptions): AsyncGenerator<ParseEvent
   }
 
   // 完成
-  const doneProgress = createProgress('done', totalBytes, totalBytes, messagesProcessed, '解析完成')
+  const doneProgress = createProgress('done', totalBytes, totalBytes, messagesProcessed, '')
   yield { type: 'progress', data: doneProgress }
   onProgress?.(doneProgress)
 

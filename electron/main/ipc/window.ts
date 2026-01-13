@@ -3,10 +3,9 @@
  */
 
 import { ipcMain, app, dialog, clipboard, shell } from 'electron'
-import { autoUpdater } from 'electron-updater'
 import * as fs from 'fs/promises'
 import type { IpcContext } from './types'
-import { simulateUpdateDialog } from '../update'
+import { simulateUpdateDialog, manualCheckForUpdates } from '../update'
 
 /**
  * 注册窗口和文件系统操作 IPC 处理器
@@ -54,6 +53,12 @@ export function registerWindowHandlers(ctx: IpcContext): void {
     win.webContents.openDevTools()
   })
 
+  // 设置主题模式
+  ipcMain.on('window:setThemeSource', (_, mode: 'system' | 'light' | 'dark') => {
+    const { nativeTheme } = require('electron')
+    nativeTheme.themeSource = mode
+  })
+
   // ==================== 应用信息 ====================
   ipcMain.handle('app:getVersion', () => {
     return app.getVersion()
@@ -72,7 +77,8 @@ export function registerWindowHandlers(ctx: IpcContext): void {
 
   // ==================== 更新检查 ====================
   ipcMain.on('check-update', () => {
-    autoUpdater.checkForUpdates()
+    // 手动检查更新（即使是预发布版本也会提示）
+    manualCheckForUpdates()
   })
 
   // 模拟更新弹窗（仅开发模式使用）

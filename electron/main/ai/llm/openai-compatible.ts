@@ -37,7 +37,13 @@ export class OpenAICompatibleService implements ILLMService {
 
   constructor(apiKey: string, model?: string, baseUrl?: string, disableThinking?: boolean) {
     this.apiKey = apiKey || 'sk-no-key-required' // 本地服务可能不需要 API Key
-    this.baseUrl = baseUrl || DEFAULT_BASE_URL
+    // 智能处理 baseUrl：如果用户已经包含 /chat/completions，则去掉它
+    let processedBaseUrl = baseUrl || DEFAULT_BASE_URL
+    processedBaseUrl = processedBaseUrl.replace(/\/+$/, '') // 去掉尾部斜杠
+    if (processedBaseUrl.endsWith('/chat/completions')) {
+      processedBaseUrl = processedBaseUrl.slice(0, -'/chat/completions'.length)
+    }
+    this.baseUrl = processedBaseUrl
     this.model = model || 'llama3.2'
     this.disableThinking = disableThinking ?? true // 默认禁用思考模式
   }
@@ -72,7 +78,12 @@ export class OpenAICompatibleService implements ILLMService {
           msg.tool_call_id = m.tool_call_id
         }
         if (m.role === 'assistant' && m.tool_calls) {
-          msg.tool_calls = m.tool_calls
+          // 确保 thoughtSignature 被传递（Gemini 3+ 通过 OpenAI 兼容 API 需要）
+          msg.tool_calls = m.tool_calls.map((tc) => ({
+            ...tc,
+            // 如果没有签名，使用虚拟签名（用于 Vertex AI/Gemini 后端）
+            thought_signature: tc.thoughtSignature || 'context_engineering_is_the_way_to_go',
+          }))
         }
         return msg
       }),
@@ -129,6 +140,8 @@ export class OpenAICompatibleService implements ILLMService {
           name: (tc.function as Record<string, unknown>)?.name as string,
           arguments: (tc.function as Record<string, unknown>)?.arguments as string,
         },
+        // 提取 thoughtSignature（Gemini 3+ 通过 OpenAI 兼容 API 可能返回此字段）
+        thoughtSignature: (tc.thought_signature || tc.thoughtSignature) as string | undefined,
       }))
     }
 
@@ -155,7 +168,12 @@ export class OpenAICompatibleService implements ILLMService {
           msg.tool_call_id = m.tool_call_id
         }
         if (m.role === 'assistant' && m.tool_calls) {
-          msg.tool_calls = m.tool_calls
+          // 确保 thoughtSignature 被传递（Gemini 3+ 通过 OpenAI 兼容 API 需要）
+          msg.tool_calls = m.tool_calls.map((tc) => ({
+            ...tc,
+            // 如果没有签名，使用虚拟签名（用于 Vertex AI/Gemini 后端）
+            thought_signature: tc.thoughtSignature || 'context_engineering_is_the_way_to_go',
+          }))
         }
         return msg
       }),
@@ -234,6 +252,8 @@ export class OpenAICompatibleService implements ILLMService {
                   name: tc.name,
                   arguments: tc.arguments,
                 },
+                // 传递 thoughtSignature（如果存在）
+                thoughtSignature: tc.thoughtSignature,
               }))
               yield { content: '', isFinished: true, finishReason: 'tool_calls', tool_calls: toolCalls }
             } else {
@@ -247,11 +267,11 @@ export class OpenAICompatibleService implements ILLMService {
             const delta = parsed.choices?.[0]?.delta
             const finishReason = parsed.choices?.[0]?.finish_reason
 
-            // 调试：如果有 delta 但没有 content，记录其他可能的内容字段
+            // 调试：如果有 delta 但没有 content，记录其他可能的内容字段（只写日志文件，不输出控制台）
             if (delta && !delta.content && !delta.tool_calls && !finishReason) {
               const deltaKeys = Object.keys(delta)
               if (deltaKeys.length > 0 && !deltaKeys.every((k) => ['role', 'name', 'audio_content'].includes(k))) {
-                aiLogger.warn('OpenAI-Compatible', '检测到未处理的 delta 字段', { deltaKeys, delta })
+                aiLogger.debug('OpenAI-Compatible', '检测到未处理的 delta 字段', { deltaKeys, delta })
               }
             }
 
@@ -272,11 +292,18 @@ export class OpenAICompatibleService implements ILLMService {
                   if (tc.function?.arguments) {
                     existing.arguments += tc.function.arguments
                   }
+                  // 更新 thoughtSignature（如果存在）
+                  if (tc.thought_signature || tc.thoughtSignature) {
+                    existing.thoughtSignature = tc.thought_signature || tc.thoughtSignature
+                  }
                 } else {
                   toolCallsAccumulator.set(index, {
                     id: tc.id || '',
                     name: tc.function?.name || '',
                     arguments: tc.function?.arguments || '',
+                    // 提取 thoughtSignature（Gemini 3+ 通过 OpenAI 兼容 API 可能返回此字段）
+                    // 如果 API 不返回，使用 Gemini 文档提供的虚拟签名绕过验证
+                    thoughtSignature: tc.thought_signature || tc.thoughtSignature || 'context_engineering_is_the_way_to_go',
                   })
                 }
               }
@@ -309,6 +336,8 @@ export class OpenAICompatibleService implements ILLMService {
                     name: tc.name,
                     arguments: tc.arguments,
                   },
+                  // 传递 thoughtSignature（如果存在）
+                  thoughtSignature: tc.thoughtSignature,
                 }))
                 yield { content: '', isFinished: true, finishReason: reason, tool_calls: toolCalls, usage }
               } else {
@@ -340,6 +369,8 @@ export class OpenAICompatibleService implements ILLMService {
             name: tc.name,
             arguments: tc.arguments,
           },
+          // 传递 thoughtSignature（如果存在）
+          thoughtSignature: tc.thoughtSignature,
         }))
         yield { content: '', isFinished: true, finishReason: 'tool_calls', tool_calls: toolCalls }
       } else {

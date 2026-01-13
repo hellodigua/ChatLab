@@ -6,33 +6,17 @@
 import Database from 'better-sqlite3'
 import * as fs from 'fs'
 import * as path from 'path'
-import { app } from 'electron'
 import type { ParsedMember, ParsedMessage } from '../../../src/types/base'
 import type { ParseResult, ParsedMeta } from '../parser/types'
-
-// 临时数据库目录
-let tempDir: string | null = null
+import { getTempDir as getAppTempDir, ensureDir } from '../paths'
 
 /**
  * 获取临时数据库目录
  */
 function getTempDir(): string {
-  if (tempDir) return tempDir
-
-  try {
-    const docPath = app.getPath('documents')
-    tempDir = path.join(docPath, 'ChatLab', 'temp')
-  } catch (error) {
-    console.error('[TempCache] Error getting documents path:', error)
-    tempDir = path.join(process.cwd(), 'temp')
-  }
-
-  // 确保目录存在
-  if (!fs.existsSync(tempDir)) {
-    fs.mkdirSync(tempDir, { recursive: true })
-  }
-
-  return tempDir
+  const dir = getAppTempDir()
+  ensureDir(dir)
+  return dir
 }
 
 /**

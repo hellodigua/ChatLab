@@ -4,40 +4,24 @@
  */
 
 import Database from 'better-sqlite3'
-import { app } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
 import type { DbMeta, ParseResult, AnalysisSession } from '../../../src/types/base'
 import { migrateDatabase, needsMigration, CURRENT_SCHEMA_VERSION } from './migrations'
-
-// 数据库存储目录
-let DB_DIR: string | null = null
+import { getDatabaseDir, ensureDir } from '../paths'
 
 /**
- * 获取数据库目录（懒加载）
+ * 获取数据库目录
  */
 function getDbDir(): string {
-  if (DB_DIR) return DB_DIR
-
-  try {
-    const docPath = app.getPath('documents')
-    DB_DIR = path.join(docPath, 'ChatLab', 'databases')
-  } catch (error) {
-    console.error('[Database] Error getting userData path:', error)
-    DB_DIR = path.join(process.cwd(), 'databases')
-  }
-
-  return DB_DIR
+  return getDatabaseDir()
 }
 
 /**
  * 确保数据库目录存在
  */
 function ensureDbDir(): void {
-  const dir = getDbDir()
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true })
-  }
+  ensureDir(getDbDir())
 }
 
 /**
@@ -75,7 +59,8 @@ function createDatabase(sessionId: string): Database.Database {
       group_id TEXT,
       group_avatar TEXT,
       owner_id TEXT,
-      schema_version INTEGER DEFAULT ${CURRENT_SCHEMA_VERSION}
+      schema_version INTEGER DEFAULT ${CURRENT_SCHEMA_VERSION},
+      session_gap_threshold INTEGER
     );
 
     CREATE TABLE IF NOT EXISTS member (
@@ -84,7 +69,8 @@ function createDatabase(sessionId: string): Database.Database {
       account_name TEXT,
       group_nickname TEXT,
       aliases TEXT DEFAULT '[]',
-      avatar TEXT
+      avatar TEXT,
+      roles TEXT DEFAULT '[]'
     );
 
     CREATE TABLE IF NOT EXISTS member_name_history (
@@ -105,12 +91,32 @@ function createDatabase(sessionId: string): Database.Database {
       ts INTEGER NOT NULL,
       type INTEGER NOT NULL,
       content TEXT,
+      reply_to_message_id TEXT DEFAULT NULL,
+      platform_message_id TEXT DEFAULT NULL,
       FOREIGN KEY(sender_id) REFERENCES member(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS chat_session (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      start_ts INTEGER NOT NULL,
+      end_ts INTEGER NOT NULL,
+      message_count INTEGER DEFAULT 0,
+      is_manual INTEGER DEFAULT 0,
+      summary TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS message_context (
+      message_id INTEGER PRIMARY KEY,
+      session_id INTEGER NOT NULL,
+      topic_id INTEGER
     );
 
     CREATE INDEX IF NOT EXISTS idx_message_ts ON message(ts);
     CREATE INDEX IF NOT EXISTS idx_message_sender ON message(sender_id);
+    CREATE INDEX IF NOT EXISTS idx_message_platform_id ON message(platform_message_id);
     CREATE INDEX IF NOT EXISTS idx_member_name_history_member_id ON member_name_history(member_id);
+    CREATE INDEX IF NOT EXISTS idx_session_time ON chat_session(start_ts, end_ts);
+    CREATE INDEX IF NOT EXISTS idx_context_session ON message_context(session_id);
   `)
 
   return db
@@ -133,8 +139,10 @@ export function openDatabase(sessionId: string, readonly = true): Database.Datab
 /**
  * 打开数据库并执行迁移（如果需要）
  * 用于需要写入的场景
+ * @param sessionId 会话ID
+ * @param forceRepair 是否强制修复（即使版本号已是最新也重新执行迁移脚本）
  */
-export function openDatabaseWithMigration(sessionId: string): Database.Database | null {
+export function openDatabaseWithMigration(sessionId: string, forceRepair = false): Database.Database | null {
   const dbPath = getDbPath(sessionId)
   if (!fs.existsSync(dbPath)) {
     return null
@@ -144,7 +152,7 @@ export function openDatabaseWithMigration(sessionId: string): Database.Database 
   db.pragma('journal_mode = WAL')
 
   // 执行迁移
-  migrateDatabase(db)
+  migrateDatabase(db, forceRepair)
 
   return db
 }
@@ -174,7 +182,7 @@ export function importData(parseResult: ParseResult): string {
       )
 
       const insertMember = db.prepare(`
-        INSERT OR IGNORE INTO member (platform_id, account_name, group_nickname, avatar) VALUES (?, ?, ?, ?)
+        INSERT OR IGNORE INTO member (platform_id, account_name, group_nickname, avatar, roles) VALUES (?, ?, ?, ?, ?)
       `)
       const getMemberId = db.prepare(`
         SELECT id FROM member WHERE platform_id = ?
@@ -187,7 +195,8 @@ export function importData(parseResult: ParseResult): string {
           member.platformId,
           member.accountName || null,
           member.groupNickname || null,
-          member.avatar || null
+          member.avatar || null,
+          member.roles ? JSON.stringify(member.roles) : '[]'
         )
         const row = getMemberId.get(member.platformId) as { id: number }
         memberIdMap.set(member.platformId, row.id)
@@ -199,8 +208,8 @@ export function importData(parseResult: ParseResult): string {
       const groupNicknameTracker = new Map<string, { currentName: string; lastSeenTs: number }>()
 
       const insertMessage = db.prepare(`
-        INSERT INTO message (sender_id, sender_account_name, sender_group_nickname, ts, type, content)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO message (sender_id, sender_account_name, sender_group_nickname, ts, type, content, reply_to_message_id, platform_message_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `)
       const insertNameHistory = db.prepare(`
         INSERT INTO member_name_history (member_id, name_type, name, start_ts, end_ts)
@@ -228,7 +237,9 @@ export function importData(parseResult: ParseResult): string {
           msg.senderGroupNickname || null,
           msg.timestamp,
           msg.type,
-          msg.content
+          msg.content,
+          msg.replyToMessageId || null,
+          msg.platformMessageId || null
         )
 
         // 追踪 account_name 变化
@@ -377,13 +388,19 @@ export function getDbDirectory(): string {
 
 /**
  * 检查是否有数据库需要迁移
- * @returns 需要迁移的数据库数量和最低版本
+ * @returns 需要迁移的数据库数量、列表、最低版本和需要强制修复的列表
  */
-export function checkMigrationNeeded(): { count: number; sessionIds: string[]; lowestVersion: number } {
+export function checkMigrationNeeded(): {
+  count: number
+  sessionIds: string[]
+  lowestVersion: number
+  forceRepairIds: string[]
+} {
   ensureDbDir()
   const dbDir = getDbDir()
   const files = fs.readdirSync(dbDir).filter((f) => f.endsWith('.db'))
   const needsMigrationList: string[] = []
+  const forceRepairList: string[] = []
   let lowestVersion = CURRENT_SCHEMA_VERSION
 
   for (const file of files) {
@@ -394,18 +411,28 @@ export function checkMigrationNeeded(): { count: number; sessionIds: string[]; l
       const db = new Database(dbPath, { readonly: true })
       db.pragma('journal_mode = WAL')
 
+      // 获取当前 schema_version
+      const metaTableInfo = db.prepare('PRAGMA table_info(meta)').all() as Array<{ name: string }>
+      const hasVersionColumn = metaTableInfo.some((col) => col.name === 'schema_version')
+      let dbVersion = 0
+      if (hasVersionColumn) {
+        const result = db.prepare('SELECT schema_version FROM meta LIMIT 1').get() as
+          | { schema_version: number | null }
+          | undefined
+        dbVersion = result?.schema_version ?? 0
+      }
+
+      // 检查 message 表是否有 reply_to_message_id 列
+      const messageTableInfo = db.prepare('PRAGMA table_info(message)').all() as Array<{ name: string }>
+      const hasReplyColumn = messageTableInfo.some((col) => col.name === 'reply_to_message_id')
+
       if (needsMigration(db)) {
         needsMigrationList.push(sessionId)
-        // 获取这个数据库的版本
-        const tableInfo = db.prepare('PRAGMA table_info(meta)').all() as Array<{ name: string }>
-        const hasVersionColumn = tableInfo.some((col) => col.name === 'schema_version')
-        let dbVersion = 0
-        if (hasVersionColumn) {
-          const result = db.prepare('SELECT schema_version FROM meta LIMIT 1').get() as
-            | { schema_version: number | null }
-            | undefined
-          dbVersion = result?.schema_version ?? 0
-        }
+        lowestVersion = Math.min(lowestVersion, dbVersion)
+      } else if (!hasReplyColumn) {
+        // 特殊情况：版本号已更新但列不存在，需要强制修复
+        needsMigrationList.push(sessionId)
+        forceRepairList.push(sessionId)
         lowestVersion = Math.min(lowestVersion, dbVersion)
       }
 
@@ -415,38 +442,68 @@ export function checkMigrationNeeded(): { count: number; sessionIds: string[]; l
     }
   }
 
-  return { count: needsMigrationList.length, sessionIds: needsMigrationList, lowestVersion }
+  return {
+    count: needsMigrationList.length,
+    sessionIds: needsMigrationList,
+    lowestVersion,
+    forceRepairIds: forceRepairList,
+  }
+}
+
+/**
+ * 迁移失败的数据库信息
+ */
+interface MigrationFailure {
+  sessionId: string
+  error: string
 }
 
 /**
  * 执行所有数据库的迁移
- * @returns 迁移结果
+ * 即使部分数据库迁移失败，也会继续处理其他数据库
+ * @returns 迁移结果，包含成功数量和失败列表
  */
-export function migrateAllDatabases(): { success: boolean; migratedCount: number; error?: string } {
-  const { sessionIds } = checkMigrationNeeded()
+export function migrateAllDatabases(): {
+  success: boolean
+  migratedCount: number
+  failures: MigrationFailure[]
+  error?: string
+} {
+  const { sessionIds, forceRepairIds } = checkMigrationNeeded()
+  const forceRepairSet = new Set(forceRepairIds)
 
   if (sessionIds.length === 0) {
-    return { success: true, migratedCount: 0 }
+    return { success: true, migratedCount: 0, failures: [] }
   }
 
   let migratedCount = 0
+  const failures: MigrationFailure[] = []
 
   for (const sessionId of sessionIds) {
     try {
-      const db = openDatabaseWithMigration(sessionId)
+      const needsForceRepair = forceRepairSet.has(sessionId)
+      const db = openDatabaseWithMigration(sessionId, needsForceRepair)
       if (db) {
         db.close()
         migratedCount++
       }
     } catch (error) {
-      console.error(`[Database] Failed to migrate ${sessionId}:`, error)
-      return {
-        success: false,
-        migratedCount,
-        error: `迁移 ${sessionId} 失败: ${error instanceof Error ? error.message : String(error)}`,
-      }
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.error(`[Database] Failed to migrate ${sessionId}:`, errorMessage)
+      failures.push({ sessionId, error: errorMessage })
     }
   }
 
-  return { success: true, migratedCount }
+  // 如果有失败的数据库，返回部分成功状态
+  if (failures.length > 0) {
+    const failedIds = failures.map((f) => f.sessionId.split('_').slice(-1)[0]).join(', ')
+    return {
+      success: false,
+      migratedCount,
+      failures,
+      error: `${failures.length} 个数据库迁移失败（ID: ${failedIds}）。建议在侧边栏中删除这些损坏的会话。`,
+    }
+  }
+
+  return { success: true, migratedCount, failures: [] }
 }

@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import AIConfigEditModal from './AIConfigEditModal.vue'
+import { useI18n } from 'vue-i18n'
+import AIModelEditModal from './AIModelEditModal.vue'
 import AlertTips from './AlertTips.vue'
+
+const { t } = useI18n()
 
 // Emits
 const emit = defineEmits<{
@@ -114,6 +117,13 @@ async function setActive(id: string) {
 }
 
 function getProviderName(providerId: string): string {
+  // Get localized provider name
+  const key = `providers.${providerId}.name`
+  const translated = t(key)
+  if (translated !== key) {
+    return translated
+  }
+  // Fallback to original name
   return providers.value.find((p) => p.id === providerId)?.name || providerId
 }
 
@@ -138,6 +148,11 @@ onMounted(() => {
 
   <!-- 配置列表视图 -->
   <div v-else class="space-y-4">
+    <!-- 标题 -->
+    <h4 class="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
+      <UIcon name="i-heroicons-sparkles" class="h-4 w-4 text-violet-500" />
+      {{ t('settings.aiConfig.title') }}
+    </h4>
     <AlertTips v-if="configs.length === 0 && aiTips.configTab?.show" :content="aiTips.configTab?.content" />
     <!-- 配置列表 -->
     <div v-if="configs.length > 0" class="space-y-2">
@@ -170,15 +185,17 @@ onMounted(() => {
           <div>
             <div class="flex items-center gap-2">
               <span class="font-medium text-gray-900 dark:text-white">{{ config.name }}</span>
-              <UBadge v-if="config.id === activeConfigId" color="primary" variant="soft" size="xs">使用中</UBadge>
+              <UBadge v-if="config.id === activeConfigId" color="primary" variant="soft" size="xs">
+                {{ t('settings.aiConfig.inUse') }}
+              </UBadge>
             </div>
             <div class="mt-0.5 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               <span>{{ getProviderName(config.provider) }}</span>
               <span>·</span>
-              <span>{{ config.model || '默认模型' }}</span>
+              <span>{{ config.model || t('settings.aiConfig.defaultModel') }}</span>
               <span v-if="config.baseUrl">·</span>
               <span v-if="config.baseUrl" class="text-violet-500">
-                {{ config.provider === 'openai-compatible' ? '本地服务' : '自定义端点' }}
+                {{ t('settings.aiConfig.customEndpoint') }}
               </span>
             </div>
           </div>
@@ -186,8 +203,14 @@ onMounted(() => {
 
         <!-- 操作按钮 -->
         <div class="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100" @click.stop>
-          <UButton size="xs" color="gray" variant="ghost" @click="openEditModal(config)">编辑</UButton>
-          <UButton size="xs" color="error" variant="ghost" @click="deleteConfig(config.id)">删除</UButton>
+          <UButton
+            size="xs"
+            color="neutral"
+            variant="ghost"
+            icon="i-heroicons-pencil-square"
+            @click="openEditModal(config)"
+          />
+          <UButton size="xs" color="error" variant="ghost" icon="i-heroicons-trash" @click="deleteConfig(config.id)" />
         </div>
       </div>
     </div>
@@ -198,21 +221,21 @@ onMounted(() => {
       class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-200 py-12 dark:border-gray-700"
     >
       <UIcon name="i-heroicons-sparkles" class="h-12 w-12 text-gray-300 dark:text-gray-600" />
-      <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">还没有配置 AI 服务</p>
-      <p class="text-xs text-gray-400 dark:text-gray-500">添加一个配置开始使用 AI 功能</p>
+      <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">{{ t('settings.aiConfig.empty.title') }}</p>
+      <p class="text-xs text-gray-400 dark:text-gray-500">{{ t('settings.aiConfig.empty.description') }}</p>
     </div>
 
     <!-- 添加按钮 -->
     <div class="flex justify-center">
       <UButton variant="soft" :disabled="isMaxConfigs" class="mt-4" @click="openAddModal">
         <UIcon name="i-heroicons-plus" class="mr-2 h-4 w-4" />
-        {{ isMaxConfigs ? '已达最大配置数量（10个）' : '添加新配置' }}
+        {{ isMaxConfigs ? t('settings.aiConfig.maxConfigs') : t('settings.aiConfig.addConfig') }}
       </UButton>
     </div>
   </div>
 
   <!-- 编辑/添加弹窗 -->
-  <AIConfigEditModal
+  <AIModelEditModal
     v-model:open="showEditModal"
     :mode="editMode"
     :config="editingConfig"

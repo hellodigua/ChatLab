@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { SubTabs } from '@/components/UI'
 import { CatchphraseTab, HotRepeatTab, KeywordAnalysis } from '@/components/analysis/quotes'
+
+const { t } = useI18n()
 
 interface TimeFilter {
   startTs?: number
@@ -14,11 +17,11 @@ const props = defineProps<{
 }>()
 
 // 子 Tab 配置
-const subTabs = [
-  { id: 'hot-repeat', label: '最火复读', icon: 'i-heroicons-fire' },
-  { id: 'catchphrase', label: '口头禅', icon: 'i-heroicons-chat-bubble-bottom-center-text' },
-  { id: 'keyword', label: '关键词分析', icon: 'i-heroicons-magnifying-glass' },
-]
+const subTabs = computed(() => [
+  { id: 'hot-repeat', label: t('hotRepeat'), icon: 'i-heroicons-fire' },
+  { id: 'catchphrase', label: t('catchphrase'), icon: 'i-heroicons-chat-bubble-bottom-center-text' },
+  { id: 'keyword', label: t('keywordAnalysis'), icon: 'i-heroicons-magnifying-glass' },
+])
 
 const activeSubTab = ref('hot-repeat')
 </script>
@@ -65,3 +68,18 @@ const activeSubTab = ref('hot-repeat')
   opacity: 0;
 }
 </style>
+
+<i18n>
+{
+  "zh-CN": {
+    "hotRepeat": "最火复读",
+    "catchphrase": "口头禅",
+    "keywordAnalysis": "关键词分析"
+  },
+  "en-US": {
+    "hotRepeat": "Hot Repeats",
+    "catchphrase": "Catchphrases",
+    "keywordAnalysis": "Keyword Analysis"
+  }
+}
+</i18n>

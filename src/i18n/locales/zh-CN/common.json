@@ -1,0 +1,48 @@
+{
+  "confirm": "确定",
+  "cancel": "取消",
+  "delete": "删除",
+  "save": "保存",
+  "edit": "编辑",
+  "add": "添加",
+  "rename": "重命名",
+  "capture": "截屏",
+  "close": "关闭",
+  "loading": "加载中...",
+  "initializing": "初始化中...",
+  "noData": "暂无数据",
+  "error": {
+    "general": "操作失败，请重试",
+    "network": "网络错误"
+  },
+  "attachment": {
+    "image": "图片",
+    "video": "视频",
+    "audio": "音频",
+    "file": "文件",
+    "sticker": "贴纸",
+    "link": "链接"
+  },
+  "unit": {
+    "messages": "条消息",
+    "members": "个成员",
+    "days": "天"
+  },
+  "weekday": {
+    "mon": "周一",
+    "tue": "周二",
+    "wed": "周三",
+    "thu": "周四",
+    "fri": "周五",
+    "sat": "周六",
+    "sun": "周日"
+  },
+  "agreement": {
+    "title": "隐私政策与用户协议",
+    "subtitle": "使用前请仔细阅读",
+    "disagree": "我不同意",
+    "agree": "我已阅读并同意",
+    "countdown": "请阅读 ({seconds}s)",
+    "updateNotice": "协议内容有重要更新，请重新阅读并确认"
+  }
+}

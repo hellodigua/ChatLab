@@ -1,15 +1,22 @@
 <script setup lang="ts">
 /**
  * 聊天记录查看器 Drawer
- * 主组件，组合筛选面板、消息列表等子组件
+ * 主组件，组合筛选面板、消息列表、会话时间线等子组件
  */
 import { ref, watch, toRaw, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import FilterPanel from './FilterPanel.vue'
 import MessageList from './MessageList.vue'
+import SessionTimeline from './SessionTimeline.vue'
 import type { ChatRecordQuery } from './types'
 import { useLayoutStore } from '@/stores/layout'
+import { useSessionStore } from '@/stores/session'
+import { storeToRefs } from 'pinia'
 
+const { t } = useI18n()
 const layoutStore = useLayoutStore()
+const sessionStore = useSessionStore()
+const { currentSessionId } = storeToRefs(sessionStore)
 
 // 消息列表组件引用
 const messageListRef = ref<InstanceType<typeof MessageList> | null>(null)
@@ -19,6 +26,15 @@ const localQuery = ref<ChatRecordQuery>({})
 
 // 消息数量
 const messageCount = ref(0)
+
+// 时间线折叠状态
+const timelineCollapsed = ref(false)
+
+// 当前激活的会话 ID（用于联动高亮）
+const activeSessionId = ref<number | undefined>(undefined)
+
+// 会话列表缓存（用于根据消息 ID 查找所属会话）
+const sessionsCache = ref<Array<{ id: number; startTs: number; endTs: number; firstMessageId: number }>>([])
 
 // 应用筛选
 function handleApplyFilter(query: ChatRecordQuery) {
@@ -35,6 +51,64 @@ function handleCountChange(count: number) {
   messageCount.value = count
 }
 
+// 处理当前可见消息变化（用于联动高亮时间线）
+function handleVisibleMessageChange(messageId: number) {
+  if (!sessionsCache.value.length) return
+
+  // 根据消息 ID 查找所属会话
+  // 由于会话是按 firstMessageId 排序的，我们找最后一个 firstMessageId <= messageId 的会话
+  let targetSession: { id: number } | undefined
+  for (const session of sessionsCache.value) {
+    if (session.firstMessageId <= messageId) {
+      targetSession = session
+    } else {
+      break
+    }
+  }
+
+  if (targetSession && targetSession.id !== activeSessionId.value) {
+    activeSessionId.value = targetSession.id
+  }
+}
+
+// 处理时间线会话选择
+function handleSessionSelect(_sessionId: number, firstMessageId: number) {
+  activeSessionId.value = _sessionId
+
+  // 检查目标消息是否在当前已加载的消息范围内
+  // 如果不在，则通过设置 scrollToMessageId 触发重新加载
+  // 这样 MessageList 会以目标消息为中心加载前后各 50 条
+  localQuery.value = {
+    ...localQuery.value,
+    scrollToMessageId: firstMessageId,
+  }
+}
+
+// 处理跳转到消息（查看上下文）
+function handleJumpToMessage(messageId: number) {
+  // 清空筛选条件，只保留 scrollToMessageId
+  localQuery.value = {
+    scrollToMessageId: messageId,
+  }
+}
+
+// 加载会话列表缓存
+async function loadSessionsCache() {
+  if (!currentSessionId.value) return
+
+  try {
+    const sessions = await window.sessionApi.getSessions(currentSessionId.value)
+    sessionsCache.value = sessions.map((s) => ({
+      id: s.id,
+      startTs: s.startTs,
+      endTs: s.endTs,
+      firstMessageId: s.firstMessageId,
+    }))
+  } catch {
+    sessionsCache.value = []
+  }
+}
+
 // 监听 Drawer 打开
 watch(
   () => layoutStore.showChatRecordDrawer,
@@ -43,6 +117,12 @@ watch(
       // 复制查询参数到本地
       const query = toRaw(layoutStore.chatRecordQuery)
       localQuery.value = query ? { ...query } : {}
+      // 加载会话缓存
+      await loadSessionsCache()
+      // 设置初始激活会话为最后一个（最新的）
+      if (sessionsCache.value.length > 0) {
+        activeSessionId.value = sessionsCache.value[sessionsCache.value.length - 1].id
+      }
       // 等待 DOM 更新后主动触发加载
       await nextTick()
       messageListRef.value?.refresh()
@@ -50,18 +130,25 @@ watch(
       // 关闭时清理
       localQuery.value = {}
       messageCount.value = 0
+      activeSessionId.value = undefined
+      sessionsCache.value = []
     }
   }
 )
 </script>
 
 <template>
-  <UDrawer v-model:open="layoutStore.showChatRecordDrawer" direction="right" :handle="false" :ui="{ content: 'z-100' }">
+  <UDrawer
+    v-model:open="layoutStore.showChatRecordDrawer"
+    direction="right"
+    :handle="false"
+    :ui="{ content: 'z-[10000]' }"
+  >
     <template #content>
-      <div class="flex h-full w-[580px] flex-col bg-white dark:bg-gray-900">
+      <div class="flex h-full w-[680px] flex-col bg-white dark:bg-gray-900" style="-webkit-app-region: no-drag">
         <!-- 头部 -->
         <div class="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-800">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">聊天记录查看器</h3>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('title') }}</h3>
           <UButton
             icon="i-heroicons-x-mark"
             color="neutral"
@@ -74,14 +161,47 @@ watch(
         <!-- 筛选面板 -->
         <FilterPanel :query="localQuery" @apply="handleApplyFilter" @reset="handleResetFilter" />
 
-        <!-- 消息列表 -->
-        <MessageList ref="messageListRef" :query="localQuery" @count-change="handleCountChange" />
+        <!-- 主内容区：时间线 + 消息列表 -->
+        <div class="flex min-h-0 flex-1">
+          <!-- 会话时间线 -->
+          <SessionTimeline
+            v-if="currentSessionId"
+            :session-id="currentSessionId"
+            :active-session-id="activeSessionId"
+            v-model:collapsed="timelineCollapsed"
+            @select="handleSessionSelect"
+          />
+
+          <!-- 消息列表容器 -->
+          <div class="min-h-0 min-w-0 flex-1">
+            <MessageList
+              ref="messageListRef"
+              :query="localQuery"
+              @count-change="handleCountChange"
+              @visible-message-change="handleVisibleMessageChange"
+              @jump-to-message="handleJumpToMessage"
+            />
+          </div>
+        </div>
 
         <!-- 底部统计 -->
-        <div v-if="messageCount > 0" class="border-t border-gray-200 px-4 py-2 dark:border-gray-800">
-          <span class="text-xs text-gray-500">已加载 {{ messageCount }} 条消息</span>
+        <div v-if="messageCount > 0" class="shrink-0 border-t border-gray-200 px-4 py-2 dark:border-gray-800">
+          <span class="text-xs text-gray-500">{{ t('loadedCount', { count: messageCount }) }}</span>
         </div>
       </div>
     </template>
   </UDrawer>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "title": "聊天记录查看器",
+    "loadedCount": "已加载 {count} 条消息"
+  },
+  "en-US": {
+    "title": "Chat Record Viewer",
+    "loadedCount": "{count} messages loaded"
+  }
+}
+</i18n>

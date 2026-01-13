@@ -106,6 +106,29 @@ export enum ChatType {
   PRIVATE = 'private', // 私聊
 }
 
+// ==================== 成员角色 ====================
+
+/**
+ * 成员角色
+ * 一个成员可以有多个角色（如 Discord 的多角色系统）
+ */
+export interface MemberRole {
+  /** 角色标识：标准角色使用 "owner" | "admin"，自定义角色使用任意字符串 */
+  id: string
+  /** 角色显示名称（自定义角色需要，标准角色可省略） */
+  name?: string
+}
+
+/**
+ * 标准角色 ID
+ */
+export const STANDARD_ROLE_IDS = {
+  /** 群主/创建者 */
+  OWNER: 'owner',
+  /** 管理员 */
+  ADMIN: 'admin',
+} as const
+
 // ==================== 数据库模型 ====================
 
 /**
@@ -119,6 +142,7 @@ export interface DbMeta {
   group_id: string | null // 群ID（群聊类型有值，私聊为空）
   group_avatar: string | null // 群头像（base64 Data URL）
   owner_id: string | null // 所有者/导出者的 platformId
+  session_gap_threshold: number | null // 会话切分阈值（秒），null 表示使用全局配置
 }
 
 /**
@@ -126,11 +150,12 @@ export interface DbMeta {
  */
 export interface DbMember {
   id: number // 自增ID
-  platform_id: string // 平台标识（QQ号等）
-  account_name: string | null // 账号名称（QQ原始昵称 sendNickName）
+  platform_id: string // 平台标识
+  account_name: string | null // 账号名称（原始昵称 sendNickName）
   group_nickname: string | null // 群昵称（sendMemberName，可为空）
   aliases: string // 用户自定义别名（JSON数组格式）
   avatar: string | null // 头像（base64 Data URL）
+  roles: string // 成员角色（JSON数组格式，如 '[{"id":"owner"}]'）
 }
 
 /**
@@ -144,6 +169,7 @@ export interface DbMessage {
   ts: number // 时间戳（秒）
   type: MessageType // 消息类型
   content: string | null // 纯文本内容
+  reply_to_message_id: string | null // 回复的目标消息 ID（平台原始 ID）
 }
 
 // ==================== Parser 解析结果 ====================
@@ -156,18 +182,21 @@ export interface ParsedMember {
   accountName: string // 账号名称（QQ原始昵称 sendNickName）
   groupNickname?: string // 群昵称（sendMemberName，可为空）
   avatar?: string // 头像（base64 Data URL，可为空）
+  roles?: MemberRole[] // 成员角色（可为空）
 }
 
 /**
  * 解析后的消息
  */
 export interface ParsedMessage {
+  platformMessageId?: string // 消息的平台原始 ID（用于回复关联查询）
   senderPlatformId: string // 发送者平台ID
   senderAccountName: string // 发送时的账号名称
   senderGroupNickname?: string // 发送时的群昵称（可为空）
   timestamp: number // 时间戳（秒）
   type: MessageType // 消息类型
   content: string | null // 内容
+  replyToMessageId?: string // 回复的目标消息 ID（平台原始 ID，可为空）
 }
 
 /**
@@ -203,6 +232,7 @@ export interface AnalysisSession {
   groupId: string | null // 群ID（群聊类型有值，私聊为空）
   groupAvatar: string | null // 群头像（base64 Data URL）
   ownerId: string | null // 所有者/导出者的 platformId
+  memberAvatar: string | null // 私聊对方头像（base64 Data URL）
 }
 
 /**
@@ -225,4 +255,47 @@ export interface ImportResult {
   success: boolean
   sessionId?: string // 成功时返回会话ID
   error?: string // 失败时返回错误信息
+}
+
+// ==================== 会话索引类型 ====================
+
+/**
+ * 会话（时间切分的对话段落）
+ */
+export interface ChatSession {
+  id: number // 自增ID
+  startTs: number // 会话开始时间戳（秒）
+  endTs: number // 会话结束时间戳（秒）
+  messageCount: number // 该会话包含的消息数
+  isManual: boolean // 是否用户手动合并/修改过
+  summary: string | null // AI 生成的会话简报（预留）
+}
+
+/**
+ * 消息上下文索引
+ */
+export interface MessageContext {
+  messageId: number // 关联 message.id
+  sessionId: number // 关联 chat_session.id
+  topicId: number | null // 关联 chat_topic.id（预留）
+}
+
+/**
+ * 会话索引配置
+ */
+export interface SessionConfig {
+  /** 默认切分阈值（秒） */
+  defaultGapThreshold: number
+}
+
+/**
+ * 会话统计信息
+ */
+export interface SessionStats {
+  /** 会话总数 */
+  sessionCount: number
+  /** 是否已生成会话索引 */
+  hasIndex: boolean
+  /** 当前使用的阈值（秒） */
+  gapThreshold: number
 }

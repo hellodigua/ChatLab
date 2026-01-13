@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import MarkdownIt from 'markdown-it'
 import userAvatar from '@/assets/images/momo.png'
 import type { ContentBlock, ToolBlockContent } from '@/composables/useAIChat'
 import CaptureButton from '@/components/common/CaptureButton.vue'
+
+const { t, locale } = useI18n()
 
 // Props
 const props = defineProps<{
@@ -65,17 +68,39 @@ function formatTimeParams(params: Record<string, unknown>): string {
 
   // 使用 year/month/day/hour 组合
   if (params.year) {
-    let result = `${params.year}年`
-    if (params.month) {
-      result += `${params.month}月`
-      if (params.day) {
-        result += `${params.day}日`
-        if (params.hour !== undefined) {
-          result += ` ${params.hour}点`
+    if (locale.value === 'zh-CN') {
+      let result = `${params.year}年`
+      if (params.month) {
+        result += `${params.month}月`
+        if (params.day) {
+          result += `${params.day}日`
+          if (params.hour !== undefined) {
+            result += ` ${params.hour}点`
+          }
         }
       }
+      return result
+    } else {
+      // English format
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+      let result = ''
+      if (params.month) {
+        result = monthNames[(params.month as number) - 1] || String(params.month)
+        if (params.day) {
+          result += ` ${params.day}`
+          if (params.hour !== undefined) {
+            const hour = params.hour as number
+            const suffix = hour >= 12 ? 'pm' : 'am'
+            const hour12 = hour % 12 || 12
+            result += `, ${hour12}${suffix}`
+          }
+        }
+        result += `, ${params.year}`
+      } else {
+        result = String(params.year)
+      }
+      return result
     }
-    return result
   }
 
   return ''
@@ -93,12 +118,12 @@ function formatToolParams(tool: ToolBlockContent): string {
     const parts: string[] = []
 
     if (keywords && keywords.length > 0) {
-      parts.push(`关键词: ${keywords.join(', ')}`)
+      parts.push(`${t('toolParams.keywords')}: ${keywords.join(', ')}`)
     }
 
     const timeStr = formatTimeParams(params)
     if (timeStr) {
-      parts.push(`时间: ${timeStr}`)
+      parts.push(`${t('toolParams.time')}: ${timeStr}`)
     }
 
     return parts.join(' | ')
@@ -106,7 +131,7 @@ function formatToolParams(tool: ToolBlockContent): string {
 
   if (name === 'get_recent_messages') {
     const parts: string[] = []
-    parts.push(`获取 ${params.limit || 100} 条消息`)
+    parts.push(t('toolParams.getMessages', { count: params.limit || 100 }))
 
     const timeStr = formatTimeParams(params)
     if (timeStr) {
@@ -121,11 +146,11 @@ function formatToolParams(tool: ToolBlockContent): string {
 
     const timeStr = formatTimeParams(params)
     if (timeStr) {
-      parts.push(`时间: ${timeStr}`)
+      parts.push(`${t('toolParams.time')}: ${timeStr}`)
     }
 
     if (params.limit) {
-      parts.push(`限制 ${params.limit} 条`)
+      parts.push(t('toolParams.limit', { count: params.limit }))
     }
 
     return parts.join(' | ')
@@ -135,33 +160,29 @@ function formatToolParams(tool: ToolBlockContent): string {
     const ids = params.message_ids as number[] | undefined
     const size = params.context_size || 20
     if (ids && ids.length > 0) {
-      return `${ids.length} 条消息的前后各 ${size} 条上下文`
+      return t('toolParams.contextWithMessages', { msgCount: ids.length, contextSize: size })
     }
-    return `前后各 ${size} 条上下文`
+    return t('toolParams.context', { size })
   }
 
   if (name === 'get_member_stats') {
-    return `前 ${params.top_n || 10} 名成员`
+    return t('toolParams.topMembers', { count: params.top_n || 10 })
   }
 
   if (name === 'get_time_stats') {
-    const typeMap: Record<string, string> = {
-      hourly: '按小时',
-      weekday: '按星期',
-      daily: '按日期',
-    }
-    return typeMap[params.type as string] || String(params.type)
+    const typeKey = params.type as string
+    return t(`toolParams.timeStats.${typeKey}`) || String(params.type)
   }
 
   if (name === 'get_group_members') {
     if (params.search) {
-      return `搜索: ${params.search}`
+      return `${t('toolParams.search')}: ${params.search}`
     }
-    return '获取成员列表'
+    return t('toolParams.getMemberList')
   }
 
   if (name === 'get_member_name_history') {
-    return `成员ID: ${params.member_id}`
+    return `${t('toolParams.memberId')}: ${params.member_id}`
   }
 
   return ''
@@ -172,7 +193,7 @@ function formatToolParams(tool: ToolBlockContent): string {
   <div class="flex items-start gap-3" :class="[isUser ? 'flex-row-reverse' : '']">
     <!-- 头像 -->
     <div v-if="isUser" class="h-8 w-8 shrink-0 overflow-hidden rounded-full">
-      <img :src="userAvatar" alt="用户头像" class="h-full w-full object-cover" />
+      <img :src="userAvatar" :alt="t('message.userAvatar')" class="h-full w-full object-cover" />
     </div>
     <div
       v-else
@@ -243,7 +264,7 @@ function formatToolParams(tool: ToolBlockContent): string {
               <!-- 工具信息 -->
               <div class="min-w-0 flex-1">
                 <!-- 调用前缀 -->
-                <span class="text-xs text-gray-400 dark:text-gray-500 mr-1">调用</span>
+                <span class="text-xs text-gray-400 dark:text-gray-500 mr-1">{{ t('message.calling') }}</span>
                 <span class="font-medium text-gray-700 dark:text-gray-300">
                   {{ block.tool.displayName }}
                 </span>
@@ -256,7 +277,12 @@ function formatToolParams(tool: ToolBlockContent): string {
 
           <!-- 流式处理中指示器（当最后一个块是已完成的工具块时显示） -->
           <div
-            v-if="isStreaming && contentBlocks && contentBlocks.length > 0 && contentBlocks[contentBlocks.length - 1].type === 'tool'"
+            v-if="
+              isStreaming &&
+              contentBlocks &&
+              contentBlocks.length > 0 &&
+              contentBlocks[contentBlocks.length - 1].type === 'tool'
+            "
             class="flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-600 dark:bg-gray-800 dark:text-gray-400"
           >
             <span class="flex gap-1">
@@ -264,7 +290,7 @@ function formatToolParams(tool: ToolBlockContent): string {
               <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-pink-500 [animation-delay:150ms]" />
               <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-pink-500 [animation-delay:300ms]" />
             </span>
-            <span>正在生成回复...</span>
+            <span>{{ t('message.generating') }}</span>
           </div>
         </div>
       </template>
@@ -283,7 +309,6 @@ function formatToolParams(tool: ToolBlockContent): string {
         <!-- 截屏按钮（仅 AI 回复显示） -->
         <CaptureButton
           v-if="showCaptureButton && !isUser && !isStreaming"
-          tooltip="截屏此问答"
           size="xs"
           type="element"
           target-selector=".qa-pair"
@@ -292,5 +317,58 @@ function formatToolParams(tool: ToolBlockContent): string {
     </div>
   </div>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "message": {
+      "userAvatar": "用户头像",
+      "calling": "调用",
+      "generating": "正在生成回复..."
+    },
+    "toolParams": {
+      "keywords": "关键词",
+      "time": "时间",
+      "getMessages": "获取 {count} 条消息",
+      "limit": "限制 {count} 条",
+      "contextWithMessages": "{msgCount} 条消息的前后各 {contextSize} 条上下文",
+      "context": "前后各 {size} 条上下文",
+      "topMembers": "前 {count} 名成员",
+      "search": "搜索",
+      "getMemberList": "获取成员列表",
+      "memberId": "成员ID",
+      "timeStats": {
+        "hourly": "按小时",
+        "weekday": "按星期",
+        "daily": "按日期"
+      }
+    }
+  },
+  "en-US": {
+    "message": {
+      "userAvatar": "User Avatar",
+      "calling": "Calling",
+      "generating": "Generating response..."
+    },
+    "toolParams": {
+      "keywords": "Keywords",
+      "time": "Time",
+      "getMessages": "Get {count} messages",
+      "limit": "Limit {count}",
+      "contextWithMessages": "Context of {contextSize} messages around {msgCount} messages",
+      "context": "{size} messages context",
+      "topMembers": "Top {count} members",
+      "search": "Search",
+      "getMemberList": "Get member list",
+      "memberId": "Member ID",
+      "timeStats": {
+        "hourly": "Hourly",
+        "weekday": "By Weekday",
+        "daily": "Daily"
+      }
+    }
+  }
+}
+</i18n>
 
 <!-- Markdown 样式已提取到全局 src/assets/styles/markdown.css -->

@@ -68,11 +68,13 @@ interface JsonlMember {
 interface JsonlMessage {
   _type: 'message'
   sender: string
+  platformMessageId?: string
   accountName: string
   groupNickname?: string
   timestamp: number
   type: number
   content: string | null
+  replyToMessageId?: string
 }
 
 /** 任意 JSONL 行 */
@@ -130,7 +132,7 @@ async function* parseChatLabJsonl(options: ParseOptions): AsyncGenerator<ParseEv
   let messagesProcessed = 0
 
   // 发送初始进度
-  const initialProgress = createProgress('parsing', 0, totalBytes, 0, '开始解析 JSONL...')
+  const initialProgress = createProgress('parsing', 0, totalBytes, 0, '')
   yield { type: 'progress', data: initialProgress }
   onProgress?.(initialProgress)
 
@@ -215,6 +217,8 @@ async function* parseChatLabJsonl(options: ParseOptions): AsyncGenerator<ParseEv
           timestamp: parsed.timestamp,
           type: parsed.type as MessageType,
           content: parsed.content,
+          platformMessageId: parsed.platformMessageId,
+          replyToMessageId: parsed.replyToMessageId,
         })
         messagesProcessed++
 
@@ -257,7 +261,7 @@ async function* parseChatLabJsonl(options: ParseOptions): AsyncGenerator<ParseEv
   }
 
   // 完成
-  const doneProgress = createProgress('done', totalBytes, totalBytes, messagesProcessed, '解析完成')
+  const doneProgress = createProgress('done', totalBytes, totalBytes, messagesProcessed, '')
   yield { type: 'progress', data: doneProgress }
   onProgress?.(doneProgress)
 

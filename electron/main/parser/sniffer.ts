@@ -5,7 +5,7 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import type { FormatFeature, FormatModule, Parser } from './types'
+import type { FormatFeature, FormatModule, Parser, FormatMatchCheck, FormatDiagnosis } from './types'
 
 /** 文件头检测大小 (8KB) */
 const HEAD_SIZE = 8 * 1024
@@ -45,6 +45,29 @@ function matchRequiredFields(headContent: string, fields: string[]): boolean {
     const pattern = new RegExp(`"${field.replace('.', '"\\s*:\\s*.*"')}"\\s*:`)
     return pattern.test(headContent) || headContent.includes(`"${field}"`)
   })
+}
+
+/**
+ * 检查必需字段并返回详细结果
+ */
+function checkRequiredFieldsDetail(
+  headContent: string,
+  fields: string[]
+): { allMatch: boolean; missing: string[] } {
+  const missing: string[] = []
+
+  for (const field of fields) {
+    const pattern = new RegExp(`"${field.replace('.', '"\\s*:\\s*.*"')}"\\s*:`)
+    const found = pattern.test(headContent) || headContent.includes(`"${field}"`)
+    if (!found) {
+      missing.push(field)
+    }
+  }
+
+  return {
+    allMatch: missing.length === 0,
+    missing,
+  }
 }
 
 /**
@@ -121,6 +144,135 @@ export class FormatSniffer {
    */
   getSupportedFormats(): FormatFeature[] {
     return this.formats.map((m) => m.feature)
+  }
+
+  /**
+   * 诊断文件格式
+   * 返回详细的匹配信息，用于提供更好的错误提示
+   * @param filePath 文件路径
+   * @returns 诊断结果，包含每个格式的匹配详情
+   */
+  diagnose(filePath: string): FormatDiagnosis {
+    const ext = getExtension(filePath)
+    const headContent = readFileHead(filePath)
+
+    const checks: FormatMatchCheck[] = []
+    const partialMatches: FormatMatchCheck[] = []
+    let matchedFormat: FormatFeature | null = null
+
+    for (const { feature } of this.formats) {
+      const check = this.checkFeatureDetail(feature, ext, headContent)
+      checks.push(check)
+
+      if (check.fullMatch && !matchedFormat) {
+        matchedFormat = feature
+      } else if (check.extensionMatch && !check.fullMatch) {
+        partialMatches.push(check)
+      }
+    }
+
+    // 生成诊断建议
+    const suggestion = this.generateSuggestion(ext, partialMatches, headContent)
+
+    return {
+      recognized: matchedFormat !== null,
+      matchedFormat,
+      checks,
+      partialMatches,
+      suggestion,
+    }
+  }
+
+  /**
+   * 检查单个格式的匹配详情
+   */
+  private checkFeatureDetail(feature: FormatFeature, ext: string, headContent: string): FormatMatchCheck {
+    const result: FormatMatchCheck = {
+      formatId: feature.id,
+      formatName: feature.name,
+      extensionMatch: feature.extensions.includes(ext),
+      headSignatureMatch: null,
+      requiredFieldsMatch: null,
+      missingFields: [],
+      fullMatch: false,
+    }
+
+    // 扩展名不匹配，直接返回
+    if (!result.extensionMatch) {
+      return result
+    }
+
+    const { signatures } = feature
+
+    // 检查文件头签名
+    if (signatures.head && signatures.head.length > 0) {
+      result.headSignatureMatch = matchHeadSignatures(headContent, signatures.head)
+    }
+
+    // 检查必需字段
+    if (signatures.requiredFields && signatures.requiredFields.length > 0) {
+      const { allMatch, missing } = checkRequiredFieldsDetail(headContent, signatures.requiredFields)
+      result.requiredFieldsMatch = allMatch
+      result.missingFields = missing
+    }
+
+    // 检查字段值模式
+    let fieldPatternsMatch = true
+    if (signatures.fieldPatterns) {
+      for (const [, pattern] of Object.entries(signatures.fieldPatterns)) {
+        if (!pattern.test(headContent)) {
+          fieldPatternsMatch = false
+          break
+        }
+      }
+    }
+
+    // 判断是否完全匹配
+    result.fullMatch =
+      result.extensionMatch &&
+      (result.headSignatureMatch === null || result.headSignatureMatch) &&
+      (result.requiredFieldsMatch === null || result.requiredFieldsMatch) &&
+      fieldPatternsMatch
+
+    return result
+  }
+
+  /**
+   * 生成诊断建议信息
+   */
+  private generateSuggestion(ext: string, partialMatches: FormatMatchCheck[], headContent: string): string {
+    if (partialMatches.length === 0) {
+      return `没有找到匹配扩展名 "${ext}" 的格式，请检查文件类型是否正确`
+    }
+
+    // 找到最可能的格式（按优先级排序后的第一个部分匹配）
+    const mostLikely = partialMatches[0]
+
+    // 构建详细的建议信息
+    const issues: string[] = []
+
+    if (mostLikely.headSignatureMatch === false) {
+      issues.push('文件头签名不匹配')
+    }
+
+    if (mostLikely.missingFields.length > 0) {
+      issues.push(`缺少必需字段: ${mostLikely.missingFields.join(', ')}`)
+    }
+
+    if (issues.length > 0) {
+      return `文件疑似 ${mostLikely.formatName} 格式，但存在以下问题：${issues.join('；')}`
+    }
+
+    // 如果是 JSON 文件，提供额外提示
+    if (ext === '.json') {
+      // 检查文件头是否能看到有效的 JSON 结构
+      const trimmed = headContent.trim()
+      if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) {
+        return '文件内容不是有效的 JSON 格式'
+      }
+    }
+
+    return `扩展名匹配 ${mostLikely.formatName} 格式，但内容结构不符合预期`
   }
 
   /**

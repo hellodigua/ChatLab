@@ -60,6 +60,7 @@ interface V4RawMessage {
 }
 
 interface V4Message {
+  messageId?: string // 消息的唯一 ID
   timestamp: string
   sender: {
     uid?: string
@@ -73,6 +74,12 @@ interface V4Message {
     text: string
     resources?: Array<{ type: string }>
     emojis?: Array<{ type: string }>
+    reply?: {
+      messageId?: string
+      referencedMessageId?: string // 被引用消息的 ID
+      senderName?: string
+      content?: string
+    }
   }
   rawMessage?: V4RawMessage
 }
@@ -235,7 +242,7 @@ async function* parseV4(options: ParseOptions): AsyncGenerator<ParseEvent, void,
   let skippedMessages = 0 // 跳过的无效消息计数
 
   // 发送初始进度
-  const initialProgress = createProgress('parsing', 0, totalBytes, 0, '开始解析...')
+  const initialProgress = createProgress('parsing', 0, totalBytes, 0, '')
   yield { type: 'progress', data: initialProgress }
   onProgress?.(initialProgress)
 
@@ -323,12 +330,14 @@ async function* parseV4(options: ParseOptions): AsyncGenerator<ParseEvent, void,
       if (value.isRecalled) textContent = '[已撤回] ' + textContent
 
       messageBatch.push({
+        platformMessageId: value.messageId, // 消息的平台原始 ID
         senderPlatformId: platformId,
         senderAccountName: accountName,
         senderGroupNickname: groupNickname,
         timestamp,
         type,
         content: textContent || null,
+        replyToMessageId: value.content?.reply?.referencedMessageId, // 被引用消息的 ID
       })
 
       messagesProcessed++
@@ -395,7 +404,7 @@ async function* parseV4(options: ParseOptions): AsyncGenerator<ParseEvent, void,
   }
 
   // 完成
-  const doneProgress = createProgress('done', totalBytes, totalBytes, messagesProcessed, '解析完成')
+  const doneProgress = createProgress('done', totalBytes, totalBytes, messagesProcessed, '')
   yield { type: 'progress', data: doneProgress }
   onProgress?.(doneProgress)
 

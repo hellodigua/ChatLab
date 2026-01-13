@@ -1,4 +1,5 @@
 import { computed, type Ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { AnalysisSession, MessageType } from '@/types/base'
 import type { HourlyActivity, DailyActivity, WeekdayActivity } from '@/types/analysis'
 import dayjs from 'dayjs'
@@ -15,6 +16,8 @@ interface UseOverviewStatisticsProps {
 }
 
 export function useOverviewStatistics(props: UseOverviewStatisticsProps, weekdayActivity: Ref<WeekdayActivity[]>) {
+  const { t } = useI18n()
+
   // 时间跨度
   const durationDays = computed(() => {
     if (props.selectedYear) {
@@ -78,8 +81,16 @@ export function useOverviewStatistics(props: UseOverviewStatisticsProps, weekday
     )
   })
 
-  // 星期名称映射（周一开始）
-  const weekdayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+  // 星期名称映射（周一开始）- 国际化
+  const weekdayNames = computed(() => [
+    t('common.weekday.mon'),
+    t('common.weekday.tue'),
+    t('common.weekday.wed'),
+    t('common.weekday.thu'),
+    t('common.weekday.fri'),
+    t('common.weekday.sat'),
+    t('common.weekday.sun'),
+  ])
 
   // 周末活跃度
   const weekdayVsWeekend = computed(() => {

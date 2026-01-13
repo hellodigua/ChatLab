@@ -1,0 +1,8 @@
+{
+  "title": "Tools",
+  "description": "Utilities for chat record processing",
+  "tabs": {
+    "merge": "Merge Chat Records"
+  }
+}
+

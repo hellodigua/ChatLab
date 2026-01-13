@@ -374,6 +374,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
    * @param historyMessages 对话历史（可选，用于上下文关联）
    * @param chatType 聊天类型（'group' | 'private'）
    * @param promptConfig 用户自定义提示词配置（可选）
+   * @param locale 语言设置（可选，默认 'zh-CN'）
    */
   ipcMain.handle(
     'agent:runStream',
@@ -384,7 +385,8 @@ export function registerAIHandlers({ win }: IpcContext): void {
       context: ToolContext,
       historyMessages?: Array<{ role: 'user' | 'assistant'; content: string }>,
       chatType?: 'group' | 'private',
-      promptConfig?: PromptConfig
+      promptConfig?: PromptConfig,
+      locale?: string
     ) => {
       aiLogger.info('IPC', `收到 Agent 流式请求: ${requestId}`, {
         userMessage: userMessage.slice(0, 100),
@@ -411,7 +413,8 @@ export function registerAIHandlers({ win }: IpcContext): void {
           { abortSignal: abortController.signal },
           formattedHistory,
           chatType ?? 'group',
-          promptConfig
+          promptConfig,
+          locale ?? 'zh-CN'
         )
 
         // 异步执行，通过事件发送流式数据
@@ -462,9 +465,21 @@ export function registerAIHandlers({ win }: IpcContext): void {
               return
             }
             aiLogger.error('IPC', `Agent 执行出错: ${requestId}`, { error: String(error) })
+            // 发送错误 chunk
             win.webContents.send('agent:streamChunk', {
               requestId,
               chunk: { type: 'error', error: String(error), isFinished: true },
+            })
+            // 发送完成事件（带错误信息），确保前端 promise 能 resolve
+            win.webContents.send('agent:complete', {
+              requestId,
+              result: {
+                content: '',
+                toolsUsed: [],
+                toolRounds: 0,
+                totalUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+                error: String(error),
+              },
             })
           } finally {
             // 清理请求追踪

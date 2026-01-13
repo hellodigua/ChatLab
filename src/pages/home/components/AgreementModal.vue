@@ -1,14 +1,40 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import MarkdownIt from 'markdown-it'
-import agreementText from '@/assets/docs/agreement.md?raw'
+import { useSettingsStore } from '@/stores/settings'
+import { availableLocales, type LocaleType } from '@/i18n'
+// 导入中英文协议文档
+import agreementZh from '@/assets/docs/agreement_zh.md?raw'
+import agreementEn from '@/assets/docs/agreement_en.md?raw'
+
+const { t } = useI18n()
+const settingsStore = useSettingsStore()
+const { locale } = storeToRefs(settingsStore)
+
+// 语言选项
+const languageOptions = computed(() =>
+  availableLocales.map((l) => ({
+    label: l.nativeName,
+    value: l.code,
+  }))
+)
+
+// 语言切换
+const currentLocale = computed({
+  get: () => locale.value,
+  set: (val: LocaleType) => settingsStore.setLocale(val),
+})
 
 // 协议版本号（更新协议时修改此版本号）
-const AGREEMENT_VERSION = '1.0'
+const AGREEMENT_VERSION = '1.1'
 const AGREEMENT_KEY = 'chatlab_agreement_version'
 
 // 弹窗显示状态（内部管理）
 const isOpen = ref(false)
+// 是否为版本更新导致的重新阅读
+const isVersionUpdated = ref(false)
 
 // 组件挂载时检查是否需要显示
 onMounted(() => {
@@ -16,17 +42,21 @@ onMounted(() => {
   // 版本号不匹配时需要重新同意
   if (acceptedVersion !== AGREEMENT_VERSION) {
     isOpen.value = true
+    // 如果之前有同意过旧版本，则是版本更新
+    if (acceptedVersion) {
+      isVersionUpdated.value = true
+    }
   }
 })
 
 // 倒计时状态
-const countdown = ref(20)
+const countdown = ref(15)
 let timer: ReturnType<typeof setInterval> | null = null
 
 // 监听 modal 打开状态，启动倒计时
 watch(isOpen, (open) => {
   if (open) {
-    countdown.value = 20
+    countdown.value = 15
     timer = setInterval(() => {
       if (countdown.value > 0) {
         countdown.value--
@@ -45,8 +75,8 @@ onUnmounted(() => {
   if (timer) clearInterval(timer)
 })
 
-// 是否可以点击同意按钮
-const canAgree = computed(() => countdown.value === 0)
+// 是否可以点击同意按钮（版本更新时无需等待倒计时）
+const canAgree = computed(() => isVersionUpdated.value || countdown.value === 0)
 
 // 创建 markdown-it 实例
 const md = new MarkdownIt({
@@ -63,12 +93,19 @@ md.renderer.rules.link_open = (tokens, idx, options, _env, self) => {
   return self.renderToken(tokens, idx, options)
 }
 
+// 根据当前语言选择协议文本
+const agreementText = computed(() => {
+  return locale.value === 'zh-CN' ? agreementZh : agreementEn
+})
+
 // 渲染后的 HTML
-const renderedContent = computed(() => md.render(agreementText))
+const renderedContent = computed(() => md.render(agreementText.value))
 
 // 同意协议
 function handleAgree() {
   localStorage.setItem(AGREEMENT_KEY, AGREEMENT_VERSION)
+  // 标记用户已确认语言设置（无论是否手动切换）
+  localStorage.setItem('chatlab_locale_set_by_user', 'true')
   isOpen.value = false
 }
 
@@ -90,17 +127,31 @@ function handleDisagree() {
     <template #content>
       <div class="flex max-h-[85vh] flex-col p-6">
         <!-- Header -->
-        <div class="mb-4 flex items-center gap-3">
-          <div
-            class="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-pink-100 to-rose-100 dark:from-pink-900/30 dark:to-rose-900/30"
-          >
-            <UIcon name="i-heroicons-document-text" class="h-6 w-6 text-pink-600 dark:text-pink-400" />
+        <div class="mb-4 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div
+              class="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-pink-100 to-rose-100 dark:from-pink-900/30 dark:to-rose-900/30"
+            >
+              <UIcon name="i-heroicons-document-text" class="h-6 w-6 text-pink-600 dark:text-pink-400" />
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ t('common.agreement.title') }}</h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('common.agreement.subtitle') }}</p>
+            </div>
           </div>
-          <div>
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white">隐私政策与用户协议</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400">使用前请仔细阅读</p>
+          <!-- 语言切换 -->
+          <div class="w-36 shrink-0">
+            <UTabs v-model="currentLocale" size="sm" class="gap-0" :items="languageOptions" />
           </div>
         </div>
+
+        <!-- 版本更新提示条 -->
+        <UAlert
+          v-if="isVersionUpdated"
+          icon="i-heroicons-exclamation-triangle"
+          :title="t('common.agreement.updateNotice')"
+          class="mb-4 pt-2"
+        />
 
         <!-- 协议内容滚动区域 -->
         <div class="mb-6 flex-1 overflow-y-auto pr-4">
@@ -109,7 +160,9 @@ function handleDisagree() {
 
         <!-- 底部按钮 -->
         <div class="flex items-center justify-end gap-3 border-t border-gray-200 pt-4 dark:border-gray-700">
-          <UButton variant="ghost" color="neutral" size="lg" @click="handleDisagree">我不同意</UButton>
+          <UButton variant="ghost" color="neutral" size="lg" @click="handleDisagree">
+            {{ t('common.agreement.disagree') }}
+          </UButton>
           <UButton
             color="primary"
             size="lg"
@@ -117,7 +170,7 @@ function handleDisagree() {
             class="bg-pink-500 hover:bg-pink-600 dark:bg-pink-600 dark:hover:bg-pink-700 disabled:opacity-50 disabled:cursor-not-allowed"
             @click="handleAgree"
           >
-            {{ canAgree ? '我已阅读并同意' : `请阅读 (${countdown}s)` }}
+            {{ canAgree ? t('common.agreement.agree') : t('common.agreement.countdown', { seconds: countdown }) }}
           </UButton>
         </div>
       </div>

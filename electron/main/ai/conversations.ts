@@ -4,38 +4,24 @@
  */
 
 import Database from 'better-sqlite3'
-import * as fs from 'fs'
 import * as path from 'path'
-import { app } from 'electron'
+import { getAiDataDir, ensureDir } from '../paths'
 
-// AI 数据库存储目录
-let AI_DB_DIR: string | null = null
+// AI 数据库实例
 let AI_DB: Database.Database | null = null
 
 /**
  * 获取 AI 数据库目录
  */
 function getAiDbDir(): string {
-  if (AI_DB_DIR) return AI_DB_DIR
-
-  try {
-    const docPath = app.getPath('documents')
-    AI_DB_DIR = path.join(docPath, 'ChatLab', 'ai')
-  } catch {
-    AI_DB_DIR = path.join(process.cwd(), 'ai')
-  }
-
-  return AI_DB_DIR
+  return getAiDataDir()
 }
 
 /**
  * 确保 AI 数据库目录存在
  */
 function ensureAiDbDir(): void {
-  const dir = getAiDbDir()
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true })
-  }
+  ensureDir(getAiDbDir())
 }
 
 /**

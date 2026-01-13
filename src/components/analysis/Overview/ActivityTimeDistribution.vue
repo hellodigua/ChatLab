@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { HourlyActivity, WeekdayActivity, MonthlyActivity } from '@/types/analysis'
 import { BarChart } from '@/components/charts'
 import type { BarChartData } from '@/components/charts'
 import { SectionCard } from '@/components/UI'
+
+const { t, locale } = useI18n()
 
 const props = defineProps<{
   hourlyActivity: HourlyActivity[]
@@ -68,7 +71,14 @@ const weekdayChartData = computed<BarChartData>(() => {
 // 月份分布图数据
 const monthlyChartData = computed<BarChartData>(() => {
   return {
-    labels: props.monthlyActivity.map((m) => `${m.month}月`),
+    labels: props.monthlyActivity.map((m) => {
+      // 中文用 X月，英文用 Jan, Feb 等
+      if (locale.value === 'zh-CN') {
+        return `${m.month}月`
+      }
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+      return monthNames[m.month - 1] || `${m.month}`
+    }),
     values: props.monthlyActivity.map((m) => m.messageCount),
   }
 })
@@ -77,7 +87,7 @@ const monthlyChartData = computed<BarChartData>(() => {
 <template>
   <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3">
     <!-- 24小时分布 -->
-    <SectionCard title="24小时活跃分布" :show-divider="false">
+    <SectionCard :title="t('hourlyTitle')" :show-divider="false">
       <div class="p-5">
         <BarChart
           :data="hourlyChartData"
@@ -87,28 +97,28 @@ const monthlyChartData = computed<BarChartData>(() => {
 
         <div class="mt-6 grid grid-cols-4 gap-2">
           <div class="text-center">
-            <div class="text-xs text-gray-500 dark:text-gray-400">凌晨</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('lateNight') }}</div>
             <div class="mt-1 text-base font-semibold text-gray-900 dark:text-white">{{ lateNightRatio }}%</div>
             <div class="mx-auto mt-1 h-1 w-full max-w-12 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
               <div class="h-full rounded-full bg-pink-300 transition-all" :style="{ width: `${lateNightRatio}%` }" />
             </div>
           </div>
           <div class="text-center">
-            <div class="text-xs text-gray-500 dark:text-gray-400">上午</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('morning') }}</div>
             <div class="mt-1 text-base font-semibold text-gray-900 dark:text-white">{{ morningRatio }}%</div>
             <div class="mx-auto mt-1 h-1 w-full max-w-12 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
               <div class="h-full rounded-full bg-pink-400 transition-all" :style="{ width: `${morningRatio}%` }" />
             </div>
           </div>
           <div class="text-center">
-            <div class="text-xs text-gray-500 dark:text-gray-400">下午</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('afternoon') }}</div>
             <div class="mt-1 text-base font-semibold text-gray-900 dark:text-white">{{ afternoonRatio }}%</div>
             <div class="mx-auto mt-1 h-1 w-full max-w-12 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
               <div class="h-full rounded-full bg-pink-500 transition-all" :style="{ width: `${afternoonRatio}%` }" />
             </div>
           </div>
           <div class="text-center">
-            <div class="text-xs text-gray-500 dark:text-gray-400">晚上</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('evening') }}</div>
             <div class="mt-1 text-base font-semibold text-gray-900 dark:text-white">{{ eveningRatio }}%</div>
             <div class="mx-auto mt-1 h-1 w-full max-w-12 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
               <div class="h-full rounded-full bg-pink-600 transition-all" :style="{ width: `${eveningRatio}%` }" />
@@ -119,7 +129,7 @@ const monthlyChartData = computed<BarChartData>(() => {
     </SectionCard>
 
     <!-- 星期分布 -->
-    <SectionCard title="星期活跃分布" :show-divider="false">
+    <SectionCard :title="t('weekdayTitle')" :show-divider="false">
       <div class="p-5">
         <div v-if="isLoadingWeekday" class="flex h-64 items-center justify-center">
           <UIcon name="i-heroicons-arrow-path" class="h-6 w-6 animate-spin text-pink-500" />
@@ -129,7 +139,7 @@ const monthlyChartData = computed<BarChartData>(() => {
 
           <div class="mt-6 grid grid-cols-2 gap-4">
             <div class="text-center">
-              <div class="text-xs text-gray-500 dark:text-gray-400">工作日</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('weekdays') }}</div>
               <div class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
                 {{ weekdayVsWeekend.weekday }}%
               </div>
@@ -141,7 +151,7 @@ const monthlyChartData = computed<BarChartData>(() => {
               </div>
             </div>
             <div class="text-center">
-              <div class="text-xs text-gray-500 dark:text-gray-400">周末</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('weekend') }}</div>
               <div class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
                 {{ weekdayVsWeekend.weekend }}%
               </div>
@@ -158,7 +168,7 @@ const monthlyChartData = computed<BarChartData>(() => {
     </SectionCard>
 
     <!-- 月份活跃分布 -->
-    <SectionCard title="月份活跃分布" :show-divider="false">
+    <SectionCard :title="t('monthlyTitle')" :show-divider="false">
       <div class="p-5">
         <div v-if="isLoadingMonthly" class="flex h-64 items-center justify-center">
           <UIcon name="i-heroicons-arrow-path" class="h-6 w-6 animate-spin text-pink-500" />
@@ -168,3 +178,30 @@ const monthlyChartData = computed<BarChartData>(() => {
     </SectionCard>
   </div>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "hourlyTitle": "24小时活跃分布",
+    "lateNight": "凌晨",
+    "morning": "上午",
+    "afternoon": "下午",
+    "evening": "晚上",
+    "weekdayTitle": "星期活跃分布",
+    "weekdays": "工作日",
+    "weekend": "周末",
+    "monthlyTitle": "月份活跃分布"
+  },
+  "en-US": {
+    "hourlyTitle": "24-Hour Activity",
+    "lateNight": "Late Night",
+    "morning": "Morning",
+    "afternoon": "Afternoon",
+    "evening": "Evening",
+    "weekdayTitle": "Weekly Activity",
+    "weekdays": "Weekdays",
+    "weekend": "Weekend",
+    "monthlyTitle": "Monthly Activity"
+  }
+}
+</i18n>

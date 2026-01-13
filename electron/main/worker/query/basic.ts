@@ -324,6 +324,46 @@ interface DbMeta {
 }
 
 /**
+ * 获取私聊对方成员的头像
+ * 逻辑参考 private-chat/index.vue 的 otherMemberAvatar
+ */
+function getPrivateChatMemberAvatar(
+  db: Database.Database,
+  sessionName: string,
+  ownerId: string | null
+): string | null {
+  // 获取所有非系统消息成员（按消息数排序）
+  const members = db
+    .prepare(
+      `SELECT
+        m.platform_id as platformId,
+        COALESCE(m.group_nickname, m.account_name, m.platform_id) as name,
+        m.avatar
+      FROM member m
+      WHERE COALESCE(m.account_name, '') != '系统消息'
+      ORDER BY (SELECT COUNT(*) FROM message WHERE sender_id = m.id) DESC`
+    )
+    .all() as Array<{ platformId: string; name: string; avatar: string | null }>
+
+  if (members.length === 0) return null
+
+  // 1. 优先排除 ownerId，找到另一成员的头像
+  if (ownerId) {
+    const other = members.find((m) => m.platformId !== ownerId)
+    if (other?.avatar) return other.avatar
+  }
+
+  // 2. 尝试匹配会话名称（私聊名称通常是对方昵称）
+  const sameName = members.find((m) => m.name === sessionName)
+  if (sameName?.avatar) return sameName.avatar
+
+  // 3. 如果只有两个成员且有 ownerId，取另一个（即使没有头像也返回 null）
+  // 如果没有 ownerId，返回第一个有头像的成员
+  const firstWithAvatar = members.find((m) => m.avatar)
+  return firstWithAvatar?.avatar || null
+}
+
+/**
  * 获取所有会话列表
  */
 export function getAllSessions(): any[] {
@@ -366,6 +406,12 @@ export function getAllSessions(): any[] {
             .get() as { count: number }
         ).count
 
+        // 私聊：获取对方成员头像
+        let memberAvatar: string | null = null
+        if (meta.type === 'private') {
+          memberAvatar = getPrivateChatMemberAvatar(db, meta.name, meta.owner_id)
+        }
+
         sessions.push({
           id: sessionId,
           name: meta.name,
@@ -378,6 +424,7 @@ export function getAllSessions(): any[] {
           groupId: meta.group_id || null,
           groupAvatar: meta.group_avatar || null,
           ownerId: meta.owner_id || null,
+          memberAvatar, // 私聊对方头像
         })
       }
 

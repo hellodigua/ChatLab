@@ -147,6 +147,44 @@ export interface FormatModule {
   preprocessor?: Preprocessor
 }
 
+// ==================== 诊断结果类型 ====================
+
+/**
+ * 单个格式的匹配检查结果
+ */
+export interface FormatMatchCheck {
+  /** 格式 ID */
+  formatId: string
+  /** 格式显示名称 */
+  formatName: string
+  /** 扩展名是否匹配 */
+  extensionMatch: boolean
+  /** 文件头签名是否匹配（如果定义了） */
+  headSignatureMatch: boolean | null
+  /** 必需字段是否匹配（如果定义了） */
+  requiredFieldsMatch: boolean | null
+  /** 缺失的必需字段（如果有） */
+  missingFields: string[]
+  /** 是否完全匹配 */
+  fullMatch: boolean
+}
+
+/**
+ * 格式诊断结果
+ */
+export interface FormatDiagnosis {
+  /** 是否成功识别到格式 */
+  recognized: boolean
+  /** 识别到的格式（如果有） */
+  matchedFormat: FormatFeature | null
+  /** 所有格式的检查详情 */
+  checks: FormatMatchCheck[]
+  /** 部分匹配的格式（扩展名匹配但内容不匹配） */
+  partialMatches: FormatMatchCheck[]
+  /** 诊断建议信息 */
+  suggestion: string
+}
+
 // ==================== 工具类型 ====================
 
 /**

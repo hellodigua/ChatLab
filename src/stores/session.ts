@@ -104,14 +104,25 @@ export const useSessionStore = defineStore(
     /**
      * 选择文件并导入
      */
-    async function importFile(): Promise<{ success: boolean; error?: string }> {
+    async function importFile(): Promise<{
+      success: boolean
+      error?: string
+      diagnosisSuggestion?: string
+    }> {
       try {
-        const result = await window.chatApi.selectFile()
-        if (!result || !result.filePath) {
-          return { success: false, error: '未选择文件' }
+      const result = await window.chatApi.selectFile()
+      // 用户取消选择
+        if (!result) {
+          return { success: false, error: 'error.no_file_selected' }
         }
+        // 有错误（如格式不识别）- 优先检查错误，因为此时可能没有 filePath
         if (result.error) {
-          return { success: false, error: result.error }
+          const diagnosisSuggestion = result.diagnosis?.suggestion
+          return { success: false, error: result.error, diagnosisSuggestion }
+        }
+        // 没有文件路径（用户取消）
+        if (!result.filePath) {
+          return { success: false, error: 'error.no_file_selected' }
         }
         return await importFileFromPath(result.filePath)
       } catch (error) {
@@ -122,13 +133,17 @@ export const useSessionStore = defineStore(
     /**
      * 从指定路径执行导入（支持拖拽）
      */
-    async function importFileFromPath(filePath: string): Promise<{ success: boolean; error?: string }> {
+    async function importFileFromPath(filePath: string): Promise<{
+      success: boolean
+      error?: string
+      diagnosisSuggestion?: string
+    }> {
       try {
         isImporting.value = true
         importProgress.value = {
           stage: 'detecting',
           progress: 0,
-          message: '准备导入...',
+          message: '', // Progress text is handled by frontend i18n
         }
 
         // 进度队列控制
@@ -188,9 +203,26 @@ export const useSessionStore = defineStore(
         if (importResult.success && importResult.sessionId) {
           await loadSessions()
           currentSessionId.value = importResult.sessionId
+
+          // 自动生成会话索引
+          try {
+            const savedThreshold = localStorage.getItem('sessionGapThreshold')
+            const gapThreshold = savedThreshold ? parseInt(savedThreshold, 10) : 1800 // 默认30分钟
+            await window.sessionApi.generate(importResult.sessionId, gapThreshold)
+          } catch (error) {
+            console.error('自动生成会话索引失败:', error)
+            // 不阻断导入流程，用户可以手动生成
+          }
+
           return { success: true }
         } else {
-          return { success: false, error: importResult.error || '导入失败' }
+          // 传递诊断信息（如果有）
+          const diagnosisSuggestion = importResult.diagnosis?.suggestion
+          return {
+            success: false,
+            error: importResult.error || 'error.import_failed',
+            diagnosisSuggestion,
+          }
         }
       } catch (error) {
         return { success: false, error: String(error) }
@@ -277,8 +309,56 @@ export const useSessionStore = defineStore(
       }
     }
 
+    // 置顶会话 ID 列表
+    const pinnedSessionIds = ref<string[]>([])
+
+    // 排序后的会话列表
+    const sortedSessions = computed(() => {
+      // 建立索引映射，index 越大表示越晚置顶
+      const pinIndexMap = new Map(pinnedSessionIds.value.map((id, index) => [id, index]))
+
+      return [...sessions.value].sort((a, b) => {
+        const aPinIndex = pinIndexMap.get(a.id)
+        const bPinIndex = pinIndexMap.get(b.id)
+        const aPinned = aPinIndex !== undefined
+        const bPinned = bPinIndex !== undefined
+
+        // 两个都置顶：后置顶的（index 大的）排前面
+        if (aPinned && bPinned) {
+          return bPinIndex! - aPinIndex!
+        }
+        // 只有一个置顶：置顶的排前面
+        if (aPinned && !bPinned) return -1
+        if (!aPinned && bPinned) return 1
+
+        // 都不置顶：保持原顺序（通常是按时间倒序）
+        return 0
+      })
+    })
+
+    /**
+     * 切换会话置顶状态
+     */
+    function togglePinSession(id: string) {
+      const index = pinnedSessionIds.value.indexOf(id)
+      if (index !== -1) {
+        pinnedSessionIds.value.splice(index, 1)
+      } else {
+        pinnedSessionIds.value.push(id)
+      }
+    }
+
+    /**
+     * 检查会话是否已置顶
+     */
+    function isPinned(id: string): boolean {
+      return pinnedSessionIds.value.includes(id)
+    }
+
     return {
       sessions,
+      sortedSessions,
+      pinnedSessionIds,
       currentSessionId,
       isImporting,
       importProgress,
@@ -300,6 +380,8 @@ export const useSessionStore = defineStore(
       renameSession,
       clearSelection,
       updateSessionOwnerId,
+      togglePinSession,
+      isPinned,
     }
   },
   {
@@ -307,6 +389,10 @@ export const useSessionStore = defineStore(
       {
         pick: ['currentSessionId'],
         storage: sessionStorage,
+      },
+      {
+        pick: ['pinnedSessionIds'],
+        storage: localStorage,
       },
     ],
   }

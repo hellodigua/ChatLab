@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Line } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -14,6 +15,8 @@ import {
 } from 'chart.js'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
+
+const { t } = useI18n()
 
 export interface LineChartData {
   labels: string[]
@@ -46,7 +49,7 @@ const chartData = computed(() => {
     labels: props.data.labels,
     datasets: [
       {
-        label: '数量',
+        label: t('count'),
         data: props.data.values,
         fill: props.fill,
         borderColor: props.lineColor,
@@ -112,3 +115,14 @@ const chartOptions = computed(() => ({
     <Line :data="chartData" :options="chartOptions" />
   </div>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "count": "数量"
+  },
+  "en-US": {
+    "count": "Count"
+  }
+}
+</i18n>

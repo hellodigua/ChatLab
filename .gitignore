@@ -26,6 +26,7 @@ out
 .obskey
 release-config.json
 src/auto-imports.d.ts
+*.tsbuildinfo
 
 # 使用npm作为包管理器
 yarn.lock

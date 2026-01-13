@@ -5,7 +5,7 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import { app } from 'electron'
+import { getLogsDir, ensureDir } from '../paths'
 
 // 日志目录
 let LOG_DIR: string | null = null
@@ -17,14 +17,7 @@ let logStream: fs.WriteStream | null = null
  */
 function getLogDir(): string {
   if (LOG_DIR) return LOG_DIR
-
-  try {
-    const docPath = app.getPath('documents')
-    LOG_DIR = path.join(docPath, 'ChatLab', 'logs', 'ai')
-  } catch {
-    LOG_DIR = path.join(process.cwd(), 'logs', 'ai')
-  }
-
+  LOG_DIR = path.join(getLogsDir(), 'ai')
   return LOG_DIR
 }
 

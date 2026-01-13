@@ -8,10 +8,11 @@ import type { IpcContext } from './ipc/types'
 // 导入各功能模块
 import { registerWindowHandlers } from './ipc/window'
 import { registerChatHandlers } from './ipc/chat'
-import { registerMergeHandlers, initMergeModule } from './ipc/merge'
+import { registerMergeHandlers, initMergeModule, cleanupTempDbs } from './ipc/merge'
 import { registerAIHandlers } from './ipc/ai'
 import { registerMessagesHandlers } from './ipc/messages'
 import { registerCacheHandlers } from './ipc/cache'
+import { registerNetworkHandlers } from './ipc/network'
 import { registerAnalyticsHandlers } from './analytics'
 // 导入 Worker 模块（用于异步分析查询和流式导入）
 import * as worker from './worker/workerManager'
@@ -43,9 +44,22 @@ const mainIpcMain = (win: BrowserWindow) => {
   registerAIHandlers(context)
   registerMessagesHandlers(context)
   registerCacheHandlers(context)
+  registerNetworkHandlers(context)
   registerAnalyticsHandlers()
 
   console.log('[IpcMain] All IPC handlers registered successfully')
+}
+
+export const cleanup = () => {
+  console.log('[IpcMain] Cleaning up resources...')
+  try {
+    // 关闭 Worker
+    worker.closeWorker()
+    // 清理临时数据库
+    cleanupTempDbs()
+  } catch (error) {
+    console.error('[IpcMain] Error during cleanup:', error)
+  }
 }
 
 export default mainIpcMain

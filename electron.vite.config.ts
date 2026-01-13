@@ -2,6 +2,7 @@ import { resolve } from 'path'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import vue from '@vitejs/plugin-vue'
 import ui from '@nuxt/ui/vite'
+import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 
 export default defineConfig(() => {
   return {
@@ -43,9 +44,17 @@ export default defineConfig(() => {
           ui: {
             colors: {
               primary: 'pink', // 使用自定义 pink 作为主色
-              neutral: 'slate',
+              neutral: 'zinc',
             },
           },
+        }),
+        VueI18nPlugin({
+          // 指定全局语言包目录
+          include: [resolve(__dirname, 'src/i18n/locales/**')],
+          // 默认语言
+          defaultSFCLang: 'json',
+          // 启用组件内 <i18n> 块
+          compositionOnly: true,
         }),
       ],
       root: 'src/',

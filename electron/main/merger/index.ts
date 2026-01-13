@@ -5,10 +5,10 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import { app } from 'electron'
 import { parseFileSync, detectFormat } from '../parser'
 import { importData } from '../database/core'
 import { TempDbReader } from './tempCache'
+import { getDownloadsDir } from '../paths'
 import type {
   ParseResult,
   ParsedMessage,
@@ -31,15 +31,10 @@ import type {
 import type { ParsedMeta } from '../parser/types'
 
 /**
- * 获取默认输出目录
+ * 获取默认输出目录（系统下载目录）
  */
 function getDefaultOutputDir(): string {
-  try {
-    const docPath = app.getPath('documents')
-    return path.join(docPath, 'ChatLab', 'merged')
-  } catch {
-    return path.join(process.cwd(), 'merged')
-  }
+  return getDownloadsDir()
 }
 
 /**

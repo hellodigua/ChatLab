@@ -29,7 +29,7 @@ function clearTempDbCache(filePath: string): void {
 /**
  * 清理所有缓存（删除所有临时数据库）
  */
-function clearAllTempDbCache(): void {
+export function cleanupTempDbs(): void {
   for (const tempDbPath of tempDbCache.values()) {
     deleteTempDatabase(tempDbPath)
   }
@@ -125,9 +125,8 @@ export function registerMergeHandlers(ctx: IpcContext): void {
     if (filePath) {
       clearTempDbCache(filePath)
     } else {
-      clearAllTempDbCache()
+      cleanupTempDbs()
     }
     return true
   })
 }
-

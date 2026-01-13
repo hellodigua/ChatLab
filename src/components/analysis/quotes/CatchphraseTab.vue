@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { CatchphraseAnalysis } from '@/types/analysis'
 import { ListPro } from '@/components/charts'
 import { SectionCard, EmptyState, LoadingState } from '@/components/UI'
+
+const { t } = useI18n()
 
 interface TimeFilter {
   startTs?: number
@@ -24,7 +27,7 @@ async function loadCatchphraseAnalysis() {
   try {
     catchphraseAnalysis.value = await window.chatApi.getCatchphraseAnalysis(props.sessionId, props.timeFilter)
   } catch (error) {
-    console.error('加载口头禅分析失败:', error)
+    console.error('Failed to load catchphrase analysis:', error)
   } finally {
     isLoading.value = false
   }
@@ -48,15 +51,15 @@ watch(
 <template>
   <div class="main-content mx-auto max-w-3xl p-6">
     <!-- 加载中 -->
-    <LoadingState v-if="isLoading" text="正在分析口头禅数据..." />
+    <LoadingState v-if="isLoading" :text="t('loading')" />
 
     <!-- 口头禅列表 -->
     <ListPro
       v-else-if="catchphraseAnalysis && catchphraseAnalysis.members.length > 0"
       :items="catchphraseAnalysis.members"
-      title="💬 口头禅分析"
-      :description="`分析了 ${catchphraseAnalysis.members.length} 位成员的高频发言`"
-      countTemplate="共 {count} 位成员"
+      :title="t('title')"
+      :description="t('description', { count: catchphraseAnalysis.members.length })"
+      :countTemplate="t('countTemplate')"
     >
       <template #item="{ item: member }">
         <div class="flex items-start gap-4">
@@ -86,7 +89,7 @@ watch(
               >
                 {{ truncateContent(phrase.content) }}
               </span>
-              <span class="text-xs text-gray-400">{{ phrase.count }}次</span>
+              <span class="text-xs text-gray-400">{{ t('times', { count: phrase.count }) }}</span>
             </div>
           </div>
         </div>
@@ -94,8 +97,29 @@ watch(
     </ListPro>
 
     <!-- 空状态 -->
-    <SectionCard v-else title="💬 口头禅分析">
-      <EmptyState text="暂无口头禅数据" />
+    <SectionCard v-else :title="t('title')">
+      <EmptyState :text="t('empty')" />
     </SectionCard>
   </div>
 </template>
+
+<i18n>
+{
+  "zh-CN": {
+    "title": "💬 口头禅分析",
+    "loading": "正在分析口头禅数据...",
+    "description": "分析了 {count} 位成员的高频发言",
+    "countTemplate": "共 {count} 位成员",
+    "times": "{count}次",
+    "empty": "暂无口头禅数据"
+  },
+  "en-US": {
+    "title": "💬 Catchphrase Analysis",
+    "loading": "Analyzing catchphrases...",
+    "description": "Analyzed frequent phrases from {count} members",
+    "countTemplate": "{count} members",
+    "times": "{count}x",
+    "empty": "No catchphrase data available"
+  }
+}
+</i18n>

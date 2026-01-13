@@ -6,7 +6,7 @@ import { ipcMain, app, dialog } from 'electron'
 import * as databaseCore from '../database/core'
 import * as worker from '../worker/workerManager'
 import * as parser from '../parser'
-import { detectFormat, type ParseProgress } from '../parser'
+import { detectFormat, diagnoseFormat, type ParseProgress } from '../parser'
 import type { IpcContext } from './types'
 import { CURRENT_SCHEMA_VERSION, getPendingMigrationInfos, type MigrationInfo } from '../database/migrations'
 
@@ -74,14 +74,24 @@ export function registerChatHandlers(ctx: IpcContext): void {
       }
 
       const filePath = filePaths[0]
-      console.log('[IpcMain] File selected:', filePath)
 
       // 检测文件格式（使用流式检测，只读取文件开头）
       const formatFeature = detectFormat(filePath)
       const format = formatFeature?.name || null
-      console.log('[IpcMain] Detected format:', format)
       if (!format) {
-        return { error: '无法识别的文件格式' }
+        // 使用诊断功能获取详细的错误信息
+        const diagnosis = diagnoseFormat(filePath)
+        // 返回详细的错误信息
+        return {
+          error: 'error.unrecognized_format',
+          diagnosis: {
+            suggestion: diagnosis.suggestion,
+            partialMatches: diagnosis.partialMatches.map((m) => ({
+              formatName: m.formatName,
+              missingFields: m.missingFields,
+            })),
+          },
+        }
       }
 
       return { filePath, format }
@@ -95,14 +105,12 @@ export function registerChatHandlers(ctx: IpcContext): void {
    * 导入聊天记录（流式版本）
    */
   ipcMain.handle('chat:import', async (_, filePath: string) => {
-    console.log('[IpcMain] chat:import called with:', filePath)
-
     try {
-      // 发送进度：开始检测格式
+      // Send progress: detecting format (message not used by frontend, stage-based translation)
       win.webContents.send('chat:importProgress', {
         stage: 'detecting',
         progress: 5,
-        message: '正在检测文件格式...',
+        message: '', // Frontend translates based on stage
       })
 
       // 使用流式导入（在 Worker 线程中执行）
@@ -128,6 +136,23 @@ export function registerChatHandlers(ctx: IpcContext): void {
           progress: 0,
           message: result.error,
         })
+
+        // 如果是格式不识别错误，提供诊断信息
+        if (result.error === 'error.unrecognized_format') {
+          const diagnosis = diagnoseFormat(filePath)
+          return {
+            success: false,
+            error: result.error,
+            diagnosis: {
+              suggestion: diagnosis.suggestion,
+              partialMatches: diagnosis.partialMatches.map((m) => ({
+                formatName: m.formatName,
+                missingFields: m.missingFields,
+              })),
+            },
+          }
+        }
+
         return { success: false, error: result.error }
       }
     } catch (error) {
@@ -595,6 +620,82 @@ export function registerChatHandlers(ctx: IpcContext): void {
       return await worker.getSchema(sessionId)
     } catch (error) {
       console.error('获取 Schema 失败：', error)
+      return []
+    }
+  })
+
+  // ==================== 会话索引 ====================
+
+  /**
+   * 生成会话索引
+   */
+  ipcMain.handle('session:generate', async (_, sessionId: string, gapThreshold?: number) => {
+    try {
+      return await worker.generateSessions(sessionId, gapThreshold)
+    } catch (error) {
+      console.error('生成会话索引失败：', error)
+      throw error
+    }
+  })
+
+  /**
+   * 检查是否已生成会话索引
+   */
+  ipcMain.handle('session:hasIndex', async (_, sessionId: string) => {
+    try {
+      return await worker.hasSessionIndex(sessionId)
+    } catch (error) {
+      console.error('检查会话索引失败：', error)
+      return false
+    }
+  })
+
+  /**
+   * 获取会话索引统计信息
+   */
+  ipcMain.handle('session:getStats', async (_, sessionId: string) => {
+    try {
+      return await worker.getSessionStats(sessionId)
+    } catch (error) {
+      console.error('获取会话统计失败：', error)
+      return { sessionCount: 0, hasIndex: false, gapThreshold: 1800 }
+    }
+  })
+
+  /**
+   * 清空会话索引
+   */
+  ipcMain.handle('session:clear', async (_, sessionId: string) => {
+    try {
+      await worker.clearSessions(sessionId)
+      return true
+    } catch (error) {
+      console.error('清空会话索引失败：', error)
+      return false
+    }
+  })
+
+  /**
+   * 更新会话切分阈值
+   */
+  ipcMain.handle('session:updateGapThreshold', async (_, sessionId: string, gapThreshold: number | null) => {
+    try {
+      await worker.updateSessionGapThreshold(sessionId, gapThreshold)
+      return true
+    } catch (error) {
+      console.error('更新阈值失败：', error)
+      return false
+    }
+  })
+
+  /**
+   * 获取会话列表（用于时间线导航）
+   */
+  ipcMain.handle('session:getSessions', async (_, sessionId: string) => {
+    try {
+      return await worker.getSessions(sessionId)
+    } catch (error) {
+      console.error('获取会话列表失败：', error)
       return []
     }
   })

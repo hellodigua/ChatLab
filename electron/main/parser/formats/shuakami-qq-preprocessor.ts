@@ -213,7 +213,7 @@ async function preprocessQQJson(inputPath: string, onProgress?: (progress: Parse
   const outputFilename = `slim_${Date.now()}_${path.basename(inputPath)}`
   const outputPath = path.join(tempDir, outputFilename)
 
-  onProgress?.(createProgress('parsing', 0, totalBytes, 0, '预处理：读取文件头...'))
+  onProgress?.(createProgress('parsing', 0, totalBytes, 0, ''))
 
   // 先从原文件读取 avatars（因为它在文件末尾，消息处理时可能无法访问）
   const avatarsStr = readAvatarsFromFile(inputPath)
@@ -268,7 +268,7 @@ async function preprocessQQJson(inputPath: string, onProgress?: (progress: Parse
         // 解析失败时忽略
       }
 
-      onProgress?.(createProgress('parsing', 0, totalBytes, 0, '预处理：开始精简消息...'))
+      onProgress?.(createProgress('parsing', 0, totalBytes, 0, ''))
 
       const readStream = fs.createReadStream(inputPath, { encoding: 'utf-8' })
       const writeStream = fs.createWriteStream(outputPath, { encoding: 'utf-8' })
@@ -326,7 +326,7 @@ async function preprocessQQJson(inputPath: string, onProgress?: (progress: Parse
         writeStream.end()
 
         writeStream.on('finish', () => {
-          onProgress?.(createProgress('done', totalBytes, totalBytes, messagesProcessed, '预处理完成'))
+          onProgress?.(createProgress('done', totalBytes, totalBytes, messagesProcessed, ''))
           resolve(outputPath)
         })
       })
@@ -336,7 +336,7 @@ async function preprocessQQJson(inputPath: string, onProgress?: (progress: Parse
         if (fs.existsSync(outputPath)) {
           fs.unlinkSync(outputPath)
         }
-        onProgress?.(createProgress('error', bytesRead, totalBytes, messagesProcessed, `预处理错误: ${err.message}`))
+        onProgress?.(createProgress('error', bytesRead, totalBytes, messagesProcessed, err.message))
         reject(err)
       })
     })
