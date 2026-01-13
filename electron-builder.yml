@@ -40,6 +40,7 @@ nsis:
   installerIcon: build/icon.ico
   uninstallerIcon: build/icon.ico
   include: installer-dpi.nsh
+  differentialPackage: false
 
 # macOS 平台配置
 mac:

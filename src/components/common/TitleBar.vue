@@ -6,8 +6,11 @@ const isMac = ref(false)
 const isMaximized = ref(false)
 
 // 检测平台
+const isWindows = ref(false)
+
 onMounted(() => {
   isMac.value = navigator.platform.toLowerCase().includes('mac')
+  isWindows.value = navigator.platform.toLowerCase().includes('win')
 
   // 监听窗口状态变化
   window.electron?.ipcRenderer?.on('windowState', (_: unknown, maximized: boolean) => {
@@ -37,8 +40,9 @@ function close() {
     <!-- 中间拖拽区域 - 填充剩余空间 -->
     <div class="drag-region" />
 
-    <!-- 右侧窗口控制按钮 - 仅 Windows/Linux -->
-    <div v-if="!isMac" class="window-controls">
+    <!-- Windows: 使用原生窗口按钮（通过 titleBarOverlay），只需预留空间 -->
+    <!-- Linux: 使用自定义窗口按钮 -->
+    <div v-if="!isMac && !isWindows" class="window-controls">
       <!-- 最小化 -->
       <button class="control-btn" @click="minimize">
         <svg width="10" height="1" viewBox="0 0 10 1">
@@ -96,7 +100,8 @@ function close() {
   height: 100%;
 }
 
-/* Windows 窗口控制按钮容器 */
+/* Windows: 原生按钮区域预留空间（由 titleBarOverlay 自动处理） */
+/* Linux: 自定义窗口控制按钮容器 */
 .window-controls {
   display: flex;
   height: 100%;

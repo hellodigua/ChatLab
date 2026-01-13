@@ -118,10 +118,24 @@ class MainProcess {
     }
 
     // macOS: 使用 hiddenInset 保留红绿灯按钮
-    // Windows/Linux: 完全移除系统标题栏
+    // Windows: 使用 titleBarOverlay，在自定义标题栏区域右侧显示原生窗口按钮
+    // Linux: 使用自定义标题栏和自定义按钮
     if (platform.isMacOS) {
       windowOptions.titleBarStyle = 'hiddenInset'
+    } else if (platform.isWindows) {
+      // 保留系统框架，只隐藏标题栏内容，把内容区域顶到最上方
+      windowOptions.titleBarStyle = 'hidden'
+      // 获取当前主题状态
+      const isDark = nativeTheme.shouldUseDarkColors
+      windowOptions.titleBarOverlay = {
+        // 背景透明
+        color: '#00000000',
+        // 图标颜色适配主题
+        symbolColor: isDark ? '#a1a1aa' : '#52525b', // dark: zinc-400, light: zinc-600
+        height: 32,
+      }
     } else {
+      // Linux 继续使用无边框 + 自定义按钮
       windowOptions.frame = false
     }
 
@@ -129,6 +143,28 @@ class MainProcess {
 
     this.mainWindow.once('ready-to-show', () => {
       this.mainWindow?.show()
+      
+      // Windows 上根据当前主题设置 titleBarOverlay 颜色
+      if (platform.isWindows) {
+        const isDark = nativeTheme.shouldUseDarkColors
+        this.mainWindow?.setTitleBarOverlay({
+          color: '#00000000', // 透明背景
+          symbolColor: isDark ? '#a1a1aa' : '#52525b', // dark: zinc-400, light: zinc-600
+          height: 32,
+        })
+        
+        // 监听主题变化，动态更新图标颜色
+        nativeTheme.on('updated', () => {
+          if (this.mainWindow && platform.isWindows) {
+            const isDark = nativeTheme.shouldUseDarkColors
+            this.mainWindow.setTitleBarOverlay({
+              color: '#00000000',
+              symbolColor: isDark ? '#a1a1aa' : '#52525b',
+              height: 32,
+            })
+          }
+        })
+      }
     })
 
     // 主窗口事件
