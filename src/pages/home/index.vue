@@ -36,14 +36,12 @@ const features = computed(() => [
             style="-webkit-app-region: drag"
           />
           <!-- Title -->
-          <h1 class="mb-4 select-none text-6xl sm:text-7xl lg:text-8xl font-black tracking-tight text-pink-500">
+          <h1 class="mb-4 select-none text-5xl sm:text-5xl lg:text-6xl font-black tracking-tight text-pink-500">
             {{ t('home.title') }}
           </h1>
           <!-- Description -->
           <div class="relative select-none inline-block mb-8">
-            <p class="text-lg sm:text-2xl text-gray-600 dark:text-gray-400 font-medium">
-              {{ t('home.subtitle') }}
-            </p>
+            <p class="text-lg sm:text-5xl text-gray-700 dark:text-gray-400 font-medium">{{ t('home.subtitle') }}</p>
             <UIcon name="i-heroicons-sparkles" class="absolute -right-6 -top-3 h-5 w-5 animate-bounce text-pink-400" />
           </div>
         </div>

@@ -165,7 +165,7 @@
     },
     "maxMessages": {
       "title": "发送条数限制",
-      "description": "每次提交给 AI 的最大消息数，数值越大 Token 消耗越多，分析也更准确（建议2000）"
+      "description": "每次提交给 AI 的最大消息数，数值越大 Token 消耗越多，分析也更准确（新手建议2000）"
     },
     "maxHistory": {
       "title": "AI上下文限制",

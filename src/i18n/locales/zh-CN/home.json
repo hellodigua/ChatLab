@@ -1,6 +1,6 @@
 {
   "title": "ChatLab",
-  "subtitle": "你的本地聊天分析实验室 ヾ(*ゝω・*)ノ",
+  "subtitle": "聊天记录分析实验室",
   "features": {
     "privacy": {
       "title": "隐私至上",
@@ -31,7 +31,7 @@
       "error": "导入中断"
     },
     "processed": "已处理 {count} 条消息",
-    "tutorial": "查看聊天记录导入教程",
+    "tutorial": "点此查看聊天记录导入教程",
     "viewLog": "查看导入日志",
     "cannotReadPath": "无法读取文件路径",
     "preparing": "准备导入...",

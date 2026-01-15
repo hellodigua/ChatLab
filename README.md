@@ -4,11 +4,7 @@
 
 ChatLab 是一个免费、开源、本地化的，专注于分析聊天记录的应用。通过 AI Agent 和灵活的 SQL 引擎，你可以自由地拆解、查询甚至重构你的社交数据。
 
-我们拒绝将你的隐私上传云端，而是把强大的分析能力直接塞进你的电脑。
-
-目前已支持：微信、QQ、WhatsApp、Discord、Instagram 的聊天记录分析，即将支持：iMessage、LINE。
-
-项目目前还处于早期迭代阶段，因此还有很多缺陷和未完成功能。若您遇到了任何问题，欢迎随时反馈。
+目前已支持：微信、QQ、WhatsApp、Discord、Instagram 的聊天记录分析，计划支持：iMessage、LINE、Messenger、Kakao Talk。
 
 ## 核心特性
 
