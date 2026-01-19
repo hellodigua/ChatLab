@@ -84,4 +84,4 @@ appImage:
   artifactName: ChatLab-${version}.${ext}
 
 # 是否在构建之前重新编译原生模块
-npmRebuild: false
+npmRebuild: true
