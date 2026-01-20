@@ -49,6 +49,16 @@ function getLogFilePath(): string {
 }
 
 /**
+ * 获取已存在的日志文件路径（不会创建新文件）
+ */
+function getExistingLogPath(): string | null {
+  if (LOG_FILE && fs.existsSync(LOG_FILE)) {
+    return LOG_FILE
+  }
+  return null
+}
+
+/**
  * 获取日志写入流
  */
 function getLogStream(): fs.WriteStream {
@@ -150,6 +160,13 @@ export const aiLogger = {
    */
   getLogPath(): string {
     return getLogFilePath()
+  },
+
+  /**
+   * 获取已存在的日志文件路径（无日志时返回空）
+   */
+  getExistingLogPath(): string | null {
+    return getExistingLogPath()
   },
 }
 

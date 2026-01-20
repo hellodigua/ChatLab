@@ -2,10 +2,12 @@
 import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
+import { useToast } from '@nuxt/ui/runtime/composables/useToast.js'
 import { usePromptStore } from '@/stores/prompt'
 import { useLayoutStore } from '@/stores/layout'
 
 const { t } = useI18n()
+const toast = useToast()
 
 // Props
 const props = defineProps<{
@@ -34,6 +36,7 @@ const currentActivePreset = computed(() => {
 
 // 预设下拉菜单状态
 const isPresetPopoverOpen = ref(false)
+const isOpeningLog = ref(false)
 
 // 设置激活预设
 function setActivePreset(presetId: string) {
@@ -50,6 +53,35 @@ function openPresetSettings() {
 // 打开设置弹窗并跳转到对话配置（消息条数限制）
 function openChatSettings() {
   layoutStore.openSettingAt('ai', 'chat')
+}
+
+// 打开当前 AI 日志文件并定位到文件
+async function openAiLogFile() {
+  if (isOpeningLog.value) return
+  isOpeningLog.value = true
+  try {
+    const result = await window.aiApi.showAiLogFile()
+    if (!result?.success) {
+      toast.add({
+        title: t('log.openFailed'),
+        description: result?.error || t('log.openFailedDesc'),
+        icon: 'i-heroicons-x-circle',
+        color: 'error',
+        duration: 2000,
+      })
+    }
+  } catch (error) {
+    console.error('打开 AI 日志失败：', error)
+    toast.add({
+      title: t('log.openFailed'),
+      description: String(error),
+      icon: 'i-heroicons-x-circle',
+      color: 'error',
+      duration: 2000,
+    })
+  } finally {
+    isOpeningLog.value = false
+  }
 }
 </script>
 
@@ -106,7 +138,7 @@ function openChatSettings() {
     </UPopover>
 
     <!-- 右侧：配置状态指示 -->
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-1">
       <!-- 消息条数限制（点击跳转设置） -->
       <button
         class="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
@@ -114,6 +146,16 @@ function openChatSettings() {
         @click="openChatSettings"
       >
         <span>{{ t('messageLimit.label') }}{{ aiGlobalSettings.maxMessagesPerRequest }}</span>
+      </button>
+      <!-- 日志按钮 -->
+      <button
+        class="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+        :title="t('log.title')"
+        :disabled="isOpeningLog"
+        @click="openAiLogFile"
+      >
+        <UIcon name="i-heroicons-folder-open" class="h-3.5 w-3.5" />
+        <span>{{ t('log.label') }}</span>
       </button>
       <!-- Token 使用量 -->
       <div
@@ -152,6 +194,12 @@ function openChatSettings() {
       "title": "每次发送的最大消息条数，点击配置"
     },
     "tokenUsageTitle": "本次会话累计 Token 使用量",
+    "log": {
+      "label": "日志",
+      "title": "打开当前 AI 日志文件",
+      "openFailed": "打开日志失败",
+      "openFailedDesc": "请稍后重试"
+    },
     "status": {
       "connected": "AI 已连接",
       "notConfigured": "请在全局设置中配置 AI 服务"
@@ -169,6 +217,12 @@ function openChatSettings() {
       "title": "Max messages per request, click to configure"
     },
     "tokenUsageTitle": "Total token usage in this session",
+    "log": {
+      "label": "Logs",
+      "title": "Open current AI log file",
+      "openFailed": "Failed to open log",
+      "openFailedDesc": "Please try again later"
+    },
     "status": {
       "connected": "AI Connected",
       "notConfigured": "Please configure AI service in Settings"

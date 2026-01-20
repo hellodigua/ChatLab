@@ -504,7 +504,6 @@ export async function* chatStream(messages: ChatMessage[], options?: ChatOptions
     messagesCount: messages.length,
     firstMessageRole: messages[0]?.role,
     firstMessageLength: messages[0]?.content?.length,
-    options,
   })
 
   const service = getCurrentLLMService()

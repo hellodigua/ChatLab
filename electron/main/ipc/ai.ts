@@ -1,8 +1,11 @@
 // electron/main/ipc/ai.ts
-import { ipcMain, BrowserWindow } from 'electron'
+import { ipcMain, BrowserWindow, shell } from 'electron'
+import * as fs from 'fs'
+import * as path from 'path'
 import * as aiConversations from '../ai/conversations'
 import * as llm from '../ai/llm'
 import { aiLogger } from '../ai/logger'
+import { getLogsDir } from '../paths'
 import { Agent, type AgentStreamChunk, type PromptConfig } from '../ai/agent'
 import type { ToolContext } from '../ai/tools/types'
 import type { IpcContext } from './types'
@@ -137,6 +140,48 @@ export function registerAIHandlers({ win }: IpcContext): void {
     } catch (error) {
       console.error('获取 AI 对话列表失败：', error)
       return []
+    }
+  })
+
+  /**
+   * 打开当前 AI 日志文件并定位到文件
+   */
+  ipcMain.handle('ai:showLogFile', async () => {
+    try {
+      // 优先使用当前已存在的日志文件，避免创建新的空日志
+      const existingLogPath = aiLogger.getExistingLogPath()
+      if (existingLogPath) {
+        shell.showItemInFolder(existingLogPath)
+        return { success: true, path: existingLogPath }
+      }
+
+      const logDir = path.join(getLogsDir(), 'ai')
+      if (!fs.existsSync(logDir)) {
+        return { success: false, error: '暂无 AI 日志文件' }
+      }
+
+      const logFiles = fs
+        .readdirSync(logDir)
+        .filter((name) => name.startsWith('ai_') && name.endsWith('.log'))
+
+      if (logFiles.length === 0) {
+        return { success: false, error: '暂无 AI 日志文件' }
+      }
+
+      // 选择最近修改的日志文件
+      const latestLog = logFiles
+        .map((name) => {
+          const filePath = path.join(logDir, name)
+          const stat = fs.statSync(filePath)
+          return { path: filePath, mtimeMs: stat.mtimeMs }
+        })
+        .sort((a, b) => b.mtimeMs - a.mtimeMs)[0]
+
+      shell.showItemInFolder(latestLog.path)
+      return { success: true, path: latestLog.path }
+    } catch (error) {
+      console.error('打开 AI 日志文件失败：', error)
+      return { success: false, error: String(error) }
     }
   })
 

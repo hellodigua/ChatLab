@@ -743,6 +743,13 @@ const aiApi = {
   deleteMessage: (messageId: string): Promise<boolean> => {
     return ipcRenderer.invoke('ai:deleteMessage', messageId)
   },
+
+  /**
+   * 打开当前 AI 日志文件并定位到文件
+   */
+  showAiLogFile: (): Promise<{ success: boolean; path?: string; error?: string }> => {
+    return ipcRenderer.invoke('ai:showLogFile')
+  },
 }
 
 // LLM API - LLM 服务功能

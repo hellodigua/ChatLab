@@ -292,6 +292,7 @@ interface AiApi {
   getMessages: (conversationId: string) => Promise<AIMessage[]>
   getMessages: (conversationId: string) => Promise<AIMessage[]>
   deleteMessage: (messageId: string) => Promise<boolean>
+  showAiLogFile: () => Promise<{ success: boolean; path?: string; error?: string }>
   // 自定义筛选
   filterMessagesWithContext: (
     sessionId: string,
