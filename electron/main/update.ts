@@ -1,6 +1,5 @@
 import { dialog, app } from 'electron'
 import { autoUpdater } from 'electron-updater'
-import { platform } from '@electron-toolkit/utils'
 import { logger } from './logger'
 import { getActiveProxyUrl } from './network/proxy'
 
@@ -141,48 +140,12 @@ const checkUpdate = (win) => {
 
     showUpdateMessageBox = true
 
-    // 解析更新日志
-    let releaseNotes = ''
-    if (info.releaseNotes) {
-      if (typeof info.releaseNotes === 'string') {
-        releaseNotes = info.releaseNotes
-      } else if (Array.isArray(info.releaseNotes)) {
-        releaseNotes = info.releaseNotes.map((note) => note.note || note).join('\n')
-      }
-      // 简单清理 HTML 标签，合并连续空行，截断下载说明
-      releaseNotes = releaseNotes
-        .replace(/<[^>]*>/g, '')
-        .replace(/\n{2,}/g, '\n')
-        .trim()
-
-      // 如果包含下载说明章节，截断该部分及之后的内容
-      // 支持多种格式：Markdown（## Download）和 HTML 处理后的纯文本（Download）
-      const downloadPatterns = [
-        /^#{1,3}\s*Download\s*$/m, // Markdown 格式：# Download, ## Download, ### Download
-        /^Download\s*$/m, // HTML 处理后的纯文本格式
-        /^#{1,3}\s*下载说明\s*$/m, // 中文 Markdown 格式
-        /^下载说明\s*$/m, // 中文 HTML 处理后的格式
-      ]
-
-      for (const pattern of downloadPatterns) {
-        const match = releaseNotes.match(pattern)
-        if (match && match.index !== undefined) {
-          releaseNotes = releaseNotes.substring(0, match.index).trim()
-          break
-        }
-      }
-    }
-
-    const detail = releaseNotes
-      ? `更新内容：\n${releaseNotes}\n\n是否立即下载并安装新版本？`
-      : '是否立即下载并安装新版本？'
-
     dialog
       .showMessageBox({
         title: '发现新版本 v' + info.version,
         message: '发现新版本 v' + info.version,
-        detail,
-        buttons: ['立即下载', '取消'],
+        detail: '点击"立即更新"将自动下载并安装新版本',
+        buttons: ['立即更新', '稍后'],
         defaultId: 0,
         cancelId: 1,
         type: 'question',
@@ -210,29 +173,16 @@ const checkUpdate = (win) => {
     win.webContents.send('update-download-progress', progressObj.percent)
   })
 
-  // 下载完成
+  // 下载完成 - 直接安装（一键更新，无需二次确认）
   autoUpdater.on('update-downloaded', () => {
-    dialog
-      .showMessageBox({
-        title: '下载完成',
-        message: '新版本已准备就绪，是否现在安装？',
-        buttons: ['安装', platform.isMacOS ? '之后提醒' : '稍后（应用退出后自动安装）'],
-        defaultId: 1,
-        cancelId: 2,
-        type: 'question',
+    logger.info('[Update] 下载完成，准备安装...')
+    // @ts-ignore
+    app.isQuiting = true
+    setTimeout(() => {
+      setImmediate(() => {
+        autoUpdater.quitAndInstall()
       })
-      .then((result) => {
-        if (result.response === 0) {
-          win.webContents.send('begin-install')
-          // @ts-ignore
-          app.isQuiting = true
-          setTimeout(() => {
-            setImmediate(() => {
-              autoUpdater.quitAndInstall()
-            })
-          }, 100)
-        }
-      })
+    }, 100)
   })
 
   // 不需要更新
@@ -304,21 +254,13 @@ const manualCheckForUpdates = () => {
 const simulateUpdateDialog = (win) => {
   const mockInfo = {
     version: '9.9.9',
-    releaseNotes: `## 更新内容\n\n- 🎉 新增聊天记录查看器\n- 🔧 修复已知问题\n- ⚡️ 性能优化`,
   }
-
-  // 解析更新日志
-  let releaseNotes = mockInfo.releaseNotes.replace(/<[^>]*>/g, '').trim()
-
-  const detail = releaseNotes
-    ? `更新内容：\n${releaseNotes}\n\n是否立即下载并安装新版本？`
-    : '是否立即下载并安装新版本？'
 
   dialog.showMessageBox({
     title: '发现新版本 v' + mockInfo.version,
     message: '发现新版本 v' + mockInfo.version,
-    detail,
-    buttons: ['立即下载', '取消'],
+    detail: '点击"立即更新"将自动下载并安装新版本',
+    buttons: ['立即更新', '稍后'],
     defaultId: 0,
     cancelId: 1,
     type: 'question',
