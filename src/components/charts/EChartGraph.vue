@@ -76,10 +76,22 @@ const colorPalette = [
   '#546570', // 深灰蓝
 ]
 
+// 去重后的节点（ECharts 要求节点名称唯一）
+const uniqueNodes = computed(() => {
+  const seen = new Set<string>()
+  return props.data.nodes.filter((node) => {
+    if (seen.has(node.name)) {
+      return false
+    }
+    seen.add(node.name)
+    return true
+  })
+})
+
 // 节点名称到颜色的映射
 const nodeColorMap = computed(() => {
   const map = new Map<string, string>()
-  props.data.nodes.forEach((node, index) => {
+  uniqueNodes.value.forEach((node, index) => {
     map.set(node.name, colorPalette[index % colorPalette.length])
   })
   return map
@@ -166,8 +178,8 @@ const option = computed<ECOption>(() => {
             shadowColor: 'rgba(0, 0, 0, 0.3)',
           },
         },
-        // 节点数据
-        data: props.data.nodes.map((node) => {
+        // 节点数据（使用去重后的节点）
+        data: uniqueNodes.value.map((node) => {
           const color = nodeColorMap.value.get(node.name) || colorPalette[0]
           return {
             name: node.name,
@@ -186,19 +198,21 @@ const option = computed<ECOption>(() => {
             },
           }
         }),
-        // 连接线数据（颜色跟随源节点）
-        links: props.data.links.map((link) => {
-          const sourceColor = nodeColorMap.value.get(link.source) || colorPalette[0]
-          return {
-            source: link.source,
-            target: link.target,
-            value: link.value,
-            lineStyle: {
-              color: sourceColor,
-              width: getLinkWidth(link.value || 1, maxLinkValue),
-            },
-          }
-        }),
+        // 连接线数据（颜色跟随源节点，过滤掉引用不存在节点的链接）
+        links: props.data.links
+          .filter((link) => nodeColorMap.value.has(link.source) && nodeColorMap.value.has(link.target))
+          .map((link) => {
+            const sourceColor = nodeColorMap.value.get(link.source) || colorPalette[0]
+            return {
+              source: link.source,
+              target: link.target,
+              value: link.value,
+              lineStyle: {
+                color: sourceColor,
+                width: getLinkWidth(link.value || 1, maxLinkValue),
+              },
+            }
+          }),
       },
     ],
   }

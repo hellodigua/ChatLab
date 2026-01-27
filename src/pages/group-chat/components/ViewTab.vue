@@ -4,8 +4,11 @@ import { useI18n } from 'vue-i18n'
 import { SubTabs } from '@/components/UI'
 import { MessageView, InteractionView } from '@/components/view'
 import UserSelect from '@/components/common/UserSelect.vue'
+import RankingTab from './RankingTab.vue'
+import { isFeatureSupported, type LocaleType } from '@/i18n'
+import type { MemberActivity } from '@/types/analysis'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 interface TimeFilter {
   startTs?: number
@@ -16,13 +19,24 @@ interface TimeFilter {
 const props = defineProps<{
   sessionId: string
   timeFilter?: TimeFilter
+  // 榜单相关 props
+  memberActivity?: MemberActivity[]
+  selectedYear?: number
+  availableYears?: number[]
 }>()
 
-// 子 Tab 配置（群聊专属：包含互动分析）
-const subTabs = computed(() => [
-  { id: 'message', label: t('message'), icon: 'i-heroicons-chat-bubble-left-right' },
-  { id: 'interaction', label: t('interaction'), icon: 'i-heroicons-arrows-right-left' },
-])
+// 子 Tab 配置（群聊专属：包含互动分析和榜单）
+const subTabs = computed(() => {
+  const tabs = [
+    { id: 'message', label: t('message'), icon: 'i-heroicons-chat-bubble-left-right' },
+    { id: 'interaction', label: t('interaction'), icon: 'i-heroicons-arrows-right-left' },
+  ]
+  // 榜单仅在中文下显示
+  if (isFeatureSupported('groupRanking', locale.value as LocaleType)) {
+    tabs.push({ id: 'ranking', label: t('ranking'), icon: 'i-heroicons-trophy' })
+  }
+  return tabs
+})
 
 const activeSubTab = ref('message')
 
@@ -54,6 +68,14 @@ const selectedMemberId = ref<number | null>(null)
           :time-filter="props.timeFilter"
           :member-id="selectedMemberId"
         />
+        <RankingTab
+          v-else-if="activeSubTab === 'ranking'"
+          :session-id="props.sessionId"
+          :member-activity="props.memberActivity || []"
+          :time-filter="props.timeFilter"
+          :selected-year="props.selectedYear"
+          :available-years="props.availableYears"
+        />
       </Transition>
     </div>
   </div>
@@ -75,11 +97,13 @@ const selectedMemberId = ref<number | null>(null)
 {
   "zh-CN": {
     "message": "消息",
-    "interaction": "互动分析"
+    "interaction": "互动分析",
+    "ranking": "榜单"
   },
   "en-US": {
     "message": "Messages",
-    "interaction": "Interactions"
+    "interaction": "Interactions",
+    "ranking": "Rankings"
   }
 }
 </i18n>
