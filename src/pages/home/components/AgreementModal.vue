@@ -111,6 +111,8 @@ function handleAgree() {
 
 // 不同意协议，退出应用
 function handleDisagree() {
+  // 不同意时清除已存的协议版本
+  localStorage.removeItem(AGREEMENT_KEY)
   window.api.send('window-close')
 }
 

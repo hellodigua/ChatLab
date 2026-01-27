@@ -93,6 +93,7 @@
     "subtitle": "View all version updates",
     "viewChangelog": "Changelog",
     "latest": "Latest",
+    "current": "Current",
     "total": "{count} versions in total",
     "close": "Close",
     "loadError": "Failed to load changelog",

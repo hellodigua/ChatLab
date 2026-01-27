@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useSettingsStore } from '@/stores/settings'
@@ -19,6 +19,14 @@ const loadError = ref<string | null>(null)
 // 使用 Map 来跟踪每个版本的展开状态，undefined 表示使用默认状态
 const expandedState = ref<Map<string, boolean>>(new Map())
 
+// 当前软件版本（用于高亮显示和默认展开）
+const currentAppVersion = ref<string | null>(null)
+
+// 版本日志已读标记的 localStorage key
+const CHANGELOG_READ_KEY = 'chatlab_changelog_read_version'
+// 用户协议同意标记的 localStorage key
+const AGREEMENT_KEY = 'chatlab_agreement_version'
+
 // 切换版本展开/收起
 function toggleVersion(version: string, index: number) {
   const currentState = isExpanded(version, index)
@@ -31,8 +39,17 @@ function isExpanded(version: string, index: number) {
   if (expandedState.value.has(version)) {
     return expandedState.value.get(version)!
   }
+  // 如果设置了当前软件版本，则当前版本默认展开
+  if (currentAppVersion.value) {
+    return version === currentAppVersion.value
+  }
   // 否则，第一个版本默认展开，其他默认收起
   return index === 0
+}
+
+// 判断是否是当前软件版本
+function isCurrentVersion(version: string) {
+  return currentAppVersion.value && version === currentAppVersion.value
 }
 
 // Changelog 数据结构
@@ -123,13 +140,79 @@ function formatDate(dateStr: string) {
   })
 }
 
+// 标记当前版本为已读
+function markVersionAsRead(version: string) {
+  localStorage.setItem(CHANGELOG_READ_KEY, version)
+}
+
+// 检查是否需要显示新版本日志（冷启动时自动检查）
+async function checkNewVersion() {
+  try {
+    // 0. 如果用户还没同意隐私协议，不检查更新日志（避免两个弹窗同时弹出）
+    const acceptedAgreement = localStorage.getItem(AGREEMENT_KEY)
+    if (!acceptedAgreement) {
+      return
+    }
+
+    // 1. 获取当前软件版本号
+    const currentVersion = await window.api.app.getVersion()
+    if (!currentVersion) return
+
+    // 2. 获取 localStorage 中存储的已读版本号
+    const readVersion = localStorage.getItem(CHANGELOG_READ_KEY)
+
+    // 3. 如果 readVersion 不为空且等于 currentVersion，说明用户已看过，不需要请求数据
+    if (readVersion && readVersion === currentVersion) {
+      return
+    }
+
+    // 4. readVersion 为空或不等于 currentVersion，需要请求远程 changelog 数据
+    const result = await window.api.app.fetchRemoteConfig(getChangelogUrl(locale.value))
+    if (!result.success || !result.data) return
+
+    const data = result.data as ChangelogItem[]
+    const latestChangelogVersion = data[0]?.version
+    if (!latestChangelogVersion) return
+
+    // 5. 在 changelog 中查找当前软件版本
+    const currentVersionExists = data.some((log) => log.version === currentVersion)
+
+    // 如果在 changelog 中找不到当前版本，说明日志还没更新到当前版本，不显示弹窗
+    if (!currentVersionExists) {
+      return
+    }
+
+    // 6. 找到了当前版本，显示弹窗
+    // 传入完整的 changelog 和当前版本号，让弹窗组件处理展开逻辑和标签显示
+    // 延迟打开，等待其他弹窗（如迁移弹窗）检查完成
+    setTimeout(() => {
+      openWithData(data, currentVersion)
+      // 打开后标记当前软件版本为已读
+      markVersionAsRead(currentVersion)
+    }, 500)
+  } catch (error) {
+    console.error('Failed to check new version:', error)
+  }
+}
+
 // 暴露方法给父组件
+
+// 手动打开弹窗（用户点击时调用），会自动获取数据
 function open() {
+  currentAppVersion.value = null // 手动打开时不设置当前版本，使用默认展开逻辑
   showModal.value = true
   // 打开时获取数据（如果还没有数据）
   if (changelogs.value.length === 0) {
     fetchChangelogs()
   }
+}
+
+// 使用预设数据打开弹窗（自动检查新版本时调用）
+function openWithData(data: ChangelogItem[], appVersion?: string) {
+  changelogs.value = data
+  currentAppVersion.value = appVersion || null
+  expandedState.value.clear() // 重置展开状态
+  showModal.value = true
 }
 
 function close() {
@@ -141,7 +224,12 @@ function getLatestVersion() {
   return changelogs.value[0]?.version || null
 }
 
-defineExpose({ open, close, fetchChangelogs, getLatestVersion })
+// 组件挂载时检查新版本
+onMounted(() => {
+  checkNewVersion()
+})
+
+defineExpose({ open, openWithData, close, fetchChangelogs, getLatestVersion })
 </script>
 
 <template>
@@ -228,6 +316,13 @@ defineExpose({ open, close, fetchChangelogs, getLatestVersion })
                       >
                         {{ t('home.changelog.latest') }}
                       </span>
+                      <!-- 当前软件版本标签 -->
+                      <span
+                        v-if="isCurrentVersion(log.version)"
+                        class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-600 dark:bg-green-900/30 dark:text-green-400"
+                      >
+                        {{ t('home.changelog.current') }}
+                      </span>
                       <!-- Expand/Collapse indicator -->
                       <UIcon
                         name="i-heroicons-chevron-down"
@@ -306,4 +401,3 @@ defineExpose({ open, close, fetchChangelogs, getLatestVersion })
     </template>
   </UModal>
 </template>
-

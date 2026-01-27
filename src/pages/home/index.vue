@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { storeToRefs } from 'pinia'
-import { useSettingsStore } from '@/stores/settings'
 import AgreementModal from './components/AgreementModal.vue'
 import MigrationModal from './components/MigrationModal.vue'
 import ImportArea from './components/ImportArea.vue'
@@ -10,23 +8,12 @@ import ChangelogModal from './components/ChangelogModal.vue'
 import HomeFooter from './components/HomeFooter.vue'
 
 const { t } = useI18n()
-const settingsStore = useSettingsStore()
-const { locale } = storeToRefs(settingsStore)
 
 // 弹窗引用
 const changelogModalRef = ref<InstanceType<typeof ChangelogModal> | null>(null)
 const agreementModalRef = ref<InstanceType<typeof AgreementModal> | null>(null)
 
-// 版本日志已读标记的 localStorage key
-const CHANGELOG_READ_KEY = 'chatlab_changelog_read_version'
-
-// 获取 changelog URL
-function getChangelogUrl() {
-  const langPath = locale.value === 'zh-CN' ? 'cn' : 'en'
-  return `https://chatlab.fun/${langPath}/changelogs.json`
-}
-
-// 打开版本日志弹窗
+// 打开版本日志弹窗（手动点击时调用）
 async function openChangelog() {
   changelogModalRef.value?.open()
 }
@@ -35,40 +22,6 @@ async function openChangelog() {
 function openTerms() {
   agreementModalRef.value?.open()
 }
-
-// 标记当前版本为已读
-function markVersionAsRead(version: string) {
-  localStorage.setItem(CHANGELOG_READ_KEY, version)
-}
-
-// 检查是否需要显示新版本日志
-async function checkNewVersion() {
-  try {
-    const result = await window.api.app.fetchRemoteConfig(getChangelogUrl())
-    if (!result.success || !result.data) return
-
-    const changelogs = result.data as { version: string }[]
-    const latestVersion = changelogs[0]?.version
-    if (!latestVersion) return
-
-    const readVersion = localStorage.getItem(CHANGELOG_READ_KEY)
-    if (readVersion !== latestVersion) {
-      // 延迟打开，等待其他弹窗（如迁移弹窗）检查完成
-      setTimeout(() => {
-        openChangelog()
-        // 打开后标记为已读
-        markVersionAsRead(latestVersion)
-      }, 500)
-    }
-  } catch (error) {
-    console.error('Failed to check new version:', error)
-  }
-}
-
-// 组件挂载时检查新版本
-onMounted(() => {
-  checkNewVersion()
-})
 
 const features = computed(() => [
   {
