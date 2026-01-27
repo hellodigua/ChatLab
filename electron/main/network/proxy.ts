@@ -8,15 +8,18 @@ import * as path from 'path'
 import { app, session } from 'electron'
 import { getSettingsDir } from '../paths'
 
+// 代理模式
+export type ProxyMode = 'off' | 'system' | 'manual'
+
 // 代理配置接口
 export interface ProxyConfig {
-  enabled: boolean
-  url: string // 完整的代理 URL，如 http://127.0.0.1:7890
+  mode: ProxyMode // 代理模式：关闭、跟随系统、手动配置
+  url: string // 完整的代理 URL，如 http://127.0.0.1:7890（仅 manual 模式使用）
 }
 
-// 默认配置
+// 默认配置 - 默认跟随系统
 const DEFAULT_CONFIG: ProxyConfig = {
-  enabled: false,
+  mode: 'system',
   url: '',
 }
 
@@ -27,6 +30,32 @@ function getConfigPath(): string {
   if (CONFIG_PATH) return CONFIG_PATH
   CONFIG_PATH = path.join(getSettingsDir(), 'proxy.json')
   return CONFIG_PATH
+}
+
+/**
+ * 迁移旧版配置到新版
+ * 旧版: { enabled: boolean, url: string }
+ * 新版: { mode: ProxyMode, url: string }
+ */
+function migrateOldConfig(data: Record<string, unknown>): ProxyConfig {
+  // 如果是旧版配置（有 enabled 字段，没有 mode 字段）
+  if ('enabled' in data && !('mode' in data)) {
+    const enabled = Boolean(data.enabled)
+    const url = String(data.url || '')
+    return {
+      mode: enabled && url ? 'manual' : 'system', // 旧版关闭的改为跟随系统
+      url: url,
+    }
+  }
+  // 新版配置
+  const mode = data.mode as ProxyMode
+  if (!['off', 'system', 'manual'].includes(mode)) {
+    return { ...DEFAULT_CONFIG }
+  }
+  return {
+    mode: mode,
+    url: String(data.url || ''),
+  }
 }
 
 /**
@@ -42,10 +71,7 @@ export function loadProxyConfig(): ProxyConfig {
   try {
     const content = fs.readFileSync(configPath, 'utf-8')
     const data = JSON.parse(content)
-    return {
-      enabled: Boolean(data.enabled),
-      url: String(data.url || ''),
-    }
+    return migrateOldConfig(data)
   } catch {
     return { ...DEFAULT_CONFIG }
   }
@@ -98,21 +124,54 @@ export async function applyProxyToSession(): Promise<void> {
   const config = loadProxyConfig()
 
   try {
-    if (config.enabled && config.url) {
-      const validation = validateProxyUrl(config.url)
-      if (validation.valid) {
-        // 设置代理规则
+    switch (config.mode) {
+      case 'off':
+        // 直接连接，不使用代理
         await session.defaultSession.setProxy({
-          proxyRules: config.url,
+          mode: 'direct',
         })
-        console.log(`[Proxy] 代理已启用: ${config.url}`)
-      }
-    } else {
-      // 清除代理设置
-      await session.defaultSession.setProxy({
-        proxyRules: '',
-      })
-      console.log('[Proxy] 代理已禁用')
+        console.log('[Proxy] 代理已关闭（直接连接）')
+        break
+
+      case 'system':
+        // 使用系统代理设置
+        await session.defaultSession.setProxy({
+          mode: 'system',
+        })
+        console.log('[Proxy] 使用系统代理')
+        break
+
+      case 'manual':
+        // 手动配置代理
+        if (config.url) {
+          const validation = validateProxyUrl(config.url)
+          if (validation.valid) {
+            await session.defaultSession.setProxy({
+              proxyRules: config.url,
+            })
+            console.log(`[Proxy] 手动代理已启用: ${config.url}`)
+          } else {
+            // URL 无效，回退到系统代理
+            await session.defaultSession.setProxy({
+              mode: 'system',
+            })
+            console.log('[Proxy] 手动代理 URL 无效，回退到系统代理')
+          }
+        } else {
+          // 没有填写 URL，回退到系统代理
+          await session.defaultSession.setProxy({
+            mode: 'system',
+          })
+          console.log('[Proxy] 手动代理未配置 URL，回退到系统代理')
+        }
+        break
+
+      default:
+        // 未知模式，使用系统代理
+        await session.defaultSession.setProxy({
+          mode: 'system',
+        })
+        console.log('[Proxy] 未知代理模式，使用系统代理')
     }
   } catch (error) {
     console.error('[Proxy] 设置代理失败:', error)
@@ -217,11 +276,11 @@ export async function testProxyConnection(proxyUrl: string): Promise<{ success: 
 
 /**
  * 获取当前有效的代理 URL
- * 如果代理已启用且 URL 有效，返回代理 URL，否则返回 undefined
+ * 仅在手动模式且 URL 有效时返回代理 URL，否则返回 undefined
  */
 export function getActiveProxyUrl(): string | undefined {
   const config = loadProxyConfig()
-  if (config.enabled && config.url) {
+  if (config.mode === 'manual' && config.url) {
     const validation = validateProxyUrl(config.url)
     if (validation.valid) {
       return config.url

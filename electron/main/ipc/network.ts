@@ -33,8 +33,8 @@ export function registerNetworkHandlers(_context: IpcContext): void {
     'network:saveProxyConfig',
     (_event, config: ProxyConfig): { success: boolean; error?: string } => {
       try {
-        // 如果启用了代理，验证 URL 格式
-        if (config.enabled && config.url) {
+        // 如果是手动模式且填写了 URL，验证 URL 格式
+        if (config.mode === 'manual' && config.url) {
           const validation = validateProxyUrl(config.url)
           if (!validation.valid) {
             return { success: false, error: validation.error }

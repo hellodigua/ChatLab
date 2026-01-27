@@ -31,8 +31,11 @@
     },
     "network": {
       "title": "Network",
-      "enableProxy": "Enable Proxy",
-      "enableProxyDesc": "Connect via proxy server",
+      "proxyMode": "Proxy Mode",
+      "proxyModeDesc": "How to connect when accessing external services",
+      "modeOff": "Off",
+      "modeSystem": "System",
+      "modeManual": "Manual",
       "proxyAddress": "Proxy Address",
       "proxyPlaceholder": "http://127.0.0.1:7890",
       "proxyHelp": "Supports HTTP/HTTPS proxy, e.g.: http://127.0.0.1:7890",

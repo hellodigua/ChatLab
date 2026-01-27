@@ -1,23 +1,33 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 
+// 代理模式类型
+type ProxyMode = 'off' | 'system' | 'manual'
+
 // 代理配置
-const proxyEnabled = ref(false)
+const proxyMode = ref<ProxyMode>('system')
 const proxyUrl = ref('')
 const proxyUrlError = ref('')
 const isSavingProxy = ref(false)
 const isTestingProxy = ref(false)
 const proxyTestResult = ref<{ success: boolean; message: string } | null>(null)
 
+// 代理模式选项
+const proxyModeOptions = computed(() => [
+  { label: t('settings.basic.network.modeOff'), value: 'off' },
+  { label: t('settings.basic.network.modeSystem'), value: 'system' },
+  { label: t('settings.basic.network.modeManual'), value: 'manual' },
+])
+
 // 加载代理配置
 async function loadProxyConfig() {
   try {
     const config = await window.networkApi.getProxyConfig()
-    proxyEnabled.value = config.enabled
-    proxyUrl.value = config.url
+    proxyMode.value = config.mode || 'system'
+    proxyUrl.value = config.url || ''
   } catch (error) {
     console.error('获取代理配置失败:', error)
   }
@@ -49,21 +59,21 @@ async function saveProxyConfig() {
   // 清除测试结果
   proxyTestResult.value = null
 
-  // 如果启用了代理但没填地址
-  if (proxyEnabled.value && !proxyUrl.value.trim()) {
+  // 如果是手动模式但没填地址
+  if (proxyMode.value === 'manual' && !proxyUrl.value.trim()) {
     proxyUrlError.value = t('settings.basic.network.enterProxyFirst')
     return
   }
 
   // 验证格式
-  if (proxyEnabled.value && !validateProxyUrl(proxyUrl.value)) {
+  if (proxyMode.value === 'manual' && !validateProxyUrl(proxyUrl.value)) {
     return
   }
 
   isSavingProxy.value = true
   try {
     const result = await window.networkApi.saveProxyConfig({
-      enabled: proxyEnabled.value,
+      mode: proxyMode.value,
       url: proxyUrl.value.trim(),
     })
 
@@ -78,13 +88,15 @@ async function saveProxyConfig() {
   }
 }
 
-// 切换代理开关
-async function toggleProxy(enabled: boolean) {
-  proxyEnabled.value = enabled
+// 切换代理模式
+async function handleProxyModeChange(mode: string | number) {
+  const newMode = mode as ProxyMode
+  proxyMode.value = newMode
   proxyTestResult.value = null
+  proxyUrlError.value = ''
 
-  // 如果关闭代理，立即保存
-  if (!enabled) {
+  // 非手动模式时立即保存
+  if (newMode !== 'manual') {
     await saveProxyConfig()
   }
 }
@@ -101,7 +113,7 @@ function handleProxyUrlInput() {
 
 // 代理地址失去焦点时保存
 async function handleProxyUrlBlur() {
-  if (proxyEnabled.value && proxyUrl.value.trim()) {
+  if (proxyMode.value === 'manual' && proxyUrl.value.trim()) {
     await saveProxyConfig()
   }
 }
@@ -124,12 +136,15 @@ async function testProxyConnection() {
     const result = await window.networkApi.testProxyConnection(proxyUrl.value.trim())
     proxyTestResult.value = {
       success: result.success,
-      message: result.success ? t('settings.basic.network.connectionSuccess') : result.error || t('settings.basic.network.connectionFailed'),
+      message: result.success
+        ? t('settings.basic.network.connectionSuccess')
+        : result.error || t('settings.basic.network.connectionFailed'),
     }
   } catch (error) {
     proxyTestResult.value = {
       success: false,
-      message: t('settings.basic.network.connectionFailed') + ': ' + (error instanceof Error ? error.message : String(error)),
+      message:
+        t('settings.basic.network.connectionFailed') + ': ' + (error instanceof Error ? error.message : String(error)),
     }
   } finally {
     isTestingProxy.value = false
@@ -149,19 +164,29 @@ onMounted(() => {
       {{ t('settings.basic.network.title') }}
     </h3>
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
-      <!-- 代理开关 -->
+      <!-- 代理模式选择 -->
       <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-gray-900 dark:text-white">{{ t('settings.basic.network.enableProxy') }}</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('settings.basic.network.enableProxyDesc') }}</p>
+        <div class="flex-1 pr-4">
+          <p class="text-sm font-medium text-gray-900 dark:text-white">{{ t('settings.basic.network.proxyMode') }}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('settings.basic.network.proxyModeDesc') }}</p>
         </div>
-        <USwitch :model-value="proxyEnabled" @update:model-value="toggleProxy" />
+        <div class="w-64">
+          <UTabs
+            :model-value="proxyMode"
+            size="sm"
+            class="gap-0"
+            :items="proxyModeOptions"
+            @update:model-value="handleProxyModeChange"
+          />
+        </div>
       </div>
 
-      <!-- 代理地址输入 -->
-      <div v-if="proxyEnabled" class="mt-4 space-y-3">
+      <!-- 手动配置时显示代理地址输入 -->
+      <div v-if="proxyMode === 'manual'" class="mt-4 space-y-3">
         <div>
-          <label class="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300"> {{ t('settings.basic.network.proxyAddress') }} </label>
+          <label class="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">
+            {{ t('settings.basic.network.proxyAddress') }}
+          </label>
           <UInput
             v-model="proxyUrl"
             :placeholder="t('settings.basic.network.proxyPlaceholder')"
@@ -210,4 +235,3 @@ onMounted(() => {
     </div>
   </div>
 </template>
-

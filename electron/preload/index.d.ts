@@ -619,9 +619,11 @@ interface CacheApi {
 }
 
 // Network API 类型 - 网络代理配置
+type ProxyMode = 'off' | 'system' | 'manual'
+
 interface ProxyConfig {
-  enabled: boolean
-  url: string
+  mode: ProxyMode // 代理模式：关闭、跟随系统、手动配置
+  url: string // 仅 manual 模式使用
 }
 
 interface NetworkApi {

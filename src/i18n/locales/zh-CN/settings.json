@@ -31,8 +31,11 @@
     },
     "network": {
       "title": "网络设置",
-      "enableProxy": "启用代理",
-      "enableProxyDesc": "通过代理服务器连接网络",
+      "proxyMode": "代理模式",
+      "proxyModeDesc": "访问外网时使用的代理方式",
+      "modeOff": "关闭",
+      "modeSystem": "跟随系统",
+      "modeManual": "手动配置",
       "proxyAddress": "代理地址",
       "proxyPlaceholder": "http://127.0.0.1:7890",
       "proxyHelp": "支持 HTTP/HTTPS 代理，格式如：http://127.0.0.1:7890",
