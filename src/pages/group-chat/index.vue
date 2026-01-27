@@ -11,7 +11,6 @@ import UITabs from '@/components/UI/Tabs.vue'
 import AITab from '@/components/analysis/AITab.vue'
 import OverviewTab from './components/OverviewTab.vue'
 import ViewTab from './components/ViewTab.vue'
-import RankingTab from './components/RankingTab.vue'
 import QuotesTab from './components/QuotesTab.vue'
 import MemberTab from './components/MemberTab.vue'
 import PageHeader from '@/components/layout/PageHeader.vue'
@@ -20,9 +19,8 @@ import IncrementalImportModal from '@/components/analysis/IncrementalImportModal
 import LoadingState from '@/components/UI/LoadingState.vue'
 import { useSessionStore } from '@/stores/session'
 import { useLayoutStore } from '@/stores/layout'
-import { isFeatureSupported, type LocaleType } from '@/i18n'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 
 const route = useRoute()
 const router = useRouter()
@@ -55,20 +53,17 @@ const availableYears = ref<number[]>([])
 const selectedYear = ref<number>(0) // 0 表示全部
 const isInitialLoad = ref(true) // 用于跳过初始加载时的 watch 触发，并控制首屏加载状态
 
-// Tab 配置（带语言限制）
+// Tab 配置
 const allTabs = [
   { id: 'overview', labelKey: 'analysis.tabs.overview', icon: 'i-heroicons-chart-pie' },
   { id: 'view', labelKey: 'analysis.tabs.view', icon: 'i-heroicons-presentation-chart-bar' },
-  { id: 'ranking', labelKey: 'analysis.tabs.ranking', icon: 'i-heroicons-trophy', feature: 'groupRanking' },
   { id: 'quotes', labelKey: 'analysis.tabs.groupQuotes', icon: 'i-heroicons-chat-bubble-bottom-center-text' },
   { id: 'members', labelKey: 'analysis.tabs.members', icon: 'i-heroicons-user-group' },
   { id: 'ai', labelKey: 'analysis.tabs.ai', icon: 'i-heroicons-sparkles' },
 ]
 
-// 根据当前语言过滤 Tab
-const tabs = computed(() =>
-  allTabs.filter((tab) => !tab.feature || isFeatureSupported(tab.feature, locale.value as LocaleType))
-)
+// Tab 列表
+const tabs = computed(() => allTabs)
 
 const activeTab = ref((route.query.tab as string) || 'overview')
 
@@ -361,13 +356,7 @@ onMounted(() => {
               :key="'view-' + selectedYear"
               :session-id="currentSessionId!"
               :time-filter="timeFilter"
-            />
-            <RankingTab
-              v-else-if="activeTab === 'ranking'"
-              :key="'ranking-' + selectedYear"
-              :session-id="currentSessionId!"
               :member-activity="memberActivity"
-              :time-filter="timeFilter"
               :selected-year="selectedYear"
               :available-years="availableYears"
             />
