@@ -23,7 +23,7 @@ const isLoading = ref(false)
 // 特殊值表示全部成员
 const ALL_MEMBERS_VALUE = '__ALL__'
 
-// 内部选中值（字符串类型，USelect 要求）
+// 内部选中值（字符串类型，通过 value-key 指定）
 const internalValue = computed({
   get: () => {
     return props.modelValue === null ? ALL_MEMBERS_VALUE : String(props.modelValue)
@@ -35,7 +35,7 @@ const internalValue = computed({
 
 // 成员选项
 const memberOptions = computed(() => {
-  const options = [
+  const options: { value: string; label: string }[] = [
     { value: ALL_MEMBERS_VALUE, label: t('allMembers') },
   ]
   members.value.forEach((m) => {
@@ -75,10 +75,12 @@ watch(
 </script>
 
 <template>
-  <USelect
+  <USelectMenu
     v-model="internalValue"
     :items="memberOptions"
     :loading="isLoading"
+    :virtualize="{ estimateSize: 32, overscan: 10 }"
+    value-key="value"
     class="w-48"
   />
 </template>
