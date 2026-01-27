@@ -10,7 +10,7 @@ interface TabItem {
 interface Props {
   modelValue: string | number
   items: TabItem[]
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'xs' | 'sm' | 'md' | 'lg'
 }
 
 interface Emits {

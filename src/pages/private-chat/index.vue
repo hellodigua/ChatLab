@@ -56,7 +56,7 @@ const isInitialLoad = ref(true) // 用于跳过初始加载时的 watch 触发�
 // Tab 配置 - 私聊有总览、视图、语录、成员、AI实验室
 const tabs = [
   { id: 'overview', labelKey: 'analysis.tabs.overview', icon: 'i-heroicons-chart-pie' },
-  // { id: 'view', labelKey: 'analysis.tabs.view', icon: 'i-heroicons-presentation-chart-bar' },
+  { id: 'view', labelKey: 'analysis.tabs.view', icon: 'i-heroicons-presentation-chart-bar' },
   { id: 'quotes', labelKey: 'analysis.tabs.quotes', icon: 'i-heroicons-chat-bubble-left-right' },
   { id: 'member', labelKey: 'analysis.tabs.member', icon: 'i-heroicons-user-group' },
   { id: 'ai', labelKey: 'analysis.tabs.ai', icon: 'i-heroicons-sparkles' },

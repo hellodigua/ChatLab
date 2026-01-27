@@ -80,3 +80,6 @@ export type {
   FilterResult,
   FilterMessage,
 } from './session'
+
+// NLP 查询
+export { getWordFrequency, segmentText, getPosTags } from './nlp'

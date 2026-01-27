@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { SubTabs } from '@/components/UI'
-import { MessageView, WordcloudView } from '@/components/view'
+import { MessageView } from '@/components/view'
 import UserSelect from '@/components/common/UserSelect.vue'
 
 const { t } = useI18n()
@@ -18,10 +18,9 @@ const props = defineProps<{
   timeFilter?: TimeFilter
 }>()
 
-// 子 Tab 配置
+// 子 Tab 配置（私聊只有消息视图）
 const subTabs = computed(() => [
   { id: 'message', label: t('message'), icon: 'i-heroicons-chat-bubble-left-right' },
-  { id: 'wordcloud', label: t('wordcloud'), icon: 'i-heroicons-cloud' },
 ])
 
 const activeSubTab = ref('message')
@@ -48,12 +47,6 @@ const selectedMemberId = ref<number | null>(null)
           :time-filter="props.timeFilter"
           :member-id="selectedMemberId"
         />
-        <WordcloudView
-          v-else-if="activeSubTab === 'wordcloud'"
-          :session-id="props.sessionId"
-          :time-filter="props.timeFilter"
-          :member-id="selectedMemberId"
-        />
       </Transition>
     </div>
   </div>
@@ -74,12 +67,10 @@ const selectedMemberId = ref<number | null>(null)
 <i18n>
 {
   "zh-CN": {
-    "message": "消息",
-    "wordcloud": "词云",
+    "message": "消息"
   },
   "en-US": {
-    "message": "Messages",
-    "wordcloud": "Word Cloud",
+    "message": "Messages"
   }
 }
 </i18n>

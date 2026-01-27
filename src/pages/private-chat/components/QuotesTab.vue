@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { SubTabs } from '@/components/UI'
-import { CatchphraseTab, KeywordAnalysis } from '@/components/analysis/quotes'
+import { CatchphraseTab, KeywordAnalysis, WordcloudTab } from '@/components/analysis/quotes'
 
 const { t } = useI18n()
 
@@ -16,9 +16,10 @@ const props = defineProps<{
   timeFilter?: TimeFilter
 }>()
 
-// 子 Tab 配置（私聊只保留口头禅和关键词分析）
+// 子 Tab 配置（私聊：口头禅、词云、关键词分析）
 const subTabs = computed(() => [
   { id: 'catchphrase', label: t('catchphrase'), icon: 'i-heroicons-chat-bubble-bottom-center-text' },
+  { id: 'wordcloud', label: t('wordcloud'), icon: 'i-heroicons-cloud' },
   { id: 'keyword', label: t('keywordAnalysis'), icon: 'i-heroicons-magnifying-glass' },
 ])
 
@@ -36,6 +37,13 @@ const activeSubTab = ref('catchphrase')
         <!-- 口头禅分析 -->
         <CatchphraseTab
           v-if="activeSubTab === 'catchphrase'"
+          :session-id="props.sessionId"
+          :time-filter="props.timeFilter"
+        />
+
+        <!-- 词云分析 -->
+        <WordcloudTab
+          v-else-if="activeSubTab === 'wordcloud'"
           :session-id="props.sessionId"
           :time-filter="props.timeFilter"
         />
@@ -65,10 +73,12 @@ const activeSubTab = ref('catchphrase')
 {
   "zh-CN": {
     "catchphrase": "口头禅",
+    "wordcloud": "词云",
     "keywordAnalysis": "关键词分析"
   },
   "en-US": {
     "catchphrase": "Catchphrases",
+    "wordcloud": "Word Cloud",
     "keywordAnalysis": "Keyword Analysis"
   }
 }

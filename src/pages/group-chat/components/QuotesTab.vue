@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { SubTabs } from '@/components/UI'
-import { CatchphraseTab, HotRepeatTab, KeywordAnalysis } from '@/components/analysis/quotes'
+import { CatchphraseTab, HotRepeatTab, KeywordAnalysis, WordcloudTab } from '@/components/analysis/quotes'
 
 const { t } = useI18n()
 
@@ -20,6 +20,7 @@ const props = defineProps<{
 const subTabs = computed(() => [
   { id: 'hot-repeat', label: t('hotRepeat'), icon: 'i-heroicons-fire' },
   { id: 'catchphrase', label: t('catchphrase'), icon: 'i-heroicons-chat-bubble-bottom-center-text' },
+  { id: 'wordcloud', label: t('wordcloud'), icon: 'i-heroicons-cloud' },
   { id: 'keyword', label: t('keywordAnalysis'), icon: 'i-heroicons-magnifying-glass' },
 ])
 
@@ -44,6 +45,13 @@ const activeSubTab = ref('hot-repeat')
         <!-- 最火复读内容 -->
         <HotRepeatTab
           v-else-if="activeSubTab === 'hot-repeat'"
+          :session-id="props.sessionId"
+          :time-filter="props.timeFilter"
+        />
+
+        <!-- 词云分析 -->
+        <WordcloudTab
+          v-else-if="activeSubTab === 'wordcloud'"
           :session-id="props.sessionId"
           :time-filter="props.timeFilter"
         />
@@ -74,11 +82,13 @@ const activeSubTab = ref('hot-repeat')
   "zh-CN": {
     "hotRepeat": "最火复读",
     "catchphrase": "口头禅",
+    "wordcloud": "词云",
     "keywordAnalysis": "关键词分析"
   },
   "en-US": {
     "hotRepeat": "Hot Repeats",
     "catchphrase": "Catchphrases",
+    "wordcloud": "Word Cloud",
     "keywordAnalysis": "Keyword Analysis"
   }
 }

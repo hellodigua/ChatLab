@@ -632,6 +632,61 @@ interface NetworkApi {
   testProxyConnection: (proxyUrl: string) => Promise<{ success: boolean; error?: string }>
 }
 
+// NLP API 类型 - 自然语言处理功能
+type SupportedLocale = 'zh-CN' | 'en-US'
+
+/** 词性过滤模式 */
+type PosFilterMode = 'all' | 'meaningful' | 'custom'
+
+interface WordFrequencyItem {
+  word: string
+  count: number
+  percentage: number
+}
+
+interface PosTagStat {
+  tag: string
+  count: number
+}
+
+interface WordFrequencyResult {
+  words: WordFrequencyItem[]
+  totalWords: number
+  totalMessages: number
+  uniqueWords: number
+  posTagStats?: PosTagStat[]
+}
+
+interface WordFrequencyParams {
+  sessionId: string
+  locale: SupportedLocale
+  timeFilter?: { startTs?: number; endTs?: number }
+  memberId?: number
+  topN?: number
+  minWordLength?: number
+  minCount?: number
+  /** 词性过滤模式：all=全部, meaningful=只保留有意义的词, custom=自定义 */
+  posFilterMode?: PosFilterMode
+  /** 自定义词性过滤列表（posFilterMode='custom' 时使用） */
+  customPosTags?: string[]
+  /** 是否启用停用词过滤，默认 true */
+  enableStopwords?: boolean
+}
+
+/** 词性标签信息 */
+interface PosTagInfo {
+  tag: string
+  name: string
+  description: string
+  meaningful: boolean
+}
+
+interface NlpApi {
+  getWordFrequency: (params: WordFrequencyParams) => Promise<WordFrequencyResult>
+  segmentText: (text: string, locale: SupportedLocale, minLength?: number) => Promise<string[]>
+  getPosTags: () => Promise<PosTagInfo[]>
+}
+
 // Session Index API 类型 - 会话索引功能
 interface SessionStats {
   sessionCount: number
@@ -716,6 +771,7 @@ declare global {
     cacheApi: CacheApi
     networkApi: NetworkApi
     sessionApi: SessionApi
+    nlpApi: NlpApi
   }
 }
 
@@ -731,6 +787,7 @@ export {
   AgentApi,
   CacheApi,
   NetworkApi,
+  NlpApi,
   ProxyConfig,
   SearchMessageResult,
   AIConversation,
@@ -754,4 +811,10 @@ export {
   EmbeddingConfig,
   VectorStoreConfig,
   RerankConfig,
+  WordFrequencyItem,
+  WordFrequencyResult,
+  WordFrequencyParams,
+  SupportedLocale,
+  PosFilterMode,
+  PosTagInfo,
 }

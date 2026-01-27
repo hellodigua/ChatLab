@@ -62,6 +62,10 @@ import {
   // 自定义筛选
   filterMessagesWithContext,
   getMultipleSessionsMessages,
+  // NLP 查询
+  getWordFrequency,
+  segmentText,
+  getPosTags,
 } from './query'
 import { streamImport, streamParseFileInfo, analyzeIncrementalImport, incrementalImport } from './import'
 
@@ -148,6 +152,11 @@ const syncHandlers: Record<string, (payload: any) => any> = {
   filterMessagesWithContext: (p) =>
     filterMessagesWithContext(p.sessionId, p.keywords, p.timeFilter, p.senderIds, p.contextSize),
   getMultipleSessionsMessages: (p) => getMultipleSessionsMessages(p.sessionId, p.chatSessionIds),
+
+  // NLP 查询
+  getWordFrequency: (p) => getWordFrequency(p),
+  segmentText: (p) => segmentText(p.text, p.locale, p.minLength),
+  getPosTags: () => getPosTags(),
 }
 
 // 异步消息处理器（流式操作）

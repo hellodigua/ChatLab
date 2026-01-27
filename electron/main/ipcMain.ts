@@ -13,6 +13,7 @@ import { registerAIHandlers } from './ipc/ai'
 import { registerMessagesHandlers } from './ipc/messages'
 import { registerCacheHandlers } from './ipc/cache'
 import { registerNetworkHandlers } from './ipc/network'
+import { registerNlpHandlers } from './ipc/nlp'
 import { registerAnalyticsHandlers } from './analytics'
 // 导入 Worker 模块（用于异步分析查询和流式导入）
 import * as worker from './worker/workerManager'
@@ -45,6 +46,7 @@ const mainIpcMain = (win: BrowserWindow) => {
   registerMessagesHandlers(context)
   registerCacheHandlers(context)
   registerNetworkHandlers(context)
+  registerNlpHandlers(context)
   registerAnalyticsHandlers()
 
   console.log('[IpcMain] All IPC handlers registered successfully')

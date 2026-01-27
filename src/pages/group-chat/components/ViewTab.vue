@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { SubTabs } from '@/components/UI'
-import { MessageView, WordcloudView, InteractionView } from '@/components/view'
+import { MessageView, InteractionView } from '@/components/view'
 import UserSelect from '@/components/common/UserSelect.vue'
 
 const { t } = useI18n()
@@ -22,7 +22,6 @@ const props = defineProps<{
 const subTabs = computed(() => [
   { id: 'message', label: t('message'), icon: 'i-heroicons-chat-bubble-left-right' },
   { id: 'interaction', label: t('interaction'), icon: 'i-heroicons-arrows-right-left' },
-  { id: 'wordcloud', label: t('wordcloud'), icon: 'i-heroicons-cloud' },
 ])
 
 const activeSubTab = ref('message')
@@ -55,12 +54,6 @@ const selectedMemberId = ref<number | null>(null)
           :time-filter="props.timeFilter"
           :member-id="selectedMemberId"
         />
-        <WordcloudView
-          v-else-if="activeSubTab === 'wordcloud'"
-          :session-id="props.sessionId"
-          :time-filter="props.timeFilter"
-          :member-id="selectedMemberId"
-        />
       </Transition>
     </div>
   </div>
@@ -82,13 +75,11 @@ const selectedMemberId = ref<number | null>(null)
 {
   "zh-CN": {
     "message": "消息",
-    "interaction": "互动分析",
-    "wordcloud": "词云",
+    "interaction": "互动分析"
   },
   "en-US": {
     "message": "Messages",
-    "interaction": "Interactions",
-    "wordcloud": "Word Cloud",
+    "interaction": "Interactions"
   }
 }
 </i18n>

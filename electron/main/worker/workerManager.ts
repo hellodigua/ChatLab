@@ -199,6 +199,15 @@ export function closeWorker(): void {
   }
 }
 
+// ==================== 通用查询 API ====================
+
+/**
+ * 通用查询函数（用于新增的查询类型）
+ */
+export async function query<T = any>(type: string, payload: any): Promise<T> {
+  return sendToWorker<T>(type, payload)
+}
+
 // ==================== 导出的异步 API ====================
 
 export async function getAvailableYears(sessionId: string): Promise<number[]> {

@@ -58,7 +58,7 @@ const isInitialLoad = ref(true) // 用于跳过初始加载时的 watch 触发�
 // Tab 配置（带语言限制）
 const allTabs = [
   { id: 'overview', labelKey: 'analysis.tabs.overview', icon: 'i-heroicons-chart-pie' },
-  // { id: 'view', labelKey: 'analysis.tabs.view', icon: 'i-heroicons-presentation-chart-bar' },
+  { id: 'view', labelKey: 'analysis.tabs.view', icon: 'i-heroicons-presentation-chart-bar' },
   { id: 'ranking', labelKey: 'analysis.tabs.ranking', icon: 'i-heroicons-trophy', feature: 'groupRanking' },
   { id: 'quotes', labelKey: 'analysis.tabs.groupQuotes', icon: 'i-heroicons-chat-bubble-bottom-center-text' },
   { id: 'members', labelKey: 'analysis.tabs.members', icon: 'i-heroicons-user-group' },

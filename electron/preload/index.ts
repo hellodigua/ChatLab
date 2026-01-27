@@ -1180,6 +1180,68 @@ const agentApi = {
   },
 }
 
+// NLP API - 自然语言处理功能
+interface WordFrequencyItem {
+  word: string
+  count: number
+  percentage: number
+}
+
+interface WordFrequencyResult {
+  words: WordFrequencyItem[]
+  totalWords: number
+  totalMessages: number
+  uniqueWords: number
+}
+
+type PosFilterMode = 'all' | 'meaningful' | 'custom'
+
+interface WordFrequencyParams {
+  sessionId: string
+  locale: 'zh-CN' | 'en-US'
+  timeFilter?: { startTs?: number; endTs?: number }
+  memberId?: number
+  topN?: number
+  minWordLength?: number
+  minCount?: number
+  /** 词性过滤模式：all=全部, meaningful=只保留有意义的词, custom=自定义 */
+  posFilterMode?: PosFilterMode
+  /** 自定义词性过滤列表（posFilterMode='custom' 时使用） */
+  customPosTags?: string[]
+  /** 是否启用停用词过滤，默认 true */
+  enableStopwords?: boolean
+}
+
+interface PosTagInfo {
+  tag: string
+  name: string
+  description: string
+  meaningful: boolean
+}
+
+const nlpApi = {
+  /**
+   * 获取词频统计（用于词云）
+   */
+  getWordFrequency: (params: WordFrequencyParams): Promise<WordFrequencyResult> => {
+    return ipcRenderer.invoke('nlp:getWordFrequency', params)
+  },
+
+  /**
+   * 单文本分词
+   */
+  segmentText: (text: string, locale: 'zh-CN' | 'en-US', minLength?: number): Promise<string[]> => {
+    return ipcRenderer.invoke('nlp:segmentText', text, locale, minLength)
+  },
+
+  /**
+   * 获取词性标签定义
+   */
+  getPosTags: (): Promise<PosTagInfo[]> => {
+    return ipcRenderer.invoke('nlp:getPosTags')
+  },
+}
+
 // Network API - 网络设置
 type ProxyMode = 'off' | 'system' | 'manual'
 
@@ -1567,6 +1629,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('cacheApi', cacheApi)
     contextBridge.exposeInMainWorld('networkApi', networkApi)
     contextBridge.exposeInMainWorld('sessionApi', sessionApi)
+    contextBridge.exposeInMainWorld('nlpApi', nlpApi)
   } catch (error) {
     console.error(error)
   }
@@ -1593,4 +1656,6 @@ if (process.contextIsolated) {
   window.networkApi = networkApi
   // @ts-ignore (define in dts)
   window.sessionApi = sessionApi
+  // @ts-ignore (define in dts)
+  window.nlpApi = nlpApi
 }
