@@ -52,7 +52,7 @@ export interface FeatureLocaleSupport {
  * 用于控制某些功能只在特定语言下显示
  */
 export const featureLocaleRestrictions: Record<string, LocaleType[]> = {
-  // 群榜单（龙王、夜猫等）只在中文下显示
+  // 榜单（龙王、夜猫等）只在中文下显示
   groupRanking: ['zh-CN'],
   // 以后可以在这里添加更多限制
 }

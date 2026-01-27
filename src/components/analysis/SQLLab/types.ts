@@ -39,7 +39,7 @@ type LocaleType = 'zh-CN' | 'en-US'
 export const TABLE_LABELS: Record<LocaleType, Record<string, string>> = {
   'zh-CN': {
     message: '消息记录',
-    member: '群成员',
+    member: '成员',
     meta: '群信息',
     member_name_history: '昵称历史',
   },

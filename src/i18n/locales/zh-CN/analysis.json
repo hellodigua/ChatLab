@@ -14,10 +14,10 @@
   "tabs": {
     "overview": "总览",
     "view": "视图",
-    "ranking": "群榜单",
-    "groupQuotes": "群语录",
+    "ranking": "榜单",
+    "groupQuotes": "语录",
     "quotes": "语录",
-    "members": "群成员",
+    "members": "成员",
     "member": "成员",
     "ai": "AI实验室"
   },

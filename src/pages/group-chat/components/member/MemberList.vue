@@ -386,7 +386,7 @@ onMounted(() => {
 <i18n>
 {
   "zh-CN": {
-    "title": "群成员管理",
+    "title": "成员管理",
     "description": "共 {count} 位成员，可为成员添加别名备注或移除成员",
     "searchPlaceholder": "搜索群昵称、账号名称、ID 或别名",
     "noMatch": "没有找到匹配的成员",
