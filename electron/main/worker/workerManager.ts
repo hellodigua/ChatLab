@@ -186,7 +186,7 @@ function sendToWorkerWithProgress<T>(
 }
 
 /**
- * 关闭 Worker
+ * 关闭 Worker（同步版本，用于一般场景）
  */
 export function closeWorker(): void {
   if (worker) {
@@ -196,6 +196,29 @@ export function closeWorker(): void {
     worker.terminate()
     worker = null
     console.log('[WorkerManager] Worker terminated')
+  }
+}
+
+/**
+ * 关闭 Worker（异步版本，确保数据库连接关闭后再终止）
+ * 用于应用退出前的清理，确保 Worker 完全关闭
+ */
+export async function closeWorkerAsync(): Promise<void> {
+  if (worker) {
+    console.log('[WorkerManager] Closing worker async...')
+    try {
+      // 等待关闭所有数据库连接（最多等待 3 秒）
+      await Promise.race([
+        sendToWorker('closeAll', {}),
+        new Promise((resolve) => setTimeout(resolve, 3000)),
+      ])
+    } catch {
+      // 忽略错误，继续终止
+    }
+
+    worker.terminate()
+    worker = null
+    console.log('[WorkerManager] Worker terminated (async)')
   }
 }
 

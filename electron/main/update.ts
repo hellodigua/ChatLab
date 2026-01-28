@@ -3,6 +3,7 @@ import { autoUpdater } from 'electron-updater'
 import { platform } from '@electron-toolkit/utils'
 import { logger } from './logger'
 import { getActiveProxyUrl } from './network/proxy'
+import { closeWorkerAsync } from './worker/workerManager'
 
 // R2 镜像源 URL（速度更快，作为主要更新源）
 const R2_MIRROR_URL = 'https://chatlab.1app.top/releases/download'
@@ -185,11 +186,23 @@ const checkUpdate = (win) => {
         cancelId: 2,
         type: 'question',
       })
-      .then((result) => {
+      .then(async (result) => {
         if (result.response === 0) {
           win.webContents.send('begin-install')
           // @ts-ignore
           app.isQuiting = true
+
+          // Windows 上先关闭 Worker 线程，确保进程能正常退出
+          // 否则 NSIS 安装器可能无法关闭旧进程
+          if (platform.isWindows) {
+            logger.info('[Update] Windows: 关闭 Worker 后再执行安装...')
+            try {
+              await closeWorkerAsync()
+            } catch (error) {
+              logger.error(`[Update] 关闭 Worker 失败: ${error}`)
+            }
+          }
+
           setTimeout(() => {
             setImmediate(() => {
               autoUpdater.quitAndInstall()

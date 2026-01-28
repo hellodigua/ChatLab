@@ -64,4 +64,20 @@ export const cleanup = () => {
   }
 }
 
+/**
+ * 异步清理资源（用于更新安装前，确保 Worker 完全关闭）
+ */
+export const cleanupAsync = async () => {
+  console.log('[IpcMain] Cleaning up resources (async)...')
+  try {
+    // 等待 Worker 完全关闭
+    await worker.closeWorkerAsync()
+    // 清理临时数据库
+    cleanupTempDbs()
+    console.log('[IpcMain] Cleanup completed')
+  } catch (error) {
+    console.error('[IpcMain] Error during async cleanup:', error)
+  }
+}
+
 export default mainIpcMain
