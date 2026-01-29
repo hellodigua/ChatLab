@@ -1,6 +1,17 @@
-# ChatLab
+<div align="center">
+
+<img src="./public/images/chatlab.svg" alt="ChatLab" title="ChatLab" width="300" />
+
+Local-first chat analysis tool: Relive your social memories powered by SQL and AI Agents.
 
 English | [简体中文](./README.md)
+
+[Project Website](https://chatlab.app/) ·
+[Documentation](https://chatlab.fun/usage/) ·
+[Roadmap](https://chatlabfun.featurebase.app/roadmap) ·
+[Issue Submission](https://github.com/hellodigua/ChatLab/issues)
+
+</div>
 
 ChatLab is a free, open-source, and local-first application dedicated to analyzing chat records. Through an AI Agent and a flexible SQL engine, you can freely dissect, query, and even reconstruct your social data.
 
