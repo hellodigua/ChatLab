@@ -19,7 +19,7 @@ const emit = defineEmits<{
 const globalMaxMessages = computed({
   get: () => aiGlobalSettings.value.maxMessagesPerRequest,
   set: (val: number) => {
-    const clampedVal = Math.max(0, Math.min(50000, val || 200))
+    const clampedVal = Math.max(0, Math.min(50000, val || 1000))
     promptStore.updateAIGlobalSettings({ maxMessagesPerRequest: clampedVal })
     emit('config-changed')
   },

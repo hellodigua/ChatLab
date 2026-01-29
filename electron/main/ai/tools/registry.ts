@@ -212,7 +212,7 @@ const searchMessagesTool: ToolDefinition = {
         },
         limit: {
           type: 'number',
-          description: '返回消息数量限制，默认 100，最大 5000',
+          description: '返回消息数量限制，默认 1000，最大 50000',
         },
         year: {
           type: 'number',
@@ -261,8 +261,8 @@ async function searchMessagesExecutor(
   context: ToolContext
 ): Promise<unknown> {
   const { sessionId, timeFilter: contextTimeFilter, maxMessagesLimit, locale } = context
-  // 用户配置优先：如果用户设置了 maxMessagesLimit，使用它；否则使用 LLM 指定的值或默认值 100，上限 5000
-  const limit = Math.min(maxMessagesLimit || params.limit || 100, 5000)
+  // 用户配置优先：如果用户设置了 maxMessagesLimit，使用它；否则使用 LLM 指定的值或默认值 1000，上限 50000
+  const limit = Math.min(maxMessagesLimit || params.limit || 1000, 50000)
 
   // 使用扩展的时间参数解析
   const effectiveTimeFilter = parseExtendedTimeParams(params, contextTimeFilter)
@@ -876,7 +876,7 @@ const getSessionMessagesTool: ToolDefinition = {
         },
         limit: {
           type: 'number',
-          description: '返回消息数量限制，默认 500。对于超长会话可以限制返回数量以节省 token',
+          description: '返回消息数量限制，默认 1000。对于超长会话可以限制返回数量以节省 token',
         },
       },
       required: ['session_id'],
@@ -893,7 +893,7 @@ async function getSessionMessagesExecutor(
 ): Promise<unknown> {
   const { sessionId, maxMessagesLimit, locale } = context
   // 用户配置优先
-  const limit = maxMessagesLimit || params.limit || 500
+  const limit = maxMessagesLimit || params.limit || 1000
 
   const result = await workerManager.getSessionMessages(sessionId, params.session_id, limit)
 

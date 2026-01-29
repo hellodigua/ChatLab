@@ -45,7 +45,7 @@ export const usePromptStore = defineStore(
     })
     const aiConfigVersion = ref(0)
     const aiGlobalSettings = ref({
-      maxMessagesPerRequest: 500,
+      maxMessagesPerRequest: 1000,
       maxHistoryRounds: 5, // AI上下文会话轮数限制
       exportFormat: 'markdown' as 'markdown' | 'txt', // 对话导出格式
       sqlExportFormat: 'csv' as 'csv' | 'json', // SQL Lab 导出格式

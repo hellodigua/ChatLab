@@ -32,7 +32,7 @@
     "network": {
       "title": "网络设置",
       "proxyMode": "代理模式",
-      "proxyModeDesc": "访问外网时使用的代理方式",
+      "proxyModeDesc": "访问网络时使用的代理方式",
       "modeOff": "关闭",
       "modeSystem": "跟随系统",
       "modeManual": "手动配置",
