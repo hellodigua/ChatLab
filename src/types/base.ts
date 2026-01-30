@@ -96,6 +96,7 @@ export const KNOWN_PLATFORMS = {
   DISCORD: 'discord',
   WHATSAPP: 'whatsapp',
   INSTAGRAM: 'instagram',
+  LINE: 'line',
   UNKNOWN: 'unknown',
 } as const
 
