@@ -599,3 +599,128 @@ export async function mergeFilesWithTempDb(
     }
   }
 }
+
+// ==================== 从会话数据库导出 ====================
+
+import Database from 'better-sqlite3'
+import { getDbPath } from '../database/core'
+
+/**
+ * 从已导入的会话数据库导出为临时 JSON 文件
+ * 用于批量管理中的合并功能
+ */
+export async function exportSessionToTempFile(sessionId: string): Promise<string> {
+  const dbPath = getDbPath(sessionId)
+  if (!fs.existsSync(dbPath)) {
+    throw new Error(`会话数据库不存在: ${sessionId}`)
+  }
+
+  const db = new Database(dbPath, { readonly: true })
+
+  try {
+    // 读取 meta
+    const meta = db.prepare('SELECT * FROM meta').get() as {
+      name: string
+      platform: string
+      type: string
+      group_id?: string
+      group_avatar?: string
+    }
+
+    if (!meta) {
+      throw new Error('无法读取会话元信息')
+    }
+
+    // 读取 members
+    const members = db
+      .prepare('SELECT platform_id, account_name, group_nickname, avatar FROM member')
+      .all() as Array<{
+      platform_id: string
+      account_name?: string
+      group_nickname?: string
+      avatar?: string
+    }>
+
+    // 读取 messages（通过 JOIN 获取发送者信息）
+    const messages = db
+      .prepare(
+        `SELECT 
+          m.platform_id as sender,
+          msg.sender_account_name as accountName,
+          msg.sender_group_nickname as groupNickname,
+          msg.ts as timestamp,
+          msg.type,
+          msg.content
+        FROM message msg
+        JOIN member m ON msg.sender_id = m.id
+        ORDER BY msg.ts`
+      )
+      .all() as Array<{
+      sender: string
+      accountName?: string
+      groupNickname?: string
+      timestamp: number
+      type: number
+      content?: string
+    }>
+
+    // 构建 ChatLab 格式数据
+    const chatLabData: ChatLabFormat = {
+      chatlab: {
+        version: '0.0.1',
+        exportedAt: Math.floor(Date.now() / 1000),
+        generator: 'ChatLab Export',
+        description: `导出自会话: ${meta.name}`,
+      },
+      meta: {
+        name: meta.name,
+        platform: meta.platform as ChatPlatform,
+        type: meta.type as ChatType,
+        groupId: meta.group_id,
+        groupAvatar: meta.group_avatar,
+      },
+      members: members.map((m) => ({
+        platformId: m.platform_id,
+        accountName: m.account_name,
+        groupNickname: m.group_nickname,
+        avatar: m.avatar,
+      })),
+      messages: messages.map((msg) => ({
+        sender: msg.sender,
+        accountName: msg.accountName,
+        groupNickname: msg.groupNickname,
+        timestamp: msg.timestamp,
+        type: msg.type,
+        content: msg.content,
+      })),
+    }
+
+    // 写入临时文件
+    const tempDir = path.join(getDefaultOutputDir(), '.chatlab_temp')
+    ensureOutputDir(tempDir)
+    const tempFilePath = path.join(tempDir, `export_${sessionId}_${Date.now()}.json`)
+    fs.writeFileSync(tempFilePath, JSON.stringify(chatLabData, null, 2), 'utf-8')
+
+    console.log(`[Merger] 导出会话到临时文件: ${tempFilePath}, 消息数: ${messages.length}`)
+
+    return tempFilePath
+  } finally {
+    db.close()
+  }
+}
+
+/**
+ * 清理临时导出文件
+ */
+export function cleanupTempExportFiles(filePaths: string[]): void {
+  for (const filePath of filePaths) {
+    try {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath)
+        console.log(`[Merger] 清理临时文件: ${filePath}`)
+      }
+    } catch (err) {
+      console.error(`[Merger] 清理临时文件失败: ${filePath}`, err)
+    }
+  }
+}

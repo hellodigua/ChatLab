@@ -165,6 +165,15 @@ interface ChatApi {
     newMessageCount: number
     error?: string
   }>
+  exportSessionsToTempFiles: (sessionIds: string[]) => Promise<{
+    success: boolean
+    tempFiles: string[]
+    error?: string
+  }>
+  cleanupTempExportFiles: (filePaths: string[]) => Promise<{
+    success: boolean
+    error?: string
+  }>
 }
 
 interface Api {
@@ -193,7 +202,6 @@ interface MergeApi {
   checkConflicts: (filePaths: string[]) => Promise<ConflictCheckResult>
   mergeFiles: (params: MergeParams) => Promise<MergeResult>
   clearCache: (filePath?: string) => Promise<boolean>
-  onParseProgress: (callback: (data: { filePath: string; progress: ImportProgress }) => void) => () => void
 }
 
 // AI 相关类型

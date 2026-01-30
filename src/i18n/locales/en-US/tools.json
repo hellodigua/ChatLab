@@ -1,8 +1,47 @@
 {
-  "title": "Tools",
-  "description": "Utilities for chat record processing",
+  "title": "Manage",
+  "description": "Chat record management",
   "tabs": {
-    "merge": "Merge Chat Records"
+    "batchManage": "Batch Manage"
+  },
+  "batchManage": {
+    "title": "Batch Delete",
+    "description": "Select chat records to delete",
+    "searchPlaceholder": "Search conversation name",
+    "searchResult": "Found {count} / {total}",
+    "noSearchResult": "No matching chat records found",
+    "selectAll": "Select All",
+    "selected": "{count} selected",
+    "empty": "No chat records",
+    "delete": "Delete Selected",
+    "confirmTitle": "Confirm Delete",
+    "confirmMessage": "Are you sure you want to delete {count} selected chat record(s)? This action cannot be undone.",
+    "deleting": "Deleting...",
+    "success": "Successfully deleted {count} chat record(s)",
+    "error": "Delete failed: {error}",
+    "messageCount": "{count} messages",
+    "importedAt": "Imported {time}",
+    "columns": {
+      "name": "Name",
+      "platform": "Platform",
+      "messages": "Messages",
+      "importedAt": "Imported"
+    },
+    "clickToEdit": "Click to edit name",
+    "merge": "Merge Selected",
+    "mergeHint": "Select 2 or more chat records from the same platform to merge",
+    "mergeConfirmTitle": "Merge Chat Records",
+    "mergeConfirmMessage": "This will merge {count} selected chat records. The original records will be deleted and a new merged record will be created.",
+    "mergeSteps": {
+      "exporting": "Exporting chat records...",
+      "parsing": "Parsing files...",
+      "checking": "Checking conflicts...",
+      "merging": "Merging data...",
+      "cleaning": "Cleaning up temp files..."
+    },
+    "mergeSuccess": "Successfully merged {count} chat records",
+    "mergeError": "Merge failed: {error}",
+    "mergedSuffix": "Merged"
   }
 }
 

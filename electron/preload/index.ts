@@ -452,6 +452,31 @@ const chatApi = {
   }> => {
     return ipcRenderer.invoke('chat:incrementalImport', sessionId, filePath)
   },
+
+  /**
+   * 导出多个会话为临时文件（用于批量管理中的合并）
+   */
+  exportSessionsToTempFiles: (
+    sessionIds: string[]
+  ): Promise<{
+    success: boolean
+    tempFiles: string[]
+    error?: string
+  }> => {
+    return ipcRenderer.invoke('chat:exportSessionsToTempFiles', sessionIds)
+  },
+
+  /**
+   * 清理临时导出文件
+   */
+  cleanupTempExportFiles: (
+    filePaths: string[]
+  ): Promise<{
+    success: boolean
+    error?: string
+  }> => {
+    return ipcRenderer.invoke('chat:cleanupTempExportFiles', filePaths)
+  },
 }
 
 // Merge API - 合并功能
@@ -484,19 +509,6 @@ const mergeApi = {
    */
   clearCache: (filePath?: string): Promise<boolean> => {
     return ipcRenderer.invoke('merge:clearCache', filePath)
-  },
-
-  /**
-   * 监听解析进度（用于大文件）
-   */
-  onParseProgress: (callback: (data: { filePath: string; progress: ImportProgress }) => void) => {
-    const handler = (_event: Electron.IpcRendererEvent, data: { filePath: string; progress: ImportProgress }) => {
-      callback(data)
-    }
-    ipcRenderer.on('merge:parseProgress', handler)
-    return () => {
-      ipcRenderer.removeListener('merge:parseProgress', handler)
-    }
   },
 }
 

@@ -18,9 +18,9 @@ export const router = createRouter({
       component: () => import('@/pages/private-chat/index.vue'),
     },
     {
-      path: '/tools',
-      name: 'tools',
-      component: () => import('@/pages/tools/index.vue'),
+      path: '/manage',
+      name: 'manage',
+      component: () => import('@/pages/manage/index.vue'),
     },
   ],
   history: createWebHashHistory(),

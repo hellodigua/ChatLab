@@ -9,6 +9,7 @@ import * as parser from '../parser'
 import { detectFormat, diagnoseFormat, type ParseProgress } from '../parser'
 import type { IpcContext } from './types'
 import { CURRENT_SCHEMA_VERSION, getPendingMigrationInfos, type MigrationInfo } from '../database/migrations'
+import { exportSessionToTempFile, cleanupTempExportFiles } from '../merger'
 
 /**
  * 注册聊天记录相关 IPC 处理器
@@ -975,6 +976,38 @@ export function registerChatHandlers(ctx: IpcContext): void {
       return result
     } catch (error) {
       console.error('[IpcMain] 执行增量导入失败:', error)
+      return { success: false, error: String(error) }
+    }
+  })
+
+  // ==================== 批量管理：导出会话为临时文件 ====================
+
+  /**
+   * 导出多个会话为临时文件（用于合并）
+   */
+  ipcMain.handle('chat:exportSessionsToTempFiles', async (_, sessionIds: string[]) => {
+    try {
+      const tempFiles: string[] = []
+      for (const sessionId of sessionIds) {
+        const tempPath = await exportSessionToTempFile(sessionId)
+        tempFiles.push(tempPath)
+      }
+      return { success: true, tempFiles }
+    } catch (error) {
+      console.error('[IpcMain] 导出会话失败:', error)
+      return { success: false, error: String(error), tempFiles: [] }
+    }
+  })
+
+  /**
+   * 清理临时导出文件
+   */
+  ipcMain.handle('chat:cleanupTempExportFiles', async (_, filePaths: string[]) => {
+    try {
+      cleanupTempExportFiles(filePaths)
+      return { success: true }
+    } catch (error) {
+      console.error('[IpcMain] 清理临时文件失败:', error)
       return { success: false, error: String(error) }
     }
   })
