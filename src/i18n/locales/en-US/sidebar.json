@@ -4,6 +4,8 @@
   "tools": "Tools",
   "chatHistory": "Chat History",
   "noRecords": "No records",
+  "searchPlaceholder": "Search conversation name",
+  "noSearchResult": "No matching chat records found",
   "contextMenu": {
     "rename": "Rename",
     "pin": "Pin",
@@ -21,7 +23,8 @@
   "tooltip": {
     "expand": "Expand sidebar",
     "collapse": "Collapse sidebar",
-    "hint": "Right-click to rename or delete"
+    "hint": "Right-click to rename or delete",
+    "search": "Search chat records"
   },
   "sessionInfo": "{count} messages · {time}",
   "footer": {

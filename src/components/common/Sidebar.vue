@@ -40,6 +40,27 @@ const deleteTarget = ref<AnalysisSession | null>(null)
 // 版本号
 const version = ref('')
 
+// 搜索相关状态
+const showSearch = ref(false)
+const searchQuery = ref('')
+
+// 过滤后的会话列表
+const filteredSortedSessions = computed(() => {
+  if (!searchQuery.value.trim()) {
+    return sortedSessions.value
+  }
+  const query = searchQuery.value.toLowerCase().trim()
+  return sortedSessions.value.filter((s) => s.name.toLowerCase().includes(query))
+})
+
+// 切换搜索框显示
+function toggleSearch() {
+  showSearch.value = !showSearch.value
+  if (!showSearch.value) {
+    searchQuery.value = ''
+  }
+}
+
 // 加载会话列表和版本号
 onMounted(async () => {
   sessionStore.loadSessions()
@@ -204,29 +225,40 @@ function getSessionAvatar(session: AnalysisSession): string | null {
 
       <!-- 新建分析 -->
       <SidebarButton icon="i-heroicons-plus" :title="t('sidebar.newAnalysis')" @click="handleImport" />
-
-      <!-- 工具 -->
-      <!-- <SidebarButton
-        icon="i-heroicons-wrench-screwdriver"
-        :title="t('sidebar.tools')"
-        :active="route.name === 'tools'"
-        @click="router.push({ name: 'tools' })"
-      /> -->
     </div>
 
     <!-- Session List -->
     <div class="flex-1 relative min-h-0 flex flex-col">
       <!-- 聊天记录标题 - 固定在顶部，不随列表滚动 -->
-      <UTooltip
-        v-if="!isCollapsed && sessions.length > 0"
-        :text="t('sidebar.tooltip.hint')"
-        :popper="{ placement: 'right' }"
-      >
-        <div class="px-7 mb-2 flex items-center gap-1">
-          <div class="text-sm font-medium text-gray-500">{{ t('sidebar.chatHistory') }}</div>
-          <UIcon name="i-heroicons-question-mark-circle" class="size-3.5 text-gray-400" />
+      <div v-if="!isCollapsed && sessions.length > 0" class="px-4 mb-2">
+        <div class="flex items-center justify-between">
+          <UTooltip :text="t('sidebar.tooltip.hint')" :popper="{ placement: 'right' }">
+            <div class="flex items-center gap-1 pl-3">
+              <div class="text-sm font-medium text-gray-500">{{ t('sidebar.chatHistory') }}</div>
+              <UIcon name="i-heroicons-question-mark-circle" class="size-3.5 text-gray-400" />
+            </div>
+          </UTooltip>
+          <UTooltip :text="t('sidebar.tooltip.search')" :popper="{ placement: 'right' }">
+            <UButton
+              :icon="showSearch ? 'i-heroicons-x-mark' : 'i-heroicons-magnifying-glass'"
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              @click="toggleSearch"
+            />
+          </UTooltip>
         </div>
-      </UTooltip>
+        <!-- 搜索框 -->
+        <div v-if="showSearch" class="mt-2">
+          <UInput
+            v-model="searchQuery"
+            :placeholder="t('sidebar.searchPlaceholder')"
+            icon="i-heroicons-magnifying-glass"
+            size="sm"
+            autofocus
+          />
+        </div>
+      </div>
 
       <!-- 聊天记录列表 - 可滚动区域，滚动条贴边 -->
       <div class="flex-1 overflow-y-auto">
@@ -234,9 +266,14 @@ function getSessionAvatar(session: AnalysisSession): string | null {
           {{ t('sidebar.noRecords') }}
         </div>
 
+        <!-- 搜索无结果 -->
+        <div v-else-if="filteredSortedSessions.length === 0 && searchQuery.trim() && !isCollapsed" class="py-8 text-center text-sm text-gray-500">
+          {{ t('sidebar.noSearchResult') }}
+        </div>
+
         <div class="space-y-1 pb-8" :class="[isCollapsed ? '' : 'px-4']">
           <UTooltip
-            v-for="session in sortedSessions"
+            v-for="session in filteredSortedSessions"
             :key="session.id"
             :text="isCollapsed ? session.name : ''"
             :popper="{ placement: 'right' }"
@@ -248,7 +285,9 @@ function getSessionAvatar(session: AnalysisSession): string | null {
                   route.params.id === session.id && !isCollapsed
                     ? 'bg-primary-100 text-gray-900 dark:bg-primary-900/30 dark:text-primary-100'
                     : 'text-gray-700 dark:text-gray-200 hover:bg-gray-200/60 dark:hover:bg-gray-800',
-                  isCollapsed ? 'justify-center cursor-pointer h-13 w-13 rounded-full ml-3.5' : 'cursor-pointer w-full rounded-full',
+                  isCollapsed
+                    ? 'justify-center cursor-pointer h-13 w-13 rounded-full ml-3.5'
+                    : 'cursor-pointer w-full rounded-full',
                 ]"
                 @click="router.push({ name: getSessionRouteName(session), params: { id: session.id } })"
               >
