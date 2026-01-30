@@ -1,12 +1,14 @@
 /**
- * ycccccccy/echotrace 导出格式解析器
- * 适配项目: https://github.com/ycccccccy/echotrace
+ * WeFlow 导出格式解析器
+ * 适配项目: WeFlow 聊天记录导出工具
  *
  * 特征：
- * - 顶层包含 session 和 messages 字段
+ * - 顶层包含 weflow、session 和 messages 字段
+ * - weflow 对象包含版本信息和导出时间
  * - session.wxid: ID（群聊以 @chatroom 结尾）
  * - session.type: "群聊" 或 "私聊"
- * - messages[].type: 中文消息类型字符串
+ * - session.avatar: 群/用户头像（base64 Data URL）
+ * - messages[].isSend: 1=发送者本人, 0=接收, null=系统
  * - messages[].senderUsername: 发送者ID
  * - messages[].senderDisplayName: 发送者显示名
  *
@@ -46,21 +48,23 @@ function extractNameFromFilePath(filePath: string): string {
 // ==================== 特征定义 ====================
 
 export const feature: FormatFeature = {
-  id: 'ycccccccy-echotrace',
-  name: 'ycccccccy/echotrace 导出',
+  id: 'weflow',
+  name: 'WeFlow 导出',
   platform: KNOWN_PLATFORMS.WECHAT,
   priority: 15,
   extensions: ['.json'],
   signatures: {
-    // 检测顶层字段和特征
-    head: [/"session"\s*:/, /"senderUsername"\s*:/, /"senderDisplayName"\s*:/],
-    requiredFields: ['session', 'messages'],
+    // weflow 对象是唯一识别特征
+    // 注意：session.avatar 包含 base64 图片，可能很大，所以 messages 字段可能不在 8KB 文件头中
+    // 只检测 weflow 和 session（它们在文件开头）
+    head: [/"weflow"\s*:\s*\{/],
+    requiredFields: ['weflow', 'session'],
   },
 }
 
-// ==================== 消息结构 ====================
+// ==================== 数据结构 ====================
 
-interface EchotraceSession {
+interface WeFlowSession {
   wxid: string
   nickname: string
   remark: string
@@ -68,9 +72,10 @@ interface EchotraceSession {
   type: '群聊' | '私聊'
   lastTimestamp: number
   messageCount: number
+  avatar?: string // 群/用户头像（base64 Data URL）
 }
 
-interface EchotraceMessage {
+interface WeFlowMessage {
   localId: number
   createTime: number // Unix 时间戳（秒）
   formattedTime: string
@@ -84,17 +89,10 @@ interface EchotraceMessage {
   source: string
 }
 
-// ==================== 头像信息结构 ====================
-
-interface EchotraceAvatarInfo {
-  displayName: string
-  base64: string // 原始 base64，不包含 Data URL 前缀
-}
-
 // ==================== 消息类型映射 ====================
 
 /**
- * 将 echotrace 中文消息类型转换为标准 MessageType
+ * 将 WeFlow 中文消息类型转换为标准 MessageType
  */
 function convertMessageType(typeStr: string): MessageType {
   switch (typeStr) {
@@ -136,6 +134,10 @@ function convertMessageType(typeStr: string): MessageType {
   }
 }
 
+// ==================== 头像信息结构 ====================
+// WeFlow 的 avatars 对象直接存储 base64 Data URL 字符串
+// 格式：{ "wxid": "data:image/jpeg;base64,..." }
+
 // ==================== 成员信息追踪 ====================
 
 interface MemberInfo {
@@ -146,7 +148,7 @@ interface MemberInfo {
 
 // ==================== 解析器实现 ====================
 
-async function* parseEchotrace(options: ParseOptions): AsyncGenerator<ParseEvent, void, unknown> {
+async function* parseWeFlow(options: ParseOptions): AsyncGenerator<ParseEvent, void, unknown> {
   const { filePath, batchSize = 5000, onProgress, onLog } = options
 
   const totalBytes = getFileSize(filePath)
@@ -159,18 +161,82 @@ async function* parseEchotrace(options: ParseOptions): AsyncGenerator<ParseEvent
   onProgress?.(initialProgress)
 
   // 记录解析开始
-  onLog?.('info', `开始解析 Echotrace 导出文件，大小: ${(totalBytes / 1024 / 1024).toFixed(2)} MB`)
+  onLog?.('info', `开始解析 WeFlow 导出文件，大小: ${(totalBytes / 1024 / 1024).toFixed(2)} MB`)
 
-  // 读取文件头获取 session 信息
-  const headContent = readFileHeadBytes(filePath, 2000)
+  // 读取文件头获取基本信息
+  const headContent = readFileHeadBytes(filePath, 5000)
 
-  // 解析 session
-  let session: EchotraceSession | null = null
+  // 使用流式读取获取完整的 session 对象（因为 session.avatar 可能很大）
+  let session: WeFlowSession | null = null
   try {
-    const sessionMatch = headContent.match(/"session"\s*:\s*(\{[^}]+\})/)
-    if (sessionMatch) {
-      session = JSON.parse(sessionMatch[1])
-    }
+    await new Promise<void>((resolve) => {
+      const sessionStream = fs.createReadStream(filePath, { encoding: 'utf-8' })
+
+      let sessionContent = ''
+      let inSession = false
+      let braceDepth = 0
+      let inString = false
+      let escape = false
+
+      sessionStream.on('data', (chunk: string | Buffer) => {
+        const str = typeof chunk === 'string' ? chunk : chunk.toString()
+
+        for (let i = 0; i < str.length; i++) {
+          const char = str[i]
+
+          if (!inSession) {
+            // 查找 "session": 的位置
+            const searchStr = '"session":'
+            if (str.slice(i, i + searchStr.length) === searchStr) {
+              inSession = true
+              i += searchStr.length - 1
+              continue
+            }
+          } else {
+            sessionContent += char
+
+            if (escape) {
+              escape = false
+              continue
+            }
+
+            if (char === '\\' && inString) {
+              escape = true
+              continue
+            }
+
+            if (char === '"') {
+              inString = !inString
+              continue
+            }
+
+            if (!inString) {
+              if (char === '{') braceDepth++
+              if (char === '}') {
+                braceDepth--
+                if (braceDepth === 0) {
+                  sessionStream.destroy()
+                  return
+                }
+              }
+            }
+          }
+        }
+      })
+
+      sessionStream.on('close', () => {
+        if (sessionContent) {
+          try {
+            session = JSON.parse(sessionContent) as WeFlowSession
+          } catch {
+            // 解析失败
+          }
+        }
+        resolve()
+      })
+
+      sessionStream.on('error', () => resolve())
+    })
   } catch {
     // 使用默认值
   }
@@ -258,11 +324,11 @@ async function* parseEchotrace(options: ParseOptions): AsyncGenerator<ParseEvent
     // 先尝试从文件头解析（适用于成员较少的聊天）
     const avatarsContent = extractAvatarsObject(headContent)
     if (avatarsContent) {
-      const avatarsObj = JSON.parse(avatarsContent) as Record<string, EchotraceAvatarInfo>
-      for (const [wxid, avatarInfo] of Object.entries(avatarsObj)) {
-        if (avatarInfo && typeof avatarInfo === 'object' && avatarInfo.base64) {
-          // 添加 Data URL 前缀
-          avatarsMap.set(wxid, `data:image/jpeg;base64,${avatarInfo.base64}`)
+      // WeFlow 的 avatars 值直接是 base64 Data URL 字符串
+      const avatarsObj = JSON.parse(avatarsContent) as Record<string, string>
+      for (const [wxid, avatarDataUrl] of Object.entries(avatarsObj)) {
+        if (avatarDataUrl && typeof avatarDataUrl === 'string') {
+          avatarsMap.set(wxid, avatarDataUrl)
         }
       }
     }
@@ -270,7 +336,7 @@ async function* parseEchotrace(options: ParseOptions): AsyncGenerator<ParseEvent
     // avatars 解析失败，继续不带头像
   }
 
-  // 如果文件头没有完整的 avatars（可能超出 2000 字节），尝试流式读取
+  // 如果文件头没有完整的 avatars（可能超出 5000 字节），尝试流式读取
   if (avatarsMap.size === 0) {
     try {
       await new Promise<void>((resolve) => {
@@ -334,10 +400,11 @@ async function* parseEchotrace(options: ParseOptions): AsyncGenerator<ParseEvent
         avatarStream.on('close', () => {
           if (avatarsContent) {
             try {
-              const avatarsObj = JSON.parse(avatarsContent) as Record<string, EchotraceAvatarInfo>
-              for (const [wxid, avatarInfo] of Object.entries(avatarsObj)) {
-                if (avatarInfo && typeof avatarInfo === 'object' && avatarInfo.base64) {
-                  avatarsMap.set(wxid, `data:image/jpeg;base64,${avatarInfo.base64}`)
+              // WeFlow 的 avatars 值直接是 base64 Data URL 字符串
+              const avatarsObj = JSON.parse(avatarsContent) as Record<string, string>
+              for (const [wxid, avatarDataUrl] of Object.entries(avatarsObj)) {
+                if (avatarDataUrl && typeof avatarDataUrl === 'string') {
+                  avatarsMap.set(wxid, avatarDataUrl)
                 }
               }
             } catch {
@@ -354,8 +421,8 @@ async function* parseEchotrace(options: ParseOptions): AsyncGenerator<ParseEvent
     }
   }
 
-  // 提取群头像（从 avatars 中获取群ID对应的头像）
-  const groupAvatar = groupId ? avatarsMap.get(groupId) : undefined
+  // 提取群头像（优先从 session.avatar，其次从 avatars 中获取群ID对应的头像）
+  const groupAvatar = session?.avatar || (groupId ? avatarsMap.get(groupId) : undefined)
 
   // 快速扫描获取 ownerId（通过 isSend === 1 推断）
   let ownerId: string | undefined
@@ -364,7 +431,7 @@ async function* parseEchotrace(options: ParseOptions): AsyncGenerator<ParseEvent
       const scanStream = fs.createReadStream(filePath, { encoding: 'utf-8' })
       const scanPipeline = chain([scanStream, parser(), pick({ filter: /^messages\.\d+$/ }), streamValues()])
 
-      scanPipeline.on('data', ({ value }: { value: EchotraceMessage }) => {
+      scanPipeline.on('data', ({ value }: { value: WeFlowMessage }) => {
         if (value.isSend === 1 && value.senderUsername && !value.senderUsername.endsWith('@chatroom')) {
           ownerId = value.senderUsername
           scanStream.destroy() // 找到后立即停止扫描
@@ -404,7 +471,7 @@ async function* parseEchotrace(options: ParseOptions): AsyncGenerator<ParseEvent
 
     const pipeline = chain([readStream, parser(), pick({ filter: /^messages\.\d+$/ }), streamValues()])
 
-    const processMessage = (msg: EchotraceMessage): ParsedMessage | null => {
+    const processMessage = (msg: WeFlowMessage): ParsedMessage | null => {
       // 验证必要字段
       if (!msg.senderUsername || msg.createTime === undefined) {
         return null
@@ -420,7 +487,7 @@ async function* parseEchotrace(options: ParseOptions): AsyncGenerator<ParseEvent
 
       const accountName = msg.senderDisplayName || platformId
 
-      // 获取头像（优先使用 senderAvatarKey，fallback 到 senderUsername）
+      // 获取头像（通过 senderAvatarKey 从 avatarsMap 查找）
       const avatarKey = msg.senderAvatarKey || msg.senderUsername
       const avatar = avatarsMap.get(avatarKey)
 
@@ -445,28 +512,30 @@ async function* parseEchotrace(options: ParseOptions): AsyncGenerator<ParseEvent
       const type = convertMessageType(msg.type)
 
       // 确保 content 是字符串类型（防止某些消息类型的 content 是对象）
+      // 同时去除开头和结尾的空白字符
       let content: string | null = null
       if (msg.content != null) {
-        content = typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
+        const rawContent = typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
+        content = rawContent.trim() || null
       }
 
       return {
         platformMessageId: String(msg.localId), // 消息的平台原始 ID（用于回复关联查询）
         senderPlatformId: platformId,
         senderAccountName: accountName,
-        // echotrace 格式没有单独的群昵称字段，使用 null 而非 undefined（SQLite 兼容）
+        // WeFlow 格式没有单独的群昵称字段，使用 null 而非 undefined（SQLite 兼容）
         senderGroupNickname: null,
         timestamp: msg.createTime,
         type,
         content,
-        // 注意：echotrace 导出格式不包含被引用消息的 ID，所以 replyToMessageId 为空
+        // 注意：WeFlow 导出格式不包含被引用消息的 ID，所以 replyToMessageId 为空
       }
     }
 
     // 用于收集批次的临时数组
     const batchCollector: ParsedMessage[] = []
 
-    pipeline.on('data', ({ value }: { value: EchotraceMessage }) => {
+    pipeline.on('data', ({ value }: { value: WeFlowMessage }) => {
       const parsed = processMessage(value)
       if (parsed) {
         batchCollector.push(parsed)
@@ -532,20 +601,20 @@ async function* parseEchotrace(options: ParseOptions): AsyncGenerator<ParseEvent
 
 export const parser_: Parser = {
   feature,
-  parse: parseEchotrace,
+  parse: parseWeFlow,
 }
 
 // ==================== 预处理器（预留） ====================
 
-import { echotracePreprocessor } from './ycccccccy-echotrace-preprocessor'
-export const preprocessor = echotracePreprocessor
+import { weflowPreprocessor } from './weflow-preprocessor'
+export const preprocessor = weflowPreprocessor
 
 // ==================== 导出格式模块 ====================
 
 const module_: FormatModule = {
   feature,
   parser: parser_,
-  preprocessor: echotracePreprocessor,
+  preprocessor: weflowPreprocessor,
 }
 
 export default module_

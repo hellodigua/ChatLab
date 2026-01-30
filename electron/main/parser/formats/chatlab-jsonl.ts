@@ -114,7 +114,7 @@ export const feature: FormatFeature = {
   id: 'chatlab-jsonl',
   name: 'ChatLab JSONL',
   platform: KNOWN_PLATFORMS.UNKNOWN,
-  priority: 2, // 仅次于 ChatLab JSON
+  priority: 51, // 低优先级，让其他格式先匹配
   extensions: ['.jsonl'],
   signatures: {
     // 第一行必须是 header 类型，包含 chatlab 信息

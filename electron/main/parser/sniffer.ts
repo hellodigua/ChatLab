@@ -7,8 +7,8 @@ import * as fs from 'fs'
 import * as path from 'path'
 import type { FormatFeature, FormatModule, Parser, FormatMatchCheck, FormatDiagnosis } from './types'
 
-/** 文件头检测大小 (8KB) */
-const HEAD_SIZE = 8 * 1024
+/** 文件头检测大小 (64KB) - 考虑到现代聊天记录文件可能包含 base64 头像等大数据 */
+const HEAD_SIZE = 64 * 1024
 
 /**
  * 读取文件头部内容

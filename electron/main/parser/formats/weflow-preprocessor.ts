@@ -1,8 +1,8 @@
 /**
- * echotrace 格式预处理器
+ * WeFlow 格式预处理器
  * 用于大文件预处理，移除冗余字段
  *
- * 当前为预留实现，echotrace 格式的字段结构较为简洁，
+ * 当前为预留实现，WeFlow 格式的字段结构较为简洁，
  * 暂不需要复杂的预处理逻辑。
  *
  * 如果未来发现性能问题，可在此添加：
@@ -14,10 +14,10 @@
 import type { Preprocessor, ParseProgress } from '../types'
 
 /**
- * echotrace 预处理器
+ * WeFlow 预处理器
  * 当前为预留实现，返回不需要预处理
  */
-export const echotracePreprocessor: Preprocessor = {
+export const weflowPreprocessor: Preprocessor = {
   /**
    * 判断是否需要预处理
    * 当前策略：暂不需要预处理
@@ -54,5 +54,4 @@ export const echotracePreprocessor: Preprocessor = {
   },
 }
 
-export default echotracePreprocessor
-
+export default weflowPreprocessor
