@@ -352,6 +352,27 @@ export async function getMembers(sessionId: string): Promise<MemberWithStats[]> 
 }
 
 /**
+ * 获取成员列表（分页版本）
+ */
+export async function getMembersPaginated(
+  sessionId: string,
+  params: {
+    page: number
+    pageSize: number
+    search?: string
+    sortOrder?: 'asc' | 'desc'
+  }
+): Promise<{
+  members: MemberWithStats[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}> {
+  return sendToWorker('getMembersPaginated', { sessionId, params })
+}
+
+/**
  * 更新成员别名
  */
 export async function updateMemberAliases(sessionId: string, memberId: number, aliases: string[]): Promise<boolean> {

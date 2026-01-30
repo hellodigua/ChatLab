@@ -20,9 +20,13 @@ export {
   getSession,
   // 成员管理
   getMembers,
+  getMembersPaginated,
   updateMemberAliases,
   deleteMember,
 } from './basic'
+
+// 成员分页类型
+export type { MembersPaginationParams, MembersPaginatedResult } from './basic'
 
 // 高级分析
 export {

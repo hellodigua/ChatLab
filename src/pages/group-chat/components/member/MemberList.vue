@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { MemberWithStats } from '@/types/analysis'
 import OwnerSelector from '@/components/analysis/member/OwnerSelector.vue'
@@ -16,8 +16,9 @@ const emit = defineEmits<{
   'data-changed': []
 }>()
 
-// 成员列表
+// 成员列表（当前页）
 const members = ref<MemberWithStats[]>([])
+const allMembers = ref<MemberWithStats[]>([]) // 用于 OwnerSelector（仅加载一次）
 const isLoading = ref(false)
 const searchQuery = ref('')
 
@@ -28,12 +29,17 @@ const isDeleting = ref(false)
 // 分页配置
 const pageSize = 20
 const currentPage = ref(1)
+const total = ref(0)
+const totalPages = ref(0)
 
 // 排序配置
 const sortOrder = ref<'desc' | 'asc'>('desc') // desc = 发言多在前
 
 // 正在保存别名的成员ID（用于显示加载状态）
 const savingAliasesId = ref<number | null>(null)
+
+// 搜索防抖定时器
+let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
 // 获取成员显示名称
 function getDisplayName(member: MemberWithStats): string {
@@ -46,54 +52,41 @@ function getFirstChar(member: MemberWithStats): string {
   return name.slice(0, 1)
 }
 
-// 过滤和排序后的成员列表
-const filteredAndSortedMembers = computed(() => {
-  let result = [...members.value]
-
-  // 搜索过滤
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    result = result.filter(
-      (m) =>
-        (m.groupNickname && m.groupNickname.toLowerCase().includes(query)) ||
-        (m.accountName && m.accountName.toLowerCase().includes(query)) ||
-        m.platformId.toLowerCase().includes(query) ||
-        m.aliases.some((a) => a.toLowerCase().includes(query))
-    )
-  }
-
-  // 按消息数排序
-  result.sort((a, b) =>
-    sortOrder.value === 'desc' ? b.messageCount - a.messageCount : a.messageCount - b.messageCount
-  )
-
-  return result
-})
-
-// 分页后的成员列表
-const paginatedMembers = computed(() => {
-  const start = (currentPage.value - 1) * pageSize
-  return filteredAndSortedMembers.value.slice(start, start + pageSize)
-})
-
-// 总页数
-const totalPages = computed(() => Math.ceil(filteredAndSortedMembers.value.length / pageSize))
-
 // 切换排序
 function toggleSort() {
   sortOrder.value = sortOrder.value === 'desc' ? 'asc' : 'desc'
+  currentPage.value = 1
+  loadMembers()
 }
 
-// 加载成员列表
+// 加载成员列表（分页）
 async function loadMembers() {
   if (!props.sessionId) return
   isLoading.value = true
   try {
-    members.value = await window.chatApi.getMembers(props.sessionId)
+    const result = await window.chatApi.getMembersPaginated(props.sessionId, {
+      page: currentPage.value,
+      pageSize,
+      search: searchQuery.value.trim(),
+      sortOrder: sortOrder.value,
+    })
+    members.value = result.members
+    total.value = result.total
+    totalPages.value = result.totalPages
   } catch (error) {
     console.error('加载成员列表失败:', error)
   } finally {
     isLoading.value = false
+  }
+}
+
+// 加载所有成员（用于 OwnerSelector）
+async function loadAllMembers() {
+  if (!props.sessionId) return
+  try {
+    allMembers.value = await window.chatApi.getMembers(props.sessionId)
+  } catch (error) {
+    console.error('加载所有成员失败:', error)
   }
 }
 
@@ -144,8 +137,10 @@ async function confirmDelete() {
   try {
     const success = await window.chatApi.deleteMember(props.sessionId, deletingMember.value.id)
     if (success) {
-      // 从列表中移除
-      members.value = members.value.filter((m) => m.id !== deletingMember.value!.id)
+      // 重新加载当前页数据
+      await loadMembers()
+      // 同时更新 allMembers（用于 OwnerSelector）
+      await loadAllMembers()
       // 通知父组件刷新数据
       emit('data-changed')
     }
@@ -157,24 +152,38 @@ async function confirmDelete() {
   }
 }
 
-// 搜索时重置页码
+// 搜索时重置页码并防抖加载
 watch(searchQuery, () => {
   currentPage.value = 1
+  // 防抖：延迟 300ms 后执行搜索
+  if (searchDebounceTimer) {
+    clearTimeout(searchDebounceTimer)
+  }
+  searchDebounceTimer = setTimeout(() => {
+    loadMembers()
+  }, 300)
+})
+
+// 监听页码变化
+watch(currentPage, () => {
+  loadMembers()
 })
 
 // 监听 sessionId 变化
 watch(
   () => props.sessionId,
   () => {
-    loadMembers()
     searchQuery.value = ''
     currentPage.value = 1
+    loadMembers()
+    loadAllMembers()
   },
   { immediate: true }
 )
 
 onMounted(() => {
   loadMembers()
+  loadAllMembers()
 })
 </script>
 
@@ -186,14 +195,14 @@ onMounted(() => {
         <div>
           <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ t('title') }}</h2>
           <p class="text-sm text-gray-500 dark:text-gray-400">
-            {{ t('description', { count: members.length }) }}
+            {{ t('description', { count: total }) }}
           </p>
         </div>
       </div>
     </div>
 
     <!-- Owner配置 -->
-    <OwnerSelector class="mb-6" :session-id="sessionId" :members="members" :is-loading="isLoading" chat-type="group" />
+    <OwnerSelector class="mb-6" :session-id="sessionId" :members="allMembers" :is-loading="isLoading" chat-type="group" />
 
     <!-- 搜索框 -->
     <div class="mb-4">
@@ -217,7 +226,7 @@ onMounted(() => {
       </div>
 
       <!-- 空状态 -->
-      <div v-else-if="filteredAndSortedMembers.length === 0" class="flex h-60 flex-col items-center justify-center">
+      <div v-else-if="members.length === 0" class="flex h-60 flex-col items-center justify-center">
         <UIcon name="i-heroicons-user-group" class="mb-3 h-12 w-12 text-gray-300 dark:text-gray-600" />
         <p class="text-gray-500 dark:text-gray-400">
           {{ searchQuery ? t('noMatch') : t('empty') }}
@@ -250,7 +259,7 @@ onMounted(() => {
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
               <tr
-                v-for="member in paginatedMembers"
+                v-for="member in members"
                 :key="member.id"
                 class="hover:bg-gray-50 dark:hover:bg-gray-800/50"
               >
@@ -325,14 +334,14 @@ onMounted(() => {
           class="flex items-center justify-between border-t border-gray-200 px-6 py-4 dark:border-gray-700"
         >
           <p class="text-sm text-gray-500 dark:text-gray-400">
-            {{ t('pagination', { start: (currentPage - 1) * pageSize + 1, end: Math.min(currentPage * pageSize, filteredAndSortedMembers.length), total: filteredAndSortedMembers.length }) }}
+            {{ t('pagination', { start: (currentPage - 1) * pageSize + 1, end: Math.min(currentPage * pageSize, total), total: total }) }}
           </p>
           <div class="flex items-center gap-2">
             <UButton
               icon="i-heroicons-chevron-left"
               variant="outline"
               size="sm"
-              :disabled="currentPage === 1"
+              :disabled="currentPage === 1 || isLoading"
               @click="currentPage--"
             />
             <span class="text-sm font-medium text-gray-600 dark:text-gray-300">
@@ -342,7 +351,7 @@ onMounted(() => {
               icon="i-heroicons-chevron-right"
               variant="outline"
               size="sm"
-              :disabled="currentPage >= totalPages"
+              :disabled="currentPage >= totalPages || isLoading"
               @click="currentPage++"
             />
           </div>

@@ -735,6 +735,122 @@ export function getMembers(sessionId: string): MemberWithStats[] {
 }
 
 /**
+ * 分页参数类型
+ */
+export interface MembersPaginationParams {
+  page: number
+  pageSize: number
+  search?: string
+  sortOrder?: 'asc' | 'desc'
+}
+
+/**
+ * 分页结果类型
+ */
+export interface MembersPaginatedResult {
+  members: MemberWithStats[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
+/**
+ * 获取成员列表（分页版本，支持搜索和排序）
+ */
+export function getMembersPaginated(
+  sessionId: string,
+  params: MembersPaginationParams
+): MembersPaginatedResult {
+  const { page = 1, pageSize = 20, search = '', sortOrder = 'desc' } = params
+
+  // 先确保数据库有 aliases 和 avatar 字段（兼容旧数据库）
+  ensureAliasesColumn(sessionId)
+  ensureAvatarColumn(sessionId)
+
+  const db = openDatabase(sessionId)
+  if (!db) {
+    return { members: [], total: 0, page, pageSize, totalPages: 0 }
+  }
+
+  // 构建搜索条件
+  const searchCondition = search
+    ? `AND (
+        m.group_nickname LIKE '%' || @search || '%' COLLATE NOCASE
+        OR m.account_name LIKE '%' || @search || '%' COLLATE NOCASE
+        OR m.platform_id LIKE '%' || @search || '%' COLLATE NOCASE
+        OR m.aliases LIKE '%' || @search || '%' COLLATE NOCASE
+      )`
+    : ''
+
+  // 排序方向
+  const orderDirection = sortOrder === 'asc' ? 'ASC' : 'DESC'
+
+  // 计算总数
+  const countResult = db
+    .prepare(
+      `
+      SELECT COUNT(*) as total FROM (
+        SELECT m.id
+        FROM member m
+        LEFT JOIN message msg ON m.id = msg.sender_id
+        WHERE COALESCE(m.group_nickname, m.account_name, m.platform_id) != '系统消息'
+        ${searchCondition}
+        GROUP BY m.id
+      )
+    `
+    )
+    .get({ search }) as { total: number }
+
+  const total = countResult?.total || 0
+  const totalPages = Math.ceil(total / pageSize)
+  const offset = (page - 1) * pageSize
+
+  // 查询分页数据
+  const rows = db
+    .prepare(
+      `
+      SELECT
+        m.id,
+        m.platform_id as platformId,
+        m.account_name as accountName,
+        m.group_nickname as groupNickname,
+        m.aliases,
+        m.avatar,
+        COUNT(msg.id) as messageCount
+      FROM member m
+      LEFT JOIN message msg ON m.id = msg.sender_id
+      WHERE COALESCE(m.group_nickname, m.account_name, m.platform_id) != '系统消息'
+      ${searchCondition}
+      GROUP BY m.id
+      ORDER BY messageCount ${orderDirection}
+      LIMIT @pageSize OFFSET @offset
+    `
+    )
+    .all({ search, pageSize, offset }) as Array<{
+    id: number
+    platformId: string
+    accountName: string | null
+    groupNickname: string | null
+    aliases: string | null
+    avatar: string | null
+    messageCount: number
+  }>
+
+  const members = rows.map((row) => ({
+    id: row.id,
+    platformId: row.platformId,
+    accountName: row.accountName,
+    groupNickname: row.groupNickname,
+    aliases: row.aliases ? JSON.parse(row.aliases) : [],
+    messageCount: row.messageCount,
+    avatar: row.avatar,
+  }))
+
+  return { members, total, page, pageSize, totalPages }
+}
+
+/**
  * 更新成员别名
  */
 export function updateMemberAliases(sessionId: string, memberId: number, aliases: string[]): boolean {

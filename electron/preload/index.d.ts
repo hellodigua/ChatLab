@@ -141,6 +141,16 @@ interface ChatApi {
   getCheckInAnalysis: (sessionId: string, filter?: TimeFilter) => Promise<CheckInAnalysis>
   // 成员管理
   getMembers: (sessionId: string) => Promise<MemberWithStats[]>
+  getMembersPaginated: (
+    sessionId: string,
+    params: { page: number; pageSize: number; search?: string; sortOrder?: 'asc' | 'desc' }
+  ) => Promise<{
+    members: MemberWithStats[]
+    total: number
+    page: number
+    pageSize: number
+    totalPages: number
+  }>
   updateMemberAliases: (sessionId: string, memberId: number, aliases: string[]) => Promise<boolean>
   deleteMember: (sessionId: string, memberId: number) => Promise<boolean>
   // SQL 实验室

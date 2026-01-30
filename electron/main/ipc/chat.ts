@@ -604,6 +604,25 @@ export function registerChatHandlers(ctx: IpcContext): void {
   })
 
   /**
+   * 获取成员列表（分页版本）
+   */
+  ipcMain.handle(
+    'chat:getMembersPaginated',
+    async (
+      _,
+      sessionId: string,
+      params: { page: number; pageSize: number; search?: string; sortOrder?: 'asc' | 'desc' }
+    ) => {
+      try {
+        return await worker.getMembersPaginated(sessionId, params)
+      } catch (error) {
+        console.error('获取成员列表（分页）失败：', error)
+        return { members: [], total: 0, page: 1, pageSize: 20, totalPages: 0 }
+      }
+    }
+  )
+
+  /**
    * 更新成员别名
    */
   ipcMain.handle('chat:updateMemberAliases', async (_, sessionId: string, memberId: number, aliases: string[]) => {

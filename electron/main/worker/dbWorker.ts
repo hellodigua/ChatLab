@@ -45,6 +45,7 @@ import {
   getMessagesAfter,
   // 成员管理
   getMembers,
+  getMembersPaginated,
   updateMemberAliases,
   deleteMember,
   // SQL 实验室
@@ -109,6 +110,7 @@ const syncHandlers: Record<string, (payload: any) => any> = {
 
   // 成员管理
   getMembers: (p) => getMembers(p.sessionId),
+  getMembersPaginated: (p) => getMembersPaginated(p.sessionId, p.params),
   updateMemberAliases: (p) => updateMemberAliases(p.sessionId, p.memberId, p.aliases),
   deleteMember: (p) => deleteMember(p.sessionId, p.memberId),
 
