@@ -196,6 +196,17 @@ async function loadInitialMessages() {
       // 滚动到顶部
       await nextTick()
       scrollToTop()
+    } else if (filter?.startTs !== undefined) {
+      // 有起始时间时，从范围起点开始加载
+      isSearchMode.value = false
+      searchOffset.value = 0
+      const result = await window.aiApi.getMessagesAfter(sessionId, 0, 100, filter, senderId)
+      messages.value = mapMessages(result.messages)
+      hasMoreBefore.value = false
+      hasMoreAfter.value = result.hasMore
+
+      await nextTick()
+      scrollToTop()
     } else {
       // 没有目标消息和关键词，加载最新的 100 条
       isSearchMode.value = false
