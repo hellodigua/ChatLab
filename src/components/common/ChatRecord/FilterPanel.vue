@@ -6,6 +6,7 @@
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
+import { DatePicker } from '@/components/UI'
 import type { ChatRecordQuery, FilterFormData } from './types'
 
 const { t } = useI18n()
@@ -122,9 +123,9 @@ function resetFilter() {
       <UInput v-model="formData.messageId" type="number" :placeholder="t('messageId')" size="sm" class="w-24" />
       <UInput v-model="formData.memberName" :placeholder="t('memberNotSupported')" size="sm" class="w-28" disabled />
       <div class="flex items-center gap-2">
-        <UInput v-model="formData.startDate" type="date" size="sm" class="w-32" />
+        <DatePicker v-model="formData.startDate" :placeholder="t('startDate')" />
         <span class="text-xs text-gray-400">~</span>
-        <UInput v-model="formData.endDate" type="date" size="sm" class="w-32" />
+        <DatePicker v-model="formData.endDate" :placeholder="t('endDate')" />
       </div>
     </div>
 
@@ -155,6 +156,8 @@ function resetFilter() {
     "messageId": "消息 ID",
     "memberNotSupported": "成员（暂不支持）",
     "keywordsPlaceholder": "关键词，多个用逗号分隔，回车搜索",
+    "startDate": "起始日期",
+    "endDate": "结束日期",
     "reset": "重置",
     "filter": "筛选"
   },
@@ -162,6 +165,8 @@ function resetFilter() {
     "messageId": "Message ID",
     "memberNotSupported": "Member (not supported)",
     "keywordsPlaceholder": "Keywords, comma separated, Enter to search",
+    "startDate": "Start Date",
+    "endDate": "End Date",
     "reset": "Reset",
     "filter": "Filter"
   }

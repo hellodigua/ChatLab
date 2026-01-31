@@ -149,7 +149,7 @@ watch(
     v-model:open="layoutStore.showChatRecordDrawer"
     direction="right"
     :handle="false"
-    :ui="{ content: 'z-[10000]' }"
+    :ui="{ content: 'z-50' }"
   >
     <template #content>
       <div class="flex h-full w-[680px] flex-col bg-white dark:bg-gray-900" style="-webkit-app-region: no-drag">
