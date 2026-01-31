@@ -178,7 +178,6 @@ watch(
             v-if="currentSessionId"
             :session-id="currentSessionId"
             :active-session-id="activeSessionId"
-            :time-filter="{ startTs: localQuery.startTs, endTs: localQuery.endTs }"
             v-model:collapsed="timelineCollapsed"
             @select="handleSessionSelect"
           />
