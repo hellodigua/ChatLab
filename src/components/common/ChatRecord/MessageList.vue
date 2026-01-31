@@ -45,6 +45,8 @@ const emit = defineEmits<{
   (e: 'reach-bottom'): void
   /** 滚动到顶部（外部模式专用，用于加载上一个块） */
   (e: 'reach-top'): void
+  /** 消息时间戳列表变化（用于联动会话时间线筛选） */
+  (e: 'message-timestamps-change', timestamps: number[]): void
 }>()
 
 const sessionStore = useSessionStore()
@@ -213,6 +215,10 @@ async function loadInitialMessages() {
 
     emit('count-change', messages.value.length)
 
+    // emit 消息时间戳列表，用于联动会话时间线筛选
+    const timestamps = messages.value.map((m) => m.timestamp)
+    emit('message-timestamps-change', timestamps)
+
     // 处理待滚动的目标
     if (pendingScrollToId.value) {
       await nextTick()
@@ -287,6 +293,7 @@ async function loadMoreBefore() {
       virtualizer.value.scrollToOffset(currentOffset + estimatedAddedHeight)
 
       emit('count-change', messages.value.length)
+      emit('message-timestamps-change', messages.value.map((m) => m.timestamp))
     }
 
     hasMoreBefore.value = result.hasMore
@@ -318,6 +325,7 @@ async function loadMoreAfter() {
         messages.value = [...messages.value, ...mapMessages(result.messages)]
         searchOffset.value += result.messages.length
         emit('count-change', messages.value.length)
+        emit('message-timestamps-change', messages.value.map((m) => m.timestamp))
       }
 
       hasMoreAfter.value = result.messages.length >= 50
@@ -331,6 +339,7 @@ async function loadMoreAfter() {
       if (result.messages.length > 0) {
         messages.value = [...messages.value, ...mapMessages(result.messages)]
         emit('count-change', messages.value.length)
+        emit('message-timestamps-change', messages.value.map((m) => m.timestamp))
       }
 
       hasMoreAfter.value = result.hasMore

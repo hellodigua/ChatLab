@@ -29,6 +29,12 @@ const props = defineProps<{
   activeSessionId?: number
   /** 是否折叠整个面板 */
   collapsed?: boolean
+  /** 筛选条件：起始时间戳 */
+  filterStartTs?: number
+  /** 筛选条件：结束时间戳 */
+  filterEndTs?: number
+  /** 筛选条件：匹配的会话 ID 集合（关键词筛选时使用） */
+  filterMatchedSessionIds?: Set<number>
 }>()
 
 const emit = defineEmits<{
@@ -57,9 +63,35 @@ const isCollapsed = computed({
   set: (v) => emit('update:collapsed', v),
 })
 
+// 根据筛选条件过滤的会话列表
+const filteredSessions = computed(() => {
+  let sessions = allSessions.value
+  if (sessions.length === 0) return []
+
+  // 优先使用匹配的会话 ID 集合筛选（关键词筛选时）
+  if (props.filterMatchedSessionIds && props.filterMatchedSessionIds.size > 0) {
+    sessions = sessions.filter((session) => props.filterMatchedSessionIds!.has(session.id))
+  }
+  // 其次根据时间范围筛选
+  else if (props.filterStartTs || props.filterEndTs) {
+    sessions = sessions.filter((session) => {
+      // 会话与筛选时间范围有交集即显示
+      const sessionStart = session.startTs
+      const sessionEnd = session.endTs
+
+      if (props.filterStartTs && sessionEnd < props.filterStartTs) return false
+      if (props.filterEndTs && sessionStart > props.filterEndTs) return false
+
+      return true
+    })
+  }
+
+  return sessions
+})
+
 // 将会话列表转换为扁平化列表（日期头 + 会话项）
 const flatList = computed<FlatListItem[]>(() => {
-  const sessions = allSessions.value
+  const sessions = filteredSessions.value
   if (sessions.length === 0) return []
 
   const result: FlatListItem[] = []
