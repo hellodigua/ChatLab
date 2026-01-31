@@ -176,7 +176,14 @@ async function loadWordFrequency() {
 
 // 监听参数变化
 watch(
-  () => [props.sessionId, props.timeFilter, selectedMemberId.value, maxWords.value, posFilterMode.value, enableStopwords.value],
+  () => [
+    props.sessionId,
+    props.timeFilter,
+    selectedMemberId.value,
+    maxWords.value,
+    posFilterMode.value,
+    enableStopwords.value,
+  ],
   () => {
     loadWordFrequency()
   },

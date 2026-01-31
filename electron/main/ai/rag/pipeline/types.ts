@@ -4,4 +4,3 @@
  */
 
 export type { SemanticPipelineOptions, SemanticPipelineResult, ChunkMetadata } from '../types'
-

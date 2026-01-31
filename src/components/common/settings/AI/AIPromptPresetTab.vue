@@ -132,7 +132,11 @@ function handleImportPresetAdded() {
               variant="soft"
               size="xs"
             >
-              {{ preset.applicableTo === 'group' ? t('settings.aiPrompt.preset.groupOnly') : t('settings.aiPrompt.preset.privateOnly') }}
+              {{
+                preset.applicableTo === 'group'
+                  ? t('settings.aiPrompt.preset.groupOnly')
+                  : t('settings.aiPrompt.preset.privateOnly')
+              }}
             </UBadge>
           </div>
         </div>

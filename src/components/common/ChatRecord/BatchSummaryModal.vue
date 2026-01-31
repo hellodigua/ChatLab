@@ -10,7 +10,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  'completed': []
+  completed: []
 }>()
 
 const { t, locale } = useI18n()
@@ -52,7 +52,9 @@ const isLoading = ref(false)
 const isGenerating = ref(false)
 const currentIndex = ref(0)
 const totalToGenerate = ref(0) // 记录开始时的总数
-const results = ref<Array<{ id: number; status: 'success' | 'failed' | 'skipped'; message?: string; summary?: string }>>([])
+const results = ref<
+  Array<{ id: number; status: 'success' | 'failed' | 'skipped'; message?: string; summary?: string }>
+>([])
 const shouldStop = ref(false)
 
 // 判断是否是消息数量太少的错误
@@ -265,12 +267,7 @@ async function startGenerate() {
       if (shouldStop.value) break
 
       try {
-        const result = await window.sessionApi.generateSummary(
-          props.sessionId,
-          session.id,
-          locale.value,
-          false
-        )
+        const result = await window.sessionApi.generateSummary(props.sessionId, session.id, locale.value, false)
 
         if (result.success) {
           // 成功：显示摘要内容
@@ -346,261 +343,246 @@ function formatTs(ts: number) {
     <template #content>
       <UCard>
         <template #header>
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold">{{ t('chatRecord.batchSummary.title', '批量生成摘要') }}</h3>
-          <UButton
-            color="neutral"
-            variant="ghost"
-            icon="i-heroicons-x-mark"
-            size="sm"
-            @click="close"
-          />
-        </div>
-      </template>
-
-      <div class="space-y-4">
-        <!-- 查询模式切换 -->
-        <div class="flex gap-2 border-b border-gray-200 dark:border-gray-700 pb-3">
-          <UButton
-            :color="queryMode === 'range' ? 'primary' : 'neutral'"
-            :variant="queryMode === 'range' ? 'solid' : 'ghost'"
-            size="sm"
-            @click="queryMode = 'range'"
-            :disabled="isGenerating"
-          >
-            {{ t('chatRecord.batchSummary.byRange', '按范围') }}
-          </UButton>
-          <UButton
-            :color="queryMode === 'time' ? 'primary' : 'neutral'"
-            :variant="queryMode === 'time' ? 'solid' : 'ghost'"
-            size="sm"
-            @click="queryMode = 'time'"
-            :disabled="isGenerating"
-          >
-            {{ t('chatRecord.batchSummary.byTime', '按时间') }}
-          </UButton>
-        </div>
-
-        <!-- 按范围选择 -->
-        <div v-if="queryMode === 'range'">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {{ t('chatRecord.batchSummary.selectRange', '选择范围') }}
-          </label>
-          <div class="space-y-3">
-            <div class="flex items-center gap-4">
-              <USlider
-                v-model="rangePercent"
-                :min="1"
-                :max="100"
-                :step="1"
-                :disabled="isGenerating"
-                class="flex-1"
-              />
-              <span class="text-lg font-semibold text-primary-600 dark:text-primary-400 min-w-[4rem] text-right">
-                {{ rangePercent }}%
-              </span>
-            </div>
-            <div class="text-xs text-gray-500 flex justify-between">
-              <span>{{ t('chatRecord.batchSummary.rangeStart', '最早') }}</span>
-              <span v-if="totalSessionCount > 0">
-                {{ t('chatRecord.batchSummary.rangeInfo', '约') }} {{ Math.ceil(totalSessionCount * rangePercent / 100) }} / {{ totalSessionCount }} {{ t('chatRecord.batchSummary.sessionsUnit', '个会话') }}
-              </span>
-              <span>{{ t('chatRecord.batchSummary.rangeEnd', '最近') }}</span>
-            </div>
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold">{{ t('chatRecord.batchSummary.title', '批量生成摘要') }}</h3>
+            <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark" size="sm" @click="close" />
           </div>
-        </div>
+        </template>
 
-        <!-- 按时间范围选择 -->
-        <div v-else-if="queryMode === 'time'">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {{ t('chatRecord.batchSummary.timeRange', '选择时间范围') }}
-          </label>
-          <div class="flex flex-wrap gap-2">
+        <div class="space-y-4">
+          <!-- 查询模式切换 -->
+          <div class="flex gap-2 border-b border-gray-200 dark:border-gray-700 pb-3">
             <UButton
-              v-for="preset in [
-                { key: 'today', label: t('chatRecord.batchSummary.today', '今天') },
-                { key: 'yesterday', label: t('chatRecord.batchSummary.yesterday', '昨天') },
-                { key: 'week', label: t('chatRecord.batchSummary.week', '最近7天') },
-                { key: 'month', label: t('chatRecord.batchSummary.month', '最近30天') },
-                { key: 'custom', label: t('chatRecord.batchSummary.custom', '自定义') },
-              ]"
-              :key="preset.key"
-              :color="selectedPreset === preset.key ? 'primary' : 'neutral'"
-              :variant="selectedPreset === preset.key ? 'solid' : 'outline'"
+              :color="queryMode === 'range' ? 'primary' : 'neutral'"
+              :variant="queryMode === 'range' ? 'solid' : 'ghost'"
               size="sm"
-              @click="selectedPreset = preset.key as TimeRangePreset"
+              @click="queryMode = 'range'"
               :disabled="isGenerating"
             >
-              {{ preset.label }}
+              {{ t('chatRecord.batchSummary.byRange', '按范围') }}
+            </UButton>
+            <UButton
+              :color="queryMode === 'time' ? 'primary' : 'neutral'"
+              :variant="queryMode === 'time' ? 'solid' : 'ghost'"
+              size="sm"
+              @click="queryMode = 'time'"
+              :disabled="isGenerating"
+            >
+              {{ t('chatRecord.batchSummary.byTime', '按时间') }}
             </UButton>
           </div>
 
-          <!-- 自定义日期选择 -->
-          <div v-if="selectedPreset === 'custom'" class="mt-3 flex items-center gap-2">
-            <UInput
-              type="date"
-              v-model="customStartDate"
-              :disabled="isGenerating"
-              size="sm"
-            />
-            <span class="text-gray-500">—</span>
-            <UInput
-              type="date"
-              v-model="customEndDate"
-              :disabled="isGenerating"
-              size="sm"
-            />
-          </div>
-        </div>
-
-        <!-- 会话预览 -->
-        <div v-if="!isLoading && !isChecking" class="text-sm text-gray-600 dark:text-gray-400">
-          <template v-if="sessions.length > 0">
-            <p>
-              {{ t('chatRecord.batchSummary.found', '找到') }} {{ sessions.length }} {{ t('chatRecord.batchSummary.sessionsUnit', '个会话') }}
-              <template v-if="existingSummaryCount > 0 || tooFewMessagesCount > 0">
-                <span class="text-gray-500">
-                  （<template v-if="existingSummaryCount > 0">
-                    <span class="text-green-600 dark:text-green-400">{{ existingSummaryCount }} {{ t('chatRecord.batchSummary.hasSummary', '个已有摘要') }}</span>
-                  </template><template v-if="existingSummaryCount > 0 && tooFewMessagesCount > 0">，</template><template v-if="tooFewMessagesCount > 0">
-                    <span class="text-gray-400">{{ tooFewMessagesCount }} {{ t('chatRecord.batchSummary.tooFewMessages', '个消息太少') }}</span>
-                  </template>）
+          <!-- 按范围选择 -->
+          <div v-if="queryMode === 'range'">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {{ t('chatRecord.batchSummary.selectRange', '选择范围') }}
+            </label>
+            <div class="space-y-3">
+              <div class="flex items-center gap-4">
+                <USlider v-model="rangePercent" :min="1" :max="100" :step="1" :disabled="isGenerating" class="flex-1" />
+                <span class="text-lg font-semibold text-primary-600 dark:text-primary-400 min-w-[4rem] text-right">
+                  {{ rangePercent }}%
                 </span>
-              </template>
-            </p>
-            <p v-if="pendingSessions.length > 0" class="mt-1 font-medium">
-              {{ t('chatRecord.batchSummary.pending', '待生成:') }} {{ pendingSessions.length }} {{ t('chatRecord.batchSummary.unit', '个') }}
-            </p>
-            <p v-else class="mt-1 text-gray-400">
-              {{ t('chatRecord.batchSummary.noPending', '没有可生成的会话') }}
-            </p>
-          </template>
-          <p v-else class="text-gray-400">
-            {{ t('chatRecord.batchSummary.noSessions', '该时间范围内没有会话') }}
-          </p>
-        </div>
-        <div v-else-if="isChecking" class="flex items-center gap-2 text-sm text-gray-500">
-          <UIcon name="i-heroicons-arrow-path" class="animate-spin" />
-          {{ t('chatRecord.batchSummary.checking', '检查中...') }}
-        </div>
-        <div v-else class="flex items-center gap-2 text-sm text-gray-500">
-          <UIcon name="i-heroicons-arrow-path" class="animate-spin" />
-          {{ t('chatRecord.batchSummary.loading', '加载中...') }}
-        </div>
-
-        <!-- 进度条 -->
-        <div v-if="isGenerating || results.length > 0" class="space-y-2">
-          <div class="flex items-center justify-between text-sm">
-            <span>{{ t('chatRecord.batchSummary.progress', '进度') }}</span>
-            <span>{{ currentIndex }} / {{ totalToGenerate || pendingSessions.length }}</span>
+              </div>
+              <div class="text-xs text-gray-500 flex justify-between">
+                <span>{{ t('chatRecord.batchSummary.rangeStart', '最早') }}</span>
+                <span v-if="totalSessionCount > 0">
+                  {{ t('chatRecord.batchSummary.rangeInfo', '约') }}
+                  {{ Math.ceil((totalSessionCount * rangePercent) / 100) }} / {{ totalSessionCount }}
+                  {{ t('chatRecord.batchSummary.sessionsUnit', '个会话') }}
+                </span>
+                <span>{{ t('chatRecord.batchSummary.rangeEnd', '最近') }}</span>
+              </div>
+            </div>
           </div>
-          <!-- 进行中：显示动画进度条 -->
-          <UProgress v-if="isGenerating" :value="progressPercent" />
-          <!-- 已完成：显示静态完成条 -->
-          <div v-else class="h-2 w-full rounded-full bg-green-500" />
-        </div>
 
-        <!-- 结果列表 -->
-        <div
-          v-if="results.length > 0"
-          ref="resultsContainer"
-          class="max-h-64 overflow-y-auto rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
-        >
-          <div
-            v-for="result in results"
-            :key="result.id"
-            class="flex flex-col gap-1 px-3 py-2 text-sm border-b border-gray-200 dark:border-gray-700 last:border-b-0"
-          >
-            <!-- 第一行：状态图标 + 会话ID + 状态文字 -->
-            <div class="flex items-center gap-2">
-              <UIcon
-                :name="result.status === 'success' ? 'i-heroicons-check-circle' : result.status === 'skipped' ? 'i-heroicons-minus-circle' : 'i-heroicons-x-circle'"
-                class="flex-shrink-0"
-                :class="{
-                  'text-green-500': result.status === 'success',
-                  'text-gray-400': result.status === 'skipped',
-                  'text-red-500': result.status === 'failed',
-                }"
-              />
-              <span class="flex-1 font-medium">
-                {{ t('chatRecord.batchSummary.session', '会话') }} #{{ result.id }}
-              </span>
-              <span
-                class="flex-shrink-0 text-xs"
-                :class="{
-                  'text-green-600 dark:text-green-400': result.status === 'success',
-                  'text-gray-500': result.status === 'skipped',
-                  'text-red-600 dark:text-red-400': result.status === 'failed',
-                }"
+          <!-- 按时间范围选择 -->
+          <div v-else-if="queryMode === 'time'">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {{ t('chatRecord.batchSummary.timeRange', '选择时间范围') }}
+            </label>
+            <div class="flex flex-wrap gap-2">
+              <UButton
+                v-for="preset in [
+                  { key: 'today', label: t('chatRecord.batchSummary.today', '今天') },
+                  { key: 'yesterday', label: t('chatRecord.batchSummary.yesterday', '昨天') },
+                  { key: 'week', label: t('chatRecord.batchSummary.week', '最近7天') },
+                  { key: 'month', label: t('chatRecord.batchSummary.month', '最近30天') },
+                  { key: 'custom', label: t('chatRecord.batchSummary.custom', '自定义') },
+                ]"
+                :key="preset.key"
+                :color="selectedPreset === preset.key ? 'primary' : 'neutral'"
+                :variant="selectedPreset === preset.key ? 'solid' : 'outline'"
+                size="sm"
+                @click="selectedPreset = preset.key as TimeRangePreset"
+                :disabled="isGenerating"
               >
-                {{
-                  result.status === 'success'
-                    ? t('chatRecord.batchSummary.statusSuccess', '成功')
-                    : result.status === 'skipped'
-                      ? t('chatRecord.batchSummary.statusSkipped', '跳过')
-                      : t('chatRecord.batchSummary.statusFailed', '失败')
-                }}
-              </span>
+                {{ preset.label }}
+              </UButton>
             </div>
-            <!-- 第二行：摘要内容或错误信息 -->
-            <div v-if="result.summary" class="pl-6 text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
-              {{ result.summary }}
+
+            <!-- 自定义日期选择 -->
+            <div v-if="selectedPreset === 'custom'" class="mt-3 flex items-center gap-2">
+              <UInput type="date" v-model="customStartDate" :disabled="isGenerating" size="sm" />
+              <span class="text-gray-500">—</span>
+              <UInput type="date" v-model="customEndDate" :disabled="isGenerating" size="sm" />
             </div>
-            <div v-else-if="result.status === 'failed' && result.message" class="pl-6 text-xs text-red-500">
-              {{ result.message }}
+          </div>
+
+          <!-- 会话预览 -->
+          <div v-if="!isLoading && !isChecking" class="text-sm text-gray-600 dark:text-gray-400">
+            <template v-if="sessions.length > 0">
+              <p>
+                {{ t('chatRecord.batchSummary.found', '找到') }} {{ sessions.length }}
+                {{ t('chatRecord.batchSummary.sessionsUnit', '个会话') }}
+                <template v-if="existingSummaryCount > 0 || tooFewMessagesCount > 0">
+                  <span class="text-gray-500">
+                    （
+                    <template v-if="existingSummaryCount > 0">
+                      <span class="text-green-600 dark:text-green-400">
+                        {{ existingSummaryCount }} {{ t('chatRecord.batchSummary.hasSummary', '个已有摘要') }}
+                      </span>
+                    </template>
+                    <template v-if="existingSummaryCount > 0 && tooFewMessagesCount > 0">，</template>
+                    <template v-if="tooFewMessagesCount > 0">
+                      <span class="text-gray-400">
+                        {{ tooFewMessagesCount }} {{ t('chatRecord.batchSummary.tooFewMessages', '个消息太少') }}
+                      </span>
+                    </template>
+                    ）
+                  </span>
+                </template>
+              </p>
+              <p v-if="pendingSessions.length > 0" class="mt-1 font-medium">
+                {{ t('chatRecord.batchSummary.pending', '待生成:') }} {{ pendingSessions.length }}
+                {{ t('chatRecord.batchSummary.unit', '个') }}
+              </p>
+              <p v-else class="mt-1 text-gray-400">
+                {{ t('chatRecord.batchSummary.noPending', '没有可生成的会话') }}
+              </p>
+            </template>
+            <p v-else class="text-gray-400">
+              {{ t('chatRecord.batchSummary.noSessions', '该时间范围内没有会话') }}
+            </p>
+          </div>
+          <div v-else-if="isChecking" class="flex items-center gap-2 text-sm text-gray-500">
+            <UIcon name="i-heroicons-arrow-path" class="animate-spin" />
+            {{ t('chatRecord.batchSummary.checking', '检查中...') }}
+          </div>
+          <div v-else class="flex items-center gap-2 text-sm text-gray-500">
+            <UIcon name="i-heroicons-arrow-path" class="animate-spin" />
+            {{ t('chatRecord.batchSummary.loading', '加载中...') }}
+          </div>
+
+          <!-- 进度条 -->
+          <div v-if="isGenerating || results.length > 0" class="space-y-2">
+            <div class="flex items-center justify-between text-sm">
+              <span>{{ t('chatRecord.batchSummary.progress', '进度') }}</span>
+              <span>{{ currentIndex }} / {{ totalToGenerate || pendingSessions.length }}</span>
             </div>
-            <div v-else-if="result.status === 'skipped'" class="pl-6 text-xs text-gray-400 italic">
-              {{ t('chatRecord.batchSummary.tooFewMessages', '消息数量太少') }}
+            <!-- 进行中：显示动画进度条 -->
+            <UProgress v-if="isGenerating" :value="progressPercent" />
+            <!-- 已完成：显示静态完成条 -->
+            <div v-else class="h-2 w-full rounded-full bg-green-500" />
+          </div>
+
+          <!-- 结果列表 -->
+          <div
+            v-if="results.length > 0"
+            ref="resultsContainer"
+            class="max-h-64 overflow-y-auto rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
+          >
+            <div
+              v-for="result in results"
+              :key="result.id"
+              class="flex flex-col gap-1 px-3 py-2 text-sm border-b border-gray-200 dark:border-gray-700 last:border-b-0"
+            >
+              <!-- 第一行：状态图标 + 会话ID + 状态文字 -->
+              <div class="flex items-center gap-2">
+                <UIcon
+                  :name="
+                    result.status === 'success'
+                      ? 'i-heroicons-check-circle'
+                      : result.status === 'skipped'
+                        ? 'i-heroicons-minus-circle'
+                        : 'i-heroicons-x-circle'
+                  "
+                  class="flex-shrink-0"
+                  :class="{
+                    'text-green-500': result.status === 'success',
+                    'text-gray-400': result.status === 'skipped',
+                    'text-red-500': result.status === 'failed',
+                  }"
+                />
+                <span class="flex-1 font-medium">
+                  {{ t('chatRecord.batchSummary.session', '会话') }} #{{ result.id }}
+                </span>
+                <span
+                  class="flex-shrink-0 text-xs"
+                  :class="{
+                    'text-green-600 dark:text-green-400': result.status === 'success',
+                    'text-gray-500': result.status === 'skipped',
+                    'text-red-600 dark:text-red-400': result.status === 'failed',
+                  }"
+                >
+                  {{
+                    result.status === 'success'
+                      ? t('chatRecord.batchSummary.statusSuccess', '成功')
+                      : result.status === 'skipped'
+                        ? t('chatRecord.batchSummary.statusSkipped', '跳过')
+                        : t('chatRecord.batchSummary.statusFailed', '失败')
+                  }}
+                </span>
+              </div>
+              <!-- 第二行：摘要内容或错误信息 -->
+              <div v-if="result.summary" class="pl-6 text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                {{ result.summary }}
+              </div>
+              <div v-else-if="result.status === 'failed' && result.message" class="pl-6 text-xs text-red-500">
+                {{ result.message }}
+              </div>
+              <div v-else-if="result.status === 'skipped'" class="pl-6 text-xs text-gray-400 italic">
+                {{ t('chatRecord.batchSummary.tooFewMessages', '消息数量太少') }}
+              </div>
             </div>
+          </div>
+
+          <!-- 统计结果 -->
+          <div v-if="!isGenerating && results.length > 0" class="flex items-center gap-4 text-sm">
+            <span class="text-green-600 dark:text-green-400">
+              <UIcon name="i-heroicons-check-circle" class="mr-1" />
+              {{ t('chatRecord.batchSummary.success', '成功:') }} {{ stats.success }}
+            </span>
+            <span v-if="stats.failed > 0" class="text-red-600 dark:text-red-400">
+              <UIcon name="i-heroicons-x-circle" class="mr-1" />
+              {{ t('chatRecord.batchSummary.failed', '失败:') }} {{ stats.failed }}
+            </span>
+            <span v-if="stats.skipped > 0" class="text-gray-500">
+              <UIcon name="i-heroicons-minus-circle" class="mr-1" />
+              {{ t('chatRecord.batchSummary.skipped', '跳过:') }} {{ stats.skipped }}
+            </span>
           </div>
         </div>
 
-        <!-- 统计结果 -->
-        <div v-if="!isGenerating && results.length > 0" class="flex items-center gap-4 text-sm">
-          <span class="text-green-600 dark:text-green-400">
-            <UIcon name="i-heroicons-check-circle" class="mr-1" />
-            {{ t('chatRecord.batchSummary.success', '成功:') }} {{ stats.success }}
-          </span>
-          <span v-if="stats.failed > 0" class="text-red-600 dark:text-red-400">
-            <UIcon name="i-heroicons-x-circle" class="mr-1" />
-            {{ t('chatRecord.batchSummary.failed', '失败:') }} {{ stats.failed }}
-          </span>
-          <span v-if="stats.skipped > 0" class="text-gray-500">
-            <UIcon name="i-heroicons-minus-circle" class="mr-1" />
-            {{ t('chatRecord.batchSummary.skipped', '跳过:') }} {{ stats.skipped }}
-          </span>
-        </div>
-      </div>
-
-      <template #footer>
-        <div class="flex justify-end gap-2">
-          <UButton
-            color="neutral"
-            variant="outline"
-            @click="close"
-            :disabled="isGenerating"
-          >
-            {{ t('common.close', '关闭') }}
-          </UButton>
-          <UButton
-            v-if="!isGenerating"
-            color="primary"
-            @click="startGenerate"
-            :disabled="pendingSessions.length === 0 || isLoading"
-          >
-            {{ t('chatRecord.batchSummary.start', '开始生成') }}
-          </UButton>
-          <UButton
-            v-else
-            color="error"
-            @click="stopGenerate"
-          >
-            {{ t('chatRecord.batchSummary.stop', '停止') }}
-          </UButton>
-        </div>
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <UButton color="neutral" variant="outline" @click="close" :disabled="isGenerating">
+              {{ t('common.close', '关闭') }}
+            </UButton>
+            <UButton
+              v-if="!isGenerating"
+              color="primary"
+              @click="startGenerate"
+              :disabled="pendingSessions.length === 0 || isLoading"
+            >
+              {{ t('chatRecord.batchSummary.start', '开始生成') }}
+            </UButton>
+            <UButton v-else color="error" @click="stopGenerate">
+              {{ t('chatRecord.batchSummary.stop', '停止') }}
+            </UButton>
+          </div>
         </template>
       </UCard>
     </template>
   </UModal>
 </template>
-

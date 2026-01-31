@@ -84,11 +84,7 @@ function formatEvidenceBlock(
     return ''
   }
 
-  const lines = [
-    `<evidence query="${rewrittenQuery}">`,
-    `以下是与用户问题语义相关的历史对话片段（按相关度排序）：`,
-    '',
-  ]
+  const lines = [`<evidence query="${rewrittenQuery}">`, `以下是与用户问题语义相关的历史对话片段（按相关度排序）：`, '']
 
   for (let i = 0; i < results.length; i++) {
     const result = results[i]
@@ -108,9 +104,7 @@ function formatEvidenceBlock(
 /**
  * 执行 Semantic Pipeline
  */
-export async function executeSemanticPipeline(
-  options: SemanticPipelineOptions
-): Promise<SemanticPipelineResult> {
+export async function executeSemanticPipeline(options: SemanticPipelineOptions): Promise<SemanticPipelineResult> {
   const { userMessage, dbPath, timeFilter, abortSignal } = options
 
   // 获取 RAG 配置
@@ -230,10 +224,7 @@ export async function executeSemanticPipeline(
     const topResults = scoredResults.slice(0, topK)
 
     const topScore = topResults[0]?.score ?? 0
-    logger.info(
-      'RAG',
-      `✅ 语义搜索完成: 返回 ${topResults.length} 个结果，最高相关度 ${(topScore * 100).toFixed(1)}%`
-    )
+    logger.info('RAG', `✅ 语义搜索完成: 返回 ${topResults.length} 个结果，最高相关度 ${(topScore * 100).toFixed(1)}%`)
 
     // 7. 生成证据块
     const evidenceBlock = formatEvidenceBlock(rewrittenQuery, topResults)
@@ -253,4 +244,3 @@ export async function executeSemanticPipeline(
     }
   }
 }
-

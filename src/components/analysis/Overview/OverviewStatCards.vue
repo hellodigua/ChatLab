@@ -25,7 +25,12 @@ defineProps<{
 <template>
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
     <!-- 日均消息 -->
-    <StatCard :label="t('dailyAvgMessages')" :value="t('messagesCount', { count: dailyAvgMessages })" icon="📊" icon-bg="blue">
+    <StatCard
+      :label="t('dailyAvgMessages')"
+      :value="t('messagesCount', { count: dailyAvgMessages })"
+      icon="📊"
+      icon-bg="blue"
+    >
       <template #subtext>
         <span class="text-sm text-gray-500">{{ t('daysCount', { count: durationDays }) }}</span>
       </template>
@@ -59,7 +64,12 @@ defineProps<{
     </StatCard>
 
     <!-- 最活跃日期 -->
-    <StatCard :label="t('mostActiveDate')" :value="peakDay ? dayjs(peakDay.date).format('MM/DD') : '-'" icon="🔥" icon-bg="red">
+    <StatCard
+      :label="t('mostActiveDate')"
+      :value="peakDay ? dayjs(peakDay.date).format('MM/DD') : '-'"
+      icon="🔥"
+      icon-bg="red"
+    >
       <template #subtext>
         <span class="text-sm text-gray-500">{{ t('messagesOnDay', { count: peakDay?.messageCount ?? 0 }) }}</span>
       </template>
@@ -73,7 +83,12 @@ defineProps<{
     </StatCard>
 
     <!-- 连续打卡 -->
-    <StatCard :label="t('consecutiveStreak')" :value="t('daysStreak', { count: maxConsecutiveDays })" icon="⚡" icon-bg="amber">
+    <StatCard
+      :label="t('consecutiveStreak')"
+      :value="t('daysStreak', { count: maxConsecutiveDays })"
+      icon="⚡"
+      icon-bg="amber"
+    >
       <template #subtext>
         <span class="text-sm text-gray-500">{{ t('longestStreak') }}</span>
       </template>

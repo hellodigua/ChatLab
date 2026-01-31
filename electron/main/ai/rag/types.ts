@@ -388,4 +388,3 @@ export interface SemanticPipelineResult {
   /** 错误信息 */
   error?: string
 }
-

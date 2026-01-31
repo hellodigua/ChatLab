@@ -542,4 +542,3 @@ export interface KeywordTemplate {
   name: string
   keywords: string[]
 }
-

@@ -4,4 +4,3 @@
 
 export { executeSemanticPipeline } from './semantic'
 export type { SemanticPipelineOptions, SemanticPipelineResult } from './types'
-

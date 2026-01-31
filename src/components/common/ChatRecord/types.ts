@@ -30,4 +30,3 @@ export interface FilterUpdateEvent {
   query: ChatRecordQuery
   shouldReload: boolean
 }
-

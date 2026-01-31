@@ -16,7 +16,16 @@ import {
   type ParsedMessage,
 } from '../../parser'
 import { getDbDir } from '../core'
-import { initPerfLog, logPerf, logPerfDetail, resetPerfLog, logInfo, logError, logSummary, getCurrentLogFile } from '../core'
+import {
+  initPerfLog,
+  logPerf,
+  logPerfDetail,
+  resetPerfLog,
+  logInfo,
+  logError,
+  logSummary,
+  getCurrentLogFile,
+} from '../core'
 import { sendProgress, generateSessionId, getDbPath, createDatabaseWithoutIndexes, createIndexes } from './utils'
 
 /** 跳过消息的原因统计 */
@@ -641,7 +650,9 @@ export async function streamImport(filePath: string, requestId: string): Promise
     logInfo(`onLog 调用次数: ${callbackStats.onLogCalls}`)
     logInfo(`onMeta 调用次数: ${callbackStats.onMetaCalls}`)
     logInfo(`onMembers 调用次数: ${callbackStats.onMembersCalls}, 总成员数: ${callbackStats.totalMembersReceived}`)
-    logInfo(`onMessageBatch 调用次数: ${callbackStats.onMessageBatchCalls}, 总消息数: ${callbackStats.totalMessagesReceived}`)
+    logInfo(
+      `onMessageBatch 调用次数: ${callbackStats.onMessageBatchCalls}, 总消息数: ${callbackStats.totalMessagesReceived}`
+    )
     if (
       callbackStats.skippedNoSenderId > 0 ||
       callbackStats.skippedNoAccountName > 0 ||
@@ -650,8 +661,10 @@ export async function streamImport(filePath: string, requestId: string): Promise
     ) {
       logInfo(`=== 消息跳过统计 ===`)
       if (callbackStats.skippedNoSenderId > 0) logInfo(`  无 senderPlatformId: ${callbackStats.skippedNoSenderId}`)
-      if (callbackStats.skippedNoAccountName > 0) logInfo(`  无 senderAccountName: ${callbackStats.skippedNoAccountName}`)
-      if (callbackStats.skippedInvalidTimestamp > 0) logInfo(`  无效 timestamp: ${callbackStats.skippedInvalidTimestamp}`)
+      if (callbackStats.skippedNoAccountName > 0)
+        logInfo(`  无 senderAccountName: ${callbackStats.skippedNoAccountName}`)
+      if (callbackStats.skippedInvalidTimestamp > 0)
+        logInfo(`  无效 timestamp: ${callbackStats.skippedInvalidTimestamp}`)
       if (callbackStats.skippedNoType > 0) logInfo(`  无 type: ${callbackStats.skippedNoType}`)
     }
 
@@ -660,7 +673,9 @@ export async function streamImport(filePath: string, requestId: string): Promise
 
     // 检查消息数量，如果为 0 则视为导入失败
     if (totalMessageCount === 0) {
-      logError(`导入失败：未解析到任何消息 (收到 ${callbackStats.totalMessagesReceived} 条消息，全部被跳过或未收到任何消息)`)
+      logError(
+        `导入失败：未解析到任何消息 (收到 ${callbackStats.totalMessagesReceived} 条消息，全部被跳过或未收到任何消息)`
+      )
       // 标记需要删除数据库文件（将在 finally 中执行，确保数据库已关闭）
       shouldDeleteDb = true
       importError = 'error.no_messages'

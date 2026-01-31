@@ -440,7 +440,8 @@ ${content.responseInstruction}`
  */
 function getFallbackRoleDefinition(chatType: 'group' | 'private', locale: string = 'zh-CN'): string {
   const content = i18nContent[locale as keyof typeof i18nContent] || i18nContent['zh-CN']
-  const chatTypeDesc = chatType === 'private' ? (locale === 'zh-CN' ? '私聊' : 'private chat') : (locale === 'zh-CN' ? '群聊' : 'group chat')
+  const chatTypeDesc =
+    chatType === 'private' ? (locale === 'zh-CN' ? '私聊' : 'private chat') : locale === 'zh-CN' ? '群聊' : 'group chat'
   return content.fallbackRoleDefinition(chatTypeDesc)
 }
 

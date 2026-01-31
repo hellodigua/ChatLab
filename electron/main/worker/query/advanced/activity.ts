@@ -613,4 +613,3 @@ export function getCheckInAnalysis(sessionId: string, filter?: TimeFilter): any 
     totalDays,
   }
 }
-

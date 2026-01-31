@@ -153,7 +153,9 @@ watch(
               </div>
 
               <!-- 单向比例标签 -->
-              <UBadge color="pink" variant="soft" size="xs">{{ t('oneWay.ratio', { value: Math.round(pair.ratio * 100) }) }}</UBadge>
+              <UBadge color="pink" variant="soft" size="xs">
+                {{ t('oneWay.ratio', { value: Math.round(pair.ratio * 100) }) }}
+              </UBadge>
             </div>
           </div>
         </SectionCard>

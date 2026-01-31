@@ -132,18 +132,19 @@ export async function validateEmbeddingConfig(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // 转换为 EmbeddingServiceConfig 格式
-    const serviceConfig: EmbeddingServiceConfig = 'id' in config
-      ? config
-      : {
-          id: 'temp',
-          name: 'temp',
-          apiSource: config.apiSource || 'reuse_llm',
-          model: config.model || 'nomic-embed-text',
-          baseUrl: config.baseUrl,
-          apiKey: config.apiKey,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        }
+    const serviceConfig: EmbeddingServiceConfig =
+      'id' in config
+        ? config
+        : {
+            id: 'temp',
+            name: 'temp',
+            apiSource: config.apiSource || 'reuse_llm',
+            model: config.model || 'nomic-embed-text',
+            baseUrl: config.baseUrl,
+            apiKey: config.apiKey,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          }
 
     const service = await createEmbeddingService(serviceConfig)
     const result = await service.validate()

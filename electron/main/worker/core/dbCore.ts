@@ -90,7 +90,10 @@ export interface TimeFilter {
  * @param filter 时间过滤器（包含时间范围和成员筛选）
  * @param tableAlias 表别名，用于多表 JOIN 场景避免列名歧义（如 'msg'）
  */
-export function buildTimeFilter(filter?: TimeFilter, tableAlias?: string): { clause: string; params: (number | string)[] } {
+export function buildTimeFilter(
+  filter?: TimeFilter,
+  tableAlias?: string
+): { clause: string; params: (number | string)[] } {
   const conditions: string[] = []
   const params: (number | string)[] = []
 

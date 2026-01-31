@@ -106,4 +106,3 @@ const option = computed<EChartsOption>(() => {
 <template>
   <EChart :option="option" :height="height" />
 </template>
-

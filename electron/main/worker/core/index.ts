@@ -27,4 +27,3 @@ export {
   getErrorCount,
   LogLevel,
 } from './perfLogger'
-

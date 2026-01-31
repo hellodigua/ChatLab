@@ -64,13 +64,7 @@ export type { ChunkingOptions, SessionMessage, SessionInfo } from './chunking'
 
 // ==================== 向量存储 ====================
 
-export {
-  getVectorStore,
-  resetVectorStore,
-  getVectorStoreStats,
-  SQLiteVectorStore,
-  MemoryVectorStore,
-} from './store'
+export { getVectorStore, resetVectorStore, getVectorStoreStats, SQLiteVectorStore, MemoryVectorStore } from './store'
 
 // ==================== Pipeline ====================
 

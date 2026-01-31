@@ -632,9 +632,7 @@ export async function exportSessionToTempFile(sessionId: string): Promise<string
     }
 
     // 读取 members
-    const members = db
-      .prepare('SELECT platform_id, account_name, group_nickname, avatar FROM member')
-      .all() as Array<{
+    const members = db.prepare('SELECT platform_id, account_name, group_nickname, avatar FROM member').all() as Array<{
       platform_id: string
       account_name?: string
       group_nickname?: string

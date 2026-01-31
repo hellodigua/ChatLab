@@ -100,23 +100,17 @@ watch(
             </UButton>
           </UButtonGroup>
         </div>
-<!-- 方向切换 -->
-            <div class="flex items-center gap-2">
-              <span class="text-xs text-gray-400">{{ t('directed') }}:</span>
-              <USwitch v-model="showDirection" size="xs" />
-            </div>
-            <!-- 重置视图 -->
-            <UButton
-              size="xs"
-              color="neutral"
-              variant="ghost"
-              icon="i-heroicons-arrow-path"
-              @click="handleResetView"
-            >
-              {{ t('reset') }}
-            </UButton>
-          </div>
+        <!-- 方向切换 -->
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-gray-400">{{ t('directed') }}:</span>
+          <USwitch v-model="showDirection" size="xs" />
         </div>
+        <!-- 重置视图 -->
+        <UButton size="xs" color="neutral" variant="ghost" icon="i-heroicons-arrow-path" @click="handleResetView">
+          {{ t('reset') }}
+        </UButton>
+      </div>
+    </div>
 
     <!-- 图表区域（全屏） -->
     <div class="flex-1 min-h-0 relative">
@@ -136,7 +130,9 @@ watch(
             :height="'100%'"
           />
           <!-- 底部统计信息 -->
-          <div class="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-gray-100/80 px-3 py-1 text-xs text-gray-500 backdrop-blur-sm dark:bg-gray-800/80 dark:text-gray-400">
+          <div
+            class="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-gray-100/80 px-3 py-1 text-xs text-gray-500 backdrop-blur-sm dark:bg-gray-800/80 dark:text-gray-400"
+          >
             {{ t('graphHint', { nodes: graphData.nodes.length, links: graphData.links.length }) }}
           </div>
         </div>
@@ -175,4 +171,3 @@ watch(
   }
 }
 </i18n>
-

@@ -133,4 +133,3 @@ export function createIndexes(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_context_session ON message_context(session_id);
   `)
 }
-

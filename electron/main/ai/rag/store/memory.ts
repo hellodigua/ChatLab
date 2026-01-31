@@ -149,9 +149,7 @@ export class MemoryVectorStore implements IVectorStore {
   /**
    * 批量添加向量
    */
-  async addBatch(
-    items: Array<{ id: string; vector: number[]; metadata?: Record<string, unknown> }>
-  ): Promise<void> {
+  async addBatch(items: Array<{ id: string; vector: number[]; metadata?: Record<string, unknown> }>): Promise<void> {
     for (const item of items) {
       await this.add(item.id, item.vector, item.metadata)
     }
@@ -263,4 +261,3 @@ export class MemoryVectorStore implements IVectorStore {
     logger.info('[Memory Store] 已关闭')
   }
 }
-

@@ -6,12 +6,7 @@
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import * as echarts from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import {
-  PieChart,
-  BarChart,
-  LineChart,
-  HeatmapChart,
-} from 'echarts/charts'
+import { PieChart, BarChart, LineChart, HeatmapChart } from 'echarts/charts'
 import {
   TitleComponent,
   TooltipComponent,
@@ -155,4 +150,3 @@ defineExpose({
 <template>
   <div ref="chartRef" :style="{ height: heightStyle, width: '100%' }" />
 </template>
-

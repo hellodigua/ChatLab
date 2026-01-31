@@ -350,4 +350,3 @@ export function getMemeBattleAnalysis(sessionId: string, filter?: TimeFilter): a
     totalBattles: battles.length,
   }
 }
-

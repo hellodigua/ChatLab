@@ -39,10 +39,7 @@ export interface ToolContext {
  * @param context 执行上下文
  * @returns 执行结果（将被序列化为字符串传回 LLM）
  */
-export type ToolExecutor<T = Record<string, unknown>> = (
-  params: T,
-  context: ToolContext
-) => Promise<unknown>
+export type ToolExecutor<T = Record<string, unknown>> = (params: T, context: ToolContext) => Promise<unknown>
 
 /**
  * 注册的工具
@@ -73,4 +70,3 @@ export interface ToolExecutionResult {
   /** 错误信息（失败时） */
   error?: string
 }
-

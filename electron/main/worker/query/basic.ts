@@ -308,7 +308,10 @@ export function getMessageTypeDistribution(sessionId: string, filter?: TimeFilte
  * - detail: 1-25 字逐字分布
  * - grouped: 5-100+ 每5字一组
  */
-export function getMessageLengthDistribution(sessionId: string, filter?: TimeFilter): {
+export function getMessageLengthDistribution(
+  sessionId: string,
+  filter?: TimeFilter
+): {
   detail: Array<{ len: number; count: number }>
   grouped: Array<{ range: string; count: number }>
 } {
@@ -368,9 +371,7 @@ export function getMessageLengthDistribution(sessionId: string, filter?: TimeFil
 
   const grouped: Array<{ range: string; count: number }> = []
   for (const r of ranges5) {
-    const count = rows
-      .filter((row) => row.len >= r.min && row.len <= r.max)
-      .reduce((sum, row) => sum + row.count, 0)
+    const count = rows.filter((row) => row.len >= r.min && row.len <= r.max).reduce((sum, row) => sum + row.count, 0)
     grouped.push({
       range: r.label,
       count,
@@ -436,11 +437,7 @@ interface DbMeta {
  * 获取私聊对方成员的头像
  * 逻辑参考 private-chat/index.vue 的 otherMemberAvatar
  */
-function getPrivateChatMemberAvatar(
-  db: Database.Database,
-  sessionName: string,
-  ownerId: string | null
-): string | null {
+function getPrivateChatMemberAvatar(db: Database.Database, sessionName: string, ownerId: string | null): string | null {
   // 获取所有非系统消息成员（按消息数排序）
   const members = db
     .prepare(
@@ -758,10 +755,7 @@ export interface MembersPaginatedResult {
 /**
  * 获取成员列表（分页版本，支持搜索和排序）
  */
-export function getMembersPaginated(
-  sessionId: string,
-  params: MembersPaginationParams
-): MembersPaginatedResult {
+export function getMembersPaginated(sessionId: string, params: MembersPaginationParams): MembersPaginatedResult {
   const { page = 1, pageSize = 20, search = '', sortOrder = 'desc' } = params
 
   // 先确保数据库有 aliases 和 avatar 字段（兼容旧数据库）

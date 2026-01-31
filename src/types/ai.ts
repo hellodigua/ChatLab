@@ -47,4 +47,3 @@ export interface AIPromptSettings {
  * @deprecated 使用 PresetApplicableType 代替
  */
 export type PromptPresetChatType = 'group' | 'private'
-

@@ -283,12 +283,7 @@ onMounted(() => {
       <span class="text-xs font-medium text-gray-600 dark:text-gray-300">{{ t('timeline') }}</span>
       <div class="flex items-center gap-0.5">
         <UTooltip :text="t('chatRecord.batchSummary.title', '批量生成摘要')">
-          <UButton
-            icon="i-heroicons-sparkles"
-            variant="ghost"
-            size="xs"
-            @click="showBatchSummaryModal = true"
-          />
+          <UButton icon="i-heroicons-sparkles" variant="ghost" size="xs" @click="showBatchSummaryModal = true" />
         </UTooltip>
         <UButton icon="i-heroicons-chevron-left" variant="ghost" size="xs" @click="isCollapsed = true" />
       </div>
@@ -369,7 +364,9 @@ onMounted(() => {
                 <span
                   v-else-if="(flatList[virtualItem.index] as { session: ChatSessionItem }).session.messageCount >= 3"
                   class="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-500 dark:text-gray-500 dark:hover:text-blue-400"
-                  @click="generateSummary((flatList[virtualItem.index] as { session: ChatSessionItem }).session, $event)"
+                  @click="
+                    generateSummary((flatList[virtualItem.index] as { session: ChatSessionItem }).session, $event)
+                  "
                 >
                   <UIcon
                     v-if="isGenerating((flatList[virtualItem.index] as { session: ChatSessionItem }).session.id)"
@@ -393,11 +390,7 @@ onMounted(() => {
   </div>
 
   <!-- 批量生成摘要弹窗 -->
-  <BatchSummaryModal
-    v-model:open="showBatchSummaryModal"
-    :session-id="sessionId"
-    @completed="loadSessions"
-  />
+  <BatchSummaryModal v-model:open="showBatchSummaryModal" :session-id="sessionId" @completed="loadSessions" />
 </template>
 
 <style scoped>

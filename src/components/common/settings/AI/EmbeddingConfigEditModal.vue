@@ -176,13 +176,7 @@ async function saveConfig() {
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
               {{ modalTitle }}
             </h3>
-            <UButton
-              icon="i-heroicons-x-mark"
-              color="neutral"
-              variant="ghost"
-              size="sm"
-              @click="isOpen = false"
-            />
+            <UButton icon="i-heroicons-x-mark" color="neutral" variant="ghost" size="sm" @click="isOpen = false" />
           </div>
         </template>
 
@@ -205,12 +199,7 @@ async function saveConfig() {
             <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
               {{ t('settings.embedding.apiSource') }}
             </label>
-            <USelectMenu
-              v-model="formData.apiSource"
-              :items="apiSourceOptions"
-              value-key="value"
-              class="w-full"
-            />
+            <USelectMenu v-model="formData.apiSource" :items="apiSourceOptions" value-key="value" class="w-full" />
             <p class="mt-1 text-xs text-gray-500">
               {{ t('settings.embedding.apiSourceHint') }}
             </p>
@@ -222,11 +211,7 @@ async function saveConfig() {
               {{ t('settings.embedding.model') }}
               <span class="text-red-500">*</span>
             </label>
-            <UInput
-              v-model="formData.model"
-              :placeholder="t('settings.embedding.modelPlaceholder')"
-              class="w-full"
-            />
+            <UInput v-model="formData.model" :placeholder="t('settings.embedding.modelPlaceholder')" class="w-full" />
             <p class="mt-1 text-xs text-gray-500">
               {{ t('settings.embedding.modelHint') }}
             </p>
@@ -301,4 +286,3 @@ async function saveConfig() {
     </template>
   </UModal>
 </template>
-

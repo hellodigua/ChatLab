@@ -86,12 +86,7 @@ export function cleanupTempDatabase(dbPath: string): void {
  * 生成消息去重键
  * 使用 timestamp + senderPlatformId + contentLength 作为去重标识
  */
-export function generateMessageKey(
-  timestamp: number,
-  senderPlatformId: string,
-  content: string | null,
-): string {
+export function generateMessageKey(timestamp: number, senderPlatformId: string, content: string | null): string {
   const contentLength = content ? content.length : 0
   return `${timestamp}_${senderPlatformId}_${contentLength}`
 }
-

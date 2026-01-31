@@ -153,10 +153,12 @@ export function createConversation(sessionId: string, title?: string): AIConvers
   const now = Math.floor(Date.now() / 1000)
   const id = `conv_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 
-  db.prepare(`
+  db.prepare(
+    `
     INSERT INTO ai_conversation (id, session_id, title, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?)
-  `).run(id, sessionId, title || null, now, now)
+  `
+  ).run(id, sessionId, title || null, now, now)
 
   return {
     id,
@@ -173,12 +175,16 @@ export function createConversation(sessionId: string, title?: string): AIConvers
 export function getConversations(sessionId: string): AIConversation[] {
   const db = getAiDb()
 
-  const rows = db.prepare(`
+  const rows = db
+    .prepare(
+      `
     SELECT id, session_id as sessionId, title, created_at as createdAt, updated_at as updatedAt
     FROM ai_conversation
     WHERE session_id = ?
     ORDER BY updated_at DESC
-  `).all(sessionId) as AIConversation[]
+  `
+    )
+    .all(sessionId) as AIConversation[]
 
   return rows
 }
@@ -189,11 +195,15 @@ export function getConversations(sessionId: string): AIConversation[] {
 export function getConversation(conversationId: string): AIConversation | null {
   const db = getAiDb()
 
-  const row = db.prepare(`
+  const row = db
+    .prepare(
+      `
     SELECT id, session_id as sessionId, title, created_at as createdAt, updated_at as updatedAt
     FROM ai_conversation
     WHERE id = ?
-  `).get(conversationId) as AIConversation | undefined
+  `
+    )
+    .get(conversationId) as AIConversation | undefined
 
   return row || null
 }
@@ -205,11 +215,15 @@ export function updateConversationTitle(conversationId: string, title: string): 
   const db = getAiDb()
   const now = Math.floor(Date.now() / 1000)
 
-  const result = db.prepare(`
+  const result = db
+    .prepare(
+      `
     UPDATE ai_conversation
     SET title = ?, updated_at = ?
     WHERE id = ?
-  `).run(title, now, conversationId)
+  `
+    )
+    .run(title, now, conversationId)
 
   return result.changes > 0
 }
@@ -245,10 +259,12 @@ export function addMessage(
   const now = Math.floor(Date.now() / 1000)
   const id = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 
-  db.prepare(`
+  db.prepare(
+    `
     INSERT INTO ai_message (id, conversation_id, role, content, timestamp, data_keywords, data_message_count, content_blocks)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
+  `
+  ).run(
     id,
     conversationId,
     role,
@@ -280,7 +296,9 @@ export function addMessage(
 export function getMessages(conversationId: string): AIMessage[] {
   const db = getAiDb()
 
-  const rows = db.prepare(`
+  const rows = db
+    .prepare(
+      `
     SELECT
       id,
       conversation_id as conversationId,
@@ -293,7 +311,9 @@ export function getMessages(conversationId: string): AIMessage[] {
     FROM ai_message
     WHERE conversation_id = ?
     ORDER BY timestamp ASC
-  `).all(conversationId) as Array<{
+  `
+    )
+    .all(conversationId) as Array<{
     id: string
     conversationId: string
     role: string

@@ -334,10 +334,7 @@ function formatToolParams(tool: ToolBlockContent): string {
 
           <!-- 流式处理中指示器（当最后一个块是已完成的工具块时显示） -->
           <div
-            v-if="
-              isStreaming &&
-              visibleBlocks.length > 0 && visibleBlocks[visibleBlocks.length - 1].type === 'tool'
-            "
+            v-if="isStreaming && visibleBlocks.length > 0 && visibleBlocks[visibleBlocks.length - 1].type === 'tool'"
             class="flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-600 dark:bg-gray-800 dark:text-gray-400"
           >
             <span class="flex gap-1">

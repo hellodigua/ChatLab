@@ -177,10 +177,7 @@ function splitIntoSubChunks(
 /**
  * 从数据库获取会话列表
  */
-function getSessionsFromDb(
-  db: Database.Database,
-  options: ChunkingOptions
-): SessionInfo[] {
+function getSessionsFromDb(db: Database.Database, options: ChunkingOptions): SessionInfo[] {
   const { limit = 50, timeFilter } = options
 
   let sql = `
@@ -213,11 +210,7 @@ function getSessionsFromDb(
 /**
  * 获取会话的消息
  */
-function getSessionMessagesFromDb(
-  db: Database.Database,
-  sessionId: number,
-  limit: number = 500
-): SessionMessage[] {
+function getSessionMessagesFromDb(db: Database.Database, sessionId: number, limit: number = 500): SessionMessage[] {
   const sql = `
     SELECT
       m.id,
@@ -387,4 +380,3 @@ export function getSessionChunk(dbPath: string, sessionId: number): Chunk | null
     }
   }
 }
-

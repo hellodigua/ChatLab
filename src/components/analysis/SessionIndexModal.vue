@@ -159,14 +159,7 @@ onMounted(() => {
               </p>
             </div>
           </div>
-          <UButton
-            v-if="canClose"
-            icon="i-heroicons-x-mark"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-            @click="close"
-          />
+          <UButton v-if="canClose" icon="i-heroicons-x-mark" color="neutral" variant="ghost" size="sm" @click="close" />
         </div>
 
         <!-- 加载中 -->
@@ -178,7 +171,9 @@ onMounted(() => {
         <template v-else>
           <!-- 未生成索引 -->
           <div v-if="!hasIndex" class="space-y-4">
-            <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/50 dark:bg-amber-900/20">
+            <div
+              class="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/50 dark:bg-amber-900/20"
+            >
               <div class="flex gap-3">
                 <UIcon name="i-heroicons-exclamation-triangle" class="h-5 w-5 shrink-0 text-amber-500" />
                 <div>
@@ -215,7 +210,9 @@ onMounted(() => {
 
           <!-- 已生成索引 -->
           <div v-else class="space-y-4">
-            <div class="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800/50 dark:bg-green-900/20">
+            <div
+              class="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800/50 dark:bg-green-900/20"
+            >
               <div class="flex gap-3">
                 <UIcon name="i-heroicons-check-circle" class="h-5 w-5 shrink-0 text-green-500" />
                 <div>
@@ -240,13 +237,19 @@ onMounted(() => {
           <UButton v-if="canClose" variant="ghost" @click="close">
             {{ t('sessionIndex.cancel') }}
           </UButton>
-          <UButton
-            color="primary"
-            :loading="isGenerating"
-            @click="generateSessionIndex"
-          >
-            <UIcon v-if="!isGenerating" :name="hasIndex ? 'i-heroicons-arrow-path' : 'i-heroicons-sparkles'" class="mr-1 h-4 w-4" />
-            {{ isGenerating ? t('sessionIndex.generating') : (hasIndex ? t('sessionIndex.regenerate') : t('sessionIndex.generate')) }}
+          <UButton color="primary" :loading="isGenerating" @click="generateSessionIndex">
+            <UIcon
+              v-if="!isGenerating"
+              :name="hasIndex ? 'i-heroicons-arrow-path' : 'i-heroicons-sparkles'"
+              class="mr-1 h-4 w-4"
+            />
+            {{
+              isGenerating
+                ? t('sessionIndex.generating')
+                : hasIndex
+                  ? t('sessionIndex.regenerate')
+                  : t('sessionIndex.generate')
+            }}
           </UButton>
         </div>
       </div>

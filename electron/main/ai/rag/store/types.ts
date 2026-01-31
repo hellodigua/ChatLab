@@ -4,4 +4,3 @@
  */
 
 export type { IVectorStore, VectorSearchResult, VectorStoreStats, VectorStoreConfig } from '../types'
-

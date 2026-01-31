@@ -30,7 +30,7 @@ export interface IncrementalImportResult {
 export async function analyzeIncrementalImport(
   sessionId: string,
   filePath: string,
-  requestId: string,
+  requestId: string
 ): Promise<IncrementalAnalyzeResult> {
   // 检测文件格式
   const formatFeature = detectFormat(filePath)
@@ -55,7 +55,7 @@ export async function analyzeIncrementalImport(
     SELECT ts, m.platform_id as sender_platform_id, content
     FROM message msg
     JOIN member m ON msg.sender_id = m.id
-  `,
+  `
     )
     .all() as Array<{ ts: number; sender_platform_id: string; content: string | null }>
 
@@ -102,7 +102,7 @@ export async function analyzeIncrementalImport(
 export async function incrementalImport(
   sessionId: string,
   filePath: string,
-  requestId: string,
+  requestId: string
 ): Promise<IncrementalImportResult> {
   // 检测文件格式
   const formatFeature = detectFormat(filePath)
@@ -129,7 +129,7 @@ export async function incrementalImport(
       SELECT ts, m.platform_id as sender_platform_id, content
       FROM message msg
       JOIN member m ON msg.sender_id = m.id
-    `,
+    `
       )
       .all() as Array<{ ts: number; sender_platform_id: string; content: string | null }>
 
@@ -176,7 +176,7 @@ export async function incrementalImport(
               m.platformId,
               m.accountName || null,
               m.groupNickname || null,
-              m.avatar || null,
+              m.avatar || null
             )
             memberIdMap.set(m.platformId, result.lastInsertRowid as number)
           }
@@ -202,7 +202,7 @@ export async function incrementalImport(
               msg.senderPlatformId,
               msg.senderAccountName || null,
               msg.senderGroupNickname || null,
-              null,
+              null
             )
             memberId = result.lastInsertRowid as number
             memberIdMap.set(msg.senderPlatformId, memberId)
@@ -215,7 +215,7 @@ export async function incrementalImport(
             msg.senderGroupNickname || null,
             msg.timestamp,
             msg.type,
-            msg.content || null,
+            msg.content || null
           )
 
           // 添加到已有 key 集合（防止文件内重复）
@@ -262,4 +262,3 @@ export async function incrementalImport(
     return { success: false, newMessageCount: 0, error: String(error) }
   }
 }
-

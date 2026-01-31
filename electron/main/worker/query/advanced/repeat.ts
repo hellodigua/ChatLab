@@ -80,7 +80,10 @@ export function getRepeatAnalysis(sessionId: string, filter?: TimeFilter): any {
 
   const fastestRepeaterStats = new Map<number, { totalDiff: number; count: number }>()
 
-  const processRepeatChain = (chain: Array<{ id: number; senderId: number; content: string; ts: number }>, breakerId?: number) => {
+  const processRepeatChain = (
+    chain: Array<{ id: number; senderId: number; content: string; ts: number }>,
+    breakerId?: number
+  ) => {
     if (chain.length < 3) return
 
     totalRepeatChains++
@@ -112,7 +115,13 @@ export function getRepeatAnalysis(sessionId: string, filter?: TimeFilter): any {
         existing.firstMessageId = firstMsgId
       }
     } else {
-      contentStats.set(content, { count: 1, maxChainLength: chainLength, originatorId, lastTs: chainTs, firstMessageId: firstMsgId })
+      contentStats.set(content, {
+        count: 1,
+        maxChainLength: chainLength,
+        originatorId,
+        lastTs: chainTs,
+        firstMessageId: firstMsgId,
+      })
     }
 
     // 计算反应时间 (Fastest Follower)

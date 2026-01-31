@@ -110,14 +110,7 @@ onMounted(async () => {
         <!-- 按钮区域 -->
         <div class="flex gap-3">
           <!-- 有错误时显示关闭按钮 -->
-          <UButton
-            v-if="canClose"
-            color="neutral"
-            variant="outline"
-            size="lg"
-            class="flex-1"
-            @click="handleClose"
-          >
+          <UButton v-if="canClose" color="neutral" variant="outline" size="lg" class="flex-1" @click="handleClose">
             {{ t('home.migration.close') }}
           </UButton>
 
@@ -129,12 +122,16 @@ onMounted(async () => {
             :class="canClose ? 'flex-1' : 'w-full'"
             @click="handleMigration"
           >
-            {{ isMigrating ? t('home.migration.upgrading') : migrationError ? t('home.migration.retry') : t('home.migration.upgradeNow') }}
+            {{
+              isMigrating
+                ? t('home.migration.upgrading')
+                : migrationError
+                  ? t('home.migration.retry')
+                  : t('home.migration.upgradeNow')
+            }}
           </UButton>
         </div>
       </div>
     </template>
   </UModal>
 </template>
-
-

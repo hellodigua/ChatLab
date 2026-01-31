@@ -81,4 +81,3 @@ export interface ChunkingOptions {
   /** 单个切片最大字符数（超过会拆分为子切片） */
   maxChunkChars?: number
 }
-

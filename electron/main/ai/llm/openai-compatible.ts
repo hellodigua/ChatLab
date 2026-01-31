@@ -49,10 +49,7 @@ function normalizeBaseUrl(baseUrl?: string): string {
 /**
  * MiniMax 流式返回可能是累计文本，这里按前缀增量去重
  */
-function dedupeCumulativeStreamChunk(
-  chunk: string,
-  previousText: string
-): { delta: string; nextText: string } {
+function dedupeCumulativeStreamChunk(chunk: string, previousText: string): { delta: string; nextText: string } {
   if (!previousText) {
     return { delta: chunk, nextText: chunk }
   }
@@ -69,7 +66,6 @@ function dedupeCumulativeStreamChunk(
   // 无法判定为累计时，退化为增量追加
   return { delta: chunk, nextText: previousText + chunk }
 }
-
 
 /**
  * 包装 fetch：注入思考开关和 thought_signature

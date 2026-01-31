@@ -368,9 +368,9 @@ export function getMentionGraph(sessionId: string, filter?: TimeFilter): Mention
     nameToMemberId.set(member.name, member.id)
 
     // 查询历史昵称
-    const history = db
-      .prepare(`SELECT name FROM member_name_history WHERE member_id = ?`)
-      .all(member.id) as Array<{ name: string }>
+    const history = db.prepare(`SELECT name FROM member_name_history WHERE member_id = ?`).all(member.id) as Array<{
+      name: string
+    }>
 
     for (const h of history) {
       if (!nameToMemberId.has(h.name)) {
