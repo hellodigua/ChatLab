@@ -29,6 +29,8 @@ const props = defineProps<{
   activeSessionId?: number
   /** 是否折叠整个面板 */
   collapsed?: boolean
+  /** 时间范围筛选 */
+  timeFilter?: { startTs?: number; endTs?: number }
 }>()
 
 const emit = defineEmits<{
@@ -45,6 +47,29 @@ const allSessions = ref<ChatSessionItem[]>([])
 const isLoading = ref(true)
 const scrollContainerRef = ref<HTMLElement | null>(null)
 
+const hasTimeFilter = computed(() => props.timeFilter?.startTs !== undefined || props.timeFilter?.endTs !== undefined)
+
+const visibleSessions = computed(() => {
+  const sessions = allSessions.value
+  const startTs = props.timeFilter?.startTs
+  const endTs = props.timeFilter?.endTs
+
+  if (startTs === undefined && endTs === undefined) return sessions
+
+  return sessions.filter((session) => {
+    if (startTs !== undefined && endTs !== undefined) {
+      return session.startTs >= startTs && session.startTs <= endTs
+    }
+    if (startTs !== undefined) {
+      return session.startTs >= startTs
+    }
+    if (endTs !== undefined) {
+      return session.startTs <= endTs
+    }
+    return true
+  })
+})
+
 // 正在生成摘要的会话 ID 集合
 const generatingSummaryIds = ref<Set<number>>(new Set())
 
@@ -59,7 +84,7 @@ const isCollapsed = computed({
 
 // 将会话列表转换为扁平化列表（日期头 + 会话项）
 const flatList = computed<FlatListItem[]>(() => {
-  const sessions = allSessions.value
+  const sessions = visibleSessions.value
   if (sessions.length === 0) return []
 
   const result: FlatListItem[] = []
@@ -157,9 +182,12 @@ async function loadSessions() {
   try {
     const data = await window.sessionApi.getSessions(props.sessionId)
     allSessions.value = data
-    // 滚动到底部（最新会话在下面）
     await nextTick()
-    scrollToBottom()
+    if (hasTimeFilter.value) {
+      scrollToTop()
+    } else {
+      scrollToBottom()
+    }
   } catch (error) {
     console.error('加载会话列表失败:', error)
   } finally {
@@ -171,6 +199,12 @@ async function loadSessions() {
 function scrollToBottom() {
   if (flatList.value.length > 0) {
     virtualizer.value.scrollToIndex(flatList.value.length - 1, { align: 'end' })
+  }
+}
+
+function scrollToTop() {
+  if (flatList.value.length > 0) {
+    virtualizer.value.scrollToIndex(0, { align: 'start' })
   }
 }
 
@@ -247,6 +281,19 @@ watch(
   }
 )
 
+watch(
+  () => props.timeFilter,
+  async () => {
+    await nextTick()
+    if (hasTimeFilter.value) {
+      scrollToTop()
+    } else {
+      scrollToBottom()
+    }
+  },
+  { deep: true }
+)
+
 // 监听 sessionId 变化，重新加载
 watch(
   () => props.sessionId,
@@ -300,7 +347,7 @@ onMounted(() => {
     </div>
 
     <!-- 空状态 -->
-    <div v-else-if="allSessions.length === 0" class="flex flex-1 items-center justify-center p-2">
+    <div v-else-if="visibleSessions.length === 0" class="flex flex-1 items-center justify-center p-2">
       <span class="text-xs text-gray-400">{{ t('noSessions') }}</span>
     </div>
 
