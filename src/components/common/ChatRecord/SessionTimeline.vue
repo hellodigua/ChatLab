@@ -25,15 +25,15 @@ type FlatListItem =
 
 const props = defineProps<{
   sessionId: string
-  /** ??????? ID?????? */
+  /** 当前激活的会话 ID（用于高亮） */
   activeSessionId?: number
-  /** ???????? */
+  /** 是否折叠整个面板 */
   collapsed?: boolean
-  /** ?????????? */
+  /** 筛选条件：起始时间戳 */
   filterStartTs?: number
-  /** ?????????? */
+  /** 筛选条件：结束时间戳 */
   filterEndTs?: number
-  /** ?????????? ID ???????????? */
+  /** 筛选条件：匹配的会话 ID 集合（关键词筛选时使用） */
   filterMatchedSessionIds?: Set<number>
 }>()
 
@@ -51,28 +51,7 @@ const allSessions = ref<ChatSessionItem[]>([])
 const isLoading = ref(true)
 const scrollContainerRef = ref<HTMLElement | null>(null)
 
-const hasTimeFilter = computed(() => props.filterStartTs !== undefined || props.filterEndTs !== undefined)
-
-// ?????????????
-const filteredSessions = computed(() => {
-  let sessions = allSessions.value
-  if (sessions.length === 0) return []
-
-  // ????????? ID ????????????
-  if (props.filterMatchedSessionIds && props.filterMatchedSessionIds.size > 0) {
-    sessions = sessions.filter((session) => props.filterMatchedSessionIds!.has(session.id))
-  } else if (props.filterStartTs !== undefined || props.filterEndTs !== undefined) {
-    sessions = sessions.filter((session) => {
-      const sessionStart = session.startTs
-      if (props.filterStartTs !== undefined && sessionStart < props.filterStartTs) return false
-      if (props.filterEndTs !== undefined && sessionStart > props.filterEndTs) return false
-      return true
-    })
-  }
-
-  return sessions
-})
-
+// 正在生成摘要的会话 ID 集合
 const generatingSummaryIds = ref<Set<number>>(new Set())
 
 // 批量生成弹窗状态
@@ -85,6 +64,32 @@ const isCollapsed = computed({
 })
 
 // 根据筛选条件过滤的会话列表
+const filteredSessions = computed(() => {
+  let sessions = allSessions.value
+  if (sessions.length === 0) return []
+
+  // 优先使用匹配的会话 ID 集合筛选（关键词筛选时）
+  if (props.filterMatchedSessionIds && props.filterMatchedSessionIds.size > 0) {
+    sessions = sessions.filter((session) => props.filterMatchedSessionIds!.has(session.id))
+  }
+  // 其次根据时间范围筛选
+  else if (props.filterStartTs || props.filterEndTs) {
+    sessions = sessions.filter((session) => {
+      // 会话与筛选时间范围有交集即显示
+      const sessionStart = session.startTs
+      const sessionEnd = session.endTs
+
+      if (props.filterStartTs && sessionEnd < props.filterStartTs) return false
+      if (props.filterEndTs && sessionStart > props.filterEndTs) return false
+
+      return true
+    })
+  }
+
+  return sessions
+})
+
+// 将会话列表转换为扁平化列表（日期头 + 会话项）
 const flatList = computed<FlatListItem[]>(() => {
   const sessions = filteredSessions.value
   if (sessions.length === 0) return []
@@ -184,12 +189,9 @@ async function loadSessions() {
   try {
     const data = await window.sessionApi.getSessions(props.sessionId)
     allSessions.value = data
+    // 滚动到底部（最新会话在下面）
     await nextTick()
-    if (hasTimeFilter.value) {
-      scrollToTop()
-    } else {
-      scrollToBottom()
-    }
+    scrollToBottom()
   } catch (error) {
     console.error('加载会话列表失败:', error)
   } finally {
@@ -201,12 +203,6 @@ async function loadSessions() {
 function scrollToBottom() {
   if (flatList.value.length > 0) {
     virtualizer.value.scrollToIndex(flatList.value.length - 1, { align: 'end' })
-  }
-}
-
-function scrollToTop() {
-  if (flatList.value.length > 0) {
-    virtualizer.value.scrollToIndex(0, { align: 'start' })
   }
 }
 
@@ -283,20 +279,6 @@ watch(
   }
 )
 
-watch(
-  () => [props.filterStartTs, props.filterEndTs, props.filterMatchedSessionIds],
-  async () => {
-    await nextTick()
-    const hasMatched = props.filterMatchedSessionIds && props.filterMatchedSessionIds.size > 0
-    if (hasTimeFilter.value || hasMatched) {
-      scrollToTop()
-    } else {
-      scrollToBottom()
-    }
-  },
-  { deep: true }
-)
-
 // 监听 sessionId 变化，重新加载
 watch(
   () => props.sessionId,
@@ -345,7 +327,7 @@ onMounted(() => {
     </div>
 
     <!-- 空状态 -->
-    <div v-else-if="filteredSessions.length === 0" class="flex flex-1 items-center justify-center p-2">
+    <div v-else-if="allSessions.length === 0" class="flex flex-1 items-center justify-center p-2">
       <span class="text-xs text-gray-400">{{ t('noSessions') }}</span>
     </div>
 
