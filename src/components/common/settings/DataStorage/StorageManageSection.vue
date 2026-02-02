@@ -203,54 +203,6 @@ defineExpose({
       </div>
     </div>
 
-    <!-- 数据目录设置 -->
-    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
-      <div class="flex items-start justify-between gap-3">
-        <div class="min-w-0 flex-1">
-          <p class="text-sm font-medium text-gray-900 dark:text-white">
-            {{ t('settings.storage.dataLocation.title') }}
-          </p>
-          <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-            {{ t('settings.storage.dataLocation.description') }}
-          </p>
-        </div>
-        <div class="shrink-0">
-          <UButton icon="i-heroicons-folder-open" variant="ghost" size="xs" @click="openBaseDir">
-            {{ t('settings.storage.dataLocation.open') }}
-          </UButton>
-        </div>
-      </div>
-
-      <div class="mt-3 flex items-center gap-2">
-        <UInput v-model="dataDir" readonly size="sm" class="min-w-0 flex-1" />
-        <UButton
-          size="sm"
-          variant="soft"
-          :loading="isUpdatingDataDir"
-          :disabled="isUpdatingDataDir"
-          @click="selectDataDir"
-        >
-          {{ t('settings.storage.dataLocation.choose') }}
-        </UButton>
-        <UButton
-          v-if="isCustomDataDir"
-          size="sm"
-          variant="ghost"
-          :disabled="isUpdatingDataDir"
-          @click="resetDataDir"
-        >
-          {{ t('settings.storage.dataLocation.reset') }}
-        </UButton>
-      </div>
-
-      <p class="mt-2 text-xs text-amber-600 dark:text-amber-400">
-        {{ t('settings.storage.dataLocation.restartTip') }}
-      </p>
-      <p v-if="dataDirError" class="mt-1 text-xs text-red-500">
-        {{ dataDirError }}
-      </p>
-    </div>
-
     <!-- 加载状态 -->
     <div v-if="isLoading && !cacheInfo" class="flex items-center justify-center py-8">
       <UIcon name="i-heroicons-arrow-path" class="h-5 w-5 animate-spin text-gray-400" />
@@ -328,6 +280,48 @@ defineExpose({
       </div>
     </div>
 
+    <!-- 数据目录设置 -->
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-medium text-gray-900 dark:text-white">
+            {{ t('settings.storage.dataLocation.title') }}
+          </p>
+          <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+            {{ t('settings.storage.dataLocation.description') }}
+          </p>
+        </div>
+        <div class="shrink-0">
+          <UButton icon="i-heroicons-folder-open" variant="ghost" size="xs" @click="openBaseDir">
+            {{ t('settings.storage.dataLocation.open') }}
+          </UButton>
+        </div>
+      </div>
+
+      <div class="mt-3 flex items-center gap-2">
+        <UInput v-model="dataDir" readonly size="sm" class="min-w-0 flex-1" />
+        <UButton
+          size="sm"
+          variant="soft"
+          :loading="isUpdatingDataDir"
+          :disabled="isUpdatingDataDir"
+          @click="selectDataDir"
+        >
+          {{ t('settings.storage.dataLocation.choose') }}
+        </UButton>
+        <UButton v-if="isCustomDataDir" size="sm" variant="ghost" :disabled="isUpdatingDataDir" @click="resetDataDir">
+          {{ t('settings.storage.dataLocation.reset') }}
+        </UButton>
+      </div>
+
+      <p class="mt-2 text-xs text-amber-600 dark:text-amber-400">
+        {{ t('settings.storage.dataLocation.restartTip') }}
+      </p>
+      <p v-if="dataDirError" class="mt-1 text-xs text-red-500">
+        {{ dataDirError }}
+      </p>
+    </div>
+
     <!-- 提示信息 -->
     <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800/50 dark:bg-amber-900/20">
       <div class="flex items-start gap-2">
@@ -365,7 +359,9 @@ defineExpose({
                 {{ pendingNewDir || t('settings.storage.dataLocation.defaultPath') }}
               </p>
             </div>
-            <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800/50 dark:bg-amber-900/20">
+            <div
+              class="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800/50 dark:bg-amber-900/20"
+            >
               <p class="text-xs text-amber-700 dark:text-amber-400">
                 {{ t('settings.storage.dataLocation.confirmWarning') }}
               </p>

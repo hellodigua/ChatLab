@@ -45,7 +45,6 @@ function switchToR2Mirror(): void {
     provider: 'generic',
     url: R2_MIRROR_URL,
   })
-  logger.info(`[Update] 使用 R2 镜像源: ${R2_MIRROR_URL}`)
 }
 
 /**

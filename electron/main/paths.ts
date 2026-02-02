@@ -11,6 +11,16 @@
 import { app } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
+import {
+  copyDirMerge,
+  copyDirRecursive,
+  ensureMarkerFile,
+  isDirectorySafeToUse,
+  isExistingChatLabDir,
+  isPathSafe,
+  isSubPath,
+  writeMigrationLog,
+} from './utils/pathUtils'
 
 // 缓存路径，避免重复计算
 let _appDataDir: string | null = null
@@ -19,8 +29,10 @@ let _legacyDataDir: string | null = null
 // 存储配置文件名（放在 userData 根目录，避免受自定义数据目录影响）
 const STORAGE_CONFIG_FILE = 'storage.json'
 
-// ChatLab 数据目录的标志性子目录列表（用于识别是否为 ChatLab 数据目录）
-const CHATLAB_DATA_DIRS = ['databases', 'ai', 'settings', 'logs', 'temp']
+// ChatLab 数据目录标记文件（用于更严格的目录识别）
+const CHATLAB_MARKER_FILE = '.chatlab'
+// ChatLab 数据目录关键子目录（用于识别已有数据）
+const CHATLAB_REQUIRED_DIRS = ['databases', 'settings']
 
 /**
  * 获取应用数据根目录
@@ -124,113 +136,6 @@ export function getCustomDataDir(): string | null {
 }
 
 /**
- * 检查路径是否安全（不在系统关键目录下）
- */
-function isPathSafe(targetPath: string): boolean {
-  // 系统关键目录列表（Windows 和 Unix）
-  const dangerousPaths = [
-    // Windows 系统目录
-    'C:\\Windows',
-    'C:\\Program Files',
-    'C:\\Program Files (x86)',
-    'C:\\ProgramData',
-    // Unix 系统目录
-    '/usr',
-    '/etc',
-    '/bin',
-    '/sbin',
-    '/lib',
-    '/var',
-    '/boot',
-    '/root',
-    '/System',
-    '/Library',
-  ]
-
-  const normalizedTarget = targetPath.toLowerCase().replace(/\//g, '\\')
-
-  for (const dangerous of dangerousPaths) {
-    const normalizedDangerous = dangerous.toLowerCase().replace(/\//g, '\\')
-    if (normalizedTarget.startsWith(normalizedDangerous)) {
-      return false
-    }
-  }
-
-  return true
-}
-
-/**
- * 检查目录是否为空或仅包含 ChatLab 数据
- */
-function isDirectorySafeToUse(dirPath: string): boolean {
-  if (!fs.existsSync(dirPath)) {
-    return true // 目录不存在，可以安全使用
-  }
-
-  try {
-    const entries = fs.readdirSync(dirPath)
-    // 如果目录为空，可以安全使用
-    if (entries.length === 0) return true
-
-    // 如果包含 ChatLab 的标志性子目录，认为是之前的数据目录
-    const hasChatlabStructure = CHATLAB_DATA_DIRS.some((d) => entries.includes(d))
-    return hasChatlabStructure
-  } catch {
-    return false
-  }
-}
-
-/**
- * 递归合并复制目录（仅复制目标不存在的文件）
- * @returns 复制结果统计
- */
-function copyDirMerge(
-  src: string,
-  dest: string,
-  stats: { copied: number; skipped: number; errors: string[] } = { copied: 0, skipped: 0, errors: [] }
-): { copied: number; skipped: number; errors: string[] } {
-  if (!fs.existsSync(src)) return stats
-
-  try {
-    ensureDir(dest)
-    const entries = fs.readdirSync(src, { withFileTypes: true })
-
-    for (const entry of entries) {
-      const srcPath = path.join(src, entry.name)
-      const destPath = path.join(dest, entry.name)
-
-      try {
-        if (entry.isDirectory()) {
-          if (!fs.existsSync(destPath)) {
-            copyDirRecursive(srcPath, destPath)
-            stats.copied++
-          } else {
-            copyDirMerge(srcPath, destPath, stats)
-          }
-        } else {
-          if (!fs.existsSync(destPath)) {
-            fs.copyFileSync(srcPath, destPath)
-            stats.copied++
-          } else {
-            stats.skipped++
-          }
-        }
-      } catch (error) {
-        const errorMsg = `复制失败: ${srcPath} -> ${error instanceof Error ? error.message : String(error)}`
-        console.error('[Paths]', errorMsg)
-        stats.errors.push(errorMsg)
-      }
-    }
-  } catch (error) {
-    const errorMsg = `读取目录失败: ${src} -> ${error instanceof Error ? error.message : String(error)}`
-    console.error('[Paths]', errorMsg)
-    stats.errors.push(errorMsg)
-  }
-
-  return stats
-}
-
-/**
  * 设置自定义数据目录
  * @param dataDir 目标目录（为空则恢复默认）
  * @param migrate 是否迁移现有数据（合并复制，不会覆盖目标文件）
@@ -245,19 +150,46 @@ export function setCustomDataDir(
   try {
     if (!normalized) {
       // 恢复默认路径
-      // 记录旧目录，下次启动时删除
-      writeStorageConfig({ pendingDeleteDir: oldDir })
-      _appDataDir = null
-      const newDir = getAppDataDir()
+      const newDir = getDefaultAppDataDir()
 
+      // 防止目标目录是当前目录的子目录，避免递归复制
+    if (migrate && oldDir !== newDir && isSubPath(oldDir, newDir)) {
+      return { success: false, error: '目标目录不能是当前数据目录的子目录' }
+    }
+
+      // 先清除自定义配置，切回默认目录
+      writeStorageConfig({})
+      _appDataDir = newDir
+
+      let canDeleteOldDir = false
       if (migrate && oldDir !== newDir) {
-        const migrateResult = copyDirMerge(oldDir, newDir)
+        const migrateResult = copyDirMerge(oldDir, newDir, ensureDir)
         console.log(
           `[Paths] 数据迁移完成: 复制 ${migrateResult.copied} 项, 跳过 ${migrateResult.skipped} 项, 错误 ${migrateResult.errors.length} 项`
         )
         if (migrateResult.errors.length > 0) {
           console.warn('[Paths] 迁移过程中出现错误:', migrateResult.errors)
+          console.warn('[Paths] 迁移失败，旧数据目录将不会自动删除')
+          // 迁移失败日志写入 app.log
+          writeMigrationLog(
+            getLogsDir(),
+            `切换为默认目录迁移失败: 从 ${oldDir} 到 ${newDir}，复制 ${migrateResult.copied} 项，跳过 ${migrateResult.skipped} 项，错误 ${migrateResult.errors.length} 项`,
+            ensureDir
+          )
+        } else {
+          canDeleteOldDir = true
+          // 迁移成功日志写入 app.log
+          writeMigrationLog(
+            getLogsDir(),
+            `切换为默认目录迁移成功: 从 ${oldDir} 到 ${newDir}，复制 ${migrateResult.copied} 项，跳过 ${migrateResult.skipped} 项`,
+            ensureDir
+          )
         }
+      }
+
+      // 迁移成功才标记删除旧目录，避免数据丢失
+      if (canDeleteOldDir) {
+        writeStorageConfig({ pendingDeleteDir: oldDir })
       }
 
       return { success: true, from: oldDir, to: newDir }
@@ -267,32 +199,58 @@ export function setCustomDataDir(
       return { success: false, error: '数据目录必须是绝对路径' }
     }
 
+    // 防止目标目录是当前目录的子目录，避免递归复制
+    if (migrate && oldDir !== normalized && isSubPath(oldDir, normalized)) {
+      return { success: false, error: '目标目录不能是当前数据目录的子目录' }
+    }
+
     // 安全检查：不能使用系统关键目录
     if (!isPathSafe(normalized)) {
       return { success: false, error: '不能使用系统关键目录作为数据目录' }
     }
 
     // 安全检查：目标目录应为空或已有 ChatLab 数据
-    if (!isDirectorySafeToUse(normalized)) {
+    if (!isDirectorySafeToUse(normalized, CHATLAB_MARKER_FILE, CHATLAB_REQUIRED_DIRS)) {
       return { success: false, error: '目标目录不为空且不包含 ChatLab 数据，请选择空目录或已有数据目录' }
     }
 
     // 确保目录存在
     ensureDir(normalized)
 
-    // 记录旧目录，下次启动时删除
-    writeStorageConfig({ dataDir: normalized, pendingDeleteDir: oldDir })
     _appDataDir = normalized
 
+    let canDeleteOldDir = false
     if (migrate && oldDir !== normalized) {
-      const migrateResult = copyDirMerge(oldDir, normalized)
+      const migrateResult = copyDirMerge(oldDir, normalized, ensureDir)
       console.log(
         `[Paths] 数据迁移完成: 复制 ${migrateResult.copied} 项, 跳过 ${migrateResult.skipped} 项, 错误 ${migrateResult.errors.length} 项`
       )
       if (migrateResult.errors.length > 0) {
         console.warn('[Paths] 迁移过程中出现错误:', migrateResult.errors)
+        console.warn('[Paths] 迁移失败，旧数据目录将不会自动删除')
+        // 迁移失败日志写入 app.log
+        writeMigrationLog(
+          getLogsDir(),
+          `切换目录迁移失败: 从 ${oldDir} 到 ${normalized}，复制 ${migrateResult.copied} 项，跳过 ${migrateResult.skipped} 项，错误 ${migrateResult.errors.length} 项`,
+          ensureDir
+        )
+      } else {
+        canDeleteOldDir = true
+        // 迁移成功日志写入 app.log
+        writeMigrationLog(
+          getLogsDir(),
+          `切换目录迁移成功: 从 ${oldDir} 到 ${normalized}，复制 ${migrateResult.copied} 项，跳过 ${migrateResult.skipped} 项`,
+          ensureDir
+        )
       }
     }
+
+    // 迁移成功才标记删除旧目录，避免数据丢失
+    const config: StorageConfig = { dataDir: normalized }
+    if (canDeleteOldDir) {
+      config.pendingDeleteDir = oldDir
+    }
+    writeStorageConfig(config)
 
     return { success: true, from: oldDir, to: normalized }
   } catch (error) {
@@ -330,16 +288,12 @@ export function cleanupPendingDeleteDir(): void {
       return
     }
 
-    // 安全检查：确保待删除目录确实是 ChatLab 数据目录（包含标志性子目录）
-    if (fs.existsSync(pendingDir)) {
-      const entries = fs.readdirSync(pendingDir)
-      const hasChatlabStructure = CHATLAB_DATA_DIRS.some((d) => entries.includes(d))
-      if (!hasChatlabStructure) {
-        console.log('[Paths] 跳过清理：待删除目录不是 ChatLab 数据目录:', pendingDir)
-        // 清除待删除标记
-        writeStorageConfig({ dataDir: config.dataDir })
-        return
-      }
+    // 安全检查：确保待删除目录确实是 ChatLab 数据目录（标记文件 + 关键子目录）
+    if (fs.existsSync(pendingDir) && !isExistingChatLabDir(pendingDir, CHATLAB_MARKER_FILE, CHATLAB_REQUIRED_DIRS)) {
+      console.log('[Paths] 跳过清理：待删除目录不是 ChatLab 数据目录:', pendingDir)
+      // 清除待删除标记
+      writeStorageConfig({ dataDir: config.dataDir })
+      return
     }
 
     // 检查目录是否存在
@@ -446,6 +400,8 @@ export function ensureAppDirs(): void {
   ensureDir(getSettingsDir())
   ensureDir(getTempDir())
   ensureDir(getLogsDir())
+  // 写入数据目录标记文件
+  ensureMarkerFile(getAppDataDir(), CHATLAB_MARKER_FILE)
 }
 
 // ==================== 数据迁移 ====================
@@ -513,7 +469,7 @@ function migrateDirectory(
 
       const stat = fs.statSync(srcPath)
       if (stat.isDirectory()) {
-        copyDirRecursive(srcPath, destPath)
+        copyDirRecursive(srcPath, destPath, ensureDir)
       } else {
         fs.copyFileSync(srcPath, destPath)
       }
@@ -530,24 +486,6 @@ function migrateDirectory(
   }
 
   return { migratedDirs, skippedDirs }
-}
-
-/**
- * 写入迁移日志到 app.log
- * 使用内联实现避免循环依赖
- */
-function writeMigrationLog(message: string): void {
-  try {
-    const logDir = getLogsDir()
-    ensureDir(logDir)
-    const logPath = path.join(logDir, 'app.log')
-    const now = new Date()
-    const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
-    const logLine = `[${timestamp}] [MIGRATION] ${message}\n`
-    fs.appendFileSync(logPath, logLine, 'utf-8')
-  } catch {
-    // 日志写入失败时静默处理
-  }
 }
 
 /**
@@ -597,36 +535,17 @@ export function migrateFromLegacyDir(): { success: boolean; migratedDirs: string
     }
 
     // 写入迁移日志
-    writeMigrationLog(summary.join(' | '))
+    writeMigrationLog(getLogsDir(), summary.join(' | '), ensureDir)
 
     return { success: true, migratedDirs: result.migratedDirs }
   } catch (error) {
     console.error('[Paths] Migration failed:', error)
     const errorMsg = error instanceof Error ? error.message : String(error)
-    writeMigrationLog(`Migration failed: ${errorMsg}`)
+    writeMigrationLog(getLogsDir(), `Migration failed: ${errorMsg}`, ensureDir)
     return {
       success: false,
       migratedDirs: [],
       error: errorMsg,
-    }
-  }
-}
-
-/**
- * 递归复制目录
- */
-function copyDirRecursive(src: string, dest: string): void {
-  ensureDir(dest)
-  const entries = fs.readdirSync(src, { withFileTypes: true })
-
-  for (const entry of entries) {
-    const srcPath = path.join(src, entry.name)
-    const destPath = path.join(dest, entry.name)
-
-    if (entry.isDirectory()) {
-      copyDirRecursive(srcPath, destPath)
-    } else {
-      fs.copyFileSync(srcPath, destPath)
     }
   }
 }
