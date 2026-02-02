@@ -622,6 +622,11 @@ interface CacheInfo {
   totalSize: number
 }
 
+interface DataDirInfo {
+  path: string
+  isCustom: boolean
+}
+
 interface CacheApi {
   getInfo: () => Promise<CacheInfo>
   clear: (cacheId: string) => Promise<{ success: boolean; error?: string; message?: string }>
@@ -632,6 +637,12 @@ interface CacheApi {
   ) => Promise<{ success: boolean; filePath?: string; error?: string }>
   getLatestImportLog: () => Promise<{ success: boolean; path?: string; name?: string; error?: string }>
   showInFolder: (filePath: string) => Promise<{ success: boolean; error?: string }>
+  getDataDir: () => Promise<DataDirInfo>
+  selectDataDir: () => Promise<{ success: boolean; path?: string; error?: string }>
+  setDataDir: (
+    path: string | null,
+    migrate?: boolean
+  ) => Promise<{ success: boolean; error?: string; from?: string; to?: string }>
 }
 
 // Network API 类型 - 网络代理配置

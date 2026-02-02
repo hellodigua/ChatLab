@@ -107,6 +107,14 @@
   "storage": {
     "title": "Local Storage Management",
     "description": "Manage data files stored locally by ChatLab",
+    "dataLocation": {
+      "title": "Data Directory",
+      "description": "Customize where local data and cache are stored",
+      "choose": "Choose",
+      "reset": "Reset",
+      "open": "Open",
+      "restartTip": "Please restart the app after switching. Data will be migrated from the old directory."
+    },
     "totalUsage": "Total: ",
     "loading": "Loading...",
     "files": "files",
