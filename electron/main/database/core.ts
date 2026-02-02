@@ -408,7 +408,9 @@ export function checkMigrationNeeded(): {
     const dbPath = getDbPath(sessionId)
 
     try {
-      const db = new Database(dbPath, { readonly: true })
+      // 不使用只读模式，因为 WAL 模式下只读连接可能无法读取 WAL 文件中的最新数据
+      // 这在 Windows 上尤其是个问题
+      const db = new Database(dbPath)
       db.pragma('journal_mode = WAL')
 
       // 获取当前 schema_version
