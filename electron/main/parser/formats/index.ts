@@ -11,6 +11,7 @@ import chatlabJsonl from './chatlab-jsonl'
 import shuakamiQqExporter from './shuakami-qq-exporter'
 import shuakamiQqExporterChunked from './shuakami-qq-exporter-chunked'
 import weflow from './weflow'
+import yccccccyEchotrace from './ycccccccy-echotrace'
 import tyrrrzDiscordExporter from './tyrrrz-discord-exporter'
 import whatsappNativeTxt from './whatsapp-native-txt'
 import qqNativeTxt from './qq-native-txt'
@@ -25,6 +26,7 @@ export const formats: FormatModule[] = [
   shuakamiQqExporterChunked, // 优先级 5 - shuakami/qq-chat-exporter chunked-jsonl
   shuakamiQqExporter, // 优先级 10 - shuakami/qq-chat-exporter
   weflow, // 优先级 15 - WeFlow 微信导出
+  yccccccyEchotrace, // 优先级 16 - ycccccccy/echotrace 微信导出
   tyrrrzDiscordExporter, // 优先级 20 - Tyrrrz/DiscordChatExporter
   instagramNative, // 优先级 25 - Instagram 官方导出
   whatsappNativeTxt, // 优先级 26 - WhatsApp 官方导出 TXT
@@ -41,6 +43,7 @@ export {
   shuakamiQqExporter,
   shuakamiQqExporterChunked,
   weflow,
+  yccccccyEchotrace,
   tyrrrzDiscordExporter,
   instagramNative,
   whatsappNativeTxt,

@@ -245,22 +245,24 @@ async function* parseWeFlow(options: ParseOptions): AsyncGenerator<ParseEvent, v
   // 1. 优先使用 session.type
   // 2. 或者通过 wxid 是否以 @chatroom 结尾判断
   let chatType = ChatType.GROUP
-  if (session) {
-    if (session.type === '私聊') {
+  // 使用局部变量避免 TypeScript 控制流分析问题
+  const sessionData = session as WeFlowSession | null
+  if (sessionData) {
+    if (sessionData.type === '私聊') {
       chatType = ChatType.PRIVATE
-    } else if (session.type === '群聊') {
+    } else if (sessionData.type === '群聊') {
       chatType = ChatType.GROUP
-    } else if (session.wxid && !session.wxid.endsWith('@chatroom')) {
+    } else if (sessionData.wxid && !sessionData.wxid.endsWith('@chatroom')) {
       chatType = ChatType.PRIVATE
     }
   }
 
   // 确定聊天名称
-  const chatName = session?.displayName || session?.nickname || extractNameFromFilePath(filePath)
+  const chatName = sessionData?.displayName || sessionData?.nickname || extractNameFromFilePath(filePath)
 
   // 提取群ID（群聊类型时有值）
   // 群ID 格式：以 @chatroom 结尾
-  const groupId = chatType === ChatType.GROUP && session?.wxid ? session.wxid : undefined
+  const groupId = chatType === ChatType.GROUP && sessionData?.wxid ? sessionData.wxid : undefined
 
   // 解析 avatars 对象（头像）
   // avatars 格式：{ "wxid": { "displayName": "...", "base64": "..." } }
@@ -422,7 +424,7 @@ async function* parseWeFlow(options: ParseOptions): AsyncGenerator<ParseEvent, v
   }
 
   // 提取群头像（优先从 session.avatar，其次从 avatars 中获取群ID对应的头像）
-  const groupAvatar = session?.avatar || (groupId ? avatarsMap.get(groupId) : undefined)
+  const groupAvatar = sessionData?.avatar || (groupId ? avatarsMap.get(groupId) : undefined)
 
   // 快速扫描获取 ownerId（通过 isSend === 1 推断）
   let ownerId: string | undefined
@@ -523,8 +525,8 @@ async function* parseWeFlow(options: ParseOptions): AsyncGenerator<ParseEvent, v
         platformMessageId: String(msg.localId), // 消息的平台原始 ID（用于回复关联查询）
         senderPlatformId: platformId,
         senderAccountName: accountName,
-        // WeFlow 格式没有单独的群昵称字段，使用 null 而非 undefined（SQLite 兼容）
-        senderGroupNickname: null,
+        // WeFlow 格式没有单独的群昵称字段
+        senderGroupNickname: undefined,
         timestamp: msg.createTime,
         type,
         content,
@@ -598,6 +600,9 @@ async function* parseWeFlow(options: ParseOptions): AsyncGenerator<ParseEvent, v
 }
 
 // ==================== 导出解析器 ====================
+
+// 导出解析函数供其他格式复用（如 ycccccccy-echotrace）
+export { parseWeFlow }
 
 export const parser_: Parser = {
   feature,
