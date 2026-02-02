@@ -36,6 +36,11 @@ const isCustomDataDir = ref(false)
 const isUpdatingDataDir = ref(false)
 const dataDirError = ref<string | null>(null)
 
+// 确认弹窗状态
+const showConfirmModal = ref(false)
+const pendingNewDir = ref<string | null>(null)
+const pendingMigrate = ref(false)
+
 // 格式化文件大小
 function formatSize(bytes: number): string {
   if (bytes === 0) return '0 B'
@@ -112,7 +117,11 @@ async function selectDataDir() {
   try {
     const result = await window.cacheApi.selectDataDir()
     if (!result.success || !result.path) return
-    await applyDataDirChange(result.path, true)
+
+    // 显示确认弹窗
+    pendingNewDir.value = result.path
+    pendingMigrate.value = true
+    showConfirmModal.value = true
   } catch (error) {
     dataDirError.value = error instanceof Error ? error.message : String(error)
   }
@@ -121,7 +130,23 @@ async function selectDataDir() {
 // 恢复默认数据目录
 async function resetDataDir() {
   dataDirError.value = null
-  await applyDataDirChange(null, false)
+  // 显示确认弹窗
+  pendingNewDir.value = null
+  pendingMigrate.value = true
+  showConfirmModal.value = true
+}
+
+// 确认切换数据目录
+async function confirmDataDirChange() {
+  showConfirmModal.value = false
+  await applyDataDirChange(pendingNewDir.value, pendingMigrate.value)
+}
+
+// 取消切换
+function cancelDataDirChange() {
+  showConfirmModal.value = false
+  pendingNewDir.value = null
+  pendingMigrate.value = false
 }
 
 // 应用数据目录变更
@@ -316,5 +341,47 @@ defineExpose({
         </div>
       </div>
     </div>
+
+    <!-- 切换数据目录确认弹窗 -->
+    <UModal v-model:open="showConfirmModal">
+      <template #content>
+        <div class="p-5">
+          <div class="mb-4 flex items-center gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+              <UIcon name="i-heroicons-exclamation-triangle" class="h-5 w-5 text-amber-600 dark:text-amber-400" />
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+              {{ t('settings.storage.dataLocation.confirmTitle') }}
+            </h3>
+          </div>
+
+          <div class="space-y-3 text-sm text-gray-600 dark:text-gray-400">
+            <p>{{ t('settings.storage.dataLocation.confirmMessage') }}</p>
+            <div class="rounded-lg bg-gray-100 p-3 dark:bg-gray-800">
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                {{ t('settings.storage.dataLocation.newPath') }}
+              </p>
+              <p class="mt-1 font-mono text-sm text-gray-900 dark:text-white">
+                {{ pendingNewDir || t('settings.storage.dataLocation.defaultPath') }}
+              </p>
+            </div>
+            <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800/50 dark:bg-amber-900/20">
+              <p class="text-xs text-amber-700 dark:text-amber-400">
+                {{ t('settings.storage.dataLocation.confirmWarning') }}
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-5 flex justify-end gap-2">
+            <UButton variant="ghost" @click="cancelDataDirChange">
+              {{ t('settings.storage.dataLocation.cancel') }}
+            </UButton>
+            <UButton color="primary" @click="confirmDataDirChange">
+              {{ t('settings.storage.dataLocation.confirm') }}
+            </UButton>
+          </div>
+        </div>
+      </template>
+    </UModal>
   </div>
 </template>
