@@ -19,6 +19,9 @@ let _legacyDataDir: string | null = null
 // 存储配置文件名（放在 userData 根目录，避免受自定义数据目录影响）
 const STORAGE_CONFIG_FILE = 'storage.json'
 
+// ChatLab 数据目录的标志性子目录列表（用于识别是否为 ChatLab 数据目录）
+const CHATLAB_DATA_DIRS = ['databases', 'ai', 'settings', 'logs', 'temp']
+
 /**
  * 获取应用数据根目录
  * 使用 userData/data 子目录，与 Electron 缓存隔离
@@ -170,8 +173,7 @@ function isDirectorySafeToUse(dirPath: string): boolean {
     if (entries.length === 0) return true
 
     // 如果包含 ChatLab 的标志性子目录，认为是之前的数据目录
-    const chatlabDirs = ['databases', 'ai', 'settings', 'logs', 'temp']
-    const hasChatlabStructure = chatlabDirs.some((d) => entries.includes(d))
+    const hasChatlabStructure = CHATLAB_DATA_DIRS.some((d) => entries.includes(d))
     return hasChatlabStructure
   } catch {
     return false
@@ -249,7 +251,13 @@ export function setCustomDataDir(
       const newDir = getAppDataDir()
 
       if (migrate && oldDir !== newDir) {
-        copyDirMerge(oldDir, newDir)
+        const migrateResult = copyDirMerge(oldDir, newDir)
+        console.log(
+          `[Paths] 数据迁移完成: 复制 ${migrateResult.copied} 项, 跳过 ${migrateResult.skipped} 项, 错误 ${migrateResult.errors.length} 项`
+        )
+        if (migrateResult.errors.length > 0) {
+          console.warn('[Paths] 迁移过程中出现错误:', migrateResult.errors)
+        }
       }
 
       return { success: true, from: oldDir, to: newDir }
@@ -277,7 +285,13 @@ export function setCustomDataDir(
     _appDataDir = normalized
 
     if (migrate && oldDir !== normalized) {
-      copyDirMerge(oldDir, normalized)
+      const migrateResult = copyDirMerge(oldDir, normalized)
+      console.log(
+        `[Paths] 数据迁移完成: 复制 ${migrateResult.copied} 项, 跳过 ${migrateResult.skipped} 项, 错误 ${migrateResult.errors.length} 项`
+      )
+      if (migrateResult.errors.length > 0) {
+        console.warn('[Paths] 迁移过程中出现错误:', migrateResult.errors)
+      }
     }
 
     return { success: true, from: oldDir, to: normalized }
@@ -319,8 +333,7 @@ export function cleanupPendingDeleteDir(): void {
     // 安全检查：确保待删除目录确实是 ChatLab 数据目录（包含标志性子目录）
     if (fs.existsSync(pendingDir)) {
       const entries = fs.readdirSync(pendingDir)
-      const chatlabDirs = ['databases', 'ai', 'settings', 'logs', 'temp']
-      const hasChatlabStructure = chatlabDirs.some((d) => entries.includes(d))
+      const hasChatlabStructure = CHATLAB_DATA_DIRS.some((d) => entries.includes(d))
       if (!hasChatlabStructure) {
         console.log('[Paths] 跳过清理：待删除目录不是 ChatLab 数据目录:', pendingDir)
         // 清除待删除标记
