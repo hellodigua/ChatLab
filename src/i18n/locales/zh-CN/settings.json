@@ -107,6 +107,14 @@
   "storage": {
     "title": "本地存储管理",
     "description": "管理 ChatLab 在本地存储的数据文件",
+    "dataLocation": {
+      "title": "数据目录位置",
+      "description": "自定义本地数据与缓存的存放位置",
+      "choose": "选择位置",
+      "reset": "恢复默认",
+      "open": "打开",
+      "restartTip": "切换目录后请重启应用，旧目录下缓存会跟随迁移"
+    },
     "totalUsage": "总占用：",
     "loading": "加载中...",
     "files": "文件",
