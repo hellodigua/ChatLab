@@ -1,10 +1,20 @@
 // electron/main/ipc/cache.ts
-import { ipcMain, app, shell } from 'electron'
+import { ipcMain, shell, dialog } from 'electron'
 import * as fs from 'fs/promises'
 import * as fsSync from 'fs'
 import * as path from 'path'
 import type { IpcContext } from './types'
-import { getAppDataDir, getDatabaseDir, getAiDataDir, getLogsDir, getDownloadsDir, ensureDir } from '../paths'
+import {
+  getAppDataDir,
+  getDatabaseDir,
+  getAiDataDir,
+  getLogsDir,
+  getDownloadsDir,
+  ensureDir,
+  getCustomDataDir,
+  setCustomDataDir,
+  ensureAppDirs,
+} from '../paths'
 
 /**
  * 递归计算目录大小
@@ -113,6 +123,61 @@ export function registerCacheHandlers(_context: IpcContext): void {
       baseDir: appDataDir,
       directories: results,
       totalSize: results.reduce((sum, dir) => sum + dir.size, 0),
+    }
+  })
+
+  /**
+   * 获取当前数据目录
+   */
+  ipcMain.handle('cache:getDataDir', async () => {
+    return {
+      path: getAppDataDir(),
+      isCustom: Boolean(getCustomDataDir()),
+    }
+  })
+
+  /**
+   * 选择数据目录（仅返回路径，不修改设置）
+   */
+  ipcMain.handle('cache:selectDataDir', async () => {
+    try {
+      const result = await dialog.showOpenDialog({
+        properties: ['openDirectory', 'createDirectory'],
+        defaultPath: getAppDataDir(),
+        title: '选择数据目录',
+        buttonLabel: '选择',
+      })
+
+      if (result.canceled || result.filePaths.length === 0) {
+        return { success: false }
+      }
+
+      return { success: true, path: result.filePaths[0] }
+    } catch (error) {
+      console.error('[Cache] Error selecting data dir:', error)
+      return { success: false, error: String(error) }
+    }
+  })
+
+  /**
+   * 设置数据目录
+   */
+  ipcMain.handle('cache:setDataDir', async (_, payload: { path?: string | null; migrate?: boolean }) => {
+    const targetPath = typeof payload?.path === 'string' ? payload.path : null
+    const migrate = payload?.migrate !== false
+
+    const result = setCustomDataDir(targetPath, migrate)
+    if (!result.success) {
+      return { success: false, error: result.error }
+    }
+
+    // 确保新目录结构完整
+    ensureAppDirs()
+
+    return {
+      success: true,
+      from: result.from,
+      to: result.to,
     }
   })
 

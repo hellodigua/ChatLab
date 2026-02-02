@@ -16,6 +16,9 @@ import * as path from 'path'
 let _appDataDir: string | null = null
 let _legacyDataDir: string | null = null
 
+// 存储配置文件名（放在 userData 根目录，避免受自定义数据目录影响）
+const STORAGE_CONFIG_FILE = 'storage.json'
+
 /**
  * 获取应用数据根目录
  * 使用 userData/data 子目录，与 Electron 缓存隔离
@@ -23,16 +26,216 @@ let _legacyDataDir: string | null = null
 export function getAppDataDir(): string {
   if (_appDataDir) return _appDataDir
 
+  // 优先读取用户自定义数据目录
+  const customDir = getCustomDataDir()
+  if (customDir) {
+    _appDataDir = customDir
+    return _appDataDir
+  }
+
+  // 回退到默认路径
+  _appDataDir = getDefaultAppDataDir()
+  return _appDataDir
+}
+
+/**
+ * 获取默认的数据根目录（userData/data）
+ */
+function getDefaultAppDataDir(): string {
   try {
     const userDataPath = app.getPath('userData')
     // 使用子目录存放应用数据，避免与 Electron 缓存混淆
-    _appDataDir = path.join(userDataPath, 'data')
+    return path.join(userDataPath, 'data')
   } catch (error) {
     console.error('[Paths] Error getting userData path:', error)
-    _appDataDir = path.join(process.cwd(), 'userData', 'data')
+    return path.join(process.cwd(), 'userData', 'data')
+  }
+}
+
+/**
+ * 获取存储配置文件路径（userData 根目录）
+ */
+function getStorageConfigPath(): string {
+  try {
+    return path.join(app.getPath('userData'), STORAGE_CONFIG_FILE)
+  } catch (error) {
+    console.error('[Paths] Error getting storage config path:', error)
+    return path.join(process.cwd(), STORAGE_CONFIG_FILE)
+  }
+}
+
+/**
+ * 存储配置接口
+ */
+interface StorageConfig {
+  dataDir?: string
+  // 待删除的旧目录（下次启动时清理）
+  pendingDeleteDir?: string
+}
+
+/**
+ * 读取存储配置
+ */
+function readStorageConfig(): StorageConfig {
+  const configPath = getStorageConfigPath()
+  if (!fs.existsSync(configPath)) return {}
+
+  try {
+    const content = fs.readFileSync(configPath, 'utf-8')
+    const data = JSON.parse(content) as StorageConfig
+    return data || {}
+  } catch (error) {
+    console.error('[Paths] Error reading storage config:', error)
   }
 
-  return _appDataDir
+  return {}
+}
+
+/**
+ * 保存存储配置
+ */
+function writeStorageConfig(config: StorageConfig): void {
+  const configPath = getStorageConfigPath()
+  try {
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf-8')
+  } catch (error) {
+    console.error('[Paths] Error writing storage config:', error)
+  }
+}
+
+/**
+ * 获取用户自定义数据目录
+ */
+export function getCustomDataDir(): string | null {
+  const config = readStorageConfig()
+  const dataDir = config.dataDir?.trim()
+  if (!dataDir) return null
+
+  // 只接受绝对路径
+  if (!path.isAbsolute(dataDir)) {
+    console.warn('[Paths] Invalid custom data dir (not absolute):', dataDir)
+    return null
+  }
+
+  return dataDir
+}
+
+/**
+ * 递归合并复制目录（仅复制目标不存在的文件）
+ */
+function copyDirMerge(src: string, dest: string): void {
+  if (!fs.existsSync(src)) return
+
+  ensureDir(dest)
+  const entries = fs.readdirSync(src, { withFileTypes: true })
+
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name)
+    const destPath = path.join(dest, entry.name)
+
+    if (entry.isDirectory()) {
+      if (!fs.existsSync(destPath)) {
+        copyDirRecursive(srcPath, destPath)
+      } else {
+        copyDirMerge(srcPath, destPath)
+      }
+    } else {
+      if (!fs.existsSync(destPath)) {
+        fs.copyFileSync(srcPath, destPath)
+      }
+    }
+  }
+}
+
+/**
+ * 设置自定义数据目录
+ * @param dataDir 目标目录（为空则恢复默认）
+ * @param migrate 是否迁移现有数据（合并复制，不会覆盖目标文件）
+ */
+export function setCustomDataDir(
+  dataDir: string | null,
+  migrate: boolean = true
+): { success: boolean; error?: string; from?: string; to?: string } {
+  const normalized = typeof dataDir === 'string' ? dataDir.trim() : ''
+  const oldDir = getAppDataDir()
+
+  try {
+    if (!normalized) {
+      // 恢复默认路径
+      const config = readStorageConfig()
+      // 记录旧目录，下次启动时删除
+      writeStorageConfig({ pendingDeleteDir: oldDir })
+      _appDataDir = null
+      const newDir = getAppDataDir()
+
+      if (migrate && oldDir !== newDir) {
+        copyDirMerge(oldDir, newDir)
+      }
+
+      return { success: true, from: oldDir, to: newDir }
+    }
+
+    if (!path.isAbsolute(normalized)) {
+      return { success: false, error: '数据目录必须是绝对路径' }
+    }
+
+    // 确保目录存在
+    ensureDir(normalized)
+
+    // 记录旧目录，下次启动时删除
+    writeStorageConfig({ dataDir: normalized, pendingDeleteDir: oldDir })
+    _appDataDir = normalized
+
+    if (migrate && oldDir !== normalized) {
+      copyDirMerge(oldDir, normalized)
+    }
+
+    return { success: true, from: oldDir, to: normalized }
+  } catch (error) {
+    console.error('[Paths] Error setting custom data dir:', error)
+    return { success: false, error: error instanceof Error ? error.message : String(error) }
+  }
+}
+
+/**
+ * 清理待删除的旧数据目录（应用启动时调用）
+ */
+export function cleanupPendingDeleteDir(): void {
+  try {
+    const config = readStorageConfig()
+    const pendingDir = config.pendingDeleteDir
+
+    if (!pendingDir) return
+
+    // 获取当前数据目录
+    const currentDir = getAppDataDir()
+
+    // 安全检查：不能删除当前正在使用的目录
+    if (pendingDir === currentDir) {
+      console.log('[Paths] 跳过清理：待删除目录与当前目录相同')
+      // 清除待删除标记
+      writeStorageConfig({ dataDir: config.dataDir })
+      return
+    }
+
+    // 检查目录是否存在
+    if (!fs.existsSync(pendingDir)) {
+      console.log('[Paths] 待删除目录不存在，跳过清理:', pendingDir)
+      // 清除待删除标记
+      writeStorageConfig({ dataDir: config.dataDir })
+      return
+    }
+
+    // 删除旧目录
+    console.log('[Paths] 正在清理旧数据目录:', pendingDir)
+    fs.rmSync(pendingDir, { recursive: true, force: true })
+    console.log('[Paths] 旧数据目录已删除:', pendingDir)
+
+    // 清除待删除标记
+    writeStorageConfig({ dataDir: config.dataDir })
+  } catch (error) {
+    console.error('[Paths] 清理旧目录失败:', error)
+  }
 }
 
 /**

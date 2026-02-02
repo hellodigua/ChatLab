@@ -5,7 +5,7 @@ import { checkUpdate } from './update'
 import mainIpcMain, { cleanup } from './ipcMain'
 import { initAnalytics, trackDailyActive } from './analytics'
 import { initProxy } from './network/proxy'
-import { needsLegacyMigration, migrateFromLegacyDir, ensureAppDirs } from './paths'
+import { needsLegacyMigration, migrateFromLegacyDir, ensureAppDirs, cleanupPendingDeleteDir } from './paths'
 import { migrateAllDatabases, checkMigrationNeeded } from './database/core'
 
 class MainProcess {
@@ -48,6 +48,9 @@ class MainProcess {
   // 初始化程序
   async init() {
     initAnalytics()
+
+    // 清理上次切换目录后的旧数据目录
+    cleanupPendingDeleteDir()
 
     // 执行数据目录迁移（从 Documents/ChatLab 迁移到 userData）
     this.migrateDataIfNeeded()
