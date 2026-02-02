@@ -113,7 +113,14 @@
       "choose": "Choose",
       "reset": "Reset",
       "open": "Open",
-      "restartTip": "Please restart the app after switching. Data will be migrated from the old directory."
+      "restartTip": "Please restart the app after switching. Data will be migrated from the old directory.",
+      "confirmTitle": "Confirm Directory Change",
+      "confirmMessage": "You are about to change the data storage location. Existing data will be migrated to the new directory.",
+      "newPath": "New directory path",
+      "defaultPath": "Default location",
+      "confirmWarning": "After restarting, the old data directory will be automatically deleted. Please ensure the new path is correct.",
+      "cancel": "Cancel",
+      "confirm": "Confirm"
     },
     "totalUsage": "Total: ",
     "loading": "Loading...",
