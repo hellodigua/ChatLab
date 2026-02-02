@@ -99,6 +99,13 @@
     "editablePromptLabel": "提示词（可临时修改）",
     "analyzing": "分析中...",
     "startAnalysis": "开始分析",
-    "analysisResult": "分析结果"
+    "analysisResult": "分析结果",
+    "loadMore": "加载更多",
+    "allLoaded": "已加载全部",
+    "dataTooLarge": "数据量过大，无法进行 AI 分析。请缩小筛选范围。",
+    "dataTooLargeThreshold": "当前数据超过 {count} 条消息",
+    "exportSuccess": "导出成功",
+    "exportFailed": "导出失败",
+    "exportPreparing": "正在准备导出..."
   }
 }

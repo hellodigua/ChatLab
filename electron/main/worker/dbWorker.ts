@@ -62,6 +62,7 @@ import {
   // 自定义筛选
   filterMessagesWithContext,
   getMultipleSessionsMessages,
+  exportFilterResultToFile,
   // NLP 查询
   getWordFrequency,
   segmentText,
@@ -148,10 +149,11 @@ const syncHandlers: Record<string, (payload: any) => any> = {
   searchSessions: (p) => searchSessions(p.sessionId, p.keywords, p.timeFilter, p.limit, p.previewCount),
   getSessionMessages: (p) => getSessionMessages(p.sessionId, p.chatSessionId, p.limit),
 
-  // 自定义筛选
+  // 自定义筛选（支持分页）
   filterMessagesWithContext: (p) =>
-    filterMessagesWithContext(p.sessionId, p.keywords, p.timeFilter, p.senderIds, p.contextSize),
-  getMultipleSessionsMessages: (p) => getMultipleSessionsMessages(p.sessionId, p.chatSessionIds),
+    filterMessagesWithContext(p.sessionId, p.keywords, p.timeFilter, p.senderIds, p.contextSize, p.page, p.pageSize),
+  getMultipleSessionsMessages: (p) =>
+    getMultipleSessionsMessages(p.sessionId, p.chatSessionIds, p.page, p.pageSize),
 
   // NLP 查询
   getWordFrequency: (p) => getWordFrequency(p),
@@ -168,6 +170,8 @@ const asyncHandlers: Record<string, (payload: any, requestId: string) => Promise
   // 增量导入
   analyzeIncrementalImport: (p, id) => analyzeIncrementalImport(p.sessionId, p.filePath, id),
   incrementalImport: (p, id) => incrementalImport(p.sessionId, p.filePath, id),
+  // 导出筛选结果到文件（支持进度报告）
+  exportFilterResultToFile: async (p, id) => exportFilterResultToFile(p, id),
 }
 
 // 处理消息

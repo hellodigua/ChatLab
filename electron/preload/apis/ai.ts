@@ -2,6 +2,7 @@
  * AI 相关 API - AI 对话、LLM 服务、Agent、Embedding
  */
 import { ipcRenderer } from 'electron'
+import type { ExportProgress } from '../../../src/types/base'
 
 // ==================== 类型定义 ====================
 
@@ -237,17 +238,26 @@ export const aiApi = {
     return ipcRenderer.invoke('ai:getMessagesAfter', sessionId, afterId, limit, filter, senderId, keywords)
   },
 
-  // ==================== 自定义筛选 ====================
+  // ==================== 自定义筛选（支持分页） ====================
 
   /**
-   * 按条件筛选消息并扩充上下文
+   * 筛选结果消息类型
+   */
+  // FilterMessage 和 FilterResult 类型定义在下方
+
+  /**
+   * 按条件筛选消息并扩充上下文（支持分页）
+   * @param page 页码（从 1 开始，默认 1）
+   * @param pageSize 每页块数（默认 50）
    */
   filterMessagesWithContext: (
     sessionId: string,
     keywords?: string[],
     timeFilter?: { startTs: number; endTs: number },
     senderIds?: number[],
-    contextSize?: number
+    contextSize?: number,
+    page?: number,
+    pageSize?: number
   ): Promise<{
     blocks: Array<{
       startTs: number
@@ -273,16 +283,36 @@ export const aiApi = {
       hitMessages: number
       totalChars: number
     }
+    pagination: {
+      page: number
+      pageSize: number
+      totalBlocks: number
+      totalHits: number
+      hasMore: boolean
+    }
   }> => {
-    return ipcRenderer.invoke('ai:filterMessagesWithContext', sessionId, keywords, timeFilter, senderIds, contextSize)
+    return ipcRenderer.invoke(
+      'ai:filterMessagesWithContext',
+      sessionId,
+      keywords,
+      timeFilter,
+      senderIds,
+      contextSize,
+      page,
+      pageSize
+    )
   },
 
   /**
-   * 获取多个会话的完整消息
+   * 获取多个会话的完整消息（支持分页）
+   * @param page 页码（从 1 开始，默认 1）
+   * @param pageSize 每页块数（默认 50）
    */
   getMultipleSessionsMessages: (
     sessionId: string,
-    chatSessionIds: number[]
+    chatSessionIds: number[],
+    page?: number,
+    pageSize?: number
   ): Promise<{
     blocks: Array<{
       startTs: number
@@ -308,8 +338,45 @@ export const aiApi = {
       hitMessages: number
       totalChars: number
     }
+    pagination: {
+      page: number
+      pageSize: number
+      totalBlocks: number
+      totalHits: number
+      hasMore: boolean
+    }
   }> => {
-    return ipcRenderer.invoke('ai:getMultipleSessionsMessages', sessionId, chatSessionIds)
+    return ipcRenderer.invoke('ai:getMultipleSessionsMessages', sessionId, chatSessionIds, page, pageSize)
+  },
+
+  /**
+   * 导出筛选结果到文件（后端生成，支持大数据量）
+   */
+  exportFilterResultToFile: (params: {
+    sessionId: string
+    sessionName: string
+    outputDir: string
+    filterMode: 'condition' | 'session'
+    keywords?: string[]
+    timeFilter?: { startTs: number; endTs: number }
+    senderIds?: number[]
+    contextSize?: number
+    chatSessionIds?: number[]
+  }): Promise<{ success: boolean; filePath?: string; error?: string }> => {
+    return ipcRenderer.invoke('ai:exportFilterResultToFile', params)
+  },
+
+  /**
+   * 监听导出进度
+   */
+  onExportProgress: (callback: (progress: ExportProgress) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, progress: ExportProgress) => {
+      callback(progress)
+    }
+    ipcRenderer.on('ai:exportProgress', handler)
+    return () => {
+      ipcRenderer.removeListener('ai:exportProgress', handler)
+    }
   },
 
   /**

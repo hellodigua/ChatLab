@@ -3,6 +3,7 @@
  * 预览面板
  * 左右结构：左侧对话块列表（虚拟滚动），右侧消息内容（复用 MessageList）
  * 支持连续滚动：滚动到底部时自动加载下一个对话块
+ * 支持分页加载：滚动到左侧列表底部时触发加载更多
  */
 
 import { computed, ref, watch, nextTick } from 'vue'
@@ -13,6 +14,15 @@ import LoadingState from '@/components/UI/LoadingState.vue'
 import type { ChatRecordMessage } from '@/types/format'
 
 const { t } = useI18n()
+
+// 分页信息类型
+interface PaginationInfo {
+  page: number
+  pageSize: number
+  totalBlocks: number
+  totalHits: number
+  hasMore: boolean
+}
 
 // Props
 const props = defineProps<{
@@ -41,10 +51,17 @@ const props = defineProps<{
       hitMessages: number
       totalChars: number
     }
+    pagination?: PaginationInfo
   } | null
   isLoading: boolean
+  isLoadingMore?: boolean
   estimatedTokens: number
   tokenStatus: 'green' | 'yellow' | 'red'
+}>()
+
+// Emits
+const emit = defineEmits<{
+  (e: 'load-more'): void
 }>()
 
 // 当前选中的对话块索引（用于左侧高亮和右侧显示）
@@ -231,6 +248,19 @@ watch(pendingScrollToMessageId, async (messageId) => {
     }, 100)
   }
 })
+
+// 处理左侧块列表滚动，接近底部时自动加载更多
+function handleBlockListScroll(event: Event) {
+  const target = event.target as HTMLElement
+  if (!target || !props.result?.pagination?.hasMore || props.isLoadingMore) return
+
+  // 距离底部 100px 时触发加载
+  const threshold = 100
+  const { scrollTop, scrollHeight, clientHeight } = target
+  if (scrollHeight - scrollTop - clientHeight < threshold) {
+    emit('load-more')
+  }
+}
 </script>
 
 <template>
@@ -244,7 +274,12 @@ watch(pendingScrollToMessageId, async (messageId) => {
         <div class="flex items-center gap-6 text-sm">
           <span class="text-gray-600 dark:text-gray-400">
             {{ t('analysis.filter.stats.blocks') }}:
-            <span class="font-medium text-gray-900 dark:text-white">{{ result.blocks.length }}</span>
+            <span class="font-medium text-gray-900 dark:text-white">
+              {{ result.blocks.length }}
+              <template v-if="result.pagination && result.pagination.totalBlocks > result.blocks.length">
+                / {{ result.pagination.totalBlocks }}
+              </template>
+            </span>
           </span>
           <span class="text-gray-600 dark:text-gray-400">
             {{ t('analysis.filter.stats.messages') }}:
@@ -252,7 +287,9 @@ watch(pendingScrollToMessageId, async (messageId) => {
           </span>
           <span class="text-gray-600 dark:text-gray-400">
             {{ t('analysis.filter.stats.hits') }}:
-            <span class="font-medium text-primary-500">{{ result.stats.hitMessages }}</span>
+            <span class="font-medium text-primary-500">
+              {{ result.pagination?.totalHits ?? result.stats.hitMessages }}
+            </span>
           </span>
           <span class="text-gray-600 dark:text-gray-400">
             {{ t('analysis.filter.stats.chars') }}:
@@ -326,11 +363,15 @@ watch(pendingScrollToMessageId, async (messageId) => {
         >
           <div class="flex-none px-3 py-2 border-b border-gray-200 dark:border-gray-700">
             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {{ t('analysis.filter.stats.blocks') }} ({{ result.blocks.length }})
+              {{ t('analysis.filter.stats.blocks') }}
+              ({{ result.blocks.length
+              }}<template v-if="result.pagination && result.pagination.totalBlocks > result.blocks.length"
+                >/{{ result.pagination.totalBlocks }}</template
+              >)
             </span>
           </div>
 
-          <div ref="blockListRef" class="flex-1 overflow-y-auto">
+          <div ref="blockListRef" class="flex-1 overflow-y-auto" @scroll="handleBlockListScroll">
             <div :style="{ height: `${blockVirtualizer.getTotalSize()}px`, position: 'relative' }">
               <div
                 v-for="virtualItem in virtualBlocks"
@@ -380,6 +421,28 @@ watch(pendingScrollToMessageId, async (messageId) => {
                   </div>
                 </div>
               </div>
+            </div>
+
+            <!-- 加载更多提示 -->
+            <div
+              v-if="result.pagination?.hasMore"
+              class="py-3 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700"
+            >
+              <template v-if="isLoadingMore">
+                <UIcon name="i-heroicons-arrow-path" class="w-4 h-4 animate-spin inline mr-1" />
+                {{ t('common.loading') }}
+              </template>
+              <template v-else>
+                <button class="text-primary-500 hover:text-primary-600" @click="emit('load-more')">
+                  {{ t('analysis.filter.loadMore') }}
+                </button>
+              </template>
+            </div>
+            <div
+              v-else-if="result.pagination && result.blocks.length >= result.pagination.totalBlocks"
+              class="py-3 text-center text-xs text-gray-400 dark:text-gray-500"
+            >
+              {{ t('analysis.filter.allLoaded') }}
             </div>
           </div>
         </div>

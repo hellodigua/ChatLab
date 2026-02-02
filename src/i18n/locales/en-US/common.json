@@ -16,7 +16,8 @@
   "noData": "No data",
   "error": {
     "general": "Operation failed, please try again",
-    "network": "Network error"
+    "network": "Network error",
+    "unknown": "Unknown error"
   },
   "attachment": {
     "image": "Image",

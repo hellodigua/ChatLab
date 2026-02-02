@@ -1,5 +1,5 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
-import type { AnalysisSession, MessageType, ImportProgress } from '../../src/types/base'
+import type { AnalysisSession, MessageType, ImportProgress, ExportProgress } from '../../src/types/base'
 import type {
   MemberActivity,
   MemberNameHistory,
@@ -252,6 +252,20 @@ interface FilterResult {
   }
 }
 
+// 分页信息类型
+interface PaginationInfo {
+  page: number
+  pageSize: number
+  totalBlocks: number
+  totalHits: number
+  hasMore: boolean
+}
+
+// 带分页的筛选结果类型
+interface FilterResultWithPagination extends FilterResult {
+  pagination: PaginationInfo
+}
+
 interface AIConversation {
   id: string
   sessionId: string
@@ -348,15 +362,36 @@ interface AiApi {
   getMessages: (conversationId: string) => Promise<AIMessage[]>
   deleteMessage: (messageId: string) => Promise<boolean>
   showAiLogFile: () => Promise<{ success: boolean; path?: string; error?: string }>
-  // 自定义筛选
+  // 自定义筛选（支持分页）
   filterMessagesWithContext: (
     sessionId: string,
     keywords?: string[],
     timeFilter?: TimeFilter,
     senderIds?: number[],
+    contextSize?: number,
+    page?: number,
+    pageSize?: number
+  ) => Promise<FilterResultWithPagination>
+  getMultipleSessionsMessages: (
+    sessionId: string,
+    chatSessionIds: number[],
+    page?: number,
+    pageSize?: number
+  ) => Promise<FilterResultWithPagination>
+  // 导出筛选结果到文件
+  exportFilterResultToFile: (params: {
+    sessionId: string
+    sessionName: string
+    outputDir: string
+    filterMode: 'condition' | 'session'
+    keywords?: string[]
+    timeFilter?: TimeFilter
+    senderIds?: number[]
     contextSize?: number
-  ) => Promise<FilterResult>
-  getMultipleSessionsMessages: (sessionId: string, chatSessionIds: number[]) => Promise<FilterResult>
+    chatSessionIds?: number[]
+  }) => Promise<{ success: boolean; filePath?: string; error?: string }>
+  // 监听导出进度
+  onExportProgress: (callback: (progress: ExportProgress) => void) => () => void
 }
 
 // LLM 相关类型

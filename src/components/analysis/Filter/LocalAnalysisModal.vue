@@ -56,6 +56,15 @@ const props = defineProps<{
 
 const open = defineModel<boolean>('open', { default: false })
 
+// 数据量阈值（超过此数量时提示数据量过大）
+const DATA_TOO_LARGE_THRESHOLD = 5000
+
+// 检查数据量是否过大
+const isDataTooLarge = computed(() => {
+  if (!props.filterResult) return false
+  return props.filterResult.stats.totalMessages > DATA_TOO_LARGE_THRESHOLD
+})
+
 // 分析模式：'preset' | 'custom'
 const analysisMode = ref<'preset' | 'custom'>('preset')
 
@@ -224,6 +233,24 @@ watch(open, (val) => {
             </div>
           </div>
 
+          <!-- 数据量过大警告 -->
+          <div
+            v-if="isDataTooLarge"
+            class="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+          >
+            <div class="flex items-start gap-2">
+              <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+              <div class="text-sm">
+                <p class="font-medium text-red-700 dark:text-red-400">
+                  {{ t('analysis.filter.dataTooLarge') }}
+                </p>
+                <p class="text-red-600 dark:text-red-500 mt-1">
+                  {{ t('analysis.filter.dataTooLargeThreshold', { count: DATA_TOO_LARGE_THRESHOLD }) }}
+                </p>
+              </div>
+            </div>
+          </div>
+
           <!-- 分析模式切换 -->
           <div class="flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg w-fit">
             <button
@@ -295,7 +322,7 @@ watch(open, (val) => {
             <UButton
               color="primary"
               :loading="isAnalyzing"
-              :disabled="isAnalyzing || (analysisMode === 'custom' && !customPrompt.trim())"
+              :disabled="isAnalyzing || isDataTooLarge || (analysisMode === 'custom' && !customPrompt.trim())"
               @click="executeAnalysis"
             >
               <UIcon name="i-heroicons-sparkles" class="w-4 h-4 mr-1" />

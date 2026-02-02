@@ -122,7 +122,7 @@ export function initWorker(): void {
 /**
  * 发送消息到 Worker 并等待响应
  */
-function sendToWorker<T>(type: string, payload: any): Promise<T> {
+function sendToWorker<T>(type: string, payload: any, timeoutMs: number = 30000): Promise<T> {
   return new Promise((resolve, reject) => {
     if (!worker) {
       try {
@@ -139,13 +139,13 @@ function sendToWorker<T>(type: string, payload: any): Promise<T> {
 
     worker!.postMessage({ id, type, payload })
 
-    // 设置超时（30秒）
+    // 设置超时
     setTimeout(() => {
       if (pendingRequests.has(id)) {
         pendingRequests.delete(id)
         reject(new Error(`Worker request timeout: ${type}`))
       }
-    }, 30000)
+    }, timeoutMs)
   })
 }
 
@@ -810,23 +810,93 @@ export interface FilterResult {
 }
 
 /**
- * 按条件筛选消息并扩充上下文
+ * 分页信息类型
+ */
+export interface PaginationInfo {
+  page: number
+  pageSize: number
+  totalBlocks: number
+  totalHits: number
+  hasMore: boolean
+}
+
+/**
+ * 带分页的筛选结果类型
+ */
+export interface FilterResultWithPagination extends FilterResult {
+  pagination: PaginationInfo
+}
+
+/**
+ * 按条件筛选消息并扩充上下文（支持分页）
  */
 export async function filterMessagesWithContext(
   sessionId: string,
   keywords?: string[],
   timeFilter?: { startTs: number; endTs: number },
   senderIds?: number[],
-  contextSize?: number
-): Promise<FilterResult> {
-  return sendToWorker('filterMessagesWithContext', { sessionId, keywords, timeFilter, senderIds, contextSize })
+  contextSize?: number,
+  page?: number,
+  pageSize?: number
+): Promise<FilterResultWithPagination> {
+  return sendToWorker('filterMessagesWithContext', {
+    sessionId,
+    keywords,
+    timeFilter,
+    senderIds,
+    contextSize,
+    page,
+    pageSize,
+  })
 }
 
 /**
- * 获取多个会话的完整消息
+ * 获取多个会话的完整消息（支持分页）
  */
-export async function getMultipleSessionsMessages(sessionId: string, chatSessionIds: number[]): Promise<FilterResult> {
-  return sendToWorker('getMultipleSessionsMessages', { sessionId, chatSessionIds })
+export async function getMultipleSessionsMessages(
+  sessionId: string,
+  chatSessionIds: number[],
+  page?: number,
+  pageSize?: number
+): Promise<FilterResultWithPagination> {
+  return sendToWorker('getMultipleSessionsMessages', { sessionId, chatSessionIds, page, pageSize })
+}
+
+/**
+ * 导出筛选结果参数
+ */
+export interface ExportFilterParams {
+  sessionId: string
+  sessionName: string
+  outputDir: string
+  filterMode: 'condition' | 'session'
+  keywords?: string[]
+  timeFilter?: { startTs: number; endTs: number }
+  senderIds?: number[]
+  contextSize?: number
+  chatSessionIds?: number[]
+}
+
+/**
+ * 导出进度回调类型
+ */
+export interface ExportProgress {
+  stage: 'preparing' | 'exporting' | 'done' | 'error'
+  currentBlock: number
+  totalBlocks: number
+  percentage: number
+  message: string
+}
+
+/**
+ * 导出筛选结果到文件（后端生成）
+ * 使用 10 分钟超时，支持大数据量导出和进度回调
+ */
+export async function exportFilterResultToFile(
+  params: ExportFilterParams,
+  onProgress?: (progress: ExportProgress) => void
+): Promise<{ success: boolean; filePath?: string; error?: string }> {
+  return sendToWorkerWithProgress('exportFilterResultToFile', params, onProgress as any, 600000)
 }
 
 // ==================== 增量导入 ====================

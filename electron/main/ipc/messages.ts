@@ -149,7 +149,7 @@ export function registerMessagesHandlers({ win }: IpcContext): void {
   // ==================== 自定义筛选 ====================
 
   /**
-   * 按条件筛选消息并扩充上下文
+   * 按条件筛选消息并扩充上下文（支持分页）
    */
   ipcMain.handle(
     'ai:filterMessagesWithContext',
@@ -159,26 +159,78 @@ export function registerMessagesHandlers({ win }: IpcContext): void {
       keywords?: string[],
       timeFilter?: { startTs: number; endTs: number },
       senderIds?: number[],
-      contextSize?: number
+      contextSize?: number,
+      page?: number,
+      pageSize?: number
     ) => {
       try {
-        return await worker.filterMessagesWithContext(sessionId, keywords, timeFilter, senderIds, contextSize)
+        return await worker.filterMessagesWithContext(
+          sessionId,
+          keywords,
+          timeFilter,
+          senderIds,
+          contextSize,
+          page,
+          pageSize
+        )
       } catch (error) {
         console.error('筛选消息失败：', error)
-        return { blocks: [], stats: { totalMessages: 0, hitMessages: 0, totalChars: 0 } }
+        return {
+          blocks: [],
+          stats: { totalMessages: 0, hitMessages: 0, totalChars: 0 },
+          pagination: { page: page ?? 1, pageSize: pageSize ?? 50, totalBlocks: 0, totalHits: 0, hasMore: false },
+        }
       }
     }
   )
 
   /**
-   * 获取多个会话的完整消息
+   * 获取多个会话的完整消息（支持分页）
    */
-  ipcMain.handle('ai:getMultipleSessionsMessages', async (_, sessionId: string, chatSessionIds: number[]) => {
-    try {
-      return await worker.getMultipleSessionsMessages(sessionId, chatSessionIds)
-    } catch (error) {
-      console.error('获取多个会话消息失败：', error)
-      return { blocks: [], stats: { totalMessages: 0, hitMessages: 0, totalChars: 0 } }
+  ipcMain.handle(
+    'ai:getMultipleSessionsMessages',
+    async (_, sessionId: string, chatSessionIds: number[], page?: number, pageSize?: number) => {
+      try {
+        return await worker.getMultipleSessionsMessages(sessionId, chatSessionIds, page, pageSize)
+      } catch (error) {
+        console.error('获取多个会话消息失败：', error)
+        return {
+          blocks: [],
+          stats: { totalMessages: 0, hitMessages: 0, totalChars: 0 },
+          pagination: { page: page ?? 1, pageSize: pageSize ?? 50, totalBlocks: 0, totalHits: 0, hasMore: false },
+        }
+      }
     }
-  })
+  )
+
+  /**
+   * 导出筛选结果到文件（后端生成，支持进度）
+   */
+  ipcMain.handle(
+    'ai:exportFilterResultToFile',
+    async (
+      _,
+      params: {
+        sessionId: string
+        sessionName: string
+        outputDir: string
+        filterMode: 'condition' | 'session'
+        keywords?: string[]
+        timeFilter?: { startTs: number; endTs: number }
+        senderIds?: number[]
+        contextSize?: number
+        chatSessionIds?: number[]
+      }
+    ) => {
+      try {
+        return await worker.exportFilterResultToFile(params, (progress) => {
+          // 发送进度到渲染进程
+          win.webContents.send('ai:exportProgress', progress)
+        })
+      } catch (error) {
+        console.error('导出筛选结果失败：', error)
+        return { success: false, error: String(error) }
+      }
+    }
+  )
 }

@@ -99,6 +99,13 @@
     "editablePromptLabel": "Prompt (editable)",
     "analyzing": "Analyzing...",
     "startAnalysis": "Start Analysis",
-    "analysisResult": "Analysis Result"
+    "analysisResult": "Analysis Result",
+    "loadMore": "Load More",
+    "allLoaded": "All loaded",
+    "dataTooLarge": "Data too large for AI analysis. Please narrow your filter.",
+    "dataTooLargeThreshold": "Current data exceeds {count} messages",
+    "exportSuccess": "Export successful",
+    "exportFailed": "Export failed",
+    "exportPreparing": "Preparing export..."
   }
 }

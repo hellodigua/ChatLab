@@ -251,6 +251,17 @@ export interface ImportProgress {
 }
 
 /**
+ * 导出进度
+ */
+export interface ExportProgress {
+  stage: 'preparing' | 'exporting' | 'done' | 'error'
+  currentBlock: number
+  totalBlocks: number
+  percentage: number // 0-100
+  message: string
+}
+
+/**
  * 导入结果
  */
 export interface ImportResult {

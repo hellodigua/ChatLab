@@ -16,7 +16,8 @@
   "noData": "暂无数据",
   "error": {
     "general": "操作失败，请重试",
-    "network": "网络错误"
+    "network": "网络错误",
+    "unknown": "未知错误"
   },
   "attachment": {
     "image": "图片",
