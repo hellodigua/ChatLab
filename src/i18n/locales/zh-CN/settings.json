@@ -113,7 +113,14 @@
       "choose": "选择位置",
       "reset": "恢复默认",
       "open": "打开",
-      "restartTip": "切换目录后请重启应用，旧目录下缓存会跟随迁移"
+      "restartTip": "切换目录后请重启应用，旧目录下缓存会跟随迁移",
+      "confirmTitle": "确认切换数据目录",
+      "confirmMessage": "您即将切换数据存储位置，现有数据将被迁移到新目录。",
+      "newPath": "新目录路径",
+      "defaultPath": "默认位置",
+      "confirmWarning": "重启应用后，旧数据目录将被自动删除。请确保新目录路径正确。",
+      "cancel": "取消",
+      "confirm": "确认切换"
     },
     "totalUsage": "总占用：",
     "loading": "加载中...",
