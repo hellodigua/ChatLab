@@ -121,30 +121,111 @@ export function getCustomDataDir(): string | null {
 }
 
 /**
- * 递归合并复制目录（仅复制目标不存在的文件）
+ * 检查路径是否安全（不在系统关键目录下）
  */
-function copyDirMerge(src: string, dest: string): void {
-  if (!fs.existsSync(src)) return
+function isPathSafe(targetPath: string): boolean {
+  // 系统关键目录列表（Windows 和 Unix）
+  const dangerousPaths = [
+    // Windows 系统目录
+    'C:\\Windows',
+    'C:\\Program Files',
+    'C:\\Program Files (x86)',
+    'C:\\ProgramData',
+    // Unix 系统目录
+    '/usr',
+    '/etc',
+    '/bin',
+    '/sbin',
+    '/lib',
+    '/var',
+    '/boot',
+    '/root',
+    '/System',
+    '/Library',
+  ]
 
-  ensureDir(dest)
-  const entries = fs.readdirSync(src, { withFileTypes: true })
+  const normalizedTarget = targetPath.toLowerCase().replace(/\//g, '\\')
 
-  for (const entry of entries) {
-    const srcPath = path.join(src, entry.name)
-    const destPath = path.join(dest, entry.name)
-
-    if (entry.isDirectory()) {
-      if (!fs.existsSync(destPath)) {
-        copyDirRecursive(srcPath, destPath)
-      } else {
-        copyDirMerge(srcPath, destPath)
-      }
-    } else {
-      if (!fs.existsSync(destPath)) {
-        fs.copyFileSync(srcPath, destPath)
-      }
+  for (const dangerous of dangerousPaths) {
+    const normalizedDangerous = dangerous.toLowerCase().replace(/\//g, '\\')
+    if (normalizedTarget.startsWith(normalizedDangerous)) {
+      return false
     }
   }
+
+  return true
+}
+
+/**
+ * 检查目录是否为空或仅包含 ChatLab 数据
+ */
+function isDirectorySafeToUse(dirPath: string): boolean {
+  if (!fs.existsSync(dirPath)) {
+    return true // 目录不存在，可以安全使用
+  }
+
+  try {
+    const entries = fs.readdirSync(dirPath)
+    // 如果目录为空，可以安全使用
+    if (entries.length === 0) return true
+
+    // 如果包含 ChatLab 的标志性子目录，认为是之前的数据目录
+    const chatlabDirs = ['databases', 'ai', 'settings', 'logs', 'temp']
+    const hasChatlabStructure = chatlabDirs.some((d) => entries.includes(d))
+    return hasChatlabStructure
+  } catch {
+    return false
+  }
+}
+
+/**
+ * 递归合并复制目录（仅复制目标不存在的文件）
+ * @returns 复制结果统计
+ */
+function copyDirMerge(
+  src: string,
+  dest: string,
+  stats: { copied: number; skipped: number; errors: string[] } = { copied: 0, skipped: 0, errors: [] }
+): { copied: number; skipped: number; errors: string[] } {
+  if (!fs.existsSync(src)) return stats
+
+  try {
+    ensureDir(dest)
+    const entries = fs.readdirSync(src, { withFileTypes: true })
+
+    for (const entry of entries) {
+      const srcPath = path.join(src, entry.name)
+      const destPath = path.join(dest, entry.name)
+
+      try {
+        if (entry.isDirectory()) {
+          if (!fs.existsSync(destPath)) {
+            copyDirRecursive(srcPath, destPath)
+            stats.copied++
+          } else {
+            copyDirMerge(srcPath, destPath, stats)
+          }
+        } else {
+          if (!fs.existsSync(destPath)) {
+            fs.copyFileSync(srcPath, destPath)
+            stats.copied++
+          } else {
+            stats.skipped++
+          }
+        }
+      } catch (error) {
+        const errorMsg = `复制失败: ${srcPath} -> ${error instanceof Error ? error.message : String(error)}`
+        console.error('[Paths]', errorMsg)
+        stats.errors.push(errorMsg)
+      }
+    }
+  } catch (error) {
+    const errorMsg = `读取目录失败: ${src} -> ${error instanceof Error ? error.message : String(error)}`
+    console.error('[Paths]', errorMsg)
+    stats.errors.push(errorMsg)
+  }
+
+  return stats
 }
 
 /**
@@ -162,7 +243,6 @@ export function setCustomDataDir(
   try {
     if (!normalized) {
       // 恢复默认路径
-      const config = readStorageConfig()
       // 记录旧目录，下次启动时删除
       writeStorageConfig({ pendingDeleteDir: oldDir })
       _appDataDir = null
@@ -177,6 +257,16 @@ export function setCustomDataDir(
 
     if (!path.isAbsolute(normalized)) {
       return { success: false, error: '数据目录必须是绝对路径' }
+    }
+
+    // 安全检查：不能使用系统关键目录
+    if (!isPathSafe(normalized)) {
+      return { success: false, error: '不能使用系统关键目录作为数据目录' }
+    }
+
+    // 安全检查：目标目录应为空或已有 ChatLab 数据
+    if (!isDirectorySafeToUse(normalized)) {
+      return { success: false, error: '目标目录不为空且不包含 ChatLab 数据，请选择空目录或已有数据目录' }
     }
 
     // 确保目录存在
@@ -216,6 +306,27 @@ export function cleanupPendingDeleteDir(): void {
       // 清除待删除标记
       writeStorageConfig({ dataDir: config.dataDir })
       return
+    }
+
+    // 安全检查：不能删除系统关键目录
+    if (!isPathSafe(pendingDir)) {
+      console.log('[Paths] 跳过清理：待删除目录是系统关键目录:', pendingDir)
+      // 清除待删除标记
+      writeStorageConfig({ dataDir: config.dataDir })
+      return
+    }
+
+    // 安全检查：确保待删除目录确实是 ChatLab 数据目录（包含标志性子目录）
+    if (fs.existsSync(pendingDir)) {
+      const entries = fs.readdirSync(pendingDir)
+      const chatlabDirs = ['databases', 'ai', 'settings', 'logs', 'temp']
+      const hasChatlabStructure = chatlabDirs.some((d) => entries.includes(d))
+      if (!hasChatlabStructure) {
+        console.log('[Paths] 跳过清理：待删除目录不是 ChatLab 数据目录:', pendingDir)
+        // 清除待删除标记
+        writeStorageConfig({ dataDir: config.dataDir })
+        return
+      }
     }
 
     // 检查目录是否存在
