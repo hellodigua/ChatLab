@@ -3,7 +3,6 @@
  * 支持多 Embedding 配置模式（参考 LLM 配置）
  */
 
-import { app } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
 import { randomUUID } from 'crypto'
@@ -16,6 +15,7 @@ import {
   type EmbeddingConfigStore,
 } from './types'
 import { aiLogger as logger } from '../logger'
+import { getAiDataDir } from '../../paths'
 
 // ==================== 路径管理 ====================
 
@@ -23,24 +23,21 @@ import { aiLogger as logger } from '../logger'
  * 获取 RAG 配置文件路径
  */
 function getConfigPath(): string {
-  const userDataPath = app.getPath('userData')
-  return path.join(userDataPath, 'data', 'ai', 'rag-config.json')
+  return path.join(getAiDataDir(), 'rag-config.json')
 }
 
 /**
  * 获取 Embedding 配置文件路径
  */
 function getEmbeddingConfigPath(): string {
-  const userDataPath = app.getPath('userData')
-  return path.join(userDataPath, 'data', 'ai', 'embedding-config.json')
+  return path.join(getAiDataDir(), 'embedding-config.json')
 }
 
 /**
  * 获取向量存储目录
  */
 export function getVectorStoreDir(): string {
-  const userDataPath = app.getPath('userData')
-  const dir = path.join(userDataPath, 'data', 'ai', 'vectors')
+  const dir = path.join(getAiDataDir(), 'vectors')
 
   // 确保目录存在
   if (!fs.existsSync(dir)) {
