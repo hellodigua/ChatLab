@@ -735,6 +735,10 @@ export class Agent {
 
         if (chunk.tool_calls) {
           toolCalls = chunk.tool_calls
+          aiLogger.info('Agent', '收到 tool_calls', {
+            count: chunk.tool_calls.length,
+            names: chunk.tool_calls.map((tc) => tc.function.name),
+          })
         }
 
         // 累加 Token 使用量（流式响应在最后一个 chunk 返回 usage）
@@ -743,11 +747,17 @@ export class Agent {
         }
 
         if (chunk.isFinished) {
+          aiLogger.info('Agent', '流结束', {
+            finishReason: chunk.finishReason,
+            hasToolCalls: !!toolCalls,
+            toolCallsCount: toolCalls?.length ?? 0,
+          })
           // 收尾：清空解析器缓冲
           parser.flush()
 
-          // 如果没有标准 tool_calls，尝试 fallback 解析
-          if (chunk.finishReason !== 'tool_calls' || !toolCalls) {
+          // 只有当 finishReason 不是 tool_calls 且 没有收到 toolCalls 时，才尝试 fallback 解析
+          // 修复：某些第三方 API（如 Gemini 中转）返回 finishReason="stop" 但实际有 tool_calls
+          if (chunk.finishReason !== 'tool_calls' && !toolCalls) {
             // Fallback: 检查内容中是否有 <tool_call> 标签
             if (hasToolCallTags(accumulatedContent)) {
               // 提取 thinking 内容

@@ -436,16 +436,20 @@ export class OpenAICompatibleService implements ILLMService {
           }
         } else if (part.type === 'finish') {
           // 流结束
+          const finishReason = mapFinishReason(part.finishReason)
+          const toolCalls = await result.toolCalls
+          const usage = mapUsage(part.totalUsage)
+
+          // 详细记录流式请求完成信息，包括工具调用
           aiLogger.info(this.providerId, '流式请求完成', {
             partCount,
             textChunkCount,
             reasoningChunkCount,
             finishReason: part.finishReason,
+            mappedFinishReason: finishReason,
+            toolCallsCount: toolCalls.length,
+            toolCallNames: toolCalls.map((tc) => tc.toolName),
           })
-
-          const finishReason = mapFinishReason(part.finishReason)
-          const toolCalls = await result.toolCalls
-          const usage = mapUsage(part.totalUsage)
 
           yield {
             content: '',
