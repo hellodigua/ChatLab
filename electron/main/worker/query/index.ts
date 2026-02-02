@@ -68,12 +68,16 @@ export {
   getSessionStats,
   updateSessionGapThreshold,
   getSessions,
+  saveSessionSummary,
+  getSessionSummary,
   searchSessions,
   getSessionMessages,
   DEFAULT_SESSION_GAP_THRESHOLD,
   // 自定义筛选
   filterMessagesWithContext,
   getMultipleSessionsMessages,
+  // 导出功能
+  exportFilterResultToFile,
 } from './session'
 export type {
   ChatSessionItem,
@@ -82,6 +86,10 @@ export type {
   ContextBlock,
   FilterResult,
   FilterMessage,
+  PaginationInfo,
+  FilterResultWithPagination,
+  ExportFilterParams,
+  ExportProgress,
 } from './session'
 
 // NLP 查询
