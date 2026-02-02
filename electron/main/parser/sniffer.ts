@@ -36,6 +36,14 @@ function matchHeadSignatures(headContent: string, patterns: RegExp[]): boolean {
 }
 
 /**
+ * 检查文件名是否匹配签名
+ */
+function matchFilenameSignatures(filePath: string, patterns: RegExp[]): boolean {
+  const filename = path.basename(filePath)
+  return patterns.some((pattern) => pattern.test(filename))
+}
+
+/**
  * 检查必需字段是否存在
  */
 function matchRequiredFields(headContent: string, fields: string[]): boolean {
@@ -102,7 +110,7 @@ export class FormatSniffer {
     const headContent = readFileHead(filePath)
 
     for (const { feature } of this.formats) {
-      if (this.matchFeature(feature, ext, headContent)) {
+      if (this.matchFeature(feature, ext, headContent, filePath)) {
         return feature
       }
     }
@@ -120,7 +128,7 @@ export class FormatSniffer {
     const headContent = readFileHead(filePath)
 
     for (const { feature, parser } of this.formats) {
-      if (this.matchFeature(feature, ext, headContent)) {
+      if (this.matchFeature(feature, ext, headContent, filePath)) {
         return parser
       }
     }
@@ -275,7 +283,12 @@ export class FormatSniffer {
   /**
    * 检查特征是否匹配
    */
-  private matchFeature(feature: FormatFeature, ext: string, headContent: string): boolean {
+  private matchFeature(
+    feature: FormatFeature,
+    ext: string,
+    headContent: string,
+    filePath?: string
+  ): boolean {
     // 1. 检查扩展名
     if (!feature.extensions.includes(ext)) {
       return false
@@ -284,20 +297,33 @@ export class FormatSniffer {
     const { signatures } = feature
 
     // 2. 检查文件头签名（如果定义了）
+    let headMatch = true
     if (signatures.head && signatures.head.length > 0) {
-      if (!matchHeadSignatures(headContent, signatures.head)) {
+      headMatch = matchHeadSignatures(headContent, signatures.head)
+    }
+
+    // 3. 检查文件名签名（如果定义了，作为文件头匹配失败的补充）
+    let filenameMatch = false
+    if (signatures.filename && signatures.filename.length > 0 && filePath) {
+      filenameMatch = matchFilenameSignatures(filePath, signatures.filename)
+    }
+
+    // 文件头签名或文件名签名至少有一个匹配
+    if (!headMatch && !filenameMatch) {
+      // 如果两个都没定义，则认为匹配（只检查扩展名）
+      if ((signatures.head && signatures.head.length > 0) || (signatures.filename && signatures.filename.length > 0)) {
         return false
       }
     }
 
-    // 3. 检查必需字段（如果定义了）
+    // 4. 检查必需字段（如果定义了）
     if (signatures.requiredFields && signatures.requiredFields.length > 0) {
       if (!matchRequiredFields(headContent, signatures.requiredFields)) {
         return false
       }
     }
 
-    // 4. 检查字段值模式（如果定义了）
+    // 5. 检查字段值模式（如果定义了）
     if (signatures.fieldPatterns) {
       for (const [, pattern] of Object.entries(signatures.fieldPatterns)) {
         if (!pattern.test(headContent)) {

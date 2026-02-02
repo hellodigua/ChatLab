@@ -65,6 +65,8 @@ export interface ParseResult {
 export interface FormatSignatures {
   /** 文件头正则匹配（任意一个匹配即可） */
   head?: RegExp[]
+  /** 文件名正则匹配（任意一个匹配即可，作为文件头匹配的补充） */
+  filename?: RegExp[]
   /** 必须存在的 JSON 字段路径 */
   requiredFields?: string[]
   /** 字段值模式匹配 */

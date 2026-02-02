@@ -54,10 +54,16 @@ export const feature: FormatFeature = {
   signatures: {
     // WhatsApp 导出文件的特征（中文/英文）
     head: [
-      /消息和通话已进行端到端加密/, // 中文
-      /Messages and calls are end-to-end encrypted/i, // 英文
-      /WhatsApp/i,
+      /消息和通话已进行端到端加密/, // 中文加密提示
+      /Messages and calls are end-to-end encrypted/i, // 英文加密提示
+      /WhatsApp/i, // 通用 WhatsApp 关键词
+      /你发送给自己的消息已进行端到端加密/, // 中文自己对话提示
+      /有人添加了你/, // 中文群聊添加提示
+      /\d{4}\/\d{1,2}\/\d{1,2} \d{1,2}:\d{2} - /, // 消息行格式特征
+      /^\[\d{1,2}\/\d{1,2}\/\d{2},? \d{1,2}:\d{2}:\d{2}\] /, // 消息行格式特征 V2
     ],
+    // 文件名特征：与xxx的 WhatsApp 聊天.txt
+    filename: [/^与.+的\s*WhatsApp\s*聊天\.txt$/i],
   },
 }
 
@@ -74,8 +80,9 @@ function cleanLine(line: string): string {
 
 // ==================== 消息头正则 ====================
 
-// 格式1：2025/12/22 12:35 - 地瓜: 内容（部分地区导出格式）
-const MESSAGE_LINE_REGEX_V1 = /^(\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}) - (.+)$/
+// 格式1：2025/12/22 12:35 或 2025/2/2 9:35 - 地瓜: 内容（部分地区导出格式）
+// 支持月份、日期、小时为 1-2 位数字
+const MESSAGE_LINE_REGEX_V1 = /^(\d{4}\/\d{1,2}\/\d{1,2} \d{1,2}:\d{2}) - (.+)$/
 
 // 格式2：[6/7/25 22:44:26] 或 [10/12/25, 12:50:16]（中文/英文地区导出格式）
 // 日期和时间之间可能有逗号（英文）或没有（中文）
@@ -139,7 +146,7 @@ function detectMessageType(content: string): MessageType {
 /**
  * 解析 WhatsApp 时间格式为秒级时间戳
  * 支持两种格式：
- * - 格式1：2025/12/22 12:35（YYYY/MM/DD HH:MM）
+ * - 格式1：2025/12/22 12:35 或 2025/2/2 9:35（YYYY/M/D H:MM，月日时可为 1-2 位）
  * - 格式2：6/7/25 22:44:26（M/D/YY HH:MM:SS）
  */
 function parseWhatsAppTime(timeStr: string, isV2Format: boolean = false): number {
@@ -164,7 +171,22 @@ function parseWhatsAppTime(timeStr: string, isV2Format: boolean = false): number
     }
   }
 
-  // 格式1：YYYY/MM/DD HH:MM
+  // 格式1：YYYY/M/D H:MM（月、日、时可为 1-2 位数字）
+  const match = timeStr.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2}) (\d{1,2}):(\d{2})$/)
+  if (match) {
+    const [, year, month, day, hour, minute] = match
+    const date = new Date(
+      parseInt(year, 10),
+      parseInt(month, 10) - 1,
+      parseInt(day, 10),
+      parseInt(hour, 10),
+      parseInt(minute, 10),
+      0
+    )
+    return Math.floor(date.getTime() / 1000)
+  }
+
+  // 兜底：尝试标准格式解析（YYYY/MM/DD HH:MM）
   const normalized = timeStr.replace(/\//g, '-').replace(' ', 'T') + ':00'
   const date = new Date(normalized)
   return Math.floor(date.getTime() / 1000)
