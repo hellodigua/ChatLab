@@ -71,6 +71,11 @@ export interface CacheInfo {
   totalSize: number
 }
 
+export interface DataDirInfo {
+  path: string
+  isCustom: boolean
+}
+
 // Session API 类型
 export interface SessionStats {
   sessionCount: number
@@ -175,6 +180,30 @@ export const cacheApi = {
    */
   getLatestImportLog: (): Promise<{ success: boolean; path?: string; name?: string; error?: string }> => {
     return ipcRenderer.invoke('cache:getLatestImportLog')
+  },
+
+  /**
+   * 获取当前数据目录
+   */
+  getDataDir: (): Promise<DataDirInfo> => {
+    return ipcRenderer.invoke('cache:getDataDir')
+  },
+
+  /**
+   * 选择数据目录（只返回路径）
+   */
+  selectDataDir: (): Promise<{ success: boolean; path?: string; error?: string }> => {
+    return ipcRenderer.invoke('cache:selectDataDir')
+  },
+
+  /**
+   * 设置数据目录
+   */
+  setDataDir: (
+    path: string | null,
+    migrate: boolean = true
+  ): Promise<{ success: boolean; error?: string; from?: string; to?: string }> => {
+    return ipcRenderer.invoke('cache:setDataDir', { path, migrate })
   },
 
   /**

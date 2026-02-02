@@ -31,6 +31,10 @@ interface CacheInfo {
 const cacheInfo = ref<CacheInfo | null>(null)
 const isLoading = ref(false)
 const clearingId = ref<string | null>(null)
+const dataDir = ref('')
+const isCustomDataDir = ref(false)
+const isUpdatingDataDir = ref(false)
+const dataDirError = ref<string | null>(null)
 
 // 格式化文件大小
 function formatSize(bytes: number): string {
@@ -56,6 +60,17 @@ async function loadCacheInfo() {
     console.error('获取缓存信息失败:', error)
   } finally {
     isLoading.value = false
+  }
+}
+
+// 加载数据目录
+async function loadDataDir() {
+  try {
+    const info = await window.cacheApi.getDataDir()
+    dataDir.value = info.path
+    isCustomDataDir.value = info.isCustom
+  } catch (error) {
+    console.error('获取数据目录失败:', error)
   }
 }
 
@@ -86,9 +101,53 @@ async function openDirectory(cacheId: string) {
   }
 }
 
+// 打开数据根目录
+async function openBaseDir() {
+  await openDirectory('base')
+}
+
+// 选择数据目录
+async function selectDataDir() {
+  dataDirError.value = null
+  try {
+    const result = await window.cacheApi.selectDataDir()
+    if (!result.success || !result.path) return
+    await applyDataDirChange(result.path, true)
+  } catch (error) {
+    dataDirError.value = error instanceof Error ? error.message : String(error)
+  }
+}
+
+// 恢复默认数据目录
+async function resetDataDir() {
+  dataDirError.value = null
+  await applyDataDirChange(null, false)
+}
+
+// 应用数据目录变更
+async function applyDataDirChange(newDir: string | null, migrate: boolean) {
+  isUpdatingDataDir.value = true
+  try {
+    const result = await window.cacheApi.setDataDir(newDir, migrate)
+    if (!result.success) {
+      dataDirError.value = result.error || '设置失败'
+      return
+    }
+
+    // 重新加载目录信息
+    await loadDataDir()
+    await loadCacheInfo()
+  } catch (error) {
+    dataDirError.value = error instanceof Error ? error.message : String(error)
+  } finally {
+    isUpdatingDataDir.value = false
+  }
+}
+
 // 组件挂载时加载数据
 onMounted(() => {
   loadCacheInfo()
+  loadDataDir()
 })
 
 // 暴露刷新方法
@@ -117,6 +176,54 @@ defineExpose({
         <!-- 刷新按钮 -->
         <UButton icon="i-heroicons-arrow-path" variant="ghost" size="sm" :loading="isLoading" @click="loadCacheInfo" />
       </div>
+    </div>
+
+    <!-- 数据目录设置 -->
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-medium text-gray-900 dark:text-white">
+            {{ t('settings.storage.dataLocation.title') }}
+          </p>
+          <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+            {{ t('settings.storage.dataLocation.description') }}
+          </p>
+        </div>
+        <div class="shrink-0">
+          <UButton icon="i-heroicons-folder-open" variant="ghost" size="xs" @click="openBaseDir">
+            {{ t('settings.storage.dataLocation.open') }}
+          </UButton>
+        </div>
+      </div>
+
+      <div class="mt-3 flex items-center gap-2">
+        <UInput v-model="dataDir" readonly size="sm" class="min-w-0 flex-1" />
+        <UButton
+          size="sm"
+          variant="soft"
+          :loading="isUpdatingDataDir"
+          :disabled="isUpdatingDataDir"
+          @click="selectDataDir"
+        >
+          {{ t('settings.storage.dataLocation.choose') }}
+        </UButton>
+        <UButton
+          v-if="isCustomDataDir"
+          size="sm"
+          variant="ghost"
+          :disabled="isUpdatingDataDir"
+          @click="resetDataDir"
+        >
+          {{ t('settings.storage.dataLocation.reset') }}
+        </UButton>
+      </div>
+
+      <p class="mt-2 text-xs text-amber-600 dark:text-amber-400">
+        {{ t('settings.storage.dataLocation.restartTip') }}
+      </p>
+      <p v-if="dataDirError" class="mt-1 text-xs text-red-500">
+        {{ dataDirError }}
+      </p>
     </div>
 
     <!-- 加载状态 -->
