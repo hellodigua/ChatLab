@@ -251,17 +251,29 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # 同步到 Cloudflare R2（国内镜像）
+      # 注意：beta/alpha/rc 等预发布版本不上传到 R2
       - name: Get version for R2 upload
         id: version
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "tag=v${{ inputs.version }}" >> $GITHUB_OUTPUT
+            VERSION_TAG="v${{ inputs.version }}"
           else
-            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+            VERSION_TAG="${{ github.ref_name }}"
+          fi
+          echo "tag=$VERSION_TAG" >> $GITHUB_OUTPUT
+
+          # 检查是否为预发布版本（包含 -beta、-alpha、-rc 等）
+          if [[ "$VERSION_TAG" =~ -(beta|alpha|rc)\. ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+            echo "Detected prerelease version: $VERSION_TAG, will skip R2 upload"
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+            echo "Detected stable version: $VERSION_TAG, will upload to R2"
           fi
 
       # 上传所有文件到版本目录
       - name: Upload to Cloudflare R2 (version directory)
+        if: steps.version.outputs.is_prerelease == 'false'
         uses: ryand56/r2-upload-action@latest
         with:
           r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
@@ -274,6 +286,7 @@ jobs:
       # 准备 yml 文件用于根目录上传
       # 需要修改 yml 中的 path/url 为包含版本号的完整路径
       - name: Prepare yml files for root upload
+        if: steps.version.outputs.is_prerelease == 'false'
         run: |
           mkdir -p dist-yml
           VERSION_TAG="${{ steps.version.outputs.tag }}"
@@ -298,6 +311,7 @@ jobs:
 
       # 上传 yml 文件到根目录（覆盖旧版本，electron-updater 从这里检测更新）
       - name: Upload yml files to Cloudflare R2 (root directory)
+        if: steps.version.outputs.is_prerelease == 'false'
         uses: ryand56/r2-upload-action@latest
         with:
           r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}

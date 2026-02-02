@@ -484,6 +484,13 @@ export function migrateAllDatabases(): {
       const needsForceRepair = forceRepairSet.has(sessionId)
       const db = openDatabaseWithMigration(sessionId, needsForceRepair)
       if (db) {
+        // 强制执行 WAL checkpoint，确保 schema_version 更改被持久化到主数据库
+        // 这对 Windows 尤其重要，因为 WAL 文件的持久化行为可能不同
+        try {
+          db.pragma('wal_checkpoint(TRUNCATE)')
+        } catch {
+          // 忽略 checkpoint 失败
+        }
         db.close()
         migratedCount++
       }
