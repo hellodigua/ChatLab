@@ -36,7 +36,6 @@ export {
   getDragonKingAnalysis,
   getDivingAnalysis,
   getCheckInAnalysis,
-  getMonologueAnalysis,
   getMemeBattleAnalysis,
   getMentionAnalysis,
   getMentionGraph,

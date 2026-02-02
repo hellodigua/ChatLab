@@ -16,14 +16,14 @@ const props = defineProps<{
   timeFilter?: TimeFilter
 }>()
 
-// 子 Tab 配置（私聊：口头禅、词云、关键词分析）
+// 子 Tab 配置（私聊：词云、口头禅、关键词分析）
 const subTabs = computed(() => [
-  { id: 'catchphrase', label: t('catchphrase'), icon: 'i-heroicons-chat-bubble-bottom-center-text' },
   { id: 'wordcloud', label: t('wordcloud'), icon: 'i-heroicons-cloud' },
+  { id: 'catchphrase', label: t('catchphrase'), icon: 'i-heroicons-chat-bubble-bottom-center-text' },
   { id: 'keyword', label: t('keywordAnalysis'), icon: 'i-heroicons-magnifying-glass' },
 ])
 
-const activeSubTab = ref('catchphrase')
+const activeSubTab = ref('wordcloud')
 </script>
 
 <template>

@@ -93,6 +93,17 @@ function handleResize() {
 // 监听 option 变化
 watch(() => props.option, updateChart, { deep: true })
 
+// 监听高度变化
+watch(
+  () => props.height,
+  () => {
+    // 使用 nextTick 确保 DOM 更新后再调整大小
+    setTimeout(() => {
+      chartInstance?.resize()
+    }, 0)
+  }
+)
+
 // 监听主题变化
 watch(isDark, () => {
   initChart()

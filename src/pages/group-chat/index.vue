@@ -189,6 +189,9 @@ async function loadAnalysisData() {
 
 // 加载所有数据
 async function loadData() {
+  // 如果没有会话 ID，保持 loading 状态，等待 syncSession 设置后再触发
+  if (!currentSessionId.value) return
+
   isInitialLoad.value = true
   await loadBaseData()
   await loadAnalysisData()

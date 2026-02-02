@@ -41,14 +41,14 @@ const stats = ref({
   uniqueWords: 0,
 })
 
-// 颜色方案
-const colorScheme = ref<'default' | 'warm' | 'cool' | 'rainbow'>('default')
+// 颜色方案（固定为默认）
+const colorScheme = 'default' as const
 
-// 字体大小倍率
-const sizeScale = ref(1)
+// 字体大小倍率（默认大）
+const sizeScale = ref(1.25)
 
-// 最大显示词数
-const maxWords = ref(100)
+// 最大显示词数（默认 150）
+const maxWords = ref(150)
 
 // 词性过滤模式
 const posFilterMode = ref<PosFilterMode>('meaningful')
@@ -78,13 +78,6 @@ const posFilterModeOptions = computed(() => [
   { label: t('posFilter.custom'), value: 'custom' },
 ])
 
-// 配色方案选项
-const colorSchemeOptions = computed(() => [
-  { label: t('colors.default'), value: 'default' },
-  { label: t('colors.warm'), value: 'warm' },
-  { label: t('colors.cool'), value: 'cool' },
-  { label: t('colors.rainbow'), value: 'rainbow' },
-])
 
 // 词数选项
 const maxWordsOptions = [
@@ -297,12 +290,6 @@ onMounted(() => {
           <UITabs v-model="maxWords" size="xs" :items="maxWordsOptions" />
         </div>
 
-        <!-- 配色方案 -->
-        <div>
-          <h4 class="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('config.colorScheme') }}</h4>
-          <UITabs v-model="colorScheme" size="xs" :items="colorSchemeOptions" />
-        </div>
-
         <!-- 字体大小 -->
         <div>
           <h4 class="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('config.sizeScale') }}</h4>
@@ -395,7 +382,6 @@ onMounted(() => {
       "uniqueLabel": "独立词"
     },
     "config": {
-      "colorScheme": "配色方案",
       "maxWords": "显示词数",
       "sizeScale": "字体大小",
       "userFilter": "用户筛选",
@@ -417,12 +403,6 @@ onMounted(() => {
       "selectAll": "全选",
       "clearAll": "清空"
     },
-    "colors": {
-      "default": "默认",
-      "warm": "暖色",
-      "cool": "冷色",
-      "rainbow": "彩虹"
-    },
     "empty": {
       "title": "暂无词云数据",
       "description": "当前筛选条件下没有足够的文本消息用于生成词云"
@@ -440,7 +420,6 @@ onMounted(() => {
       "uniqueLabel": "Unique"
     },
     "config": {
-      "colorScheme": "Color scheme",
       "maxWords": "Max words",
       "sizeScale": "Font size",
       "userFilter": "User filter",
@@ -461,12 +440,6 @@ onMounted(() => {
       "selectMeaningful": "Meaningful",
       "selectAll": "All",
       "clearAll": "Clear"
-    },
-    "colors": {
-      "default": "Default",
-      "warm": "Warm",
-      "cool": "Cool",
-      "rainbow": "Rainbow"
     },
     "empty": {
       "title": "No word cloud data",

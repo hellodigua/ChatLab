@@ -43,6 +43,7 @@ interface AIServiceConfig {
   model?: string
   baseUrl?: string
   disableThinking?: boolean
+  isReasoningModel?: boolean
   createdAt: number
   updatedAt: number
 }
@@ -88,6 +89,7 @@ const formData = ref({
   model: '',
   baseUrl: '',
   disableThinking: true, // 默认禁用思考模式
+  isReasoningModel: false, // 是否为推理模型
 })
 
 const validationResult = ref<'idle' | 'valid' | 'invalid'>('idle')
@@ -167,6 +169,7 @@ function resetForm() {
     model: presetProviders.value[0]?.models[0]?.id || '',
     baseUrl: '',
     disableThinking: true, // 默认禁用思考模式
+    isReasoningModel: false, // 是否为推理模型
   }
   validationResult.value = 'idle'
   validationMessage.value = ''
@@ -191,6 +194,7 @@ function initFromConfig(config: AIServiceConfig) {
     model: config.model || '',
     baseUrl: config.baseUrl || '',
     disableThinking: config.disableThinking ?? true, // 默认禁用
+    isReasoningModel: config.isReasoningModel ?? false, // 是否为推理模型
   }
   validationResult.value = 'idle'
   validationMessage.value = ''
@@ -313,8 +317,9 @@ async function saveConfig() {
         apiKey: finalApiKey,
         model: formData.value.model.trim() || undefined,
         baseUrl: formData.value.baseUrl.trim() || undefined,
-        // 仅本地服务才传递 disableThinking
+        // 仅本地服务才传递这些选项
         disableThinking: configType.value === 'local' ? formData.value.disableThinking : undefined,
+        isReasoningModel: configType.value === 'local' ? formData.value.isReasoningModel : undefined,
       })
 
       if (result.success) {
@@ -329,8 +334,9 @@ async function saveConfig() {
         provider: finalProvider,
         model: formData.value.model.trim() || undefined,
         baseUrl: formData.value.baseUrl.trim() || undefined,
-        // 仅本地服务才传递 disableThinking
+        // 仅本地服务才传递这些选项
         disableThinking: configType.value === 'local' ? formData.value.disableThinking : undefined,
+        isReasoningModel: configType.value === 'local' ? formData.value.isReasoningModel : undefined,
       }
 
       if (formData.value.apiKey.trim()) {
@@ -616,6 +622,15 @@ watch(
               <USwitch v-model="formData.disableThinking" />
             </div>
 
+            <!-- 推理模型 -->
+            <div class="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+              <div>
+                <p class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('isReasoningModel') }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('isReasoningModelDesc') }}</p>
+              </div>
+              <USwitch v-model="formData.isReasoningModel" />
+            </div>
+
             <!-- 验证结果 -->
             <div v-if="validationMessage">
               <div
@@ -774,6 +789,8 @@ watch(
     "apiEndpointHint": "兼容 OpenAI 格式的 API 端点",
     "disableThinking": "禁用思考模式",
     "disableThinkingDesc": "针对 Qwen3、DeepSeek-R1 等模型，禁用后使用标准工具调用格式",
+    "isReasoningModel": "推理模型",
+    "isReasoningModelDesc": "启用后将提取思考过程并禁用工具调用（如 DeepSeek-R1、QwQ 等）",
     "advancedOptions": "高级选项",
     "customService": "自定义服务",
     "unnamedConfig": "未命名配置",
@@ -813,6 +830,8 @@ watch(
     "apiEndpointHint": "OpenAI-compatible API endpoint",
     "disableThinking": "Disable Thinking Mode",
     "disableThinkingDesc": "For models like Qwen3, DeepSeek-R1. Uses standard tool calling format when disabled.",
+    "isReasoningModel": "Reasoning Model",
+    "isReasoningModelDesc": "Extracts thinking process and disables tool calling (e.g. DeepSeek-R1, QwQ)",
     "advancedOptions": "Advanced Options",
     "customService": "Custom Service",
     "unnamedConfig": "Unnamed Configuration",

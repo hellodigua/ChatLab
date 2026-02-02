@@ -193,6 +193,11 @@ export interface AIServiceConfig {
   maxTokens?: number
   /** 禁用思考模式（用于本地服务，如 Qwen3、DeepSeek-R1 等） */
   disableThinking?: boolean
+  /**
+   * 标记为推理模型（如 DeepSeek-R1、QwQ 等）
+   * 推理模型会使用 extractReasoningMiddleware 提取思考内容，且不支持 tool-calling
+   */
+  isReasoningModel?: boolean
   createdAt: number // 创建时间戳
   updatedAt: number // 更新时间戳
 }

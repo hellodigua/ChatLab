@@ -46,11 +46,11 @@ export const POS_TAG_DEFINITIONS: PosTagInfo[] = [
   { tag: 'nt', name: '机构名', description: '机构团体名', meaningful: true },
   { tag: 'nz', name: '其他专名', description: '其他专有名词', meaningful: true },
   { tag: 'nw', name: '作品名', description: '作品名', meaningful: true },
-  // 动词类
-  { tag: 'v', name: '动词', description: '普通动词', meaningful: true },
+  // 动词类（普通动词通常不太有意义，如"是""有""说"等）
+  { tag: 'v', name: '动词', description: '普通动词', meaningful: false },
   { tag: 'vn', name: '动名词', description: '动名词', meaningful: true },
-  { tag: 'vd', name: '副动词', description: '副动词', meaningful: true },
-  { tag: 'vg', name: '动语素', description: '动词性语素', meaningful: true },
+  { tag: 'vd', name: '副动词', description: '副动词', meaningful: false },
+  { tag: 'vg', name: '动语素', description: '动词性语素', meaningful: false },
   // 形容词类
   { tag: 'a', name: '形容词', description: '普通形容词', meaningful: true },
   { tag: 'an', name: '名形词', description: '名形词', meaningful: true },

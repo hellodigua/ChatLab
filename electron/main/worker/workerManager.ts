@@ -294,10 +294,6 @@ export async function getDivingAnalysis(sessionId: string, filter?: any): Promis
   return sendToWorker('getDivingAnalysis', { sessionId, filter })
 }
 
-export async function getMonologueAnalysis(sessionId: string, filter?: any): Promise<any> {
-  return sendToWorker('getMonologueAnalysis', { sessionId, filter })
-}
-
 export async function getMentionAnalysis(sessionId: string, filter?: any): Promise<any> {
   return sendToWorker('getMentionAnalysis', { sessionId, filter })
 }

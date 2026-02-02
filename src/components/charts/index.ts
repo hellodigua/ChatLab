@@ -9,6 +9,7 @@ export { default as EChartHeatmap } from './EChartHeatmap.vue'
 export { default as EChartCalendar } from './EChartCalendar.vue'
 export { default as EChartGraph } from './EChartGraph.vue'
 export { default as EChartWordcloud } from './EChartWordcloud.vue'
+export { default as EChartRank } from './EChartRank.vue'
 
 // 其他组件
 export { default as RankList } from './RankList.vue'

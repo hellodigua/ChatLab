@@ -8,6 +8,9 @@ import { initialize, trackEvent } from '@aptabase/electron/main'
 import * as fs from 'fs'
 import * as path from 'path'
 
+// AppKey
+const ANALYTICS_APP_KEY = process.env.APTABASE_APP_KEY
+
 // 分析数据存储路径
 function getAnalyticsPath(): string {
   return path.join(app.getPath('userData'), 'analytics.json')
@@ -58,25 +61,16 @@ function getTodayString(): string {
 }
 
 /**
- * 检查统计是否启用
- */
-export function isAnalyticsEnabled(): boolean {
-  return loadAnalyticsData().enabled
-}
-
-/**
  * 初始化分析模块
  * 必须在 app.whenReady() 之前调用
  */
 export function initAnalytics(): void {
-  const appKey = process.env.APTABASE_APP_KEY
-
-  if (!appKey) {
+  if (!ANALYTICS_APP_KEY) {
     return
   }
 
   try {
-    initialize(appKey)
+    initialize(ANALYTICS_APP_KEY)
     console.log('[Analytics] Aptabase 初始化成功')
   } catch (error) {
     console.error('[Analytics] Aptabase 初始化失败:', error)
@@ -105,8 +99,7 @@ export function registerAnalyticsHandlers(): void {
  * 上报每日活跃事件
  */
 export function trackDailyActive(): void {
-  const appKey = process.env.APTABASE_APP_KEY
-  if (!appKey) {
+  if (!ANALYTICS_APP_KEY) {
     return
   }
 
@@ -135,7 +128,7 @@ export function trackDailyActive(): void {
     }
 
     // 上报每日活跃事件
-    trackEvent(isNew ? 'app_active_new' : 'app_active')
+    trackEvent(isNew ? 'app_active_new' : 'app_active', { locale: app.getLocale() })
 
     data.lastReportDate = today
     saveAnalyticsData(data)
@@ -148,13 +141,12 @@ export function trackDailyActive(): void {
  * 事件上报
  */
 export function trackAppEvent(eventName: string, properties?: Record<string, string | number>): void {
-  const appKey = process.env.APTABASE_APP_KEY
-  if (!appKey) {
+  if (!ANALYTICS_APP_KEY) {
     return
   }
 
   // 检查是否启用统计
-  if (!isAnalyticsEnabled()) {
+  if (!loadAnalyticsData().enabled) {
     return
   }
 

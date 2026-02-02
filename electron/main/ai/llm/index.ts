@@ -345,6 +345,8 @@ export function hasActiveConfig(): boolean {
  */
 interface ExtendedLLMConfig extends LLMConfig {
   disableThinking?: boolean
+  /** 标记为推理模型（如 DeepSeek-R1、QwQ 等） */
+  isReasoningModel?: boolean
 }
 
 /**
@@ -415,7 +417,8 @@ export function createLLMService(config: ExtendedLLMConfig): ILLMService {
         config.baseUrl,
         config.disableThinking,
         config.provider,
-        providerInfo?.models
+        providerInfo?.models,
+        config.isReasoningModel
       )
     default:
       throw new Error(`Unknown LLM provider: ${config.provider}`)
@@ -438,6 +441,7 @@ export function getCurrentLLMService(): ILLMService | null {
     baseUrl: activeConfig.baseUrl,
     maxTokens: activeConfig.maxTokens,
     disableThinking: activeConfig.disableThinking,
+    isReasoningModel: activeConfig.isReasoningModel,
   })
 }
 

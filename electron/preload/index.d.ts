@@ -12,7 +12,6 @@ import type {
   NightOwlAnalysis,
   DragonKingAnalysis,
   DivingAnalysis,
-  MonologueAnalysis,
   MentionAnalysis,
   LaughAnalysis,
   MemeBattleAnalysis,
@@ -130,7 +129,6 @@ interface ChatApi {
   getNightOwlAnalysis: (sessionId: string, filter?: TimeFilter) => Promise<NightOwlAnalysis>
   getDragonKingAnalysis: (sessionId: string, filter?: TimeFilter) => Promise<DragonKingAnalysis>
   getDivingAnalysis: (sessionId: string, filter?: TimeFilter) => Promise<DivingAnalysis>
-  getMonologueAnalysis: (sessionId: string, filter?: TimeFilter) => Promise<MonologueAnalysis>
   getMentionAnalysis: (sessionId: string, filter?: TimeFilter) => Promise<MentionAnalysis>
   getMentionGraph: (sessionId: string, filter?: TimeFilter) => Promise<MentionGraphData>
   getLaughAnalysis: (sessionId: string, filter?: TimeFilter, keywords?: string[]) => Promise<LaughAnalysis>
@@ -380,6 +378,8 @@ interface AIServiceConfigDisplay {
   model?: string
   baseUrl?: string
   maxTokens?: number
+  disableThinking?: boolean
+  isReasoningModel?: boolean
   createdAt: number
   updatedAt: number
 }
@@ -415,6 +415,7 @@ interface LlmApi {
     baseUrl?: string
     maxTokens?: number
     disableThinking?: boolean
+    isReasoningModel?: boolean
   }) => Promise<{ success: boolean; config?: AIServiceConfigDisplay; error?: string }>
   updateConfig: (
     id: string,

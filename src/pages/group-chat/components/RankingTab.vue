@@ -1,14 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { MemberActivity } from '@/types/analysis'
-import { RankListPro } from '@/components/charts'
-import type { RankItem } from '@/components/charts'
-import { PageAnchorsNav } from '@/components/UI'
+import { PageAnchorsNav, TopNSelect } from '@/components/UI'
 import { usePageAnchors } from '@/composables'
-import DragonKingRank from './ranking/DragonKingRank.vue'
+import ActivityRank from './ranking/ActivityRank.vue'
 import CheckInRank from './ranking/CheckInRank.vue'
 import MemeBattleRank from './ranking/MemeBattleRank.vue'
-import MonologueRank from './ranking/MonologueRank.vue'
 import RepeatSection from './ranking/RepeatSection.vue'
 import DivingRank from './ranking/DivingRank.vue'
 import NightOwlRank from './ranking/NightOwlRank.vue'
@@ -46,14 +43,11 @@ const seasonTitle = computed(() => {
 
 // 锚点导航配置
 const anchors = [
-  { id: 'dragon-king', label: '🐉 龙王榜' },
-  { id: 'member-activity', label: '📊 水群榜' },
+  { id: 'activity-rank', label: '🏆 活跃榜' },
   { id: 'streak-rank', label: '🔥 火花榜' },
-  { id: 'loyalty-rank', label: '💎 忠臣榜' },
   { id: 'meme-battle', label: '⚔️ 斗图榜' },
-  { id: 'monologue', label: '🎤 自言自语榜' },
   { id: 'repeat', label: '🔁 复读榜' },
-  { id: 'night-owl', label: '🦉 修仙榜' },
+  { id: 'night-owl', label: '⏰ 出勤榜' },
   { id: 'diving', label: '🤿 潜水榜' },
 ]
 
@@ -62,15 +56,8 @@ const { contentRef, activeAnchor, scrollToAnchor } = usePageAnchors(anchors, { t
 // Template ref - used via ref="contentRef" in template
 void contentRef
 
-// ==================== 成员活跃度排行 ====================
-const memberRankData = computed<RankItem[]>(() => {
-  return props.memberActivity.map((m) => ({
-    id: m.memberId.toString(),
-    name: m.name,
-    value: m.messageCount,
-    percentage: m.percentage,
-  }))
-})
+// 全局 TopN 控制
+const globalTopN = ref(10)
 </script>
 
 <template>
@@ -87,48 +74,44 @@ const memberRankData = computed<RankItem[]>(() => {
         <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">各榜单前三名请找群主领取奖励 🎁</p>
       </div>
 
-      <!-- 龙王排名 -->
-      <div id="dragon-king" class="scroll-mt-24">
-        <DragonKingRank :session-id="sessionId" :time-filter="timeFilter" />
+      <!-- 活跃榜（龙王 + 发言数量） -->
+      <div id="activity-rank" class="scroll-mt-24">
+        <ActivityRank :session-id="sessionId" :member-activity="memberActivity" :time-filter="timeFilter" :global-top-n="globalTopN" />
       </div>
 
-      <!-- 成员活跃度排行 -->
-      <div id="member-activity" class="scroll-mt-24">
-        <RankListPro :members="memberRankData" title="水群榜" />
-      </div>
-
-      <!-- 火花榜 + 忠臣榜 -->
-      <CheckInRank :session-id="sessionId" :time-filter="timeFilter" />
+      <!-- 火花榜 -->
+      <CheckInRank :session-id="sessionId" :time-filter="timeFilter" :global-top-n="globalTopN" />
 
       <!-- 斗图榜 -->
       <div id="meme-battle" class="scroll-mt-24">
-        <MemeBattleRank :session-id="sessionId" :time-filter="timeFilter" />
-      </div>
-
-      <!-- 自言自语榜 -->
-      <div id="monologue" class="scroll-mt-24">
-        <MonologueRank :session-id="sessionId" :time-filter="timeFilter" />
+        <MemeBattleRank :session-id="sessionId" :time-filter="timeFilter" :global-top-n="globalTopN" />
       </div>
 
       <!-- 复读分析 -->
       <div id="repeat" class="scroll-mt-24">
-        <RepeatSection :session-id="sessionId" :time-filter="timeFilter" />
+        <RepeatSection :session-id="sessionId" :time-filter="timeFilter" :global-top-n="globalTopN" />
       </div>
 
-      <!-- 修仙排行榜 -->
+      <!-- 出勤榜 -->
       <div id="night-owl" class="scroll-mt-24">
-        <NightOwlRank :session-id="sessionId" :time-filter="timeFilter" />
+        <NightOwlRank :session-id="sessionId" :time-filter="timeFilter" :global-top-n="globalTopN" />
       </div>
 
       <!-- 潜水排名 -->
       <div id="diving" class="scroll-mt-24">
-        <DivingRank :session-id="sessionId" :time-filter="timeFilter" />
+        <DivingRank :session-id="sessionId" :time-filter="timeFilter" :global-top-n="globalTopN" />
       </div>
       <!-- 底部间距，确保最后一个锚点可以滚动到顶部 -->
       <div class="h-48 no-capture" />
     </div>
 
     <!-- 右侧锚点导航 -->
-    <PageAnchorsNav :anchors="anchors" :active-anchor="activeAnchor" @click="scrollToAnchor" />
+    <PageAnchorsNav :anchors="anchors" :active-anchor="activeAnchor" @click="scrollToAnchor">
+      <!-- 全局 TopN 控制 -->
+      <div class="border-l border-gray-200 pl-4 dark:border-gray-800">
+        <div class="text-xs text-gray-400 mb-2">显示数量</div>
+        <TopNSelect v-model="globalTopN" />
+      </div>
+    </PageAnchorsNav>
   </div>
 </template>

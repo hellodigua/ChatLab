@@ -6,7 +6,7 @@ Local-first chat analysis tool: Relive your social memories powered by SQL and A
 
 English | [简体中文](./README.md)
 
-[Project Website](https://chatlab.app/) ·
+[Project Website](https://chatlab.fun/) ·
 [Documentation](https://chatlab.fun/usage/) ·
 [Roadmap](https://chatlabfun.featurebase.app/roadmap) ·
 [Issue Submission](https://github.com/hellodigua/ChatLab/issues)

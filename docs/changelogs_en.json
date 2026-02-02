@@ -1,5 +1,27 @@
 [
   {
+    "version": "0.9.2",
+    "date": "2026-02-02",
+    "summary": "Rankings are now displayed as charts; word cloud generation and the local AI inference model are optimized; chat record filtering and the date picker are improved; and key routes are preloaded after launch.",
+    "changes": [
+      {
+        "type": "feat",
+        "items": [
+          "Refactor rankings to chart-based views",
+          "Optimize word cloud output",
+          "Optimize inference models",
+          "Improve linked search + filter in chat records",
+          "Enhance date picker interactions",
+          "Preload key routes after app launch"
+        ]
+      },
+      {
+        "type": "chore",
+        "items": ["Modularize preload APIs", "Optimize analytics logic", "Upgrade ESLint and format code"]
+      }
+    ]
+  },
+  {
     "version": "0.9.1",
     "date": "2026-01-30",
     "summary": "Add LINE chat import, batch management, and chat search, plus fixes for known issues.",
