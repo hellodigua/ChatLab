@@ -7,7 +7,7 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <div class="flex h-full flex-col bg-white pt-8 dark:bg-[var(--color-page-dark)]">
+  <div class="relative z-0 flex h-full flex-col bg-white pt-8 dark:bg-[var(--color-page-dark)]">
     <!-- Header -->
     <PageHeader :title="t('tools.title')" :description="t('tools.description')" icon="i-heroicons-rectangle-stack" />
 
