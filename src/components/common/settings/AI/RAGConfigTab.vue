@@ -94,9 +94,7 @@ onMounted(() => {
     </p>
 
     <!-- Embedding 配置列表 -->
-    <div
-      class="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50"
-    >
+    <div class="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
       <div class="flex items-center justify-between">
         <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
           {{ t('settings.embedding.configList') }}
@@ -148,11 +146,13 @@ onMounted(() => {
               <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                 <span>{{ config.model }}</span>
                 <span>·</span>
-                <span>{{
-                  config.apiSource === 'reuse_llm'
-                    ? t('settings.embedding.reuseLLM')
-                    : t('settings.embedding.customAPI')
-                }}</span>
+                <span>
+                  {{
+                    config.apiSource === 'reuse_llm'
+                      ? t('settings.embedding.reuseLLM')
+                      : t('settings.embedding.customAPI')
+                  }}
+                </span>
               </div>
             </div>
           </div>
@@ -197,9 +197,7 @@ onMounted(() => {
     </div>
 
     <!-- 向量缓存配置 -->
-    <div
-      class="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50"
-    >
+    <div class="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium text-gray-900 dark:text-white">

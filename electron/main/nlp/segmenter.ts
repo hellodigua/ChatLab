@@ -46,11 +46,11 @@ export const POS_TAG_DEFINITIONS: PosTagInfo[] = [
   { tag: 'nt', name: '机构名', description: '机构团体名', meaningful: true },
   { tag: 'nz', name: '其他专名', description: '其他专有名词', meaningful: true },
   { tag: 'nw', name: '作品名', description: '作品名', meaningful: true },
-  // 动词类
-  { tag: 'v', name: '动词', description: '普通动词', meaningful: true },
+  // 动词类（普通动词通常不太有意义，如"是""有""说"等）
+  { tag: 'v', name: '动词', description: '普通动词', meaningful: false },
   { tag: 'vn', name: '动名词', description: '动名词', meaningful: true },
-  { tag: 'vd', name: '副动词', description: '副动词', meaningful: true },
-  { tag: 'vg', name: '动语素', description: '动词性语素', meaningful: true },
+  { tag: 'vd', name: '副动词', description: '副动词', meaningful: false },
+  { tag: 'vg', name: '动语素', description: '动词性语素', meaningful: false },
   // 形容词类
   { tag: 'a', name: '形容词', description: '普通形容词', meaningful: true },
   { tag: 'an', name: '名形词', description: '名形词', meaningful: true },
@@ -80,9 +80,7 @@ export const POS_TAG_DEFINITIONS: PosTagInfo[] = [
 /**
  * 有意义的词性标签集合
  */
-export const MEANINGFUL_POS_TAGS = new Set(
-  POS_TAG_DEFINITIONS.filter((t) => t.meaningful).map((t) => t.tag)
-)
+export const MEANINGFUL_POS_TAGS = new Set(POS_TAG_DEFINITIONS.filter((t) => t.meaningful).map((t) => t.tag))
 
 /**
  * 获取所有词性标签信息
@@ -92,7 +90,8 @@ export function getPosTagDefinitions(): PosTagInfo[] {
 }
 
 // 用于过滤的正则表达式
-const EMOJI_REGEX = /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu
+const EMOJI_REGEX =
+  /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu
 const PUNCTUATION_REGEX = /[!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~，。！？、；：""''（）【】《》…—～·\s]/g
 const URL_REGEX = /https?:\/\/[^\s]+/g
 const MENTION_REGEX = /@[^\s@]+/g
@@ -115,7 +114,12 @@ function cleanText(text: string): string {
 /**
  * 判断是否为有效词语
  */
-function isValidWord(word: string, locale: SupportedLocale, minLength: number, enableStopwords: boolean = true): boolean {
+function isValidWord(
+  word: string,
+  locale: SupportedLocale,
+  minLength: number,
+  enableStopwords: boolean = true
+): boolean {
   // 空字符串
   if (!word || word.trim().length === 0) return false
 
@@ -206,9 +210,7 @@ function segmentChinese(text: string, options: ChineseSegmentOptions = {}): stri
       allowedTags = MEANINGFUL_POS_TAGS
     }
 
-    return tagged
-      .filter((item) => allowedTags.has(item.tag))
-      .map((item) => item.word)
+    return tagged.filter((item) => allowedTags.has(item.tag)).map((item) => item.word)
   } catch (error) {
     console.error('[NLP] 中文分词失败:', error)
     // 降级：使用简单分词
@@ -232,9 +234,7 @@ function segmentEnglish(text: string): string[] {
     const segmenter = new Intl.Segmenter('en', { granularity: 'word' })
     const segments = segmenter.segment(cleaned)
 
-    return [...segments]
-      .filter((segment) => segment.isWordLike)
-      .map((segment) => segment.segment.toLowerCase())
+    return [...segments].filter((segment) => segment.isWordLike).map((segment) => segment.segment.toLowerCase())
   } catch {
     // 降级：简单按空格分词
     return cleaned
@@ -265,17 +265,8 @@ export interface SegmentOptions {
  * @param options 分词选项
  * @returns 过滤后的分词结果
  */
-export function segment(
-  text: string,
-  locale: SupportedLocale,
-  options: SegmentOptions = {}
-): string[] {
-  const {
-    minLength,
-    posFilterMode = 'meaningful',
-    customPosTags,
-    enableStopwords = true,
-  } = options
+export function segment(text: string, locale: SupportedLocale, options: SegmentOptions = {}): string[] {
+  const { minLength, posFilterMode = 'meaningful', customPosTags, enableStopwords = true } = options
   const defaultMinLength = locale === 'zh-CN' ? 2 : 3
   const effectiveMinLength = minLength ?? defaultMinLength
 
@@ -330,9 +321,7 @@ export function batchSegmentWithFrequency(
   }
 
   // 排序并取 topN
-  const sorted = [...filtered.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, topN)
+  const sorted = [...filtered.entries()].sort((a, b) => b[1] - a[1]).slice(0, topN)
 
   return new Map(sorted)
 }

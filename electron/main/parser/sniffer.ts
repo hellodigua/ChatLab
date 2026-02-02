@@ -50,10 +50,7 @@ function matchRequiredFields(headContent: string, fields: string[]): boolean {
 /**
  * 检查必需字段并返回详细结果
  */
-function checkRequiredFieldsDetail(
-  headContent: string,
-  fields: string[]
-): { allMatch: boolean; missing: string[] } {
+function checkRequiredFieldsDetail(headContent: string, fields: string[]): { allMatch: boolean; missing: string[] } {
   const missing: string[] = []
 
   for (const field of fields) {
@@ -319,4 +316,3 @@ export class FormatSniffer {
 export function createSniffer(): FormatSniffer {
   return new FormatSniffer()
 }
-

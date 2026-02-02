@@ -267,18 +267,21 @@ function getSessionAvatar(session: AnalysisSession): string | null {
         </div>
 
         <!-- 搜索无结果 -->
-        <div v-else-if="filteredSortedSessions.length === 0 && searchQuery.trim() && !isCollapsed" class="py-8 text-center text-sm text-gray-500">
+        <div
+          v-else-if="filteredSortedSessions.length === 0 && searchQuery.trim() && !isCollapsed"
+          class="py-8 text-center text-sm text-gray-500"
+        >
           {{ t('sidebar.noSearchResult') }}
         </div>
 
         <div class="space-y-1 pb-8" :class="[isCollapsed ? '' : 'px-4']">
-          <UTooltip
+          <UContextMenu
             v-for="session in filteredSortedSessions"
             :key="session.id"
-            :text="isCollapsed ? session.name : ''"
-            :popper="{ placement: 'right' }"
+            :items="getContextMenuItems(session)"
           >
-            <UContextMenu :items="getContextMenuItems(session)">
+            <!-- 侧边栏折叠时，hover 显示完整会话名称（Tooltip 需绑定到真实 DOM） -->
+            <UTooltip :text="session.name" :disabled="!isCollapsed || !session.name" :popper="{ placement: 'right' }">
               <div
                 class="group relative flex items-center p-2 text-left transition-colors"
                 :class="[
@@ -344,8 +347,8 @@ function getSessionAvatar(session: AnalysisSession): string | null {
                   </p>
                 </div>
               </div>
-            </UContextMenu>
-          </UTooltip>
+            </UTooltip>
+          </UContextMenu>
         </div>
       </div>
       <!-- 底部渐变蒙层 - 让列表消失更自然（固定在外层容器底部） -->

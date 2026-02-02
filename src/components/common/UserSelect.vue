@@ -35,9 +35,7 @@ const internalValue = computed({
 
 // 成员选项
 const memberOptions = computed(() => {
-  const options: { value: string; label: string }[] = [
-    { value: ALL_MEMBERS_VALUE, label: t('allMembers') },
-  ]
+  const options: { value: string; label: string }[] = [{ value: ALL_MEMBERS_VALUE, label: t('allMembers') }]
   members.value.forEach((m) => {
     const displayName = m.groupNickname || m.accountName || m.platformId
     options.push({
@@ -95,4 +93,3 @@ watch(
   }
 }
 </i18n>
-

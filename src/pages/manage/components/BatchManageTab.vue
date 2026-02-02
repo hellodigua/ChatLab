@@ -25,10 +25,7 @@ const filteredSessions = computed(() => {
     return sessions.value
   }
   const query = searchQuery.value.toLowerCase().trim()
-  return sessions.value.filter((s) => 
-    s.name.toLowerCase().includes(query) ||
-    s.platform.toLowerCase().includes(query)
-  )
+  return sessions.value.filter((s) => s.name.toLowerCase().includes(query) || s.platform.toLowerCase().includes(query))
 })
 
 // 选中的会话 ID 集合
@@ -63,8 +60,7 @@ const selectedPlatform = computed(() => {
 
 // 全选状态（基于过滤后的列表）
 const isAllSelected = computed(() => {
-  return filteredSessions.value.length > 0 && 
-    filteredSessions.value.every((s) => selectedIds.value.has(s.id))
+  return filteredSessions.value.length > 0 && filteredSessions.value.every((s) => selectedIds.value.has(s.id))
 })
 
 // 部分选中状态（用于 indeterminate）
@@ -107,7 +103,10 @@ function isSelected(id: string): boolean {
 
 // 格式化时间
 function formatTime(timestamp: number): string {
-  return dayjs.unix(timestamp).locale(locale.value === 'zh-CN' ? 'zh-cn' : 'en').fromNow()
+  return dayjs
+    .unix(timestamp)
+    .locale(locale.value === 'zh-CN' ? 'zh-cn' : 'en')
+    .fromNow()
 }
 
 // 判断是否是私聊
@@ -139,7 +138,10 @@ const PLATFORM_CONFIG: Record<string, { label: string; class: string }> = {
   qq: { label: 'QQ', class: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
   weixin: { label: '微信', class: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
   discord: { label: 'Discord', class: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300' },
-  whatsapp: { label: 'WhatsApp', class: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' },
+  whatsapp: {
+    label: 'WhatsApp',
+    class: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+  },
   instagram: { label: 'Instagram', class: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300' },
   line: { label: 'LINE', class: 'bg-lime-100 text-lime-700 dark:bg-lime-900/30 dark:text-lime-300' },
   unknown: { label: '未知', class: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' },
@@ -172,7 +174,7 @@ async function saveEdit() {
 
   const newName = editingName.value.trim()
   const session = sessions.value.find((s) => s.id === editingId.value)
-  
+
   // 如果名称没变，不保存
   if (session && session.name !== newName) {
     await sessionStore.renameSession(editingId.value, newName)
@@ -306,7 +308,7 @@ async function confirmBatchDelete() {
   isDeleting.value = true
   try {
     const idsToDelete = Array.from(selectedIds.value)
-    
+
     // 逐个删除
     for (const id of idsToDelete) {
       await sessionStore.deleteSession(id)
@@ -356,14 +358,17 @@ onMounted(() => {
           :label="t('tools.batchManage.selectAll')"
           @update:model-value="toggleSelectAll"
         />
-        
+
         <!-- 已选数量 -->
         <span v-if="selectedIds.size > 0" class="text-sm text-gray-500 dark:text-gray-400">
           {{ t('tools.batchManage.selected', { count: selectedIds.size }) }}
         </span>
 
         <!-- 搜索结果数量 -->
-        <span v-if="searchQuery.trim() && filteredSessions.length !== sessions.length" class="text-sm text-gray-500 dark:text-gray-400">
+        <span
+          v-if="searchQuery.trim() && filteredSessions.length !== sessions.length"
+          class="text-sm text-gray-500 dark:text-gray-400"
+        >
           {{ t('tools.batchManage.searchResult', { count: filteredSessions.length, total: sessions.length }) }}
         </span>
       </div>
@@ -371,23 +376,13 @@ onMounted(() => {
       <div class="flex gap-2">
         <!-- 合并按钮 -->
         <UTooltip :text="canMerge ? '' : t('tools.batchManage.mergeHint')">
-          <UButton
-            color="primary"
-            :disabled="!canMerge"
-            icon="i-heroicons-document-duplicate"
-            @click="handleMerge"
-          >
+          <UButton color="primary" :disabled="!canMerge" icon="i-heroicons-document-duplicate" @click="handleMerge">
             {{ t('tools.batchManage.merge') }}
           </UButton>
         </UTooltip>
-        
+
         <!-- 删除按钮 -->
-        <UButton
-          color="primary"
-          :disabled="selectedIds.size === 0"
-          icon="i-heroicons-trash"
-          @click="openDeleteModal"
-        >
+        <UButton color="primary" :disabled="selectedIds.size === 0" icon="i-heroicons-trash" @click="openDeleteModal">
           {{ t('tools.batchManage.delete') }}
         </UButton>
       </div>
@@ -410,7 +405,9 @@ onMounted(() => {
 
     <div v-else class="flex-1 overflow-y-auto rounded-lg border border-gray-200/50 dark:border-gray-700/50">
       <!-- 表头 -->
-      <div class="sticky top-0 z-10 flex items-center gap-3 border-b border-gray-200 bg-gray-50 px-3 py-2 text-xs font-medium text-gray-500 dark:border-gray-700 dark:bg-gray-800/80 dark:text-gray-400">
+      <div
+        class="sticky top-0 z-10 flex items-center gap-3 border-b border-gray-200 bg-gray-50 px-3 py-2 text-xs font-medium text-gray-500 dark:border-gray-700 dark:bg-gray-800/80 dark:text-gray-400"
+      >
         <div class="w-6" />
         <div class="w-8" />
         <div class="min-w-0 flex-1">{{ t('tools.batchManage.columns.name') }}</div>
@@ -426,17 +423,13 @@ onMounted(() => {
         class="flex cursor-pointer items-center gap-3 px-3 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
         :class="[
           isSelected(session.id) ? 'bg-pink-50 dark:bg-pink-900/20' : '',
-          index !== filteredSessions.length - 1 ? 'border-b border-gray-100 dark:border-gray-800' : ''
+          index !== filteredSessions.length - 1 ? 'border-b border-gray-100 dark:border-gray-800' : '',
         ]"
         @click="toggleSelect(session.id)"
       >
         <!-- 复选框 -->
         <div class="w-6">
-          <UCheckbox
-            :model-value="isSelected(session.id)"
-            @click.stop
-            @update:model-value="toggleSelect(session.id)"
-          />
+          <UCheckbox :model-value="isSelected(session.id)" @click.stop @update:model-value="toggleSelect(session.id)" />
         </div>
 
         <!-- 头像 -->
@@ -489,7 +482,10 @@ onMounted(() => {
 
         <!-- 平台 -->
         <div class="w-20 text-center">
-          <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium" :class="getPlatformClass(session.platform)">
+          <span
+            class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+            :class="getPlatformClass(session.platform)"
+          >
             {{ getPlatformLabel(session.platform) }}
           </span>
         </div>
@@ -518,7 +514,7 @@ onMounted(() => {
               {{ t('tools.batchManage.mergeConfirmTitle') }}
             </h3>
           </div>
-          
+
           <p class="mb-4 text-gray-600 dark:text-gray-400">
             {{ t('tools.batchManage.mergeConfirmMessage', { count: selectedIds.size }) }}
           </p>
@@ -526,7 +522,7 @@ onMounted(() => {
           <!-- 选中的会话预览 -->
           <div class="mb-4 max-h-40 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700">
             <div
-              v-for="session in sessions.filter(s => selectedIds.has(s.id))"
+              v-for="session in sessions.filter((s) => selectedIds.has(s.id))"
               :key="session.id"
               class="flex items-center gap-2 border-b border-gray-100 px-3 py-2 last:border-b-0 dark:border-gray-800"
             >
@@ -571,7 +567,7 @@ onMounted(() => {
               {{ t('tools.batchManage.confirmTitle') }}
             </h3>
           </div>
-          
+
           <p class="mb-6 text-gray-600 dark:text-gray-400">
             {{ t('tools.batchManage.confirmMessage', { count: selectedIds.size }) }}
           </p>

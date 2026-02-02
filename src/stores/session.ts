@@ -174,8 +174,8 @@ export const useSessionStore = defineStore(
       diagnosisSuggestion?: string
     }> {
       try {
-      const result = await window.chatApi.selectFile()
-      // 用户取消选择
+        const result = await window.chatApi.selectFile()
+        // 用户取消选择
         if (!result) {
           return { success: false, error: 'error.no_file_selected' }
         }
@@ -565,7 +565,7 @@ export const useSessionStore = defineStore(
         // 智能命名：如果所有文件群名相同则用该名，否则用第一个文件的群名
         const names = mergeFiles.value.map((f) => f.info?.name).filter(Boolean)
         const uniqueNames = [...new Set(names)]
-        const outputName = uniqueNames.length === 1 ? uniqueNames[0]! : (names[0] || '合并记录')
+        const outputName = uniqueNames.length === 1 ? uniqueNames[0]! : names[0] || '合并记录'
 
         const result = await window.mergeApi.mergeFiles({
           filePaths,

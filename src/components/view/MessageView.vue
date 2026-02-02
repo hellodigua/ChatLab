@@ -304,16 +304,9 @@ watch(
             <!-- 右侧摘要列表 -->
             <div class="lg:w-1/2">
               <div class="space-y-3">
-                <div
-                  v-for="(item, index) in typeSummary"
-                  :key="index"
-                  class="flex items-center gap-3"
-                >
+                <div v-for="(item, index) in typeSummary" :key="index" class="flex items-center gap-3">
                   <!-- 颜色标记 -->
-                  <div
-                    class="h-3 w-3 shrink-0 rounded-full"
-                    :style="{ backgroundColor: getTypeColor(index) }"
-                  />
+                  <div class="h-3 w-3 shrink-0 rounded-full" :style="{ backgroundColor: getTypeColor(index) }" />
                   <!-- 类型名称 -->
                   <div class="min-w-20 shrink-0 text-sm text-gray-700 dark:text-gray-300">
                     {{ item.name }}
@@ -335,9 +328,7 @@ watch(
                     <span class="text-sm font-medium text-gray-900 dark:text-white">
                       {{ item.count.toLocaleString() }}
                     </span>
-                    <span class="ml-1 text-xs text-gray-400">
-                      ({{ item.percentage }}%)
-                    </span>
+                    <span class="ml-1 text-xs text-gray-400">({{ item.percentage }}%)</span>
                   </div>
                 </div>
               </div>
@@ -378,11 +369,7 @@ watch(
         <!-- 年份分布 -->
         <SectionCard :title="t('yearlyDistribution')" :show-divider="false">
           <div class="p-5">
-            <EChartBar
-              v-if="yearlyChartData.values.length > 0"
-              :data="yearlyChartData"
-              :height="200"
-            />
+            <EChartBar v-if="yearlyChartData.values.length > 0" :data="yearlyChartData" :height="200" />
             <div v-else class="flex h-48 items-center justify-center text-gray-400">
               {{ t('noData') }}
             </div>

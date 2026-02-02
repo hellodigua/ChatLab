@@ -109,4 +109,3 @@ export async function getVectorStoreStats(): Promise<{
 export { SQLiteVectorStore } from './sqlite'
 export { MemoryVectorStore } from './memory'
 export type { IVectorStore, VectorSearchResult, VectorStoreStats, VectorStoreConfig } from './types'
-

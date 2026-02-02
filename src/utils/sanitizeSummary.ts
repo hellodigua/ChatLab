@@ -13,7 +13,9 @@ const DEFAULT_ALLOWED_ATTRS: Record<string, string[]> = {
 const DEFAULT_ALLOWED_PROTOCOLS = ['http:', 'https:']
 
 function normalizeAllowedTags(allowedTags?: string[]) {
-  return new Set((allowedTags && allowedTags.length > 0 ? allowedTags : DEFAULT_ALLOWED_TAGS).map((tag) => tag.toUpperCase()))
+  return new Set(
+    (allowedTags && allowedTags.length > 0 ? allowedTags : DEFAULT_ALLOWED_TAGS).map((tag) => tag.toUpperCase())
+  )
 }
 
 function normalizeAllowedAttrs(allowedAttrs?: Record<string, string[]>) {
@@ -46,7 +48,9 @@ export function sanitizeSummary(raw: string, options: SanitizeSummaryOptions = {
   const allowedTags = normalizeAllowedTags(options.allowedTags)
   const allowedAttrs = normalizeAllowedAttrs(options.allowedAttrs)
   const allowedProtocols =
-    options.allowedProtocols && options.allowedProtocols.length > 0 ? options.allowedProtocols : DEFAULT_ALLOWED_PROTOCOLS
+    options.allowedProtocols && options.allowedProtocols.length > 0
+      ? options.allowedProtocols
+      : DEFAULT_ALLOWED_PROTOCOLS
 
   const parser = new DOMParser()
   const doc = parser.parseFromString(raw || '', 'text/html')

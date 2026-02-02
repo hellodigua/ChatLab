@@ -1,24 +1,47 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import type { RepeatAnalysis } from '@/types/analysis'
-import { RankListPro, EChartBar, ListPro } from '@/components/charts'
+import { EChartRank, EChartBar } from '@/components/charts'
 import type { RankItem, EChartBarData } from '@/components/charts'
-import { SectionCard, EmptyState, LoadingState } from '@/components/UI'
-import { getRankBadgeClass } from '@/utils'
+import { EChartTimeRank } from './charts'
+import { SectionCard, EmptyState, LoadingState, Tabs, TopNSelect } from '@/components/UI'
 
 interface TimeFilter {
   startTs?: number
   endTs?: number
 }
 
-const props = defineProps<{
-  sessionId: string
-  timeFilter?: TimeFilter
-}>()
+const props = withDefaults(
+  defineProps<{
+    sessionId: string
+    timeFilter?: TimeFilter
+    /** 是否显示 TopN 选择器 */
+    showTopNSelect?: boolean
+    /** 全局 TopN 控制（变化时强制同步） */
+    globalTopN?: number
+  }>(),
+  {
+    showTopNSelect: true,
+  }
+)
 
 const analysis = ref<RepeatAnalysis | null>(null)
 const isLoading = ref(false)
-const rankMode = ref<'count' | 'rate'>('count')
+const roleTab = ref<'originator' | 'initiator' | 'breaker'>('originator') // 角色 Tab
+const statsTab = ref<'fastest' | 'distribution'>('fastest') // 统计 Tab
+const roleTopN = ref(props.globalTopN ?? 10) // 复读榜 TopN
+const statsTopN = ref(props.globalTopN ?? 10) // 复读统计 TopN
+
+// 监听全局 TopN 变化，强制同步所有内部 TopN
+watch(
+  () => props.globalTopN,
+  (newVal) => {
+    if (newVal !== undefined) {
+      roleTopN.value = newVal
+      statsTopN.value = newVal
+    }
+  }
+)
 
 async function loadData() {
   if (!props.sessionId) return
@@ -34,35 +57,74 @@ async function loadData() {
 
 const originatorRankData = computed<RankItem[]>(() => {
   if (!analysis.value) return []
-  const data = rankMode.value === 'count' ? analysis.value.originators : analysis.value.originatorRates
-  return data.map((m) => ({
+  return analysis.value.originators.map((m) => ({
     id: m.memberId.toString(),
     name: m.name,
-    value: (m as any).count,
-    percentage: rankMode.value === 'count' ? (m as any).percentage : (m as any).rate,
+    value: m.count,
+    percentage: m.percentage,
   }))
 })
 
 const initiatorRankData = computed<RankItem[]>(() => {
   if (!analysis.value) return []
-  const data = rankMode.value === 'count' ? analysis.value.initiators : analysis.value.initiatorRates
-  return data.map((m) => ({
+  return analysis.value.initiators.map((m) => ({
     id: m.memberId.toString(),
     name: m.name,
-    value: (m as any).count,
-    percentage: rankMode.value === 'count' ? (m as any).percentage : (m as any).rate,
+    value: m.count,
+    percentage: m.percentage,
   }))
 })
 
 const breakerRankData = computed<RankItem[]>(() => {
   if (!analysis.value) return []
-  const data = rankMode.value === 'count' ? analysis.value.breakers : analysis.value.breakerRates
-  return data.map((m) => ({
+  return analysis.value.breakers.map((m) => ({
     id: m.memberId.toString(),
     name: m.name,
-    value: (m as any).count,
-    percentage: rankMode.value === 'count' ? (m as any).percentage : (m as any).rate,
+    value: m.count,
+    percentage: m.percentage,
   }))
+})
+
+// 根据当前 Tab 获取数据
+const currentRankData = computed<RankItem[]>(() => {
+  switch (roleTab.value) {
+    case 'originator':
+      return originatorRankData.value
+    case 'initiator':
+      return initiatorRankData.value
+    case 'breaker':
+      return breakerRankData.value
+    default:
+      return originatorRankData.value
+  }
+})
+
+// 卡片标题
+const cardTitle = computed(() => {
+  switch (roleTab.value) {
+    case 'originator':
+      return '🔁 复读榜 - 被复读'
+    case 'initiator':
+      return '🔁 复读榜 - 挑起'
+    case 'breaker':
+      return '🔁 复读榜 - 打断'
+    default:
+      return '🔁 复读榜'
+  }
+})
+
+// 卡片描述
+const cardDescription = computed(() => {
+  switch (roleTab.value) {
+    case 'originator':
+      return '发出的消息被别人复读的次数'
+    case 'initiator':
+      return '第二个发送相同消息、带起节奏的人'
+    case 'breaker':
+      return '终结复读链的人'
+    default:
+      return ''
+  }
 })
 
 const chainLengthChartData = computed<EChartBarData>(() => {
@@ -74,6 +136,21 @@ const chainLengthChartData = computed<EChartBarData>(() => {
   }
 })
 
+// 统计卡片标题
+const statsTitle = computed(() => {
+  return statsTab.value === 'fastest' ? '📊 复读统计 - 最快反应' : '📊 复读统计 - 链长分布'
+})
+
+// 统计卡片描述
+const statsDescription = computed(() => {
+  if (statsTab.value === 'fastest') {
+    return '平均复读反应时间（至少参与5次复读）'
+  }
+  const total = analysis.value?.totalRepeatChains ?? 0
+  const avg = analysis.value?.avgChainLength ?? 0
+  return `共 ${total} 次复读，平均 ${avg} 人参与`
+})
+
 watch(
   () => [props.sessionId, props.timeFilter],
   () => loadData(),
@@ -82,121 +159,78 @@ watch(
 </script>
 
 <template>
-  <SectionCard
-    title="复读榜"
-    :description="
-      isLoading
-        ? '加载中...'
-        : analysis
-          ? `共检测到 ${analysis.totalRepeatChains} 次复读，平均复读链长度 ${analysis.avgChainLength} 人`
-          : '暂无复读数据'
-    "
-  >
-    <template #headerRight>
-      <UTabs
-        v-if="analysis && analysis.totalRepeatChains > 0"
-        v-model="rankMode"
-        :items="[
-          { label: '按次数', value: 'count' },
-          { label: '按复读率', value: 'rate' },
-        ]"
-        size="xs"
-      />
-    </template>
-
+  <div class="space-y-6">
     <LoadingState v-if="isLoading" text="正在分析复读数据..." />
 
-    <div v-else-if="analysis && analysis.totalRepeatChains > 0" class="space-y-6 p-5">
-      <!-- 复读链长度分布 -->
-      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div class="rounded-lg border border-gray-100 bg-gray-50/50 dark:border-gray-800 dark:bg-gray-800/50">
-          <div class="border-b border-gray-100 px-4 py-3 dark:border-gray-800">
-            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">📊 复读链长度分布</h4>
-            <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">每次复读有多少人参与</p>
+    <template v-else-if="analysis && analysis.totalRepeatChains > 0">
+      <!-- 复读榜主卡片 -->
+      <SectionCard :title="cardTitle" :description="cardDescription">
+        <template #headerRight>
+          <div class="flex items-center gap-3">
+            <TopNSelect v-if="showTopNSelect" v-model="roleTopN" />
+            <Tabs
+              v-model="roleTab"
+              :items="[
+                { label: '被复读', value: 'originator' },
+                { label: '挑起', value: 'initiator' },
+                { label: '打断', value: 'breaker' },
+              ]"
+              size="sm"
+            />
           </div>
-          <div class="p-4">
+        </template>
+
+        <EChartRank
+          v-if="currentRankData.length > 0"
+          :members="currentRankData"
+          :title="cardTitle"
+          unit="次"
+          :top-n="roleTopN"
+          bare
+        />
+        <EmptyState v-else text="暂无数据" />
+      </SectionCard>
+
+      <!-- 复读统计（最快反应 + 链长分布） -->
+      <SectionCard :title="statsTitle" :description="statsDescription">
+        <template #headerRight>
+          <div class="flex items-center gap-3">
+            <TopNSelect v-if="showTopNSelect && statsTab === 'fastest'" v-model="statsTopN" />
+            <Tabs
+              v-model="statsTab"
+              :items="[
+                { label: '最快反应', value: 'fastest' },
+                { label: '链长分布', value: 'distribution' },
+              ]"
+              size="sm"
+            />
+          </div>
+        </template>
+
+        <!-- 最快反应 -->
+        <template v-if="statsTab === 'fastest'">
+          <EChartTimeRank
+            v-if="analysis.fastestRepeaters && analysis.fastestRepeaters.length > 0"
+            :items="analysis.fastestRepeaters"
+            :top-n="statsTopN"
+            title=""
+            bare
+          />
+          <EmptyState v-else text="暂无最快复读数据" />
+        </template>
+
+        <!-- 链长分布 -->
+        <template v-else>
+          <div class="px-3 py-2">
             <EChartBar v-if="chainLengthChartData.labels.length > 0" :data="chainLengthChartData" :height="200" />
-            <EmptyState v-else padding="md" />
+            <EmptyState v-else text="暂无分布数据" />
           </div>
-        </div>
-      </div>
+        </template>
+      </SectionCard>
+    </template>
 
-      <!-- 复读排行榜 Grid -->
-      <div class="grid grid-cols-1 gap-6">
-        <RankListPro
-          v-if="originatorRankData.length > 0"
-          :members="originatorRankData"
-          title="🎯 谁的聊天最容易产生复读"
-          :description="rankMode === 'rate' ? '被复读次数 / 总发言数' : '发出的消息被别人复读的次数'"
-          unit="次"
-        />
-
-        <RankListPro
-          v-if="initiatorRankData.length > 0"
-          :members="initiatorRankData"
-          title="🔥 谁最喜欢挑起复读"
-          :description="rankMode === 'rate' ? '挑起复读次数 / 总发言数' : '第二个发送相同消息、带起节奏的人'"
-          unit="次"
-        />
-
-        <RankListPro
-          v-if="breakerRankData.length > 0"
-          :members="breakerRankData"
-          title="✂️ 谁喜欢打断复读"
-          :description="rankMode === 'rate' ? '打断复读次数 / 总发言数' : '终结复读链的人'"
-          unit="次"
-        />
-
-        <!-- 最快复读选手 -->
-        <ListPro
-          v-if="analysis.fastestRepeaters && analysis.fastestRepeaters.length > 0"
-          :items="analysis.fastestRepeaters"
-          title="⚡️ 最快复读选手"
-          description="平均复读反应时间（至少参与5次复读）"
-          countTemplate="共 {count} 位选手"
-        >
-          <template #item="{ item: member, index }">
-            <div class="flex items-center gap-3">
-              <!-- 排名 -->
-              <div
-                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold"
-                :class="getRankBadgeClass(index)"
-              >
-                {{ index + 1 }}
-              </div>
-
-              <!-- 名字 -->
-              <div class="w-32 shrink-0">
-                <p class="truncate font-medium text-gray-900 dark:text-white">
-                  {{ member.name }}
-                </p>
-              </div>
-
-              <!-- 反应时间条（第一名100%，越慢越短） -->
-              <div class="flex flex-1 items-center">
-                <div class="h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
-                  <div
-                    class="h-full rounded-full bg-linear-to-r from-yellow-400 to-orange-500"
-                    :style="{
-                      width: `${Math.round((analysis!.fastestRepeaters[0].avgTimeDiff / member.avgTimeDiff) * 100)}%`,
-                    }"
-                  />
-                </div>
-              </div>
-
-              <!-- 统计数据 -->
-              <div class="flex shrink-0 items-baseline gap-2">
-                <span class="text-lg font-bold text-gray-900 dark:text-white">
-                  {{ (member.avgTimeDiff / 1000).toFixed(2) }}s
-                </span>
-                <span class="text-xs text-gray-500">· {{ member.count }} 次</span>
-              </div>
-            </div>
-          </template>
-        </ListPro>
-      </div>
-    </div>
-
-    <EmptyState v-else text="该群组暂无复读记录" />
-  </SectionCard>
+    <SectionCard v-else title="🔁 复读榜">
+      <EmptyState text="该群组暂无复读记录" />
+    </SectionCard>
+  </div>
 </template>

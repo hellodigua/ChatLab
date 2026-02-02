@@ -161,9 +161,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
         return { success: false, error: '暂无 AI 日志文件' }
       }
 
-      const logFiles = fs
-        .readdirSync(logDir)
-        .filter((name) => name.startsWith('ai_') && name.endsWith('.log'))
+      const logFiles = fs.readdirSync(logDir).filter((name) => name.startsWith('ai_') && name.endsWith('.log'))
 
       if (logFiles.length === 0) {
         return { success: false, error: '暂无 AI 日志文件' }
@@ -734,11 +732,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
    */
   ipcMain.handle(
     'embedding:updateConfig',
-    async (
-      _,
-      id: string,
-      updates: Partial<Omit<rag.EmbeddingServiceConfig, 'id' | 'createdAt' | 'updatedAt'>>
-    ) => {
+    async (_, id: string, updates: Partial<Omit<rag.EmbeddingServiceConfig, 'id' | 'createdAt' | 'updatedAt'>>) => {
       try {
         aiLogger.info('IPC', '更新 Embedding 配置', { id })
         const result = rag.updateEmbeddingConfig(id, updates)

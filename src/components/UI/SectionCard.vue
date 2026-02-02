@@ -3,17 +3,36 @@
  * 带标题的卡片容器组件
  * 统一的分析模块卡片样式
  */
-defineProps<{
-  /** 卡片标题 */
-  title: string
-  /** 可选的描述文字 */
-  description?: string
-  /** 是否显示边框分隔线（默认 true） */
-  showDivider?: boolean
-}>()
+import { computed } from 'vue'
 
-// 设置默认值
-const showDivider = defineModel('showDivider', { default: true })
+const props = withDefaults(
+  defineProps<{
+    /** 卡片标题 */
+    title: string
+    /** 可选的描述文字 */
+    description?: string
+    /** 是否显示边框分隔线（默认 true） */
+    showDivider?: boolean
+    /** 是否启用内容滚动 */
+    scrollable?: boolean
+    /** 最大高度（vh 单位），默认 60vh */
+    maxHeightVh?: number
+  }>(),
+  {
+    showDivider: true,
+    scrollable: false,
+    maxHeightVh: 60,
+  }
+)
+
+// 内容区域样式
+const contentStyle = computed(() => {
+  if (!props.scrollable) return undefined
+  return {
+    maxHeight: `${props.maxHeightVh}vh`,
+    overflowY: 'auto' as const,
+  }
+})
 </script>
 
 <template>
@@ -33,6 +52,12 @@ const showDivider = defineModel('showDivider', { default: true })
     </div>
 
     <!-- 内容区域 -->
-    <slot />
+    <div v-if="scrollable" :style="contentStyle">
+      <slot />
+    </div>
+    <slot v-else />
+
+    <!-- 底部区域（在滚动区域外） -->
+    <slot name="footer" />
   </div>
 </template>

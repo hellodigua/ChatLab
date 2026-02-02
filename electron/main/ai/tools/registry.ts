@@ -1008,9 +1008,7 @@ async function getSessionSummariesExecutor(
   let filteredSessions = sessions
   if (params.keywords && params.keywords.length > 0) {
     const keywords = params.keywords.map((k) => k.toLowerCase())
-    filteredSessions = sessions.filter((s) =>
-      keywords.some((keyword) => s.summary?.toLowerCase().includes(keyword))
-    )
+    filteredSessions = sessions.filter((s) => keywords.some((keyword) => s.summary?.toLowerCase().includes(keyword)))
   }
 
   // 只返回有摘要的

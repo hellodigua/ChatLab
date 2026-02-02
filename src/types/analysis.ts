@@ -154,41 +154,6 @@ export interface NightOwlAnalysis {
   totalDays: number
 }
 
-// ==================== 自言自语分析类型 ====================
-
-/**
- * 自言自语排名项
- */
-export interface MonologueRankItem {
-  memberId: number
-  platformId: string
-  name: string
-  totalStreaks: number // 总连击次数（>=2的段落数）
-  maxCombo: number // 个人最高连击数
-  lowStreak: number // 2-4句（加特林模式）
-  midStreak: number // 5-9句（小作文）
-  highStreak: number // 10+句（无人区广播）
-}
-
-/**
- * 最高连击纪录
- */
-export interface MaxComboRecord {
-  memberId: number
-  platformId: string
-  memberName: string
-  comboLength: number // 连击长度
-  startTs: number // 开始时间
-}
-
-/**
- * 自言自语分析结果
- */
-export interface MonologueAnalysis {
-  rank: MonologueRankItem[]
-  maxComboRecord: MaxComboRecord | null // 全群最高纪录
-}
-
 /**
  * 龙王排名项（每天发言最多的人）
  */
@@ -542,4 +507,3 @@ export interface KeywordTemplate {
   name: string
   keywords: string[]
 }
-

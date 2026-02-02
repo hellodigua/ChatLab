@@ -145,4 +145,3 @@ function close() {
   color: white;
 }
 </style>
-

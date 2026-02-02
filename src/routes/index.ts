@@ -33,3 +33,17 @@ router.beforeEach((_to, _from, next) => {
 router.afterEach((to) => {
   document.body.id = `page-${to.name as string}`
 })
+
+/**
+ * 预加载关键路由组件
+ */
+function preloadCriticalRoutes() {
+  requestIdleCallback(() => {
+    // 预加载聊天分析页面（最常访问的路由）
+    import('@/pages/group-chat/index.vue')
+    import('@/pages/private-chat/index.vue')
+  })
+}
+
+// 路由准备就绪后触发预加载
+router.isReady().then(preloadCriticalRoutes)

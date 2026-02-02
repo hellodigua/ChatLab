@@ -484,21 +484,6 @@ export function registerChatHandlers(ctx: IpcContext): void {
   )
 
   /**
-   * 获取自言自语分析数据
-   */
-  ipcMain.handle(
-    'chat:getMonologueAnalysis',
-    async (_, sessionId: string, filter?: { startTs?: number; endTs?: number }) => {
-      try {
-        return await worker.getMonologueAnalysis(sessionId, filter)
-      } catch (error) {
-        console.error('获取自言自语分析失败：', error)
-        return { rank: [], maxComboRecord: null }
-      }
-    }
-  )
-
-  /**
    * 获取 @ 互动分析数据
    */
   ipcMain.handle(
@@ -777,7 +762,12 @@ export function registerChatHandlers(ctx: IpcContext): void {
       console.log('[IPC] session:generateSummary 收到请求:', { dbSessionId, chatSessionId, locale, forceRegenerate })
       try {
         const { generateSessionSummary } = await import('../ai/summary')
-        const result = await generateSessionSummary(dbSessionId, chatSessionId, locale || 'zh-CN', forceRegenerate || false)
+        const result = await generateSessionSummary(
+          dbSessionId,
+          chatSessionId,
+          locale || 'zh-CN',
+          forceRegenerate || false
+        )
         console.log('[IPC] session:generateSummary 返回:', result)
         return result
       } catch (error) {
@@ -806,56 +796,53 @@ export function registerChatHandlers(ctx: IpcContext): void {
   /**
    * 批量检查会话是否可以生成摘要
    */
-  ipcMain.handle(
-    'session:checkCanGenerateSummary',
-    async (_, dbSessionId: string, chatSessionIds: number[]) => {
-      try {
-        const { checkSessionsCanGenerateSummary } = await import('../ai/summary')
-        const results = checkSessionsCanGenerateSummary(dbSessionId, chatSessionIds)
-        // 将 Map 转换为普通对象以便 IPC 传输
-        const obj: Record<number, { canGenerate: boolean; reason?: string }> = {}
-        for (const [id, result] of results) {
-          obj[id] = result
-        }
-        return obj
-      } catch (error) {
-        console.error('批量检查会话摘要失败：', error)
-        return {}
+  ipcMain.handle('session:checkCanGenerateSummary', async (_, dbSessionId: string, chatSessionIds: number[]) => {
+    try {
+      const { checkSessionsCanGenerateSummary } = await import('../ai/summary')
+      const results = checkSessionsCanGenerateSummary(dbSessionId, chatSessionIds)
+      // 将 Map 转换为普通对象以便 IPC 传输
+      const obj: Record<number, { canGenerate: boolean; reason?: string }> = {}
+      for (const [id, result] of results) {
+        obj[id] = result
       }
+      return obj
+    } catch (error) {
+      console.error('批量检查会话摘要失败：', error)
+      return {}
     }
-  )
+  })
 
   /**
    * 根据时间范围查询会话列表
    */
-  ipcMain.handle(
-    'session:getByTimeRange',
-    async (_, dbSessionId: string, startTs: number, endTs: number) => {
-      console.log('[session:getByTimeRange] 查询参数:', { dbSessionId, startTs, endTs })
-      console.log('[session:getByTimeRange] 时间范围:', {
-        start: new Date(startTs * 1000).toISOString(),
-        end: new Date(endTs * 1000).toISOString(),
+  ipcMain.handle('session:getByTimeRange', async (_, dbSessionId: string, startTs: number, endTs: number) => {
+    console.log('[session:getByTimeRange] 查询参数:', { dbSessionId, startTs, endTs })
+    console.log('[session:getByTimeRange] 时间范围:', {
+      start: new Date(startTs * 1000).toISOString(),
+      end: new Date(endTs * 1000).toISOString(),
+    })
+
+    try {
+      const { openDatabase } = await import('../database/core')
+      const db = openDatabase(dbSessionId, true)
+      if (!db) {
+        console.log('[session:getByTimeRange] 数据库打开失败')
+        return []
+      }
+
+      // 先查询总数和时间范围
+      const stats = db
+        .prepare('SELECT COUNT(*) as count, MIN(start_ts) as minTs, MAX(start_ts) as maxTs FROM chat_session')
+        .get() as { count: number; minTs: number; maxTs: number }
+      console.log('[session:getByTimeRange] 数据库会话统计:', {
+        count: stats.count,
+        minTs: stats.minTs ? new Date(stats.minTs * 1000).toISOString() : null,
+        maxTs: stats.maxTs ? new Date(stats.maxTs * 1000).toISOString() : null,
       })
 
-      try {
-        const { openDatabase } = await import('../database/core')
-        const db = openDatabase(dbSessionId, true)
-        if (!db) {
-          console.log('[session:getByTimeRange] 数据库打开失败')
-          return []
-        }
-
-        // 先查询总数和时间范围
-        const stats = db.prepare('SELECT COUNT(*) as count, MIN(start_ts) as minTs, MAX(start_ts) as maxTs FROM chat_session').get() as { count: number; minTs: number; maxTs: number }
-        console.log('[session:getByTimeRange] 数据库会话统计:', {
-          count: stats.count,
-          minTs: stats.minTs ? new Date(stats.minTs * 1000).toISOString() : null,
-          maxTs: stats.maxTs ? new Date(stats.maxTs * 1000).toISOString() : null,
-        })
-
-        const sessions = db
-          .prepare(
-            `
+      const sessions = db
+        .prepare(
+          `
             SELECT
               id,
               start_ts as startTs,
@@ -866,23 +853,22 @@ export function registerChatHandlers(ctx: IpcContext): void {
             WHERE start_ts >= ? AND start_ts <= ?
             ORDER BY start_ts DESC
           `
-          )
-          .all(startTs, endTs) as Array<{
-          id: number
-          startTs: number
-          endTs: number
-          messageCount: number
-          summary: string | null
-        }>
+        )
+        .all(startTs, endTs) as Array<{
+        id: number
+        startTs: number
+        endTs: number
+        messageCount: number
+        summary: string | null
+      }>
 
-        console.log('[session:getByTimeRange] 查询结果数量:', sessions.length)
-        return sessions
-      } catch (error) {
-        console.error('查询时间范围会话失败：', error)
-        return []
-      }
+      console.log('[session:getByTimeRange] 查询结果数量:', sessions.length)
+      return sessions
+    } catch (error) {
+      console.error('查询时间范围会话失败：', error)
+      return []
     }
-  )
+  })
 
   /**
    * 获取最近 N 条会话

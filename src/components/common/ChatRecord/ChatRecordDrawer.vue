@@ -43,6 +43,9 @@ const activeSessionId = ref<number | undefined>(undefined)
 // 会话列表缓存（用于根据消息 ID 查找所属会话）
 const sessionsCache = ref<Array<{ id: number; startTs: number; endTs: number; firstMessageId: number }>>([])
 
+// 匹配消息所属的会话 ID 集合（用于关键词筛选时联动时间线）
+const matchedSessionIds = ref<Set<number> | undefined>(undefined)
+
 // 应用筛选
 function handleApplyFilter(query: ChatRecordQuery) {
   localQuery.value = query
@@ -51,11 +54,34 @@ function handleApplyFilter(query: ChatRecordQuery) {
 // 重置筛选
 function handleResetFilter() {
   localQuery.value = {}
+  matchedSessionIds.value = undefined
 }
 
 // 处理消息数量变化
 function handleCountChange(count: number) {
   messageCount.value = count
+}
+
+// 处理消息时间戳变化（用于计算匹配的会话 ID）
+function handleMessageTimestampsChange(timestamps: number[]) {
+  // 只有在关键词筛选时才计算匹配的会话
+  if (!localQuery.value.keywords?.length || !sessionsCache.value.length) {
+    matchedSessionIds.value = undefined
+    return
+  }
+
+  // 根据消息时间戳找出对应的会话 ID
+  const sessionIds = new Set<number>()
+  for (const ts of timestamps) {
+    for (const session of sessionsCache.value) {
+      if (ts >= session.startTs && ts <= session.endTs) {
+        sessionIds.add(session.id)
+        break
+      }
+    }
+  }
+
+  matchedSessionIds.value = sessionIds.size > 0 ? sessionIds : undefined
 }
 
 // 处理当前可见消息变化（用于联动高亮时间线）
@@ -149,7 +175,7 @@ watch(
     v-model:open="layoutStore.showChatRecordDrawer"
     direction="right"
     :handle="false"
-    :ui="{ content: 'z-[10000]' }"
+    :ui="{ content: 'z-50' }"
   >
     <template #content>
       <div class="flex h-full w-[680px] flex-col bg-white dark:bg-gray-900" style="-webkit-app-region: no-drag">
@@ -178,6 +204,9 @@ watch(
             v-if="currentSessionId"
             :session-id="currentSessionId"
             :active-session-id="activeSessionId"
+            :filter-start-ts="localQuery.startTs"
+            :filter-end-ts="localQuery.endTs"
+            :filter-matched-session-ids="matchedSessionIds"
             v-model:collapsed="timelineCollapsed"
             @select="handleSessionSelect"
           />
@@ -190,6 +219,7 @@ watch(
               @count-change="handleCountChange"
               @visible-message-change="handleVisibleMessageChange"
               @jump-to-message="handleJumpToMessage"
+              @message-timestamps-change="handleMessageTimestampsChange"
             />
           </div>
         </div>

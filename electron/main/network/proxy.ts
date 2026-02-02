@@ -190,11 +190,7 @@ export async function testProxyConnection(proxyUrl: string): Promise<{ success: 
   }
 
   // 测试 URL 列表（按优先级）
-  const testUrls = [
-    'https://www.google.com',
-    'https://www.cloudflare.com',
-    'https://api.deepseek.com',
-  ]
+  const testUrls = ['https://www.google.com', 'https://www.cloudflare.com', 'https://api.deepseek.com']
 
   try {
     // 临时设置代理

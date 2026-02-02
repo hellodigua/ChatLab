@@ -141,4 +141,3 @@ export class OpenAICompatibleEmbeddingService implements IEmbeddingService {
     // API 服务无需释放资源
   }
 }
-

@@ -152,7 +152,14 @@ function parseWhatsAppTime(timeStr: string, isV2Format: boolean = false): number
       const [, month, day, year, hour, minute, second] = match
       // 将 2 位年份转换为 4 位（假设 00-99 对应 2000-2099）
       const fullYear = 2000 + parseInt(year, 10)
-      const date = new Date(fullYear, parseInt(month, 10) - 1, parseInt(day, 10), parseInt(hour, 10), parseInt(minute, 10), parseInt(second, 10))
+      const date = new Date(
+        fullYear,
+        parseInt(month, 10) - 1,
+        parseInt(day, 10),
+        parseInt(hour, 10),
+        parseInt(minute, 10),
+        parseInt(second, 10)
+      )
       return Math.floor(date.getTime() / 1000)
     }
   }

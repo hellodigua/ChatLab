@@ -208,10 +208,7 @@ export async function closeWorkerAsync(): Promise<void> {
     console.log('[WorkerManager] Closing worker async...')
     try {
       // 等待关闭所有数据库连接（最多等待 3 秒）
-      await Promise.race([
-        sendToWorker('closeAll', {}),
-        new Promise((resolve) => setTimeout(resolve, 3000)),
-      ])
+      await Promise.race([sendToWorker('closeAll', {}), new Promise((resolve) => setTimeout(resolve, 3000))])
     } catch {
       // 忽略错误，继续终止
     }
@@ -295,10 +292,6 @@ export async function getDragonKingAnalysis(sessionId: string, filter?: any): Pr
 
 export async function getDivingAnalysis(sessionId: string, filter?: any): Promise<any> {
   return sendToWorker('getDivingAnalysis', { sessionId, filter })
-}
-
-export async function getMonologueAnalysis(sessionId: string, filter?: any): Promise<any> {
-  return sendToWorker('getMonologueAnalysis', { sessionId, filter })
 }
 
 export async function getMentionAnalysis(sessionId: string, filter?: any): Promise<any> {

@@ -141,16 +141,23 @@ function isValidMessage(content: string): boolean {
   if (emojiOnlyPattern.test(trimmed)) return false
 
   // 过滤占位符文本
-  const placeholders = ['[图片]', '[语音]', '[视频]', '[文件]', '[表情]', '[动画表情]', '[位置]', '[名片]', '[红包]', '[转账]', '[撤回消息]']
+  const placeholders = [
+    '[图片]',
+    '[语音]',
+    '[视频]',
+    '[文件]',
+    '[表情]',
+    '[动画表情]',
+    '[位置]',
+    '[名片]',
+    '[红包]',
+    '[转账]',
+    '[撤回消息]',
+  ]
   if (placeholders.some((p) => trimmed === p)) return false
 
   // 过滤系统消息（入群、退群等）
-  const systemPatterns = [
-    /^.*邀请.*加入了群聊$/,
-    /^.*退出了群聊$/,
-    /^.*撤回了一条消息$/,
-    /^你撤回了一条消息$/,
-  ]
+  const systemPatterns = [/^.*邀请.*加入了群聊$/, /^.*退出了群聊$/, /^.*撤回了一条消息$/, /^你撤回了一条消息$/]
   if (systemPatterns.some((p) => p.test(trimmed))) return false
 
   return true
@@ -494,4 +501,3 @@ export function checkSessionsCanGenerateSummary(
 
   return results
 }
-

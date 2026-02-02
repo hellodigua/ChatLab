@@ -45,9 +45,11 @@ export function getWordFrequency(params: WordFrequencyParams): WordFrequencyResu
   // 构建 WHERE 子句，排除系统消息
   let whereClause = clause
   if (whereClause.includes('WHERE')) {
-    whereClause += " AND COALESCE(m.account_name, '') != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND TRIM(msg.content) != ''"
+    whereClause +=
+      " AND COALESCE(m.account_name, '') != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND TRIM(msg.content) != ''"
   } else {
-    whereClause = " WHERE COALESCE(m.account_name, '') != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND TRIM(msg.content) != ''"
+    whereClause =
+      " WHERE COALESCE(m.account_name, '') != '系统消息' AND msg.type = 0 AND msg.content IS NOT NULL AND TRIM(msg.content) != ''"
   }
 
   // 查询消息内容
@@ -78,11 +80,7 @@ export function getWordFrequency(params: WordFrequencyParams): WordFrequencyResu
   // 收集词性统计（用于显示每个词性有多少词，仅中文有效）
   let posTagStats: PosTagStat[] | undefined
   if ((locale as SupportedLocale) === 'zh-CN') {
-    const posStatsMap = collectPosTagStats(
-      texts,
-      minWordLength ?? 2,
-      enableStopwords
-    )
+    const posStatsMap = collectPosTagStats(texts, minWordLength ?? 2, enableStopwords)
     posTagStats = [...posStatsMap.entries()].map(([tag, count]) => ({ tag, count }))
   }
 
@@ -121,11 +119,7 @@ export function getWordFrequency(params: WordFrequencyParams): WordFrequencyResu
 /**
  * 单文本分词（用于调试或其他用途）
  */
-export function segmentText(
-  text: string,
-  locale: SupportedLocale,
-  minLength?: number
-): string[] {
+export function segmentText(text: string, locale: SupportedLocale, minLength?: number): string[] {
   return segment(text, locale, { minLength })
 }
 

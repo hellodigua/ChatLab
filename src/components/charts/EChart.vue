@@ -6,12 +6,7 @@
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import * as echarts from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import {
-  PieChart,
-  BarChart,
-  LineChart,
-  HeatmapChart,
-} from 'echarts/charts'
+import { PieChart, BarChart, LineChart, HeatmapChart } from 'echarts/charts'
 import {
   TitleComponent,
   TooltipComponent,
@@ -98,6 +93,17 @@ function handleResize() {
 // 监听 option 变化
 watch(() => props.option, updateChart, { deep: true })
 
+// 监听高度变化
+watch(
+  () => props.height,
+  () => {
+    // 使用 nextTick 确保 DOM 更新后再调整大小
+    setTimeout(() => {
+      chartInstance?.resize()
+    }, 0)
+  }
+)
+
 // 监听主题变化
 watch(isDark, () => {
   initChart()
@@ -155,4 +161,3 @@ defineExpose({
 <template>
   <div ref="chartRef" :style="{ height: heightStyle, width: '100%' }" />
 </template>
-

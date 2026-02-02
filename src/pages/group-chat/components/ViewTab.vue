@@ -54,7 +54,7 @@ const selectedMemberId = ref<number | null>(null)
     </SubTabs>
 
     <!-- 子 Tab 内容 -->
-    <div class="flex-1 min-h-0 overflow-auto">
+    <div class="flex-1 min-h-0 overflow-y-auto">
       <Transition name="fade" mode="out-in">
         <MessageView
           v-if="activeSubTab === 'message'"

@@ -120,9 +120,7 @@ export function getEmbeddingConfigById(id: string): EmbeddingServiceConfig | nul
 /**
  * 添加新 Embedding 配置
  */
-export function addEmbeddingConfig(
-  config: Omit<EmbeddingServiceConfig, 'id' | 'createdAt' | 'updatedAt'>
-): {
+export function addEmbeddingConfig(config: Omit<EmbeddingServiceConfig, 'id' | 'createdAt' | 'updatedAt'>): {
   success: boolean
   config?: EmbeddingServiceConfig
   error?: string

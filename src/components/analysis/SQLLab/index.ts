@@ -8,4 +8,3 @@ export { default as AIHistoryModal } from './AIHistoryModal.vue'
 export { default as ResultTable } from './ResultTable.vue'
 
 export * from './types'
-

@@ -42,4 +42,3 @@ defineProps<{
     <slot name="action" />
   </div>
 </template>
-

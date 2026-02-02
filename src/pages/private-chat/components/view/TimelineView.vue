@@ -45,4 +45,3 @@ defineProps<{
   }
 }
 </i18n>
-

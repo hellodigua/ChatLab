@@ -149,11 +149,7 @@ interface MemberInfo {
 
 // ==================== 消息类型转换 ====================
 
-function convertMessageType(
-  msgType: string,
-  content: ChunkedMessage['content'],
-  isRecalled?: boolean
-): MessageType {
+function convertMessageType(msgType: string, content: ChunkedMessage['content'], isRecalled?: boolean): MessageType {
   if (isRecalled) return MessageType.RECALL
 
   // 系统消息

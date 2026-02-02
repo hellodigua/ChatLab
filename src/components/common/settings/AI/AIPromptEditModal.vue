@@ -198,9 +198,9 @@ ${formData.value.responseRules}`
         <div class="max-h-[500px] space-y-4 overflow-y-auto pr-1">
           <!-- 预设名称 -->
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{
-              t('modal.presetName')
-            }}</label>
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {{ t('modal.presetName') }}
+            </label>
             <UInput v-model="formData.name" :placeholder="t('modal.presetNamePlaceholder')" class="w-60" />
           </div>
 
@@ -232,9 +232,9 @@ ${formData.value.responseRules}`
 
           <!-- 角色定义 -->
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{{
-              t('modal.roleDefinition')
-            }}</label>
+            <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {{ t('modal.roleDefinition') }}
+            </label>
             <UTextarea
               v-model="formData.roleDefinition"
               :rows="8"

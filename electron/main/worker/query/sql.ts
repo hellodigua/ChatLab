@@ -128,12 +128,9 @@ export function executeRawSQL(sessionId: string, sql: string): SQLResult {
   } catch (error) {
     if (error instanceof Error) {
       // 美化错误信息
-      const message = error.message
-        .replace(/^SQLITE_ERROR: /, '')
-        .replace(/^SQLITE_READONLY: /, '只读模式：')
+      const message = error.message.replace(/^SQLITE_ERROR: /, '').replace(/^SQLITE_READONLY: /, '只读模式：')
       throw new Error(message)
     }
     throw error
   }
 }
-

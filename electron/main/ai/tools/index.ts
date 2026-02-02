@@ -77,10 +77,7 @@ export async function getTool(name: string): Promise<RegisteredTool | undefined>
  * @param toolCall LLM 返回的 tool_call
  * @param context 执行上下文
  */
-export async function executeToolCall(
-  toolCall: ToolCall,
-  context: ToolContext
-): Promise<ToolExecutionResult> {
+export async function executeToolCall(toolCall: ToolCall, context: ToolContext): Promise<ToolExecutionResult> {
   await ensureToolsInitialized()
   const toolName = toolCall.function.name
 
@@ -120,10 +117,7 @@ export async function executeToolCall(
  * @param toolCalls LLM 返回的 tool_calls 数组
  * @param context 执行上下文
  */
-export async function executeToolCalls(
-  toolCalls: ToolCall[],
-  context: ToolContext
-): Promise<ToolExecutionResult[]> {
+export async function executeToolCalls(toolCalls: ToolCall[], context: ToolContext): Promise<ToolExecutionResult[]> {
   // 并行执行所有工具调用
   return Promise.all(toolCalls.map((tc) => executeToolCall(tc, context)))
 }
@@ -143,4 +137,3 @@ export async function getRegisteredToolCount(): Promise<number> {
   await ensureToolsInitialized()
   return toolRegistry.size
 }
-

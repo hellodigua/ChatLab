@@ -101,9 +101,7 @@ export class SQLiteVectorStore implements IVectorStore {
   /**
    * 批量添加向量
    */
-  async addBatch(
-    items: Array<{ id: string; vector: number[]; metadata?: Record<string, unknown> }>
-  ): Promise<void> {
+  async addBatch(items: Array<{ id: string; vector: number[]; metadata?: Record<string, unknown> }>): Promise<void> {
     const insert = this.db.prepare(`
       INSERT OR REPLACE INTO vectors (id, vector, dimensions, metadata)
       VALUES (?, ?, ?, ?)
@@ -123,9 +121,7 @@ export class SQLiteVectorStore implements IVectorStore {
    * 获取向量（BLOB → Float32Array）
    */
   async get(id: string): Promise<number[] | null> {
-    const row = this.db.prepare('SELECT vector FROM vectors WHERE id = ?').get(id) as
-      | { vector: Buffer }
-      | undefined
+    const row = this.db.prepare('SELECT vector FROM vectors WHERE id = ?').get(id) as { vector: Buffer } | undefined
 
     if (!row) return null
 
@@ -194,9 +190,7 @@ export class SQLiteVectorStore implements IVectorStore {
     const countRow = this.db.prepare('SELECT COUNT(*) as count FROM vectors').get() as { count: number }
 
     // 获取第一个向量的维度
-    const dimRow = this.db.prepare('SELECT dimensions FROM vectors LIMIT 1').get() as
-      | { dimensions: number }
-      | undefined
+    const dimRow = this.db.prepare('SELECT dimensions FROM vectors LIMIT 1').get() as { dimensions: number } | undefined
 
     // 获取数据库文件大小
     let sizeBytes: number | undefined
@@ -223,4 +217,3 @@ export class SQLiteVectorStore implements IVectorStore {
     logger.info('[SQLite Store] 已关闭')
   }
 }
-

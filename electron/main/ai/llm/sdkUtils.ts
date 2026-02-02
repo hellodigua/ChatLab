@@ -3,15 +3,7 @@
  */
 
 import { jsonSchema } from 'ai'
-import type {
-  ContentPart,
-  FinishReason,
-  LanguageModelUsage,
-  ModelMessage,
-  ToolSet,
-  TypedToolCall,
-  JSONValue,
-} from 'ai'
+import type { ContentPart, FinishReason, LanguageModelUsage, ModelMessage, ToolSet, TypedToolCall, JSONValue } from 'ai'
 import type { ChatMessage, ChatResponse, ToolCall, ToolDefinition } from './types'
 
 const UNKNOWN_TOOL_NAME = 'unknown_tool'

@@ -130,7 +130,12 @@ export class TempDbWriter {
       // 确保成员存在（消息中没有头像信息，设为 null）
       if (!this.memberSet.has(msg.senderPlatformId)) {
         this.memberSet.add(msg.senderPlatformId)
-        this.insertMember.run(msg.senderPlatformId, msg.senderAccountName || null, msg.senderGroupNickname || null, null)
+        this.insertMember.run(
+          msg.senderPlatformId,
+          msg.senderAccountName || null,
+          msg.senderGroupNickname || null,
+          null
+        )
       }
 
       this.insertMessage.run(

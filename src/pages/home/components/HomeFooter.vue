@@ -199,10 +199,7 @@ watch(locale, () => {
     <div class="flex items-center justify-center">
       <template v-for="(link, index) in footerLinks" :key="link.id">
         <!-- 分隔点 -->
-        <span
-          v-if="index > 0"
-          class="mx-2 text-gray-300 dark:text-gray-600"
-        >·</span>
+        <span v-if="index > 0" class="mx-2 text-gray-300 dark:text-gray-600">·</span>
         <!-- 链接按钮 -->
         <button
           class="text-sm text-gray-500 hover:text-primary transition-colors dark:text-gray-400 dark:hover:text-primary"
@@ -225,4 +222,3 @@ watch(locale, () => {
     </div>
   </div>
 </template>
-

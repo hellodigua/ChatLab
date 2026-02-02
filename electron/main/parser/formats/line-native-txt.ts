@@ -275,7 +275,7 @@ async function* parseLINE(options: ParseOptions): AsyncGenerator<ParseEvent, voi
     // 尝试解析消息行
     const msgPattern = useTabSeparator ? PRIVATE_MSG_PATTERN : GROUP_MSG_PATTERN
     const msgMatch = line.match(msgPattern)
-    
+
     // 调试前几行
     if (debugLogCount < 5 && line.trim()) {
       onLog?.('debug', `LINE 行[${i}]: "${line.substring(0, 50)}..." match=${!!msgMatch}`)

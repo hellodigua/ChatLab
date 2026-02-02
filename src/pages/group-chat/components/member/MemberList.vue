@@ -202,7 +202,13 @@ onMounted(() => {
     </div>
 
     <!-- Owner配置 -->
-    <OwnerSelector class="mb-6" :session-id="sessionId" :members="allMembers" :is-loading="isLoading" chat-type="group" />
+    <OwnerSelector
+      class="mb-6"
+      :session-id="sessionId"
+      :members="allMembers"
+      :is-loading="isLoading"
+      chat-type="group"
+    />
 
     <!-- 搜索框 -->
     <div class="mb-4">
@@ -258,11 +264,7 @@ onMounted(() => {
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-              <tr
-                v-for="member in members"
-                :key="member.id"
-                class="hover:bg-gray-50 dark:hover:bg-gray-800/50"
-              >
+              <tr v-for="member in members" :key="member.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                 <!-- 账号名称 (ID) -->
                 <td class="px-4 py-4">
                   <div class="flex items-center gap-2">
@@ -334,7 +336,13 @@ onMounted(() => {
           class="flex items-center justify-between border-t border-gray-200 px-6 py-4 dark:border-gray-700"
         >
           <p class="text-sm text-gray-500 dark:text-gray-400">
-            {{ t('pagination', { start: (currentPage - 1) * pageSize + 1, end: Math.min(currentPage * pageSize, total), total: total }) }}
+            {{
+              t('pagination', {
+                start: (currentPage - 1) * pageSize + 1,
+                end: Math.min(currentPage * pageSize, total),
+                total: total,
+              })
+            }}
           </p>
           <div class="flex items-center gap-2">
             <UButton
@@ -380,7 +388,12 @@ onMounted(() => {
           </div>
           <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{ t('modal.title') }}</h3>
           <p class="mb-6 text-sm text-gray-500 dark:text-gray-400">
-            {{ t('modal.content', { name: deletingMember ? getDisplayName(deletingMember) : '', count: deletingMember?.messageCount.toLocaleString() }) }}
+            {{
+              t('modal.content', {
+                name: deletingMember ? getDisplayName(deletingMember) : '',
+                count: deletingMember?.messageCount.toLocaleString(),
+              })
+            }}
           </p>
           <div class="flex justify-center gap-3">
             <UButton variant="outline" @click="cancelDelete">{{ t('modal.cancel') }}</UButton>

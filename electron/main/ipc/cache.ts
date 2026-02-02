@@ -4,14 +4,7 @@ import * as fs from 'fs/promises'
 import * as fsSync from 'fs'
 import * as path from 'path'
 import type { IpcContext } from './types'
-import {
-  getAppDataDir,
-  getDatabaseDir,
-  getAiDataDir,
-  getLogsDir,
-  getDownloadsDir,
-  ensureDir,
-} from '../paths'
+import { getAppDataDir, getDatabaseDir, getAiDataDir, getLogsDir, getDownloadsDir, ensureDir } from '../paths'
 
 /**
  * 递归计算目录大小

@@ -206,23 +206,18 @@ function translateError(error: string): string {
             {{ t('analysis.incremental.description', { name: sessionName }) }}
           </p>
 
-          <FileDropZone
-            :accept="['.json', '.jsonl', '.txt']"
-            class="w-full"
-            @files="handleFileDrop"
-          >
+          <FileDropZone :accept="['.json', '.jsonl', '.txt']" class="w-full" @files="handleFileDrop">
             <template #default="{ isDragOver }">
               <div
                 class="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 transition-colors"
-                :class="isDragOver
-                  ? 'border-pink-500 bg-pink-50/50 dark:border-pink-400 dark:bg-pink-500/10'
-                  : 'border-gray-300 hover:border-pink-400 dark:border-gray-600 dark:hover:border-pink-500'"
+                :class="
+                  isDragOver
+                    ? 'border-pink-500 bg-pink-50/50 dark:border-pink-400 dark:bg-pink-500/10'
+                    : 'border-gray-300 hover:border-pink-400 dark:border-gray-600 dark:hover:border-pink-500'
+                "
                 @click="handleSelectFile"
               >
-                <UIcon
-                  name="i-heroicons-arrow-up-tray"
-                  class="mb-3 h-10 w-10 text-gray-400"
-                />
+                <UIcon name="i-heroicons-arrow-up-tray" class="mb-3 h-10 w-10 text-gray-400" />
                 <p class="text-sm text-gray-600 dark:text-gray-400">
                   {{ isDragOver ? t('home.import.dropHint') : t('analysis.incremental.dropHint') }}
                 </p>
@@ -341,4 +336,3 @@ function translateError(error: string): string {
     </template>
   </UModal>
 </template>
-

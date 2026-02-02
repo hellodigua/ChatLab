@@ -279,4 +279,3 @@ onUnmounted(() => {
 <template>
   <div ref="chartRef" :style="{ height: heightStyle, width: '100%' }" />
 </template>
-

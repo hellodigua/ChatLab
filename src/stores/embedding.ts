@@ -82,7 +82,6 @@ export const useEmbeddingStore = defineStore('embedding', () => {
     }
   }
 
-
   /**
    * 切换激活配置
    */
@@ -166,4 +165,3 @@ export const useEmbeddingStore = defineStore('embedding', () => {
     refreshConfigs,
   }
 })
-

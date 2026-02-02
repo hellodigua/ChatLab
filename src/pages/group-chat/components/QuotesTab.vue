@@ -18,13 +18,13 @@ const props = defineProps<{
 
 // 子 Tab 配置
 const subTabs = computed(() => [
+  { id: 'wordcloud', label: t('wordcloud'), icon: 'i-heroicons-cloud' },
   { id: 'hot-repeat', label: t('hotRepeat'), icon: 'i-heroicons-fire' },
   { id: 'catchphrase', label: t('catchphrase'), icon: 'i-heroicons-chat-bubble-bottom-center-text' },
-  { id: 'wordcloud', label: t('wordcloud'), icon: 'i-heroicons-cloud' },
   { id: 'keyword', label: t('keywordAnalysis'), icon: 'i-heroicons-magnifying-glass' },
 ])
 
-const activeSubTab = ref('hot-repeat')
+const activeSubTab = ref('wordcloud')
 </script>
 
 <template>

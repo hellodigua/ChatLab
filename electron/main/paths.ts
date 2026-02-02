@@ -323,4 +323,3 @@ export function removeLegacyDir(): boolean {
     return false
   }
 }
-

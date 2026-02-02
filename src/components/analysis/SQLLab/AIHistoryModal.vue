@@ -118,4 +118,3 @@ function formatHistoryTime(timestamp: number): string {
   }
 }
 </i18n>
-

@@ -16,26 +16,20 @@ export function registerNlpHandlers(_ctx: IpcContext): void {
    * 获取词频统计
    * 用于词云展示
    */
-  ipcMain.handle(
-    'nlp:getWordFrequency',
-    async (
-      _event,
-      params: WordFrequencyParams
-    ): Promise<WordFrequencyResult> => {
-      try {
-        const result = await worker.query('getWordFrequency', params)
-        return result as WordFrequencyResult
-      } catch (error) {
-        console.error('[NLP] 获取词频统计失败:', error)
-        return {
-          words: [],
-          totalWords: 0,
-          totalMessages: 0,
-          uniqueWords: 0,
-        }
+  ipcMain.handle('nlp:getWordFrequency', async (_event, params: WordFrequencyParams): Promise<WordFrequencyResult> => {
+    try {
+      const result = await worker.query('getWordFrequency', params)
+      return result as WordFrequencyResult
+    } catch (error) {
+      console.error('[NLP] 获取词频统计失败:', error)
+      return {
+        words: [],
+        totalWords: 0,
+        totalMessages: 0,
+        uniqueWords: 0,
       }
     }
-  )
+  })
 
   /**
    * 单文本分词
@@ -43,12 +37,7 @@ export function registerNlpHandlers(_ctx: IpcContext): void {
    */
   ipcMain.handle(
     'nlp:segmentText',
-    async (
-      _event,
-      text: string,
-      locale: SupportedLocale,
-      minLength?: number
-    ): Promise<string[]> => {
+    async (_event, text: string, locale: SupportedLocale, minLength?: number): Promise<string[]> => {
       try {
         const result = await worker.query('segmentText', { text, locale, minLength })
         return result as string[]
