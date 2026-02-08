@@ -1,12 +1,23 @@
 /**
  * LINE 官方导出 TXT 格式解析器
- * 支持私聊和群聊，支持英文/中文/日文等多语言导出
+ * 支持私聊和群聊，支持多语言导出（EN / ZH-CN / ZH-TW / JA）
  *
- * 特征：
- * - 私聊：有头部（标题+保存时间），消息用 Tab 分隔
- * - 群聊：无头部，直接日期行开始，消息用空格分隔
- * - 时间格式：HH:MM（无秒数）
- * - 日期行独立，包含年月日
+ * 格式特征：
+ * - 头部格式（私聊和群聊相同）：
+ *   Line 1: [LINE] {name}的聊天记录 / Chat history with/in {name} / ...
+ *   Line 2: 保存日期: YYYY/MM/DD HH:MM / Saved on: ...
+ *   Line 3: (空行)
+ * - 日期行：YYYY/MM/DD（星期）或 Day, MM/DD/YYYY
+ * - 消息格式：TIME\t{sender}\t{content}（Tab 分隔）
+ * - 系统消息：TIME\t\t{content}（双 Tab，无发送者）
+ * - 时间格式：HH:MM / 上午|下午HH:MM / 午前|午後HH:MM / HH:MMam|pm
+ * - 多行消息：用双引号包裹
+ *
+ * 私聊 vs 群聊区分：
+ * - EN: "Chat history with {name}" (私聊) vs "Chat history in {name}" (群聊)
+ * - JA: "{name}とのトーク履歴" (私聊) vs "{name}のトーク履歴" (群聊)
+ * - ZH-CN: "与{name}的聊天记录" (私聊) vs "{name}的聊天记录" (群聊)
+ * - ZH-TW: "與{name}的聊天記錄" (私聊) vs "{name}的聊天記錄" (群聊)
  */
 
 import * as fs from 'fs'
@@ -30,16 +41,15 @@ export const feature: FormatFeature = {
   id: 'line-native-txt',
   name: 'LINE 官方导出 TXT',
   platform: KNOWN_PLATFORMS.LINE,
-  priority: 35, // 在 QQ 官方导出之后
+  priority: 35,
   extensions: ['.txt'],
   signatures: {
     head: [
-      // 私聊：Tab 分隔的消息格式
-      /^\d{1,2}:\d{2}\t[^\t\n]+\t/m,
-      // 群聊：日期行格式 (YYYY.MM.DD)
-      /^\d{4}\.\d{2}\.\d{2} (Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)/m,
-      // 私聊头部关键词（多语言）
-      /^(Chat history with |\[LINE\] )/m,
+      // 头部标识（多语言）
+      /^\[LINE\] /m,
+      /^(?:\[LINE\] )?Chat history (?:with|in) /m,
+      // Tab 分隔的消息格式（支持多种时间格式）
+      /^((?:上午|下午|午前|午後)?\d{1,2}:\d{2}(?:[AaPp][Mm])?)\t[^\t\n]+\t/m,
     ],
   },
 }
@@ -57,20 +67,41 @@ function extractNameFromFilePath(filePath: string): string {
 }
 
 /**
- * 从私聊头部提取对方名称
+ * 从头部提取聊天名称和类型
+ * 支持：英文、日文、简体中文、繁体中文
  */
-function extractNameFromHeader(header: string): string | null {
-  // 英文：Chat history with {name}
-  const enMatch = header.match(/^Chat history with (.+)$/m)
-  if (enMatch) return enMatch[1].trim()
+function extractNameFromHeader(header: string): { name: string; isGroup: boolean } | null {
+  // ===== 英文 =====
+  // 私聊：Chat history with {name}
+  const enPrivateMatch = header.match(/^(?:\[LINE\] )?Chat history with (.+)$/m)
+  if (enPrivateMatch) return { name: enPrivateMatch[1].trim(), isGroup: false }
+  // 群聊：Chat history in {name}
+  const enGroupMatch = header.match(/^(?:\[LINE\] )?Chat history in (.+)$/m)
+  if (enGroupMatch) return { name: enGroupMatch[1].trim(), isGroup: true }
 
-  // 中文：[LINE] 与{name}的对话
-  const zhMatch = header.match(/^\[LINE\] 与(.+)的对话$/m)
-  if (zhMatch) return zhMatch[1].trim()
+  // ===== 日文 =====
+  // 私聊：{name}とのトーク履歴
+  const jaPrivateMatch = header.match(/^\[LINE\] (.+)とのトーク履歴/)
+  if (jaPrivateMatch) return { name: jaPrivateMatch[1].trim(), isGroup: false }
+  // 群聊：{name}のトーク履歴
+  const jaGroupMatch = header.match(/^\[LINE\] (.+)のトーク履歴/)
+  if (jaGroupMatch) return { name: jaGroupMatch[1].trim(), isGroup: true }
 
-  // 日文：[LINE] {name}とのトーク履歴
-  const jaMatch = header.match(/^\[LINE\] (.+)とのトーク/)
-  if (jaMatch) return jaMatch[1].trim()
+  // ===== 简体中文 =====
+  // 私聊：与{name}的聊天记录
+  const zhCnPrivateMatch = header.match(/^\[LINE\] 与(.+)的聊天记录/)
+  if (zhCnPrivateMatch) return { name: zhCnPrivateMatch[1].trim(), isGroup: false }
+  // 群聊：{name}的聊天记录
+  const zhCnGroupMatch = header.match(/^\[LINE\] (.+)的聊天记录/)
+  if (zhCnGroupMatch) return { name: zhCnGroupMatch[1].trim(), isGroup: true }
+
+  // ===== 繁体中文 =====
+  // 私聊：與{name}的聊天記錄
+  const zhTwPrivateMatch = header.match(/^\[LINE\] 與(.+)的聊天記錄/)
+  if (zhTwPrivateMatch) return { name: zhTwPrivateMatch[1].trim(), isGroup: false }
+  // 群聊：{name}的聊天記錄
+  const zhTwGroupMatch = header.match(/^\[LINE\] (.+)的聊天記錄/)
+  if (zhTwGroupMatch) return { name: zhTwGroupMatch[1].trim(), isGroup: true }
 
   return null
 }
@@ -115,49 +146,62 @@ function parseDateLine(line: string): Date | null {
 
 /**
  * 消息行正则模式
+ * 时间格式：HH:MM / HH:MMam|pm / 上午|下午|午前|午後HH:MM
  */
-// 私聊：HH:MM\t{name}\t{content}
-const PRIVATE_MSG_PATTERN = /^(\d{1,2}:\d{2})\t([^\t]+)\t(.*)$/
-// 群聊：HH:MM {name} {content}
-const GROUP_MSG_PATTERN = /^(\d{1,2}:\d{2}) ([^\s]+) (.*)$/
+// 私聊/群聊（有发送者）：TIME\t{name}\t{content}
+const PRIVATE_MSG_PATTERN = /^((?:上午|下午|午前|午後)?\d{1,2}:\d{2}(?:[AaPp][Mm])?)\t([^\t]+)\t(.*)$/
+// 群聊：HH:MM {name} {content} (已废弃，实际都用 Tab 分隔)
+const GROUP_MSG_PATTERN = /^((?:上午|下午|午前|午後)?\d{1,2}:\d{2}(?:[AaPp][Mm])?) ([^\s]+) (.*)$/
+// 系统消息：双 Tab（无发送者），如「下午07:04\t\tXXX已加入群組」
+const SYSTEM_MSG_PATTERN = /^((?:上午|下午|午前|午後)?\d{1,2}:\d{2}(?:[AaPp][Mm])?)\t\t(.+)$/
 
 /**
- * 特殊消息类型映射（多语言）
+ * 特殊消息类型映射（多语言：EN / ZH-CN / ZH-TW / JA）
  */
 const SPECIAL_MESSAGE_TYPES: Record<string, MessageType> = {
-  // 图片
-  '[Photo]': MessageType.IMAGE,
-  '[照片]': MessageType.IMAGE,
-  '[写真]': MessageType.IMAGE,
-  Photos: MessageType.IMAGE,
+  // 图片 / Photo
+  '[Photo]': MessageType.IMAGE,       // EN
+  '[照片]': MessageType.IMAGE,        // ZH-CN / ZH-TW
+  '[写真]': MessageType.IMAGE,        // JA
+  Photos: MessageType.IMAGE,          // EN (fallback)
 
-  // 语音
-  '[Voice message]': MessageType.VOICE,
-  '[语音信息]': MessageType.VOICE,
-  '[ボイスメッセージ]': MessageType.VOICE,
-  Audio: MessageType.VOICE,
+  // 语音 / Voice
+  '[Voice message]': MessageType.VOICE,   // EN
+  '[语音信息]': MessageType.VOICE,        // ZH-CN
+  '[語音訊息]': MessageType.VOICE,        // ZH-TW
+  '[ボイスメッセージ]': MessageType.VOICE, // JA
+  Audio: MessageType.VOICE,               // EN (fallback)
 
-  // 视频
-  Videos: MessageType.VIDEO,
-  '[Video]': MessageType.VIDEO,
-  '[视频]': MessageType.VIDEO,
-  '[動画]': MessageType.VIDEO,
+  // 视频 / Video
+  '[Video]': MessageType.VIDEO,       // EN
+  '[视频]': MessageType.VIDEO,        // ZH-CN
+  '[影片]': MessageType.VIDEO,        // ZH-TW
+  '[動画]': MessageType.VIDEO,        // JA
+  Videos: MessageType.VIDEO,          // EN (fallback)
 
-  // 文件
-  '[File]': MessageType.FILE,
-  '[文件]': MessageType.FILE,
-  '[ファイル]': MessageType.FILE,
+  // 文件 / File
+  '[File]': MessageType.FILE,         // EN
+  '[文件]': MessageType.FILE,         // ZH-CN
+  '[檔案]': MessageType.FILE,         // ZH-TW
+  '[ファイル]': MessageType.FILE,     // JA
 
-  // 贴纸/表情
-  Stickers: MessageType.EMOJI,
-  '[Sticker]': MessageType.EMOJI,
-  '[贴图]': MessageType.EMOJI,
-  '[スタンプ]': MessageType.EMOJI,
+  // 贴纸 / Sticker
+  '[Sticker]': MessageType.EMOJI,     // EN
+  '[贴图]': MessageType.EMOJI,        // ZH-CN
+  '[貼圖]': MessageType.EMOJI,        // ZH-TW
+  '[スタンプ]': MessageType.EMOJI,    // JA
+  Stickers: MessageType.EMOJI,        // EN (fallback)
 
-  // 位置
-  '[Location]': MessageType.LOCATION,
-  '[位置]': MessageType.LOCATION,
-  '[位置情報]': MessageType.LOCATION,
+  // 位置 / Location
+  '[Location]': MessageType.LOCATION, // EN
+  '[位置]': MessageType.LOCATION,     // ZH-CN / ZH-TW
+  '[位置情報]': MessageType.LOCATION, // JA
+
+  // 记事本 / Notes
+  '[Notes]': MessageType.TEXT,        // EN
+  '[记事本]': MessageType.TEXT,       // ZH-CN
+  '[記事本]': MessageType.TEXT,       // ZH-TW
+  '[ノート]': MessageType.TEXT,       // JA
 }
 
 /**
@@ -176,13 +220,45 @@ function detectMessageType(content: string): MessageType {
     return MessageType.LOCATION
   }
 
-  // 检查系统消息
+  // 检查系统消息（多语言：EN / ZH-CN / ZH-TW / JA）
   if (
-    content.includes(' added ') ||
-    content.includes(' to the group') ||
-    content.includes('unsent a message') ||
-    content === 'Message unsent.' ||
-    content.startsWith('Auto-reply')
+    // --- 加入群组 / Join group ---
+    content.includes(' joined the group') ||        // EN
+    content.includes('已加入该群') ||               // ZH-CN
+    content.includes('已加入群組') ||               // ZH-TW
+    content.includes('がグループに参加しました') || // JA
+
+    // --- 拉人进群 / Added to group ---
+    content.includes(' added ') ||                  // EN
+    content.includes(' to the group') ||            // EN
+    content.includes('已将') ||                     // ZH-CN
+    content.includes('添加至群') ||                 // ZH-CN
+    content.includes('添加到群') ||                 // ZH-CN (另一格式)
+    content.includes('已新增') ||                   // ZH-TW
+    content.includes('至群組') ||                   // ZH-TW
+    content.includes('をグループに追加しました') || // JA
+
+    // --- 退出群组 / Left group ---
+    content.includes(' left the group') ||          // EN
+    content.includes('已退群') ||                   // ZH-CN
+    content.includes('已離開群組') ||               // ZH-TW
+    content.includes('がグループを退会しました') || // JA
+
+    // --- 设定公告 / Announcement ---
+    content.includes('made an announcement') ||     // EN
+    content.includes('发布了通告') ||               // ZH-CN
+    content.includes('已設定公告') ||               // ZH-TW
+    content.includes('がアナウンスしました') ||     // JA
+
+    // --- 收回讯息 / Unsent message ---
+    content.includes('unsent a message') ||         // EN
+    content === 'Message unsent.' ||                // EN
+    content.includes('撤回了一条消息') ||           // ZH-CN
+    content.includes('已收回訊息') ||               // ZH-TW
+    content.includes('送信を取り消しました') ||     // JA
+
+    // --- 其他 / Others ---
+    content.startsWith('Auto-reply')                // EN 自动回复
   ) {
     return MessageType.SYSTEM
   }
@@ -225,17 +301,17 @@ async function* parseLINE(options: ParseOptions): AsyncGenerator<ParseEvent, voi
   let lastMessage: ParsedMessage | null = null
   let lineIndex = 0
 
-  // 检测是否有私聊头部
+  // 检测是否有头部
   if (lines.length > 0) {
     const firstLine = lines[0].trim()
     onLog?.('debug', `LINE 第一行: "${firstLine}"`)
-    const headerName = extractNameFromHeader(firstLine)
-    if (headerName) {
-      chatName = headerName
-      isPrivateChat = true
-      useTabSeparator = true
+    const headerResult = extractNameFromHeader(firstLine)
+    if (headerResult) {
+      chatName = headerResult.name
+      isPrivateChat = !headerResult.isGroup
+      useTabSeparator = true // 两种头部格式都使用 Tab 分隔
       lineIndex = 3 // 跳过头部（标题、保存时间、空行）
-      onLog?.('debug', `LINE 检测到私聊头部，对方: ${headerName}`)
+      onLog?.('debug', `LINE 检测到头部，名称: ${headerResult.name}, 群聊: ${headerResult.isGroup}`)
     }
   }
 
@@ -284,10 +360,45 @@ async function* parseLINE(options: ParseOptions): AsyncGenerator<ParseEvent, voi
 
     if (msgMatch) {
       const [, timeStr, sender, contentRaw] = msgMatch
-      const content = contentRaw.trim()
+      let content = contentRaw.trim()
 
-      // 解析时间
-      const [hours, minutes] = timeStr.split(':').map(Number)
+      // 处理 LINE 导出的多行消息格式（用双引号包裹）
+      let isQuotedMultiline = false
+      if (content.startsWith('"')) {
+        content = content.substring(1) // 移除开头的引号
+        isQuotedMultiline = !content.endsWith('"') // 单行带引号则直接处理
+        if (content.endsWith('"')) {
+          content = content.substring(0, content.length - 1) // 移除结尾引号
+        }
+      }
+
+      // 解析时间（支持中文上午/下午、日文午前/午後、英文am/pm）
+      let hours = 0
+      let minutes = 0
+
+      const prefix = timeStr.match(/^(上午|下午|午前|午後)/)?.[1]
+      const cleanTime = timeStr.replace(/^(上午|下午|午前|午後)/, '')
+      const partsMatch = cleanTime.match(/^(\d{1,2}):(\d{2})([AaPp][Mm])?$/i)
+
+      if (partsMatch) {
+        hours = parseInt(partsMatch[1])
+        minutes = parseInt(partsMatch[2])
+        const suffix = partsMatch[3]?.toLowerCase()
+
+        // 英文后缀
+        if (suffix === 'pm' && hours < 12) hours += 12
+        if (suffix === 'am' && hours === 12) hours = 0
+
+        // 中文/日文前缀 (下午/午後 = PM, 上午/午前 = AM)
+        if ((prefix === '下午' || prefix === '午後') && hours < 12) hours += 12
+        if ((prefix === '上午' || prefix === '午前') && hours === 12) hours = 0
+      } else {
+        // Fallback
+        const parts = timeStr.split(':').map(Number)
+        hours = parts[0]
+        minutes = parts[1]
+      }
+
       let timestamp: number
 
       if (currentDate) {
@@ -319,7 +430,8 @@ async function* parseLINE(options: ParseOptions): AsyncGenerator<ParseEvent, voi
         timestamp,
         type: msgType,
         content: content || null,
-      }
+        _isQuotedMultiline: isQuotedMultiline, // 临时标记，用于追加多行内容时处理结尾引号
+      } as ParsedMessage & { _isQuotedMultiline?: boolean }
       messages.push(lastMessage)
       messagesProcessed++
 
@@ -334,12 +446,74 @@ async function* parseLINE(options: ParseOptions): AsyncGenerator<ParseEvent, voi
         )
         onProgress?.(progress)
       }
-    } else if (line.trim() && lastMessage) {
-      // 非消息行，追加到上一条消息（多行内容）
-      if (lastMessage.content) {
-        lastMessage.content += '\n' + line
-      } else {
-        lastMessage.content = line
+    } else {
+      // 尝试解析系统消息（双 Tab）
+      const systemMatch = line.match(SYSTEM_MSG_PATTERN)
+      if (systemMatch) {
+        const [, timeStr, contentRaw] = systemMatch
+        const content = contentRaw.trim()
+
+        // 解析时间（支持中文、日文、英文）
+        let hours = 0
+        let minutes = 0
+
+        const prefix = timeStr.match(/^(上午|下午|午前|午後)/)?.[1]
+        const cleanTime = timeStr.replace(/^(上午|下午|午前|午後)/, '')
+        const partsMatch = cleanTime.match(/^(\d{1,2}):(\d{2})([AaPp][Mm])?$/i)
+
+        if (partsMatch) {
+          hours = parseInt(partsMatch[1])
+          minutes = parseInt(partsMatch[2])
+          const suffix = partsMatch[3]?.toLowerCase()
+
+          if (suffix === 'pm' && hours < 12) hours += 12
+          if (suffix === 'am' && hours === 12) hours = 0
+
+          if ((prefix === '下午' || prefix === '午後') && hours < 12) hours += 12
+          if ((prefix === '上午' || prefix === '午前') && hours === 12) hours = 0
+        } else {
+          const parts = timeStr.split(':').map(Number)
+          hours = parts[0]
+          minutes = parts[1]
+        }
+
+        let timestamp: number
+        if (currentDate) {
+          const msgDate = new Date(currentDate)
+          msgDate.setHours(hours, minutes, 0, 0)
+          timestamp = Math.floor(msgDate.getTime() / 1000)
+        } else {
+          const now = new Date()
+          now.setHours(hours, minutes, 0, 0)
+          timestamp = Math.floor(now.getTime() / 1000)
+        }
+
+        // 创建系统消息
+        lastMessage = {
+          senderPlatformId: 'system',
+          senderAccountName: '系統',
+          timestamp,
+          type: MessageType.SYSTEM,
+          content: content || null,
+        }
+        messages.push(lastMessage)
+        messagesProcessed++
+      } else if (line.trim() && lastMessage) {
+        // 非消息行，追加到上一条消息（多行内容）
+        let appendLine = line
+        const quotedMsg = lastMessage as ParsedMessage & { _isQuotedMultiline?: boolean }
+
+        // 检查是否为带引号多行消息的最后一行（以 " 结尾）
+        if (quotedMsg._isQuotedMultiline && appendLine.endsWith('"')) {
+          appendLine = appendLine.substring(0, appendLine.length - 1) // 移除结尾引号
+          delete quotedMsg._isQuotedMultiline // 清除临时标记
+        }
+
+        if (lastMessage.content) {
+          lastMessage.content += '\n' + appendLine
+        } else {
+          lastMessage.content = appendLine
+        }
       }
     }
   }
