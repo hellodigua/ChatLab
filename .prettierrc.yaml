@@ -7,3 +7,4 @@ useTabs: false
 endOfLine: 'lf'
 htmlWhitespaceSensitivity: 'ignore'
 arrowParens: 'always'
+proseWrap: 'never'
