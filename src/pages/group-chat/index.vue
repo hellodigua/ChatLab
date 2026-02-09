@@ -173,6 +173,21 @@ watch(
   }
 )
 
+// 同步主 Tab 到 URL，便于从 home/siderbar 直接恢复到指定功能页
+watch(
+  () => activeTab.value,
+  (newTab) => {
+    if (!newTab) return
+    if (route.query.tab === newTab) return
+    router.replace({
+      query: {
+        ...route.query,
+        tab: newTab,
+      },
+    })
+  }
+)
+
 // 监听会话变化（切换会话时清空时间范围，等待 TimeSelect 重新拉取）
 watch(
   currentSessionId,
