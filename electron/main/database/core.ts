@@ -411,6 +411,15 @@ export function checkMigrationNeeded(): {
       const db = new Database(dbPath, { readonly: true })
       db.pragma('journal_mode = WAL')
 
+      // 仅迁移聊天会话数据库，跳过其他业务库（如 AI 会话索引库）
+      const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as Array<{ name: string }>
+      const tableSet = new Set(tables.map((t) => t.name))
+      const isChatSessionDb = tableSet.has('meta') && tableSet.has('member') && tableSet.has('message')
+      if (!isChatSessionDb) {
+        db.close()
+        continue
+      }
+
       // 获取当前 schema_version
       const metaTableInfo = db.prepare('PRAGMA table_info(meta)').all() as Array<{ name: string }>
       const hasVersionColumn = metaTableInfo.some((col) => col.name === 'schema_version')
