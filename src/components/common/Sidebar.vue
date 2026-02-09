@@ -292,7 +292,18 @@ function getSessionAvatar(session: AnalysisSession): string | null {
                     ? 'justify-center cursor-pointer h-13 w-13 rounded-full ml-3.5'
                     : 'cursor-pointer w-full rounded-full',
                 ]"
-                @click="router.push({ name: getSessionRouteName(session), params: { id: session.id } })"
+                @click="
+                  router.push({
+                    name: getSessionRouteName(session),
+                    params: { id: session.id },
+                    query:
+                      route.name === 'group-chat' &&
+                      getSessionRouteName(session) === 'group-chat' &&
+                      (route.query.tab as string) === 'view'
+                        ? { tab: 'view' }
+                        : undefined,
+                  })
+                "
               >
                 <!-- 会话头像 -->
                 <!-- 有头像图片时显示图片 -->

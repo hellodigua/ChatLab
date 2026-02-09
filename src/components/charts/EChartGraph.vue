@@ -21,18 +21,28 @@ export interface GraphNode {
   value?: number
   symbolSize?: number
   category?: number
+  messageCount?: number
+  weightedDegree?: number
+  totalMentions?: number
+  communitySize?: number
 }
 
 export interface GraphLink {
   source: string
   target: string
   value?: number
+  mentionCount?: number
+  temporalTurns?: number
+  temporalScore?: number
+  reciprocity?: number
+  avgDeltaSec?: number | null
 }
 
 export interface GraphData {
   nodes: GraphNode[]
   links: GraphLink[]
   maxLinkValue?: number
+  categories?: Array<{ name: string }>
 }
 
 interface Props {
@@ -40,13 +50,23 @@ interface Props {
   height?: number | string
   layout?: 'circular' | 'force' // 布局类型
   directed?: boolean // 是否显示箭头（有向图）
+  showLegend?: boolean
+  neon?: boolean
+  selectedNode?: string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
   height: 400,
   layout: 'circular',
   directed: false,
+  showLegend: false,
+  neon: false,
+  selectedNode: null,
 })
+
+const emit = defineEmits<{
+  (event: 'node-click', nodeName: string | null): void
+}>()
 
 // 计算高度样式
 const heightStyle = computed(() => {
@@ -62,18 +82,18 @@ let chartInstance: echarts.ECharts | null = null
 
 // 丰富的调色板（为每个节点分配不同颜色）
 const colorPalette = [
-  '#ee4567', // 粉色（主题色）
-  '#5470c6', // 蓝色
-  '#91cc75', // 绿色
-  '#fac858', // 黄色
-  '#ee6666', // 红色
-  '#73c0de', // 青色
-  '#9a60b4', // 紫色
-  '#fc8452', // 橙色
-  '#3ba272', // 深绿
-  '#ea7ccc', // 粉紫
-  '#6e7074', // 灰色
-  '#546570', // 深灰蓝
+  '#ee4567', // pink-500
+  '#f7758c', // pink-400
+  '#8b5cf6', // violet
+  '#6366f1', // indigo
+  '#14b8a6', // teal
+  '#3b82f6', // blue
+  '#22c55e', // green
+  '#f97316', // orange
+  '#eab308', // yellow
+  '#ec4899', // pink-600
+  '#06b6d4', // cyan
+  '#64748b', // slate
 ]
 
 // 去重后的节点（ECharts 要求节点名称唯一）
@@ -88,42 +108,103 @@ const uniqueNodes = computed(() => {
   })
 })
 
+const graphCategories = computed(() => {
+  if (props.data.categories && props.data.categories.length > 0) {
+    return props.data.categories
+  }
+  const categorySet = new Set<number>()
+  for (const node of uniqueNodes.value) {
+    if (typeof node.category === 'number') categorySet.add(node.category)
+  }
+  return [...categorySet].sort((a, b) => a - b).map((id) => ({ name: `Community ${id + 1}` }))
+})
+
 // 节点名称到颜色的映射
 const nodeColorMap = computed(() => {
   const map = new Map<string, string>()
   uniqueNodes.value.forEach((node, index) => {
-    map.set(node.name, colorPalette[index % colorPalette.length])
+    const colorIdx = typeof node.category === 'number' ? node.category : index
+    map.set(node.name, colorPalette[colorIdx % colorPalette.length])
   })
   return map
+})
+
+const selectedAdjacency = computed(() => {
+  if (!props.selectedNode) return new Set<string>()
+  const neighbors = new Set<string>()
+  for (const link of props.data.links) {
+    if (link.source === props.selectedNode) neighbors.add(link.target)
+    if (link.target === props.selectedNode) neighbors.add(link.source)
+  }
+  return neighbors
 })
 
 // 计算边的宽度（根据 value 归一化）
 function getLinkWidth(value: number, maxValue: number): number {
   if (maxValue <= 0) return 1
-  // 宽度范围 1-6
-  return 1 + (value / maxValue) * 5
+  // 宽度范围约 1-4.5，避免低权重边过于抢眼
+  return 1 + (value / maxValue) * 3.5
+}
+
+function getMetricLine(label: string, value: unknown): string | null {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null
+  return `${label}: ${value}`
 }
 
 const option = computed<ECOption>(() => {
   const maxLinkValue = props.data.maxLinkValue || Math.max(...props.data.links.map((l) => l.value || 1), 1)
 
   return {
+    backgroundColor: 'transparent',
     tooltip: {
       trigger: 'item',
-      backgroundColor: isDark.value ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.95)',
-      borderColor: isDark.value ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+      backgroundColor: isDark.value ? 'rgba(12, 18, 26, 0.94)' : 'rgba(255, 255, 255, 0.96)',
+      borderColor: isDark.value ? 'rgba(148, 163, 184, 0.2)' : 'rgba(15, 23, 42, 0.08)',
       textStyle: {
-        color: isDark.value ? '#e5e7eb' : '#374151',
+        color: isDark.value ? '#e2e8f0' : '#334155',
       },
       formatter: (params: any) => {
         if (params.dataType === 'node') {
-          return `<b>${params.data.name}</b><br/>消息数: ${params.data.value || 0}`
+          const lines: string[] = [`<b>${params.data.name}</b>`]
+          const messageLine = getMetricLine('Messages', params.data.messageCount)
+          const degreeLine = getMetricLine('Weight', params.data.weightedDegree)
+          const mentionLine = getMetricLine('@ Mentions', params.data.totalMentions)
+          const communityLine = getMetricLine('Community Size', params.data.communitySize)
+          if (messageLine) lines.push(messageLine)
+          if (degreeLine) lines.push(degreeLine)
+          if (mentionLine) lines.push(mentionLine)
+          if (communityLine) lines.push(communityLine)
+          return lines.join('<br/>')
         } else if (params.dataType === 'edge') {
-          return `${params.data.source} → ${params.data.target}<br/>艾特次数: ${params.data.value || 0}`
+          const lines: string[] = [
+            `${params.data.source} ↔ ${params.data.target}`,
+            `Strength: ${params.data.value || 0}`,
+          ]
+          const mentionLine = getMetricLine('@ Interactions', params.data.mentionCount)
+          const temporalLine = getMetricLine('Temporal Turns', params.data.temporalTurns)
+          const reciprocityLine = getMetricLine('Reciprocity', params.data.reciprocity)
+          if (mentionLine) lines.push(mentionLine)
+          if (temporalLine) lines.push(temporalLine)
+          if (reciprocityLine) lines.push(reciprocityLine)
+          return lines.join('<br/>')
         }
         return ''
       },
     },
+    legend:
+      props.showLegend && graphCategories.value.length > 0
+        ? {
+            top: 0,
+            left: 'center',
+            itemWidth: 10,
+            itemHeight: 10,
+            textStyle: {
+              color: isDark.value ? '#94a3b8' : '#475569',
+              fontSize: 11,
+            },
+            data: graphCategories.value.map((item) => item.name),
+          }
+        : undefined,
     // 动画效果
     animationDuration: 1000,
     animationDurationUpdate: 500,
@@ -136,13 +217,17 @@ const option = computed<ECOption>(() => {
         force:
           props.layout === 'force'
             ? {
-                repulsion: 300,
-                gravity: 0.1,
-                edgeLength: [80, 200],
+                initLayout: 'circular',
+                repulsion: 360,
+                gravity: 0.28,
+                edgeLength: [32, 150],
                 friction: 0.6,
+                layoutAnimation: true,
               }
             : undefined,
         roam: true,
+        progressiveThreshold: 1200,
+        progressive: 240,
         scaleLimit: {
           min: 0.3, // 最小缩放 30%
           max: 3, // 最大缩放 300%
@@ -159,8 +244,10 @@ const option = computed<ECOption>(() => {
         edgeSymbol: props.directed ? ['none', 'arrow'] : ['none', 'none'],
         edgeSymbolSize: props.directed ? [0, 10] : [0, 0],
         lineStyle: {
-          curveness: 0.3, // 始终使用曲线
-          opacity: 0.5,
+          color: 'source',
+          curveness: 0.28,
+          opacity: 0.28,
+          width: 1.5,
         },
         emphasis: {
           focus: 'adjacency',
@@ -170,46 +257,78 @@ const option = computed<ECOption>(() => {
             fontWeight: 600,
           },
           lineStyle: {
-            width: 4,
-            opacity: 0.9,
+            width: 4.5,
+            opacity: 0.95,
           },
           itemStyle: {
             shadowBlur: 15,
             shadowColor: 'rgba(0, 0, 0, 0.3)',
           },
         },
+        blur: {
+          itemStyle: {
+            opacity: 0.22,
+          },
+          lineStyle: {
+            opacity: 0.04,
+          },
+          label: {
+            opacity: 0.22,
+          },
+        },
         // 节点数据（使用去重后的节点）
         data: uniqueNodes.value.map((node) => {
           const color = nodeColorMap.value.get(node.name) || colorPalette[0]
+          const hasSelection = Boolean(props.selectedNode)
+          const isSelected = props.selectedNode === node.name
+          const isAdjacent = selectedAdjacency.value.has(node.name)
+          const isContextNode = !hasSelection || isSelected || isAdjacent
+          const baseSize = node.symbolSize || 30
           return {
+            ...node,
+            id: String(node.id),
             name: node.name,
             value: node.value,
-            symbolSize: node.symbolSize || 30,
+            category: node.category,
+            symbolSize: isSelected ? baseSize + 6 : baseSize,
             // circular 布局显示所有标签，force 布局只显示大节点的标签
             label: {
-              show: props.layout === 'circular' ? true : (node.symbolSize || 30) > 30,
+              show: hasSelection ? isContextNode : props.layout === 'circular' ? true : baseSize > 35,
+              color: isDark.value ? '#f1f5f9' : '#1e293b',
+              textBorderColor: isDark.value ? '#0f172a' : '#ffffff',
+              textBorderWidth: isSelected ? 2 : 1.5,
             },
             itemStyle: {
               color: color,
-              borderColor: '#fff',
-              borderWidth: 2,
-              shadowBlur: 5,
-              shadowColor: `${color}66`, // 同色系阴影
+              borderColor: isDark.value ? '#1e293b' : '#ffffff',
+              borderWidth: isSelected ? 4 : baseSize > 20 ? 3 : 1.5,
+              shadowBlur: props.neon ? (isSelected ? 26 : 20) : isSelected ? 12 : 6,
+              shadowColor: props.neon ? color : `${color}66`,
+              opacity: isContextNode ? 1 : 0.22,
             },
           }
         }),
+        categories: graphCategories.value,
         // 连接线数据（颜色跟随源节点，过滤掉引用不存在节点的链接）
         links: props.data.links
           .filter((link) => nodeColorMap.value.has(link.source) && nodeColorMap.value.has(link.target))
           .map((link) => {
             const sourceColor = nodeColorMap.value.get(link.source) || colorPalette[0]
+            const weight = link.value || 1
+            const baseOpacity = maxLinkValue > 0 ? 0.2 + (weight / maxLinkValue) * 0.5 : 0.3
+            const isContextLink =
+              !props.selectedNode || link.source === props.selectedNode || link.target === props.selectedNode
             return {
+              ...link,
               source: link.source,
               target: link.target,
               value: link.value,
               lineStyle: {
                 color: sourceColor,
-                width: getLinkWidth(link.value || 1, maxLinkValue),
+                width: isContextLink
+                  ? getLinkWidth(weight, maxLinkValue) + (props.selectedNode ? 0.8 : 0)
+                  : Math.max(0.8, getLinkWidth(weight, maxLinkValue) * 0.45),
+                opacity: isContextLink ? baseOpacity : 0.03,
               },
             }
           }),
@@ -226,6 +345,18 @@ function initChart() {
     renderer: 'canvas',
   })
   chartInstance.setOption(option.value)
+
+  chartInstance.on('click', (params: any) => {
+    if (params?.dataType === 'node') {
+      emit('node-click', params?.data?.name || null)
+    }
+  })
+
+  chartInstance.getZr().on('click', (event: any) => {
+    if (!event?.target) {
+      emit('node-click', null)
+    }
+  })
 }
 
 // 更新图表
@@ -254,7 +385,7 @@ defineExpose({
 
 // 监听数据和主题变化
 watch(
-  [() => props.data, () => props.layout, () => props.directed, isDark],
+  [() => props.data, () => props.layout, () => props.directed, () => props.selectedNode, isDark],
   () => {
     if (chartInstance) {
       updateChart()

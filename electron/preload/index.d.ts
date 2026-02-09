@@ -13,6 +13,8 @@ import type {
   DragonKingAnalysis,
   DivingAnalysis,
   MentionAnalysis,
+  RelationshipGraphData,
+  RelationshipGraphOptions,
   LaughAnalysis,
   MemeBattleAnalysis,
   CheckInAnalysis,
@@ -131,6 +133,11 @@ interface ChatApi {
   getDivingAnalysis: (sessionId: string, filter?: TimeFilter) => Promise<DivingAnalysis>
   getMentionAnalysis: (sessionId: string, filter?: TimeFilter) => Promise<MentionAnalysis>
   getMentionGraph: (sessionId: string, filter?: TimeFilter) => Promise<MentionGraphData>
+  getRelationshipGraph: (
+    sessionId: string,
+    filter?: TimeFilter,
+    options?: RelationshipGraphOptions
+  ) => Promise<RelationshipGraphData>
   getLaughAnalysis: (sessionId: string, filter?: TimeFilter, keywords?: string[]) => Promise<LaughAnalysis>
   getMemeBattleAnalysis: (sessionId: string, filter?: TimeFilter) => Promise<MemeBattleAnalysis>
   getCheckInAnalysis: (sessionId: string, filter?: TimeFilter) => Promise<CheckInAnalysis>

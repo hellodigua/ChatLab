@@ -17,6 +17,7 @@
   "scripts": {
     "dev": "electron-vite dev",
     "preview": "electron-vite preview",
+    "analyze:relationship": "node scripts/generate-member-relationship-graph.cjs",
     "format": "prettier --write .",
     "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
     "build": "electron-vite build",

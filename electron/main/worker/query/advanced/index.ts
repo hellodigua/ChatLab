@@ -12,6 +12,14 @@ export { getNightOwlAnalysis, getDragonKingAnalysis, getDivingAnalysis, getCheck
 // 行为分析：斗图
 export { getMemeBattleAnalysis } from './behavior'
 
-// 社交分析：@ 互动、含笑量
-export { getMentionAnalysis, getMentionGraph, getLaughAnalysis } from './social'
-export type { MentionGraphData, MentionGraphNode, MentionGraphLink } from './social'
+// 社交分析：@ 互动、关系模型、含笑量
+export { getMentionAnalysis, getMentionGraph, getRelationshipGraph, getLaughAnalysis } from './social'
+export type {
+  MentionGraphData,
+  MentionGraphNode,
+  MentionGraphLink,
+  RelationshipGraphData,
+  RelationshipGraphNode,
+  RelationshipGraphLink,
+  RelationshipGraphOptions,
+} from './social'

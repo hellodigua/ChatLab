@@ -503,12 +503,64 @@ export function registerChatHandlers(ctx: IpcContext): void {
    */
   ipcMain.handle(
     'chat:getMentionGraph',
-    async (_, sessionId: string, filter?: { startTs?: number; endTs?: number }) => {
+    async (_, sessionId: string, filter?: { startTs?: number; endTs?: number; memberId?: number | null }) => {
       try {
         return await worker.getMentionGraph(sessionId, filter)
       } catch (error) {
         console.error('获取 @ 互动关系图失败：', error)
         return { nodes: [], links: [], maxLinkValue: 0 }
+      }
+    }
+  )
+
+  /**
+   * 获取成员关系模型图（@ + 时间相邻共现）
+   */
+  ipcMain.handle(
+    'chat:getRelationshipGraph',
+    async (
+      _,
+      sessionId: string,
+      filter?: { startTs?: number; endTs?: number; memberId?: number | null },
+      options?: {
+        mentionWeight?: number
+        temporalWeight?: number
+        reciprocityWeight?: number
+        windowSeconds?: number
+        decaySeconds?: number
+        minScore?: number
+        minTemporalTurns?: number
+        topEdges?: number
+      }
+    ) => {
+      try {
+        return await worker.getRelationshipGraph(sessionId, filter, options)
+      } catch (error) {
+        console.error('获取成员关系模型图失败：', error)
+        return {
+          nodes: [],
+          links: [],
+          maxLinkValue: 0,
+          communities: [],
+          stats: {
+            totalMembers: 0,
+            involvedMembers: 0,
+            rawEdgeCount: 0,
+            keptEdges: 0,
+            maxMentionCount: 0,
+            maxTemporalScore: 0,
+          },
+          options: {
+            mentionWeight: 0.45,
+            temporalWeight: 0.4,
+            reciprocityWeight: 0.15,
+            windowSeconds: 300,
+            decaySeconds: 120,
+            minScore: 0.12,
+            minTemporalTurns: 2,
+            topEdges: 120,
+          },
+        }
       }
     }
   )
