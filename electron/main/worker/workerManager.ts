@@ -302,6 +302,10 @@ export async function getMentionGraph(sessionId: string, filter?: any): Promise<
   return sendToWorker('getMentionGraph', { sessionId, filter })
 }
 
+export async function getRelationshipGraph(sessionId: string, filter?: any, options?: any): Promise<any> {
+  return sendToWorker('getRelationshipGraph', { sessionId, filter, options })
+}
+
 export async function getLaughAnalysis(sessionId: string, filter?: any, keywords?: string[]): Promise<any> {
   return sendToWorker('getLaughAnalysis', { sessionId, filter, keywords })
 }

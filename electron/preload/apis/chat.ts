@@ -16,6 +16,8 @@ import type {
   DragonKingAnalysis,
   DivingAnalysis,
   MentionAnalysis,
+  RelationshipGraphData,
+  RelationshipGraphOptions,
   LaughAnalysis,
   CheckInAnalysis,
   MemeBattleAnalysis,
@@ -268,13 +270,24 @@ export const chatApi = {
    */
   getMentionGraph: (
     sessionId: string,
-    filter?: { startTs?: number; endTs?: number }
+    filter?: { startTs?: number; endTs?: number; memberId?: number | null }
   ): Promise<{
     nodes: Array<{ id: number; name: string; value: number; symbolSize: number }>
     links: Array<{ source: string; target: string; value: number }>
     maxLinkValue: number
   }> => {
     return ipcRenderer.invoke('chat:getMentionGraph', sessionId, filter)
+  },
+
+  /**
+   * 获取成员关系模型图（@ + 时间相邻共现 + 互惠度）
+   */
+  getRelationshipGraph: (
+    sessionId: string,
+    filter?: { startTs?: number; endTs?: number; memberId?: number | null },
+    options?: RelationshipGraphOptions
+  ): Promise<RelationshipGraphData> => {
+    return ipcRenderer.invoke('chat:getRelationshipGraph', sessionId, filter, options)
   },
 
   /**

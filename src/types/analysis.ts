@@ -379,6 +379,77 @@ export interface MentionAnalysis {
   memberDetails: MemberMentionDetail[]
 }
 
+/**
+ * 成员关系模型参数（@ + 时间共现 + 互惠度）
+ */
+export interface RelationshipGraphOptions {
+  mentionWeight?: number
+  temporalWeight?: number
+  reciprocityWeight?: number
+  windowSeconds?: number
+  decaySeconds?: number
+  minScore?: number
+  minTemporalTurns?: number
+  topEdges?: number
+}
+
+/**
+ * 成员关系图节点
+ */
+export interface RelationshipGraphNode {
+  id: number
+  name: string
+  value: number // 节点综合权重（加权度）
+  symbolSize: number
+  category: number // 社区编号
+  messageCount: number
+  weightedDegree: number
+  totalMentions: number
+  communitySize: number
+}
+
+/**
+ * 成员关系图边
+ */
+export interface RelationshipGraphLink {
+  source: string
+  target: string
+  value: number // 关系强度
+  mentionCount: number
+  temporalTurns: number
+  temporalScore: number
+  reciprocity: number
+  avgDeltaSec: number | null
+}
+
+/**
+ * 成员关系图分析结果
+ */
+export interface RelationshipGraphData {
+  nodes: RelationshipGraphNode[]
+  links: RelationshipGraphLink[]
+  maxLinkValue: number
+  communities: Array<{ id: number; name: string; size: number }>
+  stats: {
+    totalMembers: number
+    involvedMembers: number
+    rawEdgeCount: number
+    keptEdges: number
+    maxMentionCount: number
+    maxTemporalScore: number
+  }
+  options: {
+    mentionWeight: number
+    temporalWeight: number
+    reciprocityWeight: number
+    windowSeconds: number
+    decaySeconds: number
+    minScore: number
+    minTemporalTurns: number
+    topEdges: number
+  }
+}
+
 // ==================== 含笑量分析类型 ====================
 
 /**
