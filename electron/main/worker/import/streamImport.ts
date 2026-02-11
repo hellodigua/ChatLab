@@ -134,8 +134,13 @@ function createTempDatabase(dbPath: string): Database.Database {
  * 流式导入聊天记录
  * @param filePath 文件路径
  * @param requestId 请求ID（用于进度回调）
+ * @param formatOptions 格式特定选项（如 Telegram 的 chatIndex）
  */
-export async function streamImport(filePath: string, requestId: string): Promise<StreamImportResult> {
+export async function streamImport(
+  filePath: string,
+  requestId: string,
+  formatOptions?: Record<string, unknown>
+): Promise<StreamImportResult> {
   // 检测格式
   const formatFeature = detectFormat(filePath)
   if (!formatFeature) {
@@ -312,6 +317,7 @@ export async function streamImport(filePath: string, requestId: string): Promise
   try {
     await streamParseFile(actualFilePath, {
       batchSize: 5000,
+      formatOptions,
 
       onProgress: (progress) => {
         callbackStats.onProgressCalls++

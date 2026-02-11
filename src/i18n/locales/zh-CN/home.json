@@ -88,6 +88,18 @@
     "close": "关闭",
     "retry": "重试"
   },
+  "chatSelector": {
+    "title": "选择要导入的聊天",
+    "scanning": "正在扫描聊天列表...",
+    "scanFailed": "扫描失败",
+    "retry": "重试",
+    "selectAll": "全选",
+    "chatCount": "共 {count} 个聊天",
+    "selected": "已选 {count} 个",
+    "messageCount": "{count} 条消息",
+    "import": "导入 ({count})",
+    "noChats": "未发现任何聊天"
+  },
   "changelog": {
     "title": "版本日志",
     "subtitle": "查看所有版本更新内容",

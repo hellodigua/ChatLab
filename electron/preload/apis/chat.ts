@@ -65,6 +65,40 @@ export const chatApi = {
   },
 
   /**
+   * 检测文件格式（轻量级）
+   */
+  detectFormat: (
+    filePath: string
+  ): Promise<{ id: string; name: string; platform: string; multiChat: boolean } | null> => {
+    return ipcRenderer.invoke('chat:detectFormat', filePath)
+  },
+
+  /**
+   * 导入聊天记录（带格式选项）
+   * 用于多聊天格式等需要额外参数的场景（如指定 chatIndex）
+   */
+  importWithOptions: (
+    filePath: string,
+    formatOptions: Record<string, unknown>
+  ): Promise<{ success: boolean; sessionId?: string; error?: string }> => {
+    return ipcRenderer.invoke('chat:importWithOptions', filePath, formatOptions)
+  },
+
+  /**
+   * 扫描多聊天文件中的聊天列表（通用）
+   * 自动检测格式并调用对应格式的 scanChats
+   */
+  scanMultiChatFile: (
+    filePath: string
+  ): Promise<{
+    success: boolean
+    chats: Array<{ index: number; name: string; type: string; id: number; messageCount: number }>
+    error?: string
+  }> => {
+    return ipcRenderer.invoke('chat:scanMultiChatFile', filePath)
+  },
+
+  /**
    * 获取所有分析会话列表
    */
   getSessions: (): Promise<AnalysisSession[]> => {

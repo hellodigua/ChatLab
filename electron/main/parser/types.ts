@@ -89,6 +89,8 @@ export interface FormatFeature {
   extensions: string[]
   /** 内容特征签名 */
   signatures: FormatSignatures
+  /** 是否为多聊天格式（一个文件包含多个聊天） */
+  multiChat?: boolean
 }
 
 // ==================== 解析层：解析器接口 ====================
@@ -104,6 +106,8 @@ export interface ParseOptions {
   filePath: string
   /** 每批消息数量（默认 5000） */
   batchSize?: number
+  /** 格式特定的额外选项（如 Telegram 的 chatIndex） */
+  formatOptions?: Record<string, unknown>
   /** 进度回调（可选，用于外部监听） */
   onProgress?: (progress: ParseProgress) => void
   /** 日志回调（可选，用于记录解析过程中的信息、警告、错误） */
@@ -139,14 +143,35 @@ export interface Preprocessor {
   cleanup(tempPath: string): void
 }
 
+// ==================== 多聊天支持 ====================
+
+/**
+ * 多聊天文件中单个聊天的信息
+ * 用于「一个文件包含多个聊天」的格式（如 Telegram 官方导出）
+ */
+export interface MultiChatInfo {
+  /** 在源文件中的索引 */
+  index: number
+  /** 聊天名称 */
+  name: string
+  /** 聊天类型（平台特定的原始类型字符串） */
+  type: string
+  /** 聊天 ID */
+  id: number
+  /** 消息数量 */
+  messageCount: number
+}
+
 /**
  * 格式模块导出结构
- * 每个格式文件同时导出 feature、parser，以及可选的 preprocessor
+ * 每个格式文件同时导出 feature、parser，以及可选的 preprocessor 和 scanChats
  */
 export interface FormatModule {
   feature: FormatFeature
   parser: Parser
   preprocessor?: Preprocessor
+  /** 扫描多聊天文件中的聊天列表（仅 multiChat 格式需要实现） */
+  scanChats?: (filePath: string) => Promise<MultiChatInfo[]>
 }
 
 // ==================== 诊断结果类型 ====================

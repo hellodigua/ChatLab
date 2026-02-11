@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { FileDropZone } from '@/components/UI'
 import FileListItem from './FileListItem.vue'
+import ChatSelector, { type ChatInfo } from './ChatSelector.vue'
 import { storeToRefs } from 'pinia'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
@@ -22,6 +23,21 @@ const {
   mergeError,
   mergeResult,
 } = storeToRefs(sessionStore)
+
+// 聊天选择器状态（多聊天格式通用）
+const showChatSelector = ref(false)
+const chatSelectorFilePath = ref('')
+
+// 自动生成会话索引（与 importFileFromPath 保持一致）
+async function autoGenerateSessionIndex(sessionId: string) {
+  try {
+    const savedThreshold = localStorage.getItem('sessionGapThreshold')
+    const gapThreshold = savedThreshold ? parseInt(savedThreshold, 10) : 1800
+    await window.sessionApi.generate(sessionId, gapThreshold)
+  } catch (error) {
+    console.error('自动生成会话索引失败:', error)
+  }
+}
 
 const importError = ref<string | null>(null)
 const diagnosisSuggestion = ref<string | null>(null)
@@ -134,6 +150,14 @@ async function processFilePaths(paths: string[]) {
   // 单文件 或 未启用合并导入 - 使用原有逻辑
   if (paths.length === 1 || !mergeImportEnabled.value) {
     if (paths.length === 1) {
+      // 检测是否为多聊天格式（需要弹出聊天选择器）
+      const format = await window.chatApi.detectFormat(paths[0])
+      if (format?.multiChat) {
+        chatSelectorFilePath.value = paths[0]
+        showChatSelector.value = true
+        return
+      }
+
       // 单文件导入
       const result = await sessionStore.importFileFromPath(paths[0])
       if (!result.success && result.error) {
@@ -167,6 +191,113 @@ async function processFilePaths(paths: string[]) {
 
   // 多文件 + 合并导入（调用 store 方法）
   await sessionStore.mergeImportFiles(paths)
+}
+
+// 聊天选择后的导入处理（通用，适用于 Telegram 等多聊天格式）
+async function handleChatSelect(selectedChats: ChatInfo[]) {
+  if (selectedChats.length === 0) return
+
+  const filePath = chatSelectorFilePath.value
+
+  if (selectedChats.length === 1) {
+    // 单个聊天：直接导入
+    isImporting.value = true
+    importProgress.value = { stage: 'detecting', progress: 0, message: '' }
+
+    const unsubscribe = window.chatApi.onImportProgress((progress) => {
+      if (progress.stage === 'done') return
+      importProgress.value = progress
+    })
+
+    try {
+      const result = await window.chatApi.importWithOptions(filePath, { chatIndex: selectedChats[0].index })
+      unsubscribe()
+
+      if (importProgress.value) {
+        importProgress.value.progress = 100
+      }
+      await new Promise((resolve) => setTimeout(resolve, 300))
+
+      if (result.success && result.sessionId) {
+        await sessionStore.loadSessions()
+        sessionStore.selectSession(result.sessionId)
+        // 自动生成会话索引
+        await autoGenerateSessionIndex(result.sessionId)
+        await navigateToSession(result.sessionId)
+      } else {
+        importError.value = translateError(result.error || 'error.import_failed')
+      }
+    } catch (error) {
+      importError.value = String(error)
+    } finally {
+      isImporting.value = false
+      setTimeout(() => {
+        importProgress.value = null
+      }, 500)
+    }
+  } else {
+    // 多个聊天：逐个导入（类似批量导入）
+    isBatchImporting.value = true
+    batchFiles.value = selectedChats.map((chat) => ({
+      path: `${filePath}#${chat.index}`,
+      name: chat.name || `Chat ${chat.id}`,
+      status: 'pending' as const,
+    }))
+
+    let successCount = 0
+    let failedCount = 0
+
+    for (let i = 0; i < selectedChats.length; i++) {
+      const chat = selectedChats[i]
+      batchFiles.value[i].status = 'importing'
+
+      const unsubscribe = window.chatApi.onImportProgress((progress) => {
+        if (progress.stage === 'done') return
+        batchFiles.value[i].progress = progress
+      })
+
+      try {
+        const result = await window.chatApi.importWithOptions(filePath, { chatIndex: chat.index })
+        unsubscribe()
+
+        if (result.success && result.sessionId) {
+          batchFiles.value[i].status = 'success'
+          batchFiles.value[i].sessionId = result.sessionId
+          successCount++
+          // 自动生成会话索引
+          await autoGenerateSessionIndex(result.sessionId)
+        } else {
+          batchFiles.value[i].status = 'failed'
+          batchFiles.value[i].error = result.error
+          failedCount++
+        }
+      } catch (error) {
+        unsubscribe()
+        batchFiles.value[i].status = 'failed'
+        batchFiles.value[i].error = String(error)
+        failedCount++
+      }
+    }
+
+    // 刷新会话列表
+    await sessionStore.loadSessions()
+
+    // 转为结果状态
+    isBatchImporting.value = false
+    batchImportResult.value = {
+      total: selectedChats.length,
+      success: successCount,
+      failed: failedCount,
+      cancelled: 0,
+      files: batchFiles.value.map((f) => ({
+        path: f.path,
+        name: f.name,
+        status: f.status,
+        sessionId: f.sessionId,
+        error: f.error,
+      })),
+    }
+  }
 }
 
 // 关闭合并结果并跳转
@@ -296,10 +427,10 @@ const getMergeFileProgressText = (file: MergeFileInfo) =>
     <!-- 批量导入进度（导入中） -->
     <div
       v-if="isBatchImporting && batchFiles.length > 0"
-      class="w-full max-w-4xl rounded-3xl border border-gray-200/50 bg-gray-100/50 px-8 py-8 backdrop-blur-md dark:border-white/10 dark:bg-gray-800/40"
+      class="w-full max-w-4xl rounded-3xl border border-gray-200/50 bg-gray-100/50 px-8 py-6 backdrop-blur-md dark:border-white/10 dark:bg-gray-800/40"
     >
       <!-- 标题和进度 -->
-      <div class="mb-6 flex items-center justify-between">
+      <div class="mb-4 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-pink-50 dark:bg-pink-500/10">
             <UIcon name="i-heroicons-arrow-path" class="h-5 w-5 animate-spin text-pink-600 dark:text-pink-400" />
@@ -324,7 +455,7 @@ const getMergeFileProgressText = (file: MergeFileInfo) =>
       </div>
 
       <!-- 文件列表 -->
-      <div class="max-h-80 space-y-2 overflow-y-auto">
+      <div class="max-h-52 space-y-2 overflow-y-auto">
         <FileListItem
           v-for="(file, index) in batchFiles"
           :key="file.path"
@@ -342,10 +473,10 @@ const getMergeFileProgressText = (file: MergeFileInfo) =>
     <!-- 合并导入进度 -->
     <div
       v-else-if="isMergeImporting && mergeStage !== 'done'"
-      class="w-full max-w-4xl rounded-3xl border border-gray-200/50 bg-gray-100/50 px-8 py-8 backdrop-blur-md dark:border-white/10 dark:bg-gray-800/40"
+      class="w-full max-w-4xl rounded-3xl border border-gray-200/50 bg-gray-100/50 px-8 py-6 backdrop-blur-md dark:border-white/10 dark:bg-gray-800/40"
     >
       <!-- 标题 -->
-      <div class="mb-6 flex items-center justify-between">
+      <div class="mb-4 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-pink-50 dark:bg-pink-500/10">
             <UIcon
@@ -377,7 +508,7 @@ const getMergeFileProgressText = (file: MergeFileInfo) =>
       </div>
 
       <!-- 文件列表 -->
-      <div class="max-h-80 space-y-2 overflow-y-auto">
+      <div class="max-h-52 space-y-2 overflow-y-auto">
         <FileListItem
           v-for="(file, index) in mergeFiles"
           :key="file.path"
@@ -395,7 +526,7 @@ const getMergeFileProgressText = (file: MergeFileInfo) =>
     <!-- 合并导入完成 -->
     <div
       v-else-if="isMergeImporting && mergeStage === 'done' && mergeResult"
-      class="w-full max-w-4xl rounded-3xl border border-gray-200/50 bg-gray-100/50 px-8 py-8 backdrop-blur-md dark:border-white/10 dark:bg-gray-800/40"
+      class="w-full max-w-4xl rounded-3xl border border-gray-200/50 bg-gray-100/50 px-8 py-6 backdrop-blur-md dark:border-white/10 dark:bg-gray-800/40"
     >
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
@@ -423,10 +554,10 @@ const getMergeFileProgressText = (file: MergeFileInfo) =>
     <!-- 批量导入结果摘要 -->
     <div
       v-else-if="batchImportResult"
-      class="w-full max-w-4xl rounded-3xl border border-gray-200/50 bg-gray-100/50 px-8 py-8 backdrop-blur-md dark:border-white/10 dark:bg-gray-800/40"
+      class="w-full max-w-4xl rounded-3xl border border-gray-200/50 bg-gray-100/50 px-8 py-6 backdrop-blur-md dark:border-white/10 dark:bg-gray-800/40"
     >
       <!-- 标题 -->
-      <div class="mb-6 flex items-center justify-between">
+      <div class="mb-4 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div
             class="flex h-10 w-10 items-center justify-center rounded-xl"
@@ -463,7 +594,7 @@ const getMergeFileProgressText = (file: MergeFileInfo) =>
       </div>
 
       <!-- 文件列表 -->
-      <div class="max-h-80 space-y-2 overflow-y-auto">
+      <div class="max-h-52 space-y-2 overflow-y-auto">
         <FileListItem
           v-for="(file, index) in batchImportResult.files"
           :key="file.path"
@@ -616,5 +747,12 @@ const getMergeFileProgressText = (file: MergeFileInfo) =>
     <UButton :to="tutorialUrl" target="_blank" trailing-icon="i-heroicons-chevron-right-20-solid">
       {{ t('home.import.tutorial') }}
     </UButton>
+
+    <!-- 聊天选择器（多聊天格式通用） -->
+    <ChatSelector
+      v-model:open="showChatSelector"
+      :file-path="chatSelectorFilePath"
+      @select="handleChatSelect"
+    />
   </div>
 </template>

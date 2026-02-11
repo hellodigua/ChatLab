@@ -6,7 +6,7 @@ import { ipcMain, app, dialog } from 'electron'
 import * as databaseCore from '../database/core'
 import * as worker from '../worker/workerManager'
 import * as parser from '../parser'
-import { detectFormat, diagnoseFormat, type ParseProgress } from '../parser'
+import { detectFormat, diagnoseFormat, scanMultiChatFile, type ParseProgress } from '../parser'
 import type { IpcContext } from './types'
 import { CURRENT_SCHEMA_VERSION, getPendingMigrationInfos, type MigrationInfo } from '../database/migrations'
 import { exportSessionToTempFile, cleanupTempExportFiles } from '../merger'
@@ -166,6 +166,84 @@ export function registerChatHandlers(ctx: IpcContext): void {
         message: String(error),
       })
 
+      return { success: false, error: String(error) }
+    }
+  })
+
+  /**
+   * 检测文件格式（轻量级，仅返回格式 ID、名称和是否多聊天）
+   */
+  ipcMain.handle('chat:detectFormat', async (_, filePath: string) => {
+    try {
+      const formatFeature = detectFormat(filePath)
+      if (!formatFeature) return null
+      return {
+        id: formatFeature.id,
+        name: formatFeature.name,
+        platform: formatFeature.platform,
+        multiChat: formatFeature.multiChat || false,
+      }
+    } catch {
+      return null
+    }
+  })
+
+  /**
+   * 扫描多聊天文件中的聊天列表（通用）
+   * 自动检测格式并调用对应格式的 scanChats
+   */
+  ipcMain.handle('chat:scanMultiChatFile', async (_, filePath: string) => {
+    try {
+      const chats = await scanMultiChatFile(filePath)
+      return { success: true, chats }
+    } catch (error) {
+      console.error('[IpcMain] 扫描多聊天文件失败:', error)
+      return { success: false, error: String(error), chats: [] }
+    }
+  })
+
+  /**
+   * 导入聊天记录（带格式选项）
+   * 用于多聊天格式等需要额外参数的场景（如指定 chatIndex）
+   */
+  ipcMain.handle('chat:importWithOptions', async (_, filePath: string, formatOptions: Record<string, unknown>) => {
+    try {
+      win.webContents.send('chat:importProgress', {
+        stage: 'detecting',
+        progress: 5,
+        message: '',
+      })
+
+      const result = await worker.streamImport(filePath, (progress: ParseProgress) => {
+        win.webContents.send('chat:importProgress', {
+          stage: progress.stage,
+          progress: progress.percentage,
+          message: progress.message,
+          bytesRead: progress.bytesRead,
+          totalBytes: progress.totalBytes,
+          messagesProcessed: progress.messagesProcessed,
+        })
+      }, formatOptions)
+
+      if (result.success) {
+        console.log('[IpcMain] Stream import (with options) successful, sessionId:', result.sessionId)
+        return { success: true, sessionId: result.sessionId, diagnostics: result.diagnostics }
+      } else {
+        console.error('[IpcMain] Stream import (with options) failed:', result.error)
+        win.webContents.send('chat:importProgress', {
+          stage: 'error',
+          progress: 0,
+          message: result.error,
+        })
+        return { success: false, error: result.error, diagnostics: result.diagnostics }
+      }
+    } catch (error) {
+      console.error('[IpcMain] Import with options failed:', error)
+      win.webContents.send('chat:importProgress', {
+        stage: 'error',
+        progress: 0,
+        message: String(error),
+      })
       return { success: false, error: String(error) }
     }
   })

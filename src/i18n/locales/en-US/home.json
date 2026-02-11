@@ -88,6 +88,18 @@
     "close": "Close",
     "retry": "Retry"
   },
+  "chatSelector": {
+    "title": "Select chats to import",
+    "scanning": "Scanning chat list...",
+    "scanFailed": "Scan failed",
+    "retry": "Retry",
+    "selectAll": "Select all",
+    "chatCount": "{count} chats",
+    "selected": "{count} selected",
+    "messageCount": "{count} messages",
+    "import": "Import ({count})",
+    "noChats": "No chats found"
+  },
   "changelog": {
     "title": "Changelog",
     "subtitle": "View all version updates",

@@ -87,12 +87,27 @@ interface ChatApi {
     error?: string
     diagnosis?: FormatDiagnosisSimple
   } | null>
+  detectFormat: (filePath: string) => Promise<{ id: string; name: string; platform: string; multiChat: boolean } | null>
   import: (filePath: string) => Promise<{
     success: boolean
     sessionId?: string
     error?: string
     diagnosis?: FormatDiagnosisSimple
     diagnostics?: ImportDiagnostics
+  }>
+  importWithOptions: (
+    filePath: string,
+    formatOptions: Record<string, unknown>
+  ) => Promise<{
+    success: boolean
+    sessionId?: string
+    error?: string
+    diagnostics?: ImportDiagnostics
+  }>
+  scanMultiChatFile: (filePath: string) => Promise<{
+    success: boolean
+    chats: Array<{ index: number; name: string; type: string; id: number; messageCount: number }>
+    error?: string
   }>
   getSessions: () => Promise<AnalysisSession[]>
   getSession: (sessionId: string) => Promise<AnalysisSession | null>

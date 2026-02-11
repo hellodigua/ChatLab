@@ -406,12 +406,14 @@ export async function streamParseFileInfo(
  * 流式导入聊天记录
  * @param filePath 文件路径
  * @param onProgress 进度回调
+ * @param formatOptions 格式特定选项（如 Telegram 的 chatIndex）
  */
 export async function streamImport(
   filePath: string,
-  onProgress?: (progress: ParseProgress) => void
+  onProgress?: (progress: ParseProgress) => void,
+  formatOptions?: Record<string, unknown>
 ): Promise<{ success: boolean; sessionId?: string; error?: string }> {
-  return sendToWorkerWithProgress('streamImport', { filePath }, onProgress)
+  return sendToWorkerWithProgress('streamImport', { filePath, formatOptions }, onProgress)
 }
 
 /**

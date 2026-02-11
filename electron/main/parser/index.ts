@@ -17,6 +17,7 @@ import type {
   ParsedMember,
   ParsedMessage,
   FormatDiagnosis,
+  MultiChatInfo,
 } from './types'
 
 // ==================== 全局嗅探器实例 ====================
@@ -70,6 +71,30 @@ export function getPreprocessor(filePath: string) {
 
   const module = formats.find((m) => m.feature.id === feature.id)
   return module?.preprocessor || null
+}
+
+/**
+ * 扫描多聊天文件中的聊天列表
+ * 自动检测格式并调用对应格式模块的 scanChats
+ * @param filePath 文件路径
+ * @returns 聊天列表，如果格式不支持多聊天则抛出错误
+ */
+export async function scanMultiChatFile(filePath: string): Promise<MultiChatInfo[]> {
+  const feature = sniffer.sniff(filePath)
+  if (!feature) {
+    throw new Error(`无法识别文件格式: ${filePath}`)
+  }
+
+  if (!feature.multiChat) {
+    throw new Error(`格式 "${feature.name}" 不是多聊天格式`)
+  }
+
+  const module = formats.find((m) => m.feature.id === feature.id)
+  if (!module?.scanChats) {
+    throw new Error(`格式 "${feature.name}" 声明了 multiChat 但未实现 scanChats`)
+  }
+
+  return module.scanChats(filePath)
 }
 
 /**
@@ -211,6 +236,7 @@ export type {
   ParsedMember,
   ParsedMessage,
   FormatDiagnosis,
+  MultiChatInfo,
 }
 
 // ==================== 导出嗅探器（高级用法） ====================
@@ -238,6 +264,7 @@ export interface StreamParseCallbacks {
 export interface StreamParseOptions extends StreamParseCallbacks {
   filePath: string
   batchSize?: number
+  formatOptions?: Record<string, unknown>
 }
 
 /**
@@ -248,9 +275,9 @@ export async function streamParseFile(
   filePath: string,
   callbacks: Omit<StreamParseOptions, 'filePath'>
 ): Promise<void> {
-  const { onProgress, onMeta, onMembers, onMessageBatch, onLog, batchSize = 5000 } = callbacks
+  const { onProgress, onMeta, onMembers, onMessageBatch, onLog, batchSize = 5000, formatOptions } = callbacks
 
-  for await (const event of parseFile({ filePath, batchSize, onProgress, onLog })) {
+  for await (const event of parseFile({ filePath, batchSize, formatOptions, onProgress, onLog })) {
     switch (event.type) {
       case 'meta':
         onMeta(event.data)
