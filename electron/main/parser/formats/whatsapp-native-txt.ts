@@ -3,9 +3,13 @@
  * 适配 WhatsApp 聊天导出功能
  *
  * 格式特征：
- * - 文件头：消息和通话已进行端到端加密
- * - 消息格式：YYYY/MM/DD HH:MM - 昵称: 内容
- * - 系统消息：YYYY/MM/DD HH:MM - 系统内容（无冒号分隔）
+ * - 文件头：消息和通话已进行端到端加密 / Messages and calls are end-to-end encrypted
+ * - 消息格式（V1，无方括号）：YYYY/MM/DD HH:MM - 昵称: 内容
+ * - 消息格式（V2，方括号）：
+ *   - [M/D/YY HH:MM:SS] 昵称: 内容（2 位年份）
+ *   - [YYYY/MM/DD HH:MM:SS] 昵称: 内容（4 位年份在前，中文地区）
+ *   - [DD/MM/YYYY, HH:MM:SS] 昵称: 内容（4 位年份在后，英文地区）
+ * - 系统消息：时间戳 + 系统内容（无冒号分隔）
  * - 媒体占位：<省略影音内容>
  */
 
@@ -59,8 +63,8 @@ export const feature: FormatFeature = {
       /WhatsApp/i, // 通用 WhatsApp 关键词
       /你发送给自己的消息已进行端到端加密/, // 中文自己对话提示
       /有人添加了你/, // 中文群聊添加提示
-      /\d{4}\/\d{1,2}\/\d{1,2} \d{1,2}:\d{2} - /, // 消息行格式特征
-      /^\[\d{1,2}\/\d{1,2}\/\d{2},? \d{1,2}:\d{2}:\d{2}\] /, // 消息行格式特征 V2
+      /\d{4}\/\d{1,2}\/\d{1,2} \d{1,2}:\d{2} - /, // 消息行格式特征（无方括号）
+      /\[\d{1,4}\/\d{1,2}\/\d{2,4},? \d{1,2}:\d{2}:\d{2}\] /, // 消息行格式特征（方括号，支持 2/4 位年份）
     ],
     // 文件名特征：与xxx的 WhatsApp 聊天.txt
     filename: [/^与.+的\s*WhatsApp\s*聊天\.txt$/i],
@@ -84,13 +88,16 @@ function cleanLine(line: string): string {
 // 支持月份、日期、小时为 1-2 位数字
 const MESSAGE_LINE_REGEX_V1 = /^(\d{4}\/\d{1,2}\/\d{1,2} \d{1,2}:\d{2}) - (.+)$/
 
-// 格式2：[6/7/25 22:44:26] 或 [10/12/25, 12:50:16]（中文/英文地区导出格式）
+// 格式2（方括号格式）：支持多种地区导出
+// - [6/7/25 22:44:26] 或 [10/12/25, 12:50:16]（2 位年份，M/D/YY）
+// - [2024/10/31 15:50:46]（4 位年份在前，YYYY/MM/DD，中文地区）
+// - [31/10/2024, 15:50:46]（4 位年份在后，DD/MM/YYYY，英文地区）
 // 日期和时间之间可能有逗号（英文）或没有（中文）
-const MESSAGE_LINE_REGEX_V2 = /^\[(\d{1,2}\/\d{1,2}\/\d{2},? \d{1,2}:\d{2}:\d{2})\] (.+)$/
+const MESSAGE_LINE_REGEX_V2 = /^\[(\d{1,4}\/\d{1,2}\/\d{2,4},? \d{1,2}:\d{2}:\d{2})\] (.+)$/
 
 // 从消息内容中分离昵称和实际内容
-// 格式：昵称: 内容
-const SENDER_CONTENT_REGEX = /^(.+?): (.*)$/
+// 格式：昵称: 内容（冒号后可能是空格、U+200E LTR Mark 或两者组合）
+const SENDER_CONTENT_REGEX = /^(.+?):[\s\u200E]+(.*)$/
 
 // ==================== 系统消息识别 ====================
 
@@ -145,24 +152,45 @@ function detectMessageType(content: string): MessageType {
 
 /**
  * 解析 WhatsApp 时间格式为秒级时间戳
- * 支持两种格式：
+ * 支持多种格式：
  * - 格式1：2025/12/22 12:35 或 2025/2/2 9:35（YYYY/M/D H:MM，月日时可为 1-2 位）
- * - 格式2：6/7/25 22:44:26（M/D/YY HH:MM:SS）
+ * - 格式2（方括号）：
+ *   - 6/7/25 22:44:26（M/D/YY HH:MM:SS，2 位年份）
+ *   - 2024/10/31 15:50:46（YYYY/MM/DD HH:MM:SS，4 位年份在前，中文地区）
+ *   - 31/10/2024, 15:50:46（DD/MM/YYYY, HH:MM:SS，4 位年份在后，英文地区）
  */
 function parseWhatsAppTime(timeStr: string, isV2Format: boolean = false): number {
   if (isV2Format) {
-    // 格式2：M/D/YY HH:MM:SS 或 M/D/YY, HH:MM:SS（可选逗号）
-    // 先移除可能的逗号
+    // 方括号格式：先移除可能的逗号
     const normalizedStr = timeStr.replace(',', '')
-    const match = normalizedStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}) (\d{1,2}):(\d{2}):(\d{2})$/)
+    const match = normalizedStr.match(
+      /^(\d{1,4})\/(\d{1,2})\/(\d{2,4}) (\d{1,2}):(\d{2}):(\d{2})$/
+    )
     if (match) {
-      const [, month, day, year, hour, minute, second] = match
-      // 将 2 位年份转换为 4 位（假设 00-99 对应 2000-2099）
-      const fullYear = 2000 + parseInt(year, 10)
+      const [, part1, part2, part3, hour, minute, second] = match
+      let year: number, month: number, day: number
+
+      if (part1.length === 4) {
+        // YYYY/MM/DD 格式（中文地区，4 位年份在前）
+        year = parseInt(part1, 10)
+        month = parseInt(part2, 10)
+        day = parseInt(part3, 10)
+      } else if (part3.length === 4) {
+        // DD/MM/YYYY 格式（英文地区，4 位年份在后）
+        day = parseInt(part1, 10)
+        month = parseInt(part2, 10)
+        year = parseInt(part3, 10)
+      } else {
+        // M/D/YY 格式（2 位年份，假设 00-99 对应 2000-2099）
+        month = parseInt(part1, 10)
+        day = parseInt(part2, 10)
+        year = 2000 + parseInt(part3, 10)
+      }
+
       const date = new Date(
-        fullYear,
-        parseInt(month, 10) - 1,
-        parseInt(day, 10),
+        year,
+        month - 1,
+        day,
         parseInt(hour, 10),
         parseInt(minute, 10),
         parseInt(second, 10)
