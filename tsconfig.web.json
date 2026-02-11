@@ -20,7 +20,8 @@
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@electron/*": ["electron/*"]
     }
   }
 }
