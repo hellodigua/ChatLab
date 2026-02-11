@@ -156,8 +156,7 @@ const syncHandlers: Record<string, (payload: any) => any> = {
   // 自定义筛选（支持分页）
   filterMessagesWithContext: (p) =>
     filterMessagesWithContext(p.sessionId, p.keywords, p.timeFilter, p.senderIds, p.contextSize, p.page, p.pageSize),
-  getMultipleSessionsMessages: (p) =>
-    getMultipleSessionsMessages(p.sessionId, p.chatSessionIds, p.page, p.pageSize),
+  getMultipleSessionsMessages: (p) => getMultipleSessionsMessages(p.sessionId, p.chatSessionIds, p.page, p.pageSize),
 
   // NLP 查询
   getWordFrequency: (p) => getWordFrequency(p),

@@ -293,7 +293,7 @@ export async function streamImport(filePath: string, requestId: string): Promise
   let importError: string | null = null
 
   // 统计回调调用次数（用于诊断）
-  let callbackStats = {
+  const callbackStats = {
     onProgressCalls: 0,
     onLogCalls: 0,
     onMetaCalls: 0,

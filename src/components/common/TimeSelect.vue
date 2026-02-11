@@ -311,8 +311,7 @@ function initModeDefaults(newMode: TimeSelectMode) {
       break
     }
     case 'year': {
-      selectedYear.value =
-        availableYears.value[0] || new Date(fullTimeRange.value.end * 1000).getFullYear()
+      selectedYear.value = availableYears.value[0] || new Date(fullTimeRange.value.end * 1000).getFullYear()
       break
     }
     case 'custom': {
@@ -457,12 +456,7 @@ watch(
 <template>
   <div v-if="visible && isLoaded" class="flex items-center gap-2">
     <!-- 模式选择器 -->
-    <USelect
-      v-model="modeModel"
-      :items="modeOptions"
-      size="md"
-      class="w-28 shrink-0"
-    />
+    <USelect v-model="modeModel" :items="modeOptions" size="md" class="w-28 shrink-0" />
 
     <!-- 最近模式：UITabs 选择时间段 -->
     <UITabs

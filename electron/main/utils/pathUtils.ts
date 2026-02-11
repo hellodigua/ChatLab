@@ -181,11 +181,7 @@ export function copyDirMerge(
 /**
  * 写入迁移日志到 app.log
  */
-export function writeMigrationLog(
-  logDir: string,
-  message: string,
-  ensureDir: (dirPath: string) => void
-): void {
+export function writeMigrationLog(logDir: string, message: string, ensureDir: (dirPath: string) => void): void {
   try {
     ensureDir(logDir)
     const logPath = path.join(logDir, 'app.log')

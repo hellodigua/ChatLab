@@ -462,11 +462,11 @@ onMounted(() => {
               v-model="editingName"
               type="text"
               class="w-full rounded border border-pink-300 bg-white px-2 py-0.5 text-sm font-medium text-gray-900 focus:border-pink-500 focus:outline-none focus:ring-1 focus:ring-pink-500 dark:border-pink-600 dark:bg-gray-800 dark:text-white"
+              autofocus
               @blur="saveEdit"
               @keydown.enter="saveEdit"
               @keydown.escape="cancelEdit"
               @click.stop
-              autofocus
             />
             <!-- 显示模式 -->
             <p

@@ -102,8 +102,8 @@ watch(
 <template>
   <UModal
     :open="open"
-    @update:open="emit('update:open', $event)"
     :ui="{ overlay: 'app-region-no-drag', content: 'md:w-full max-w-2xl app-region-no-drag' }"
+    @update:open="emit('update:open', $event)"
   >
     <template #content>
       <div class="p-6">

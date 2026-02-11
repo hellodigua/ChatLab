@@ -20,7 +20,11 @@ const props = defineProps<{
 const subTabs = computed(() => [
   { id: 'wordcloud', label: t('analysis.subTabs.quotes.wordcloud'), icon: 'i-heroicons-cloud' },
   { id: 'hot-repeat', label: t('analysis.subTabs.quotes.hotRepeat'), icon: 'i-heroicons-fire' },
-  { id: 'catchphrase', label: t('analysis.subTabs.quotes.catchphrase'), icon: 'i-heroicons-chat-bubble-bottom-center-text' },
+  {
+    id: 'catchphrase',
+    label: t('analysis.subTabs.quotes.catchphrase'),
+    icon: 'i-heroicons-chat-bubble-bottom-center-text',
+  },
   { id: 'keyword', label: t('analysis.subTabs.quotes.keywordAnalysis'), icon: 'i-heroicons-magnifying-glass' },
 ])
 

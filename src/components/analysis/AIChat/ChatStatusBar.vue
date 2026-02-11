@@ -119,13 +119,19 @@ async function openAiLogFile() {
           class="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-300"
         >
           <UIcon name="i-heroicons-chat-bubble-bottom-center-text" class="h-3.5 w-3.5" />
-          <span class="max-w-[120px] truncate">{{ currentActivePreset?.name || t('ai.chat.statusBar.preset.default') }}</span>
+          <span class="max-w-[120px] truncate">
+            {{ currentActivePreset?.name || t('ai.chat.statusBar.preset.default') }}
+          </span>
           <UIcon name="i-heroicons-chevron-down" class="h-3 w-3" />
         </button>
         <template #content>
           <div class="w-48 py-1">
             <div class="px-3 py-1.5 text-xs font-medium text-gray-400 dark:text-gray-500">
-              {{ chatType === 'group' ? t('ai.chat.statusBar.preset.groupTitle') : t('ai.chat.statusBar.preset.privateTitle') }}
+              {{
+                chatType === 'group'
+                  ? t('ai.chat.statusBar.preset.groupTitle')
+                  : t('ai.chat.statusBar.preset.privateTitle')
+              }}
             </div>
             <button
               v-for="preset in currentPresets"
@@ -170,7 +176,9 @@ async function openAiLogFile() {
           :disabled="isLoadingLLM"
         >
           <UIcon name="i-heroicons-cpu-chip" class="h-3.5 w-3.5" />
-          <span class="max-w-[120px] truncate">{{ activeConfig?.name || t('ai.chat.statusBar.model.notConfigured') }}</span>
+          <span class="max-w-[120px] truncate">
+            {{ activeConfig?.name || t('ai.chat.statusBar.model.notConfigured') }}
+          </span>
           <UIcon name="i-heroicons-chevron-down" class="h-3 w-3" />
         </button>
         <template #content>

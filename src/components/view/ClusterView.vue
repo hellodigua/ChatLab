@@ -299,17 +299,21 @@ watch(viewMode, async (newMode, oldMode) => {
   }
 })
 
-watch([graphData, isDark], () => {
-  console.log('[ClusterView] graphData/isDark changed', {
-    hasGraphData: !!graphData.value,
-    nodeCount: graphData.value?.nodes?.length,
-    viewMode: viewMode.value,
-    isLoading: isLoading.value,
-  })
-  if (viewMode.value === 'matrix') {
-    updateChart()
-  }
-}, { deep: true })
+watch(
+  [graphData, isDark],
+  () => {
+    console.log('[ClusterView] graphData/isDark changed', {
+      hasGraphData: !!graphData.value,
+      nodeCount: graphData.value?.nodes?.length,
+      viewMode: viewMode.value,
+      isLoading: isLoading.value,
+    })
+    if (viewMode.value === 'matrix') {
+      updateChart()
+    }
+  },
+  { deep: true }
+)
 
 // 加载完成后重新初始化图表（因为 v-if 会重新创建 DOM）
 watch(isLoading, async (loading, wasLoading) => {
@@ -350,241 +354,267 @@ onUnmounted(() => {
 
 <template>
   <div class="p-4 h-full">
-    <div class="flex h-full flex-col rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+    <div
+      class="flex h-full flex-col rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden"
+    >
       <!-- 顶部工具栏 -->
-      <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-      <div class="flex items-center gap-3">
-        <!-- 视图切换 -->
-        <UButtonGroup size="xs">
-          <UButton
-            :color="viewMode === 'matrix' ? 'primary' : 'neutral'"
-            :variant="viewMode === 'matrix' ? 'solid' : 'ghost'"
-            @click="viewMode = 'matrix'"
-          >
-            {{ t('views.cluster.matrixView') }}
-          </UButton>
-          <UButton
-            :color="viewMode === 'member' ? 'primary' : 'neutral'"
-            :variant="viewMode === 'member' ? 'solid' : 'ghost'"
-            @click="viewMode = 'member'"
-          >
-            {{ t('views.cluster.memberView') }}
-          </UButton>
-          <UButton
-            :color="viewMode === 'circle' ? 'primary' : 'neutral'"
-            :variant="viewMode === 'circle' ? 'solid' : 'ghost'"
-            @click="viewMode = 'circle'"
-          >
-            {{ t('views.cluster.rankingView') }}
-          </UButton>
-        </UButtonGroup>
-      </div>
+      <div
+        class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
+      >
+        <div class="flex items-center gap-3">
+          <!-- 视图切换 -->
+          <UButtonGroup size="xs">
+            <UButton
+              :color="viewMode === 'matrix' ? 'primary' : 'neutral'"
+              :variant="viewMode === 'matrix' ? 'solid' : 'ghost'"
+              @click="viewMode = 'matrix'"
+            >
+              {{ t('views.cluster.matrixView') }}
+            </UButton>
+            <UButton
+              :color="viewMode === 'member' ? 'primary' : 'neutral'"
+              :variant="viewMode === 'member' ? 'solid' : 'ghost'"
+              @click="viewMode = 'member'"
+            >
+              {{ t('views.cluster.memberView') }}
+            </UButton>
+            <UButton
+              :color="viewMode === 'circle' ? 'primary' : 'neutral'"
+              :variant="viewMode === 'circle' ? 'solid' : 'ghost'"
+              @click="viewMode = 'circle'"
+            >
+              {{ t('views.cluster.rankingView') }}
+            </UButton>
+          </UButtonGroup>
+        </div>
 
-      <div class="flex items-center gap-3">
-        <!-- 参数设置 -->
-        <UPopover>
-          <UButton variant="ghost" size="xs" icon="i-heroicons-adjustments-horizontal" />
-          <template #content>
-            <div class="p-3 w-64">
-              <h4 class="text-sm font-medium mb-3">{{ t('views.cluster.modelSettings') }}</h4>
-              <div class="space-y-3">
-                <div>
-                  <label class="text-xs text-gray-500 mb-1 block">{{ t('views.cluster.lookAhead') }}</label>
-                  <UInput
-                    v-model.number="modelOptions.lookAhead"
-                    type="number"
-                    :min="1"
-                    :max="10"
-                    size="xs"
-                    placeholder="1-10"
-                  />
-                  <p class="text-xs text-gray-400 mt-1">{{ t('views.cluster.lookAheadDesc') }}</p>
+        <div class="flex items-center gap-3">
+          <!-- 参数设置 -->
+          <UPopover>
+            <UButton variant="ghost" size="xs" icon="i-heroicons-adjustments-horizontal" />
+            <template #content>
+              <div class="p-3 w-64">
+                <h4 class="text-sm font-medium mb-3">{{ t('views.cluster.modelSettings') }}</h4>
+                <div class="space-y-3">
+                  <div>
+                    <label class="text-xs text-gray-500 mb-1 block">{{ t('views.cluster.lookAhead') }}</label>
+                    <UInput
+                      v-model.number="modelOptions.lookAhead"
+                      type="number"
+                      :min="1"
+                      :max="10"
+                      size="xs"
+                      placeholder="1-10"
+                    />
+                    <p class="text-xs text-gray-400 mt-1">{{ t('views.cluster.lookAheadDesc') }}</p>
+                  </div>
+                  <div>
+                    <label class="text-xs text-gray-500 mb-1 block">{{ t('views.cluster.decaySeconds') }}</label>
+                    <UInput
+                      v-model.number="modelOptions.decaySeconds"
+                      type="number"
+                      :min="30"
+                      :max="3600"
+                      size="xs"
+                      placeholder="30-3600"
+                    />
+                    <p class="text-xs text-gray-400 mt-1">{{ t('views.cluster.decaySecondsDesc') }}</p>
+                  </div>
+                  <UButton size="xs" color="primary" class="w-full mt-2" @click="loadData">
+                    {{ t('views.cluster.applySettings') }}
+                  </UButton>
                 </div>
-                <div>
-                  <label class="text-xs text-gray-500 mb-1 block">{{ t('views.cluster.decaySeconds') }}</label>
-                  <UInput
-                    v-model.number="modelOptions.decaySeconds"
-                    type="number"
-                    :min="30"
-                    :max="3600"
-                    size="xs"
-                    placeholder="30-3600"
-                  />
-                  <p class="text-xs text-gray-400 mt-1">{{ t('views.cluster.decaySecondsDesc') }}</p>
-                </div>
-                <UButton size="xs" color="primary" class="w-full mt-2" @click="loadData">
-                  {{ t('views.cluster.applySettings') }}
-                </UButton>
               </div>
-            </div>
-          </template>
-        </UPopover>
+            </template>
+          </UPopover>
 
-        <!-- 刷新 -->
-        <UButton variant="ghost" size="xs" icon="i-heroicons-arrow-path" @click="loadData" />
-      </div>
-    </div>
-
-    <!-- 内容区域 -->
-    <div class="flex-1 min-h-0 overflow-hidden">
-      <!-- 加载中 -->
-      <div v-if="isLoading" class="h-full flex items-center justify-center">
-        <UIcon name="i-heroicons-arrow-path" class="w-6 h-6 animate-spin text-gray-400" />
-      </div>
-
-      <!-- 无数据 -->
-      <div v-else-if="!graphData || graphData.nodes.length === 0" class="h-full flex items-center justify-center">
-        <div class="text-center text-gray-400">
-          <UIcon name="i-heroicons-user-group" class="w-12 h-12 mx-auto mb-2 opacity-50" />
-          <p>{{ t('views.cluster.noData') }}</p>
+          <!-- 刷新 -->
+          <UButton variant="ghost" size="xs" icon="i-heroicons-arrow-path" @click="loadData" />
         </div>
       </div>
 
-      <!-- 矩阵热力图 -->
-      <div v-else-if="viewMode === 'matrix'" class="h-full">
-        <div ref="chartRef" class="w-full h-full" />
-      </div>
+      <!-- 内容区域 -->
+      <div class="flex-1 min-h-0 overflow-hidden">
+        <!-- 加载中 -->
+        <div v-if="isLoading" class="h-full flex items-center justify-center">
+          <UIcon name="i-heroicons-arrow-path" class="w-6 h-6 animate-spin text-gray-400" />
+        </div>
 
-      <!-- 成员视图 -->
-      <div v-else-if="viewMode === 'member'" class="h-full flex overflow-hidden">
-        <!-- 左侧：成员列表 -->
-        <div class="w-64 border-r border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
+        <!-- 无数据 -->
+        <div v-else-if="!graphData || graphData.nodes.length === 0" class="h-full flex items-center justify-center">
+          <div class="text-center text-gray-400">
+            <UIcon name="i-heroicons-user-group" class="w-12 h-12 mx-auto mb-2 opacity-50" />
+            <p>{{ t('views.cluster.noData') }}</p>
+          </div>
+        </div>
+
+        <!-- 矩阵热力图 -->
+        <div v-else-if="viewMode === 'matrix'" class="h-full">
+          <div ref="chartRef" class="w-full h-full" />
+        </div>
+
+        <!-- 成员视图 -->
+        <div v-else-if="viewMode === 'member'" class="h-full flex overflow-hidden">
+          <!-- 左侧：成员列表 -->
+          <div class="w-64 border-r border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+              <h3 class="text-sm font-medium flex items-center gap-2">
+                <UIcon name="i-heroicons-users" class="w-4 h-4" />
+                {{ t('views.cluster.selectMember') }}
+              </h3>
+            </div>
+            <div class="flex-1 overflow-y-auto">
+              <div
+                v-for="member in memberList"
+                :key="member.id"
+                class="px-4 py-2 cursor-pointer border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                :class="{ 'bg-primary-50 dark:bg-primary-900/30': selectedMemberId === member.id }"
+                @click="selectedMemberId = member.id"
+              >
+                <div class="flex items-center justify-between">
+                  <span class="text-sm truncate">{{ member.name }}</span>
+                  <span class="text-xs text-gray-400">{{ member.messageCount }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 右侧：选中成员的关系 -->
+          <div class="flex-1 overflow-hidden flex flex-col">
+            <div v-if="!selectedMember" class="flex-1 flex items-center justify-center">
+              <div class="text-center text-gray-400">
+                <UIcon name="i-heroicons-cursor-arrow-rays" class="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p>{{ t('views.cluster.selectMemberHint') }}</p>
+              </div>
+            </div>
+
+            <template v-else>
+              <!-- 选中成员信息 -->
+              <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
+                <div
+                  class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold bg-primary-500"
+                >
+                  {{ selectedMember.name.charAt(0) }}
+                </div>
+                <div>
+                  <div class="font-medium">{{ selectedMember.name }}</div>
+                  <div class="text-xs text-gray-400">
+                    {{ t('views.cluster.msgCount') }}: {{ selectedMember.messageCount }} |
+                    {{ t('views.cluster.relationCount') }}: {{ selectedMemberRelations.length }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- 关系排行 -->
+              <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-sm font-medium flex items-center gap-2">
+                  <UIcon name="i-heroicons-heart" class="w-4 h-4 text-pink-500" />
+                  {{ t('views.cluster.relationsByIntimacy') }}
+                </h3>
+              </div>
+
+              <div class="flex-1 overflow-y-auto">
+                <div v-if="selectedMemberRelations.length === 0" class="p-4 text-center text-gray-400">
+                  {{ t('views.cluster.noRelations') }}
+                </div>
+                <div
+                  v-for="(relation, index) in selectedMemberRelations"
+                  :key="relation.otherName"
+                  class="px-4 py-3 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                >
+                  <div class="flex items-center gap-3">
+                    <span
+                      class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                      :class="
+                        index < 3
+                          ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                          : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                      "
+                    >
+                      {{ index + 1 }}
+                    </span>
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm font-medium truncate">{{ relation.otherName }}</div>
+                      <div class="flex items-center gap-3 mt-0.5 text-xs text-gray-400">
+                        <span>{{ t('views.cluster.intimacy') }}: {{ (relation.value * 100).toFixed(0) }}%</span>
+                        <span>
+                          {{ t('views.cluster.coOccurrence') }}: {{ relation.coOccurrenceCount
+                          }}{{ t('views.cluster.times') }}
+                        </span>
+                      </div>
+                    </div>
+                    <!-- 亲密度条（以最高分为100%基准） -->
+                    <div class="w-20 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <div
+                        class="h-full bg-linear-to-r from-pink-400 to-pink-600"
+                        :style="{
+                          width: `${selectedMemberRelations[0]?.value ? (relation.value / selectedMemberRelations[0].value) * 100 : 0}%`,
+                        }"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- 排行视图 -->
+        <div v-else class="h-full flex flex-col overflow-hidden">
           <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
             <h3 class="text-sm font-medium flex items-center gap-2">
-              <UIcon name="i-heroicons-users" class="w-4 h-4" />
-              {{ t('views.cluster.selectMember') }}
+              <UIcon name="i-heroicons-trophy" class="w-4 h-4 text-yellow-500" />
+              {{ t('views.cluster.interactionRanking') }}
             </h3>
           </div>
           <div class="flex-1 overflow-y-auto">
             <div
-              v-for="member in memberList"
-              :key="member.id"
-              class="px-4 py-2 cursor-pointer border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-              :class="{ 'bg-primary-50 dark:bg-primary-900/30': selectedMemberId === member.id }"
-              @click="selectedMemberId = member.id"
+              v-for="(link, index) in topRelations"
+              :key="index"
+              class="px-4 py-3 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
             >
-              <div class="flex items-center justify-between">
-                <span class="text-sm truncate">{{ member.name }}</span>
-                <span class="text-xs text-gray-400">{{ member.messageCount }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 右侧：选中成员的关系 -->
-        <div class="flex-1 overflow-hidden flex flex-col">
-          <div v-if="!selectedMember" class="flex-1 flex items-center justify-center">
-            <div class="text-center text-gray-400">
-              <UIcon name="i-heroicons-cursor-arrow-rays" class="w-12 h-12 mx-auto mb-2 opacity-50" />
-              <p>{{ t('views.cluster.selectMemberHint') }}</p>
-            </div>
-          </div>
-
-          <template v-else>
-            <!-- 选中成员信息 -->
-            <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
-              <div
-                class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold bg-primary-500"
-              >
-                {{ selectedMember.name.charAt(0) }}
-              </div>
-              <div>
-                <div class="font-medium">{{ selectedMember.name }}</div>
-                <div class="text-xs text-gray-400">
-                  {{ t('views.cluster.msgCount') }}: {{ selectedMember.messageCount }} |
-                  {{ t('views.cluster.relationCount') }}: {{ selectedMemberRelations.length }}
-                </div>
-              </div>
-            </div>
-
-            <!-- 关系排行 -->
-            <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-              <h3 class="text-sm font-medium flex items-center gap-2">
-                <UIcon name="i-heroicons-heart" class="w-4 h-4 text-pink-500" />
-                {{ t('views.cluster.relationsByIntimacy') }}
-              </h3>
-            </div>
-
-            <div class="flex-1 overflow-y-auto">
-              <div v-if="selectedMemberRelations.length === 0" class="p-4 text-center text-gray-400">
-                {{ t('views.cluster.noRelations') }}
-              </div>
-              <div
-                v-for="(relation, index) in selectedMemberRelations"
-                :key="relation.otherName"
-                class="px-4 py-3 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-              >
-                <div class="flex items-center gap-3">
-                  <span
-                    class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                    :class="index < 3 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'"
-                  >
-                    {{ index + 1 }}
-                  </span>
-                  <div class="flex-1 min-w-0">
-                    <div class="text-sm font-medium truncate">{{ relation.otherName }}</div>
-                    <div class="flex items-center gap-3 mt-0.5 text-xs text-gray-400">
-                      <span>{{ t('views.cluster.intimacy') }}: {{ (relation.value * 100).toFixed(0) }}%</span>
-                      <span>{{ t('views.cluster.coOccurrence') }}: {{ relation.coOccurrenceCount }}{{ t('views.cluster.times') }}</span>
-                    </div>
+              <div class="flex items-center gap-3">
+                <span
+                  class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+                  :class="
+                    index < 3
+                      ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                      : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                  "
+                >
+                  {{ index + 1 }}
+                </span>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 text-sm">
+                    <span class="font-medium truncate">{{ link.source }}</span>
+                    <span class="text-gray-400">↔</span>
+                    <span class="font-medium truncate">{{ link.target }}</span>
                   </div>
-                  <!-- 亲密度条（以最高分为100%基准） -->
-                  <div class="w-20 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div
-                      class="h-full bg-linear-to-r from-pink-400 to-pink-600"
-                      :style="{ width: `${selectedMemberRelations[0]?.value ? (relation.value / selectedMemberRelations[0].value * 100) : 0}%` }"
-                    />
+                  <div class="flex items-center gap-3 mt-1 text-xs text-gray-400">
+                    <span>{{ t('views.cluster.score') }}: {{ link.value.toFixed(2) }}</span>
+                    <span>
+                      {{ t('views.cluster.coOccurrence') }}: {{ link.coOccurrenceCount }}{{ t('views.cluster.times') }}
+                    </span>
                   </div>
                 </div>
-              </div>
-            </div>
-          </template>
-        </div>
-      </div>
-
-      <!-- 排行视图 -->
-      <div v-else class="h-full flex flex-col overflow-hidden">
-        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-          <h3 class="text-sm font-medium flex items-center gap-2">
-            <UIcon name="i-heroicons-trophy" class="w-4 h-4 text-yellow-500" />
-            {{ t('views.cluster.interactionRanking') }}
-          </h3>
-        </div>
-        <div class="flex-1 overflow-y-auto">
-          <div v-for="(link, index) in topRelations" :key="index" class="px-4 py-3 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-            <div class="flex items-center gap-3">
-              <span
-                class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
-                :class="index < 3 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'"
-              >
-                {{ index + 1 }}
-              </span>
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 text-sm">
-                  <span class="font-medium truncate">{{ link.source }}</span>
-                  <span class="text-gray-400">↔</span>
-                  <span class="font-medium truncate">{{ link.target }}</span>
+                <!-- 临近度条（以最高分为100%基准） -->
+                <div class="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div
+                    class="h-full bg-linear-to-r from-yellow-400 to-orange-500"
+                    :style="{ width: `${topRelations[0]?.value ? (link.value / topRelations[0].value) * 100 : 0}%` }"
+                  />
                 </div>
-                <div class="flex items-center gap-3 mt-1 text-xs text-gray-400">
-                  <span>{{ t('views.cluster.score') }}: {{ link.value.toFixed(2) }}</span>
-                  <span>{{ t('views.cluster.coOccurrence') }}: {{ link.coOccurrenceCount }}{{ t('views.cluster.times') }}</span>
-                </div>
-              </div>
-              <!-- 临近度条（以最高分为100%基准） -->
-              <div class="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div
-                  class="h-full bg-linear-to-r from-yellow-400 to-orange-500"
-                  :style="{ width: `${topRelations[0]?.value ? (link.value / topRelations[0].value * 100) : 0}%` }"
-                />
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
       <!-- 底部统计 -->
-      <div v-if="graphData" class="px-4 py-2 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-400 flex items-center gap-4 bg-gray-50 dark:bg-gray-800/50">
+      <div
+        v-if="graphData"
+        class="px-4 py-2 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-400 flex items-center gap-4 bg-gray-50 dark:bg-gray-800/50"
+      >
         <span>{{ t('views.cluster.totalMembers') }}: {{ graphData.stats.totalMembers }}</span>
         <span>{{ t('views.cluster.totalMessages') }}: {{ graphData.stats.totalMessages.toLocaleString() }}</span>
         <span>{{ t('views.cluster.involvedMembers') }}: {{ graphData.stats.involvedMembers }}</span>
@@ -593,4 +623,3 @@ onUnmounted(() => {
     </div>
   </div>
 </template>
-

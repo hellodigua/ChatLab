@@ -14,7 +14,9 @@ const emit = defineEmits<{
 }>()
 
 const aiTips = computed(() => {
-  const config = JSON.parse(localStorage.getItem(`chatlab_app_config_${locale.value}`) || localStorage.getItem('chatlab_app_config') || '{}')
+  const config = JSON.parse(
+    localStorage.getItem(`chatlab_app_config_${locale.value}`) || localStorage.getItem('chatlab_app_config') || '{}'
+  )
   return config.aiTips || {}
 })
 

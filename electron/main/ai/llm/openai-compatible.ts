@@ -19,7 +19,6 @@ import type {
 import { aiLogger } from '../logger'
 import { buildModelMessages, buildToolSet, mapFinishReason, mapToolCalls, mapUsage } from './sdkUtils'
 
-
 /**
  * 从 AI SDK 错误中提取详细信息
  * 特别是从 responseBody 中获取模型/服务端返回的错误消息

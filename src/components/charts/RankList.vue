@@ -89,4 +89,3 @@ function getRelativePercentage(index: number): number {
     </div>
   </div>
 </template>
-

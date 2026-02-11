@@ -136,7 +136,9 @@ onMounted(async () => {
                 >
                   {{ item.name }}
                 </span>
-                <UBadge v-if="item.endTs === null" color="primary" variant="soft" size="xs">{{ t('members.nicknameHistory.current') }}</UBadge>
+                <UBadge v-if="item.endTs === null" color="primary" variant="soft" size="xs">
+                  {{ t('members.nicknameHistory.current') }}
+                </UBadge>
                 <span class="text-xs text-gray-400">({{ formatPeriod(item.startTs, item.endTs) }})</span>
               </div>
 
@@ -152,4 +154,3 @@ onMounted(async () => {
     </SectionCard>
   </div>
 </template>
-

@@ -76,7 +76,12 @@ const globalTopN = ref(10)
 
       <!-- 活跃榜（龙王 + 发言数量） -->
       <div id="activity-rank" class="scroll-mt-24">
-        <ActivityRank :session-id="sessionId" :member-activity="memberActivity" :time-filter="timeFilter" :global-top-n="globalTopN" />
+        <ActivityRank
+          :session-id="sessionId"
+          :member-activity="memberActivity"
+          :time-filter="timeFilter"
+          :global-top-n="globalTopN"
+        />
       </div>
 
       <!-- 火花榜 -->

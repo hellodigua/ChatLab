@@ -101,9 +101,7 @@ const nightStatsTitle = computed(() => {
 
 // 修仙统计描述
 const nightStatsDescription = computed(() => {
-  return nightStatsTab.value === 'distribution'
-    ? '深夜时段（23:00-05:00）各时段发言分布'
-    : '连续在深夜时段发言的天数'
+  return nightStatsTab.value === 'distribution' ? '深夜时段（23:00-05:00）各时段发言分布' : '连续在深夜时段发言的天数'
 })
 
 watch(

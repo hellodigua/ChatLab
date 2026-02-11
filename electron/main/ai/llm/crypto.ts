@@ -20,11 +20,15 @@ const SALT = 'chatlab-api-key-encryption-v1'
 function deriveKey(): Buffer {
   try {
     const machineId = machineIdSync()
-    return createHash('sha256').update(machineId + SALT).digest()
+    return createHash('sha256')
+      .update(machineId + SALT)
+      .digest()
   } catch (error) {
     // 如果无法获取机器 ID，使用固定的回退值（安全性降低）
     console.warn('无法获取机器 ID，使用回退密钥:', error)
-    return createHash('sha256').update('chatlab-fallback-key' + SALT).digest()
+    return createHash('sha256')
+      .update('chatlab-fallback-key' + SALT)
+      .digest()
   }
 }
 

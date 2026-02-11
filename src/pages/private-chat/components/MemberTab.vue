@@ -178,13 +178,15 @@ onMounted(() => {
 
         <!-- 别名编辑 -->
         <div class="mt-4 border-t border-gray-100 pt-4 dark:border-gray-800">
-          <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('members.private.customAlias') }}</label>
+          <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {{ t('members.private.customAlias') }}
+          </label>
           <div class="relative">
             <UInputTags
               :model-value="member.aliases"
-              @update:model-value="(val) => updateAliases(member, val)"
               :placeholder="t('members.private.aliasPlaceholder')"
               class="w-full"
+              @update:model-value="(val) => updateAliases(member, val)"
             />
             <!-- 保存中指示器 -->
             <div v-if="savingAliasesId === member.id" class="absolute right-3 top-1/2 -translate-y-1/2">
@@ -213,4 +215,3 @@ onMounted(() => {
     </div>
   </div>
 </template>
-

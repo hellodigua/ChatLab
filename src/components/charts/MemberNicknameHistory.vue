@@ -84,7 +84,9 @@ const singleNickname = computed(() => props.history.length === 1)
             <span class="text-gray-900 dark:text-white" :class="{ 'font-semibold text-[#de335e]': isCurrent(item) }">
               {{ item.name }}
             </span>
-            <UBadge v-if="isCurrent(item)" color="primary" variant="soft" size="xs">{{ t('views.charts.nicknameHistory.current') }}</UBadge>
+            <UBadge v-if="isCurrent(item)" color="primary" variant="soft" size="xs">
+              {{ t('views.charts.nicknameHistory.current') }}
+            </UBadge>
           </div>
           <div class="mt-0.5">
             <span class="text-xs text-gray-500 dark:text-gray-400">{{ formatPeriod(item.startTs, item.endTs) }}</span>
@@ -99,4 +101,3 @@ const singleNickname = computed(() => props.history.length === 1)
     <span class="text-sm text-gray-400">{{ t('views.charts.nicknameHistory.empty') }}</span>
   </div>
 </template>
-

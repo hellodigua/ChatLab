@@ -4,11 +4,7 @@
  */
 
 import { openReadonlyDatabase } from './core'
-import type {
-  FilterMessage,
-  ContextBlock,
-  FilterResultWithPagination,
-} from './types'
+import type { FilterMessage, ContextBlock, FilterResultWithPagination } from './types'
 
 /**
  * 按条件筛选消息并扩充上下文（支持分页）

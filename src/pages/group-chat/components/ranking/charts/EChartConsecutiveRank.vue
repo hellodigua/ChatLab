@@ -38,9 +38,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 // 限制显示数量
 const displayData = computed(() => {
-  return [...props.items]
-    .sort((a, b) => b.maxConsecutiveDays - a.maxConsecutiveDays)
-    .slice(0, props.topN)
+  return [...props.items].sort((a, b) => b.maxConsecutiveDays - a.maxConsecutiveDays).slice(0, props.topN)
 })
 
 // 计算图表高度
@@ -52,7 +50,10 @@ const chartHeight = computed(() => {
 // 柱状图颜色
 const barColorActive = {
   type: 'linear' as const,
-  x: 0, y: 0, x2: 1, y2: 0,
+  x: 0,
+  y: 0,
+  x2: 1,
+  y2: 0,
   colorStops: [
     { offset: 0, color: '#f97316' }, // orange-500
     { offset: 1, color: '#fb923c' }, // orange-400
@@ -61,7 +62,10 @@ const barColorActive = {
 
 const barColorInactive = {
   type: 'linear' as const,
-  x: 0, y: 0, x2: 1, y2: 0,
+  x: 0,
+  y: 0,
+  x2: 1,
+  y2: 0,
   colorStops: [
     { offset: 0, color: '#ec4899' }, // pink-500
     { offset: 1, color: '#f472b6' }, // pink-400

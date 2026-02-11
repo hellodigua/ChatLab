@@ -134,7 +134,13 @@ watch(
 
     <!-- 史诗级战役视图 -->
     <template v-if="activeTab === 'battle'">
-      <EChartBattleRank v-if="analysis.topBattles.length > 0" :battles="analysis.topBattles" title="" :top-n="topN" bare />
+      <EChartBattleRank
+        v-if="analysis.topBattles.length > 0"
+        :battles="analysis.topBattles"
+        title=""
+        :top-n="topN"
+        bare
+      />
       <div v-else class="py-8 text-center text-sm text-gray-400">暂无史诗级战役数据</div>
     </template>
 

@@ -225,7 +225,7 @@ async function* parseTxt(options: ParseOptions): AsyncGenerator<ParseEvent, void
       const rawNickname = headerMatch[2].trim()
       let nickname = cleanNickname(rawNickname) // 清理前缀污染
       // platformId: (id) 或 <email>，如果没有则使用昵称（讨论组格式）
-      let platformId = headerMatch[3] || headerMatch[4] || nickname
+      const platformId = headerMatch[3] || headerMatch[4] || nickname
 
       // 如果昵称和 ID 相同，可能是系统故障，使用之前记录的昵称
       if (nickname === platformId && headerMatch[3]) {

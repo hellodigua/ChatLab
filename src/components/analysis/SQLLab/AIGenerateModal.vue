@@ -289,7 +289,9 @@ function useAndRunSQL() {
           </UButton>
 
           <template v-else>
-            <UButton variant="outline" :loading="isGenerating" @click="generateSQL">{{ t('common.regenerate') }}</UButton>
+            <UButton variant="outline" :loading="isGenerating" @click="generateSQL">
+              {{ t('common.regenerate') }}
+            </UButton>
             <UButton variant="outline" @click="useGeneratedSQL">{{ t('ai.sqlLab.generate.useSQL') }}</UButton>
             <UButton color="primary" @click="useAndRunSQL">
               <UIcon name="i-heroicons-play" class="mr-1 h-4 w-4" />

@@ -7,11 +7,7 @@
 import { ref, computed, watch } from 'vue'
 import type { Ref } from 'vue'
 import type { RouteLocationNormalizedLoaded, Router } from 'vue-router'
-import type {
-  TimeRangeValue,
-  TimeSelectState,
-  TimeSelectMode,
-} from '@/components/common/TimeSelect.vue'
+import type { TimeRangeValue, TimeSelectState, TimeSelectMode } from '@/components/common/TimeSelect.vue'
 
 interface UseTimeSelectOptions {
   /** 当前激活的 Tab ref（用于 URL 同步） */
@@ -24,11 +20,7 @@ interface UseTimeSelectOptions {
   onTimeRangeChange?: () => void
 }
 
-export function useTimeSelect(
-  route: RouteLocationNormalizedLoaded,
-  router: Router,
-  options: UseTimeSelectOptions
-) {
+export function useTimeSelect(route: RouteLocationNormalizedLoaded, router: Router, options: UseTimeSelectOptions) {
   const { activeTab, isInitialLoad, currentSessionId, onTimeRangeChange } = options
 
   // ==================== 核心状态 ====================

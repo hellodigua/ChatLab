@@ -59,7 +59,7 @@ watch(
       :items="catchphraseAnalysis.members"
       :title="t('quotes.catchphrase.title')"
       :description="t('quotes.catchphrase.description', { count: catchphraseAnalysis.members.length })"
-      :countTemplate="t('quotes.catchphrase.countTemplate')"
+      :count-template="t('quotes.catchphrase.countTemplate')"
     >
       <template #item="{ item: member }">
         <div class="flex items-start gap-4">

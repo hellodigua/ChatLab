@@ -283,12 +283,7 @@ export class FormatSniffer {
   /**
    * 检查特征是否匹配
    */
-  private matchFeature(
-    feature: FormatFeature,
-    ext: string,
-    headContent: string,
-    filePath?: string
-  ): boolean {
+  private matchFeature(feature: FormatFeature, ext: string, headContent: string, filePath?: string): boolean {
     // 1. 检查扩展名
     if (!feature.extensions.includes(ext)) {
       return false

@@ -19,7 +19,9 @@ const props = defineProps<{
 }>()
 
 // 子 Tab 配置（私聊只有消息视图）
-const subTabs = computed(() => [{ id: 'message', label: t('analysis.subTabs.view.message'), icon: 'i-heroicons-chat-bubble-left-right' }])
+const subTabs = computed(() => [
+  { id: 'message', label: t('analysis.subTabs.view.message'), icon: 'i-heroicons-chat-bubble-left-right' },
+])
 
 const activeSubTab = ref('message')
 

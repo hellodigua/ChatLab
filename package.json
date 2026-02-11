@@ -63,6 +63,7 @@
     "@types/stream-json": "^1.7.8",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/eslint-config-prettier": "^10.2.0",
+    "@vue/eslint-config-typescript": "^14.6.0",
     "@vueuse/core": "^13.9.0",
     "axios": "^1.13.2",
     "cross-env": "^7.0.3",

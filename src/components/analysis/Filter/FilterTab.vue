@@ -287,8 +287,7 @@ async function exportFeedPack() {
         : undefined,
       senderIds: rawFilter.senderIds.length > 0 ? [...rawFilter.senderIds] : undefined,
       contextSize: rawFilter.contextSize,
-      chatSessionIds:
-        filterMode.value === 'session' ? [...toRaw(selectedSessionIds.value)] : undefined,
+      chatSessionIds: filterMode.value === 'session' ? [...toRaw(selectedSessionIds.value)] : undefined,
     }
 
     // 调用后端导出

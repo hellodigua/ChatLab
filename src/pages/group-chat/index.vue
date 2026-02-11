@@ -203,10 +203,8 @@ onMounted(() => {
         :description="
           t('analysis.groupChat.description', {
             dateRange: timeRangeValue?.displayLabel ?? '',
-            memberCount:
-              timeRangeValue?.isFullRange !== false ? session.memberCount : filteredMemberCount,
-            messageCount:
-              timeRangeValue?.isFullRange !== false ? session.messageCount : filteredMessageCount,
+            memberCount: timeRangeValue?.isFullRange !== false ? session.memberCount : filteredMemberCount,
+            messageCount: timeRangeValue?.isFullRange !== false ? session.messageCount : filteredMessageCount,
           })
         "
         :avatar="session.groupAvatar"

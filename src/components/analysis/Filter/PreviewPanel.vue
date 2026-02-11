@@ -218,7 +218,7 @@ function goToNextBlock() {
 }
 
 // 原本是跳转到上一个块，但体验不好，暂时禁用
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 function goToPrevBlock() {
   // 禁用向上跳转，用户可以通过点击左侧列表手动切换
 }
@@ -364,10 +364,11 @@ function handleBlockListScroll(event: Event) {
           <div class="flex-none px-3 py-2 border-b border-gray-200 dark:border-gray-700">
             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
               {{ t('analysis.filter.stats.blocks') }}
-              ({{ result.blocks.length
-              }}<template v-if="result.pagination && result.pagination.totalBlocks > result.blocks.length"
-                >/{{ result.pagination.totalBlocks }}</template
-              >)
+              ({{ result.blocks.length }}
+              <template v-if="result.pagination && result.pagination.totalBlocks > result.blocks.length">
+                /{{ result.pagination.totalBlocks }}
+              </template>
+              )
             </span>
           </div>
 
@@ -450,8 +451,8 @@ function handleBlockListScroll(event: Event) {
         <!-- 右侧：消息内容（复用 MessageList） -->
         <div class="flex-1 overflow-hidden">
           <MessageList
-            ref="messageListRef"
             v-if="currentBlockMessages.length > 0"
+            ref="messageListRef"
             :query="emptyQuery"
             :external-messages="currentBlockMessages"
             :hit-message-ids="hitMessageIds"

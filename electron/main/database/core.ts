@@ -414,9 +414,7 @@ export function checkMigrationNeeded(): {
       // 仅迁移聊天会话数据库：这里最小依赖是 meta + message
       // 这样可跳过非聊天库，同时避免把 member 缺失的异常库直接误归为“非聊天库”
       const requiredTableCount = db
-        .prepare(
-          "SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name IN ('meta', 'message')"
-        )
+        .prepare("SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name IN ('meta', 'message')")
         .get() as { cnt: number }
       const isChatSessionDb = requiredTableCount.cnt === 2
       if (!isChatSessionDb) {

@@ -309,7 +309,7 @@ async function* parseDiscordExporter(options: ParseOptions): AsyncGenerator<Pars
 
   // 收集成员和消息
   const memberMap = new Map<string, ParsedMember>()
-  let messageBatch: ParsedMessage[] = []
+  const messageBatch: ParsedMessage[] = []
 
   // 流式解析消息
   await new Promise<void>((resolve, reject) => {

@@ -218,7 +218,7 @@ onMounted(() => {
         icon="i-heroicons-magnifying-glass"
         class="w-100"
       >
-        <template #trailing v-if="searchQuery">
+        <template v-if="searchQuery" #trailing>
           <UButton icon="i-heroicons-x-mark" variant="link" color="neutral" size="xs" @click="searchQuery = ''" />
         </template>
       </UInput>
@@ -310,9 +310,9 @@ onMounted(() => {
                   <div class="max-w-xs">
                     <UInputTags
                       :model-value="member.aliases"
-                      @update:model-value="(val) => updateAliases(member, val)"
                       :placeholder="t('members.list.aliasPlaceholder')"
                       class="w-80"
+                      @update:model-value="(val) => updateAliases(member, val)"
                     />
                     <!-- 保存中指示器 -->
                     <div v-if="savingAliasesId === member.id" class="absolute right-2 top-1/2 -translate-y-1/2">
@@ -378,7 +378,7 @@ onMounted(() => {
     </div>
 
     <!-- 删除确认弹窗 -->
-    <UModal :open="!!deletingMember" @update:open="deletingMember = null" :ui="{ content: 'max-w-sm' }">
+    <UModal :open="!!deletingMember" :ui="{ content: 'max-w-sm' }" @update:open="deletingMember = null">
       <template #content>
         <div class="p-6 text-center">
           <div
@@ -397,11 +397,12 @@ onMounted(() => {
           </p>
           <div class="flex justify-center gap-3">
             <UButton variant="outline" @click="cancelDelete">{{ t('members.list.modal.cancel') }}</UButton>
-            <UButton color="error" :loading="isDeleting" @click="confirmDelete">{{ t('members.list.modal.confirm') }}</UButton>
+            <UButton color="error" :loading="isDeleting" @click="confirmDelete">
+              {{ t('members.list.modal.confirm') }}
+            </UButton>
           </div>
         </div>
       </template>
     </UModal>
   </div>
 </template>
-

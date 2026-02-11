@@ -164,7 +164,7 @@ export function generateSessions(
  */
 export function generateIncrementalSessions(
   sessionId: string,
-  gapThreshold: number = DEFAULT_SESSION_GAP_THRESHOLD,
+  gapThreshold: number = DEFAULT_SESSION_GAP_THRESHOLD
 ): number {
   // 先关闭缓存的只读连接
   closeDatabase(sessionId)
@@ -177,7 +177,9 @@ export function generateIncrementalSessions(
   try {
     // 1. 获取已索引消息的 ID 集合（通过 message_context 表）
     const indexedIds = new Set<number>()
-    const existingContextRows = db.prepare('SELECT message_id FROM message_context').all() as Array<{ message_id: number }>
+    const existingContextRows = db.prepare('SELECT message_id FROM message_context').all() as Array<{
+      message_id: number
+    }>
     for (const row of existingContextRows) {
       indexedIds.add(row.message_id)
     }
@@ -195,9 +197,9 @@ export function generateIncrementalSessions(
     }
 
     // 3. 获取最后一个已有会话的信息
-    const lastSession = db.prepare(
-      'SELECT id, end_ts FROM chat_session ORDER BY end_ts DESC LIMIT 1'
-    ).get() as { id: number; end_ts: number } | undefined
+    const lastSession = db.prepare('SELECT id, end_ts FROM chat_session ORDER BY end_ts DESC LIMIT 1').get() as
+      | { id: number; end_ts: number }
+      | undefined
 
     // 4. 按时间排序新消息，然后用 gap-based 算法切分
     newMessages.sort((a, b) => a.ts - b.ts || a.id - b.id)
@@ -231,7 +233,7 @@ export function generateIncrementalSessions(
 
         if (isFirst) {
           // 第一条新消息：检查是否能并入最后一个已有会话
-          if (lastSession && (msg.ts - lastSession.end_ts) <= gapThreshold * 1000) {
+          if (lastSession && msg.ts - lastSession.end_ts <= gapThreshold * 1000) {
             // 并入已有会话
             currentSessionId = lastSession.id
             currentEndTs = lastSession.end_ts
@@ -242,7 +244,7 @@ export function generateIncrementalSessions(
         } else {
           // 后续消息：检查与上一条的时间差
           const prevMsg = newMessages[i - 1]
-          if ((msg.ts - prevMsg.ts) > gapThreshold * 1000) {
+          if (msg.ts - prevMsg.ts > gapThreshold * 1000) {
             // 如果之前在追加已有会话，先更新它
             if (currentSessionId && appendCount > 0) {
               updateSessionEndAndCount.run(currentEndTs, appendCount, currentSessionId)

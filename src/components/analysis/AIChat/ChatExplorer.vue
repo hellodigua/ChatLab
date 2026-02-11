@@ -281,10 +281,10 @@ watch(
       ref="conversationListRef"
       :session-id="sessionId"
       :active-id="currentConversationId"
+      class="h-full shrink-0"
       @select="handleSelectConversation"
       @create="handleCreateConversation"
       @delete="handleDeleteConversation"
-      class="h-full shrink-0"
     />
 
     <!-- 中间：对话区域 -->
@@ -349,8 +349,8 @@ watch(
         <Transition name="fade-up">
           <button
             v-if="showScrollToBottom"
-            @click="handleScrollToBottom"
             class="absolute bottom-20 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-gray-800/90 px-3 py-1.5 text-xs text-white shadow-lg backdrop-blur-sm transition-all hover:bg-gray-700 dark:bg-gray-700/90 dark:hover:bg-gray-600"
+            @click="handleScrollToBottom"
           >
             <UIcon name="i-heroicons-arrow-down" class="h-3.5 w-3.5" />
             <span>{{ t('ai.chat.scrollToBottom') }}</span>

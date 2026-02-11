@@ -60,7 +60,9 @@ const formattedCount = computed(() => {
 
         <!-- 完整列表弹窗 -->
         <UModal v-model:open="isOpen" :ui="{ content: 'md:w-full max-w-3xl' }">
-          <UButton v-if="showViewAll" icon="i-heroicons-list-bullet" variant="ghost">{{ t('views.charts.listPro.fullRanking') }}</UButton>
+          <UButton v-if="showViewAll" icon="i-heroicons-list-bullet" variant="ghost">
+            {{ t('views.charts.listPro.fullRanking') }}
+          </UButton>
           <template #content>
             <div ref="modalBodyRef" class="section-content flex flex-col">
               <!-- Header -->
@@ -103,4 +105,3 @@ const formattedCount = computed(() => {
     </div>
   </div>
 </template>
-

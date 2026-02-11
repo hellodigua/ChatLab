@@ -120,8 +120,20 @@ function resetFilter() {
   <div class="border-b border-gray-200 px-4 py-3 dark:border-gray-800">
     <!-- 第一行：消息ID、成员、时间范围 -->
     <div class="flex items-center gap-3">
-      <UInput v-model="formData.messageId" type="number" :placeholder="t('records.filter.messageId')" size="sm" class="w-24" />
-      <UInput v-model="formData.memberName" :placeholder="t('records.filter.memberNotSupported')" size="sm" class="w-28" disabled />
+      <UInput
+        v-model="formData.messageId"
+        type="number"
+        :placeholder="t('records.filter.messageId')"
+        size="sm"
+        class="w-24"
+      />
+      <UInput
+        v-model="formData.memberName"
+        :placeholder="t('records.filter.memberNotSupported')"
+        size="sm"
+        class="w-28"
+        disabled
+      />
       <div class="flex items-center gap-2">
         <DatePicker v-model="formData.startDate" :placeholder="t('records.filter.startDate')" />
         <span class="text-xs text-gray-400">~</span>

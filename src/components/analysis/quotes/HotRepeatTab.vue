@@ -73,8 +73,8 @@ watch(
       :items="repeatAnalysis.hotContents"
       :title="t('quotes.hotRepeat.title')"
       :description="t('quotes.hotRepeat.description')"
-      :topN="50"
-      :countTemplate="t('quotes.hotRepeat.countTemplate')"
+      :top-n="50"
+      :count-template="t('quotes.hotRepeat.countTemplate')"
     >
       <template #item="{ item, index }">
         <div class="flex items-center gap-3">

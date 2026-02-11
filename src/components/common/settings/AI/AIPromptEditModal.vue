@@ -185,7 +185,7 @@ ${formData.value.responseRules}`
 </script>
 
 <template>
-  <UModal :open="open" @update:open="emit('update:open', $event)" :ui="{ content: 'md:w-full max-w-2xl' }">
+  <UModal :open="open" :ui="{ content: 'md:w-full max-w-2xl' }" @update:open="emit('update:open', $event)">
     <template #content>
       <div class="p-6">
         <!-- Header -->
@@ -201,7 +201,11 @@ ${formData.value.responseRules}`
             <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
               {{ t('settings.aiPrompt.modal.presetName') }}
             </label>
-            <UInput v-model="formData.name" :placeholder="t('settings.aiPrompt.modal.presetNamePlaceholder')" class="w-60" />
+            <UInput
+              v-model="formData.name"
+              :placeholder="t('settings.aiPrompt.modal.presetNamePlaceholder')"
+              class="w-60"
+            />
           </div>
 
           <!-- 适用场景（仅自定义预设显示） -->
@@ -213,19 +217,23 @@ ${formData.value.responseRules}`
             <div class="flex items-center gap-4">
               <label class="flex cursor-pointer items-center gap-2">
                 <input
-                  type="checkbox"
                   v-model="formData.supportGroup"
+                  type="checkbox"
                   class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                 />
-                <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.aiPrompt.modal.groupChat') }}</span>
+                <span class="text-sm text-gray-700 dark:text-gray-300">
+                  {{ t('settings.aiPrompt.modal.groupChat') }}
+                </span>
               </label>
               <label class="flex cursor-pointer items-center gap-2">
                 <input
-                  type="checkbox"
                   v-model="formData.supportPrivate"
+                  type="checkbox"
                   class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                 />
-                <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.aiPrompt.modal.privateChat') }}</span>
+                <span class="text-sm text-gray-700 dark:text-gray-300">
+                  {{ t('settings.aiPrompt.modal.privateChat') }}
+                </span>
               </label>
             </div>
           </div>

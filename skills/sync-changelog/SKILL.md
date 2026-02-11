@@ -20,8 +20,7 @@ description: 将 docs/changelogs_cn.json 的当前版本日志生成适合英文
    - 工作区干净，否则退出。
    - 位于 `main`，否则在干净前提下切换。
 
-可复用脚本：`scripts/preflight_main_clean.sh`
-当前仓库建议调用：
+可复用脚本：`scripts/preflight_main_clean.sh` 当前仓库建议调用：
 
 ```bash
 scripts/preflight_main_clean.sh . "package.json,docs/changelogs_cn.json"

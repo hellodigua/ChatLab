@@ -141,7 +141,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <UModal :open="isOpen" @update:open="handleOpenChange" :dismissible="canClose">
+  <UModal :open="isOpen" :dismissible="canClose" @update:open="handleOpenChange">
     <template #content>
       <div class="p-6">
         <!-- 头部 -->

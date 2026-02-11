@@ -293,7 +293,10 @@ async function loadMoreBefore() {
       virtualizer.value.scrollToOffset(currentOffset + estimatedAddedHeight)
 
       emit('count-change', messages.value.length)
-      emit('message-timestamps-change', messages.value.map((m) => m.timestamp))
+      emit(
+        'message-timestamps-change',
+        messages.value.map((m) => m.timestamp)
+      )
     }
 
     hasMoreBefore.value = result.hasMore
@@ -325,7 +328,10 @@ async function loadMoreAfter() {
         messages.value = [...messages.value, ...mapMessages(result.messages)]
         searchOffset.value += result.messages.length
         emit('count-change', messages.value.length)
-        emit('message-timestamps-change', messages.value.map((m) => m.timestamp))
+        emit(
+          'message-timestamps-change',
+          messages.value.map((m) => m.timestamp)
+        )
       }
 
       hasMoreAfter.value = result.messages.length >= 50
@@ -339,7 +345,10 @@ async function loadMoreAfter() {
       if (result.messages.length > 0) {
         messages.value = [...messages.value, ...mapMessages(result.messages)]
         emit('count-change', messages.value.length)
-        emit('message-timestamps-change', messages.value.map((m) => m.timestamp))
+        emit(
+          'message-timestamps-change',
+          messages.value.map((m) => m.timestamp)
+        )
       }
 
       hasMoreAfter.value = result.hasMore

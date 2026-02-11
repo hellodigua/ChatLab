@@ -153,9 +153,9 @@ export function setCustomDataDir(
       const newDir = getDefaultAppDataDir()
 
       // 防止目标目录是当前目录的子目录，避免递归复制
-    if (migrate && oldDir !== newDir && isSubPath(oldDir, newDir)) {
-      return { success: false, error: '目标目录不能是当前数据目录的子目录' }
-    }
+      if (migrate && oldDir !== newDir && isSubPath(oldDir, newDir)) {
+        return { success: false, error: '目标目录不能是当前数据目录的子目录' }
+      }
 
       // 先清除自定义配置，切回默认目录
       writeStorageConfig({})

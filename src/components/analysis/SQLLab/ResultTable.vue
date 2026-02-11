@@ -264,8 +264,8 @@ async function exportResult() {
   } catch (err) {
     console.error('导出失败:', err)
     toast.add({
-        title: t('common.exportFailed'),
-        description: String(err),
+      title: t('common.exportFailed'),
+      description: String(err),
       icon: 'i-heroicons-x-circle',
       color: 'error',
       duration: 3000,
@@ -568,7 +568,9 @@ defineExpose({ resetSort })
         <div class="max-h-[70vh] overflow-hidden p-6">
           <div class="mb-4 flex items-center gap-2">
             <UIcon name="i-heroicons-sparkles" class="h-5 w-5 text-pink-500" />
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('ai.sqlLab.result.summaryTitle') }}</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+              {{ t('ai.sqlLab.result.summaryTitle') }}
+            </h3>
           </div>
 
           <!-- 加载状态 -->

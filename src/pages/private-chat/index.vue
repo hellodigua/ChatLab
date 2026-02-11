@@ -212,8 +212,7 @@ onMounted(() => {
         :description="
           t('analysis.privateChat.description', {
             dateRange: timeRangeValue?.displayLabel ?? '',
-            messageCount:
-              timeRangeValue?.isFullRange !== false ? session.messageCount : filteredMessageCount,
+            messageCount: timeRangeValue?.isFullRange !== false ? session.messageCount : filteredMessageCount,
           })
         "
         :avatar="otherMemberAvatar"

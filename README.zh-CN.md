@@ -6,10 +6,7 @@
 
 [English](README.md) | 简体中文
 
-[项目主页](https://chatlab.fun/cn/) ·
-[项目文档](https://chatlab.fun/cn/usage/) ·
-[路线图](https://chatlabfun.featurebase.app/roadmap) ·
-[问题提交](https://github.com/hellodigua/ChatLab/issues)
+[项目主页](https://chatlab.fun/cn/) · [项目文档](https://chatlab.fun/cn/usage/) · [路线图](https://chatlabfun.featurebase.app/roadmap) · [问题提交](https://github.com/hellodigua/ChatLab/issues)
 
 </div>
 

@@ -32,12 +32,19 @@ defineProps<{
       icon-bg="blue"
     >
       <template #subtext>
-        <span class="text-sm text-gray-500">{{ t('analysis.overview.statCards.daysCount', { count: durationDays }) }}</span>
+        <span class="text-sm text-gray-500">
+          {{ t('analysis.overview.statCards.daysCount', { count: durationDays }) }}
+        </span>
       </template>
     </StatCard>
 
     <!-- 图片/表情 -->
-    <StatCard :label="t('analysis.overview.statCards.imageMessages')" :value="t('analysis.overview.statCards.imagesCount', { count: imageCount })" icon="📸" icon-bg="pink">
+    <StatCard
+      :label="t('analysis.overview.statCards.imageMessages')"
+      :value="t('analysis.overview.statCards.imagesCount', { count: imageCount })"
+      icon="📸"
+      icon-bg="pink"
+    >
       <template #subtext>
         <span class="text-sm text-gray-500">{{ t('analysis.overview.statCards.peakHour') }}</span>
         <span class="font-semibold text-pink-500">{{ peakHour?.hour || 0 }}:00</span>
@@ -52,12 +59,19 @@ defineProps<{
       icon-bg="amber"
     >
       <template #subtext>
-        <span class="text-sm text-gray-500">{{ t('analysis.overview.statCards.messagesOnDay', { count: peakWeekday?.messageCount ?? 0 }) }}</span>
+        <span class="text-sm text-gray-500">
+          {{ t('analysis.overview.statCards.messagesOnDay', { count: peakWeekday?.messageCount ?? 0 }) }}
+        </span>
       </template>
     </StatCard>
 
     <!-- 周末活跃度 -->
-    <StatCard :label="t('analysis.overview.statCards.weekendActivity')" :value="`${weekdayVsWeekend.weekend}%`" icon="🏖️" icon-bg="green">
+    <StatCard
+      :label="t('analysis.overview.statCards.weekendActivity')"
+      :value="`${weekdayVsWeekend.weekend}%`"
+      icon="🏖️"
+      icon-bg="green"
+    >
       <template #subtext>
         <span class="text-sm text-gray-500">{{ t('analysis.overview.statCards.weekendRatio') }}</span>
       </template>
@@ -71,14 +85,18 @@ defineProps<{
       icon-bg="red"
     >
       <template #subtext>
-        <span class="text-sm text-gray-500">{{ t('analysis.overview.statCards.messagesOnDay', { count: peakDay?.messageCount ?? 0 }) }}</span>
+        <span class="text-sm text-gray-500">
+          {{ t('analysis.overview.statCards.messagesOnDay', { count: peakDay?.messageCount ?? 0 }) }}
+        </span>
       </template>
     </StatCard>
 
     <!-- 活跃天数 -->
     <StatCard :label="t('analysis.overview.statCards.activeDays')" :value="`${activeDays}`" icon="📆" icon-bg="blue">
       <template #subtext>
-        <span class="text-sm text-gray-500">{{ t('analysis.overview.statCards.slashDays', { count: totalDays }) }}</span>
+        <span class="text-sm text-gray-500">
+          {{ t('analysis.overview.statCards.slashDays', { count: totalDays }) }}
+        </span>
       </template>
     </StatCard>
 

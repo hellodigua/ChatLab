@@ -71,7 +71,9 @@ onMounted(() => {
   >
     <!-- 面板头部 -->
     <div class="flex items-center justify-between border-b border-gray-200 p-2 dark:border-gray-800">
-      <span v-if="!isCollapsed" class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ t('ai.sqlLab.schema.tables') }}</span>
+      <span v-if="!isCollapsed" class="text-xs font-medium text-gray-500 dark:text-gray-400">
+        {{ t('ai.sqlLab.schema.tables') }}
+      </span>
       <button
         class="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
         @click="isCollapsed = !isCollapsed"

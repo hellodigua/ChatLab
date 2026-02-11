@@ -46,7 +46,7 @@ defineExpose({
 
 // Template refs
 const aiModelConfigRef = ref<InstanceType<typeof AIModelConfigTab> | null>(null)
-void aiModelConfigRef
+void aiModelConfigRef.value
 </script>
 
 <template>

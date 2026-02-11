@@ -166,7 +166,9 @@ const newTemplateKeyword = ref('')
 
 // 是否编辑模式
 const isEditMode = computed(() => editingTemplateId.value !== null)
-const modalTitle = computed(() => (isEditMode.value ? t('quotes.keywords.modal.editTitle') : t('quotes.keywords.modal.createTitle')))
+const modalTitle = computed(() =>
+  isEditMode.value ? t('quotes.keywords.modal.editTitle') : t('quotes.keywords.modal.createTitle')
+)
 
 // 打开创建模板弹窗
 function openCreateModal() {
@@ -373,8 +375,8 @@ watch(
     :items="rankData"
     :title="t('quotes.keywords.title')"
     :description="t('quotes.keywords.description')"
-    :topN="10"
-    :countTemplate="t('quotes.keywords.countTemplate')"
+    :top-n="10"
+    :count-template="t('quotes.keywords.countTemplate')"
   >
     <!-- 配置区 -->
     <template #config>
@@ -429,7 +431,9 @@ watch(
                 <h3 class="mb-3 font-semibold text-gray-900 dark:text-white">{{ modalTitle }}</h3>
                 <div class="space-y-3">
                   <div>
-                    <label class="mb-1 block text-xs text-gray-500">{{ t('quotes.keywords.modal.templateName') }}</label>
+                    <label class="mb-1 block text-xs text-gray-500">
+                      {{ t('quotes.keywords.modal.templateName') }}
+                    </label>
                     <UInput v-model="templateName" :placeholder="t('quotes.keywords.modal.templateNamePlaceholder')" />
                   </div>
                   <div>

@@ -356,8 +356,8 @@ function formatTs(ts: number) {
               :color="queryMode === 'range' ? 'primary' : 'neutral'"
               :variant="queryMode === 'range' ? 'solid' : 'ghost'"
               size="sm"
-              @click="queryMode = 'range'"
               :disabled="isGenerating"
+              @click="queryMode = 'range'"
             >
               {{ t('records.batchSummary.byRange', '按范围') }}
             </UButton>
@@ -365,8 +365,8 @@ function formatTs(ts: number) {
               :color="queryMode === 'time' ? 'primary' : 'neutral'"
               :variant="queryMode === 'time' ? 'solid' : 'ghost'"
               size="sm"
-              @click="queryMode = 'time'"
               :disabled="isGenerating"
+              @click="queryMode = 'time'"
             >
               {{ t('records.batchSummary.byTime', '按时间') }}
             </UButton>
@@ -414,8 +414,8 @@ function formatTs(ts: number) {
                 :color="selectedPreset === preset.key ? 'primary' : 'neutral'"
                 :variant="selectedPreset === preset.key ? 'solid' : 'outline'"
                 size="sm"
-                @click="selectedPreset = preset.key as TimeRangePreset"
                 :disabled="isGenerating"
+                @click="selectedPreset = preset.key as TimeRangePreset"
               >
                 {{ preset.label }}
               </UButton>
@@ -423,9 +423,9 @@ function formatTs(ts: number) {
 
             <!-- 自定义日期选择 -->
             <div v-if="selectedPreset === 'custom'" class="mt-3 flex items-center gap-2">
-              <UInput type="date" v-model="customStartDate" :disabled="isGenerating" size="sm" />
+              <UInput v-model="customStartDate" type="date" :disabled="isGenerating" size="sm" />
               <span class="text-gray-500">—</span>
-              <UInput type="date" v-model="customEndDate" :disabled="isGenerating" size="sm" />
+              <UInput v-model="customEndDate" type="date" :disabled="isGenerating" size="sm" />
             </div>
           </div>
 
@@ -514,9 +514,7 @@ function formatTs(ts: number) {
                     'text-red-500': result.status === 'failed',
                   }"
                 />
-                <span class="flex-1 font-medium">
-                  {{ t('records.batchSummary.session', '会话') }} #{{ result.id }}
-                </span>
+                <span class="flex-1 font-medium">{{ t('records.batchSummary.session', '会话') }} #{{ result.id }}</span>
                 <span
                   class="flex-shrink-0 text-xs"
                   :class="{
@@ -566,14 +564,14 @@ function formatTs(ts: number) {
 
         <template #footer>
           <div class="flex justify-end gap-2">
-            <UButton color="neutral" variant="outline" @click="close" :disabled="isGenerating">
+            <UButton color="neutral" variant="outline" :disabled="isGenerating" @click="close">
               {{ t('common.close', '关闭') }}
             </UButton>
             <UButton
               v-if="!isGenerating"
               color="primary"
-              @click="startGenerate"
               :disabled="pendingSessions.length === 0 || isLoading"
+              @click="startGenerate"
             >
               {{ t('records.batchSummary.start', '开始生成') }}
             </UButton>

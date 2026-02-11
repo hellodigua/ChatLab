@@ -75,7 +75,11 @@ watch(
   <div id="streak-rank" class="scroll-mt-24">
     <LoadingState v-if="isLoading" text="正在分析数据..." />
 
-    <SectionCard v-else-if="analysis && analysis.streakRank.length > 0" :title="streakTitle" :description="streakDescription">
+    <SectionCard
+      v-else-if="analysis && analysis.streakRank.length > 0"
+      :title="streakTitle"
+      :description="streakDescription"
+    >
       <template #headerRight>
         <div class="flex items-center gap-3">
           <TopNSelect v-if="showTopNSelect" v-model="topN" />

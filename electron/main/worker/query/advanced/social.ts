@@ -818,7 +818,10 @@ export function getClusterGraph(
     .all(...params) as Array<{ senderId: number; ts: number }>
 
   if (messages.length < 2) {
-    return { ...emptyResult, stats: { ...emptyResult.stats, totalMembers: members.length, totalMessages: messages.length } }
+    return {
+      ...emptyResult,
+      stats: { ...emptyResult.stats, totalMembers: members.length, totalMessages: messages.length },
+    }
   }
 
   // 3. 统计每个成员的消息数（用于归一化）

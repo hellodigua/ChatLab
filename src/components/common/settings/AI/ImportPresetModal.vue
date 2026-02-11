@@ -162,20 +162,24 @@ watch(
 </script>
 
 <template>
-  <UModal :open="open" @update:open="emit('update:open', $event)" :ui="{ content: 'md:w-full max-w-lg' }">
+  <UModal :open="open" :ui="{ content: 'md:w-full max-w-lg' }" @update:open="emit('update:open', $event)">
     <template #content>
       <div class="p-6">
         <!-- Header -->
         <div class="mb-4 flex items-center justify-between">
           <div class="flex items-center gap-2">
             <UIcon name="i-heroicons-cloud-arrow-down" class="h-5 w-5 text-primary-500" />
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('settings.aiPrompt.importPreset.title') }}</h2>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+              {{ t('settings.aiPrompt.importPreset.title') }}
+            </h2>
           </div>
           <UButton icon="i-heroicons-x-mark" variant="ghost" size="sm" @click="closeModal" />
         </div>
 
         <!-- 描述 -->
-        <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">{{ t('settings.aiPrompt.importPreset.description') }}</p>
+        <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+          {{ t('settings.aiPrompt.importPreset.description') }}
+        </p>
 
         <!-- 内容区域 -->
         <div class="max-h-[400px] overflow-y-auto">
@@ -255,7 +259,7 @@ watch(
   </UModal>
 
   <!-- 预览弹窗 -->
-  <UModal :open="!!previewPreset" @update:open="closePreview" :ui="{ content: 'md:w-full max-w-2xl' }">
+  <UModal :open="!!previewPreset" :ui="{ content: 'md:w-full max-w-2xl' }" @update:open="closePreview">
     <template #content>
       <div class="p-6">
         <div class="mb-4 flex items-center justify-between">

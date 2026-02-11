@@ -22,7 +22,7 @@ const props = withDefaults(defineProps<Props>(), {
 // 计算最大高度（像素）
 const maxHeightPx = computed(() => {
   if (typeof window === 'undefined') return 500
-  return Math.round(window.innerHeight * props.maxHeightVh / 100)
+  return Math.round((window.innerHeight * props.maxHeightVh) / 100)
 })
 
 // 是否需要滚动

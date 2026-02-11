@@ -171,12 +171,7 @@ watch(
 </script>
 
 <template>
-  <UDrawer
-    v-model:open="layoutStore.showChatRecordDrawer"
-    direction="right"
-    :handle="false"
-    :ui="{ content: 'z-50' }"
-  >
+  <UDrawer v-model:open="layoutStore.showChatRecordDrawer" direction="right" :handle="false" :ui="{ content: 'z-50' }">
     <template #content>
       <div class="flex h-full w-[680px] flex-col bg-white dark:bg-gray-900" style="-webkit-app-region: no-drag">
         <!-- 头部 -->
@@ -202,12 +197,12 @@ watch(
           <!-- 会话时间线 -->
           <SessionTimeline
             v-if="currentSessionId"
+            v-model:collapsed="timelineCollapsed"
             :session-id="currentSessionId"
             :active-session-id="activeSessionId"
             :filter-start-ts="localQuery.startTs"
             :filter-end-ts="localQuery.endTs"
             :filter-matched-session-ids="matchedSessionIds"
-            v-model:collapsed="timelineCollapsed"
             @select="handleSessionSelect"
           />
 
@@ -232,4 +227,3 @@ watch(
     </template>
   </UDrawer>
 </template>
-

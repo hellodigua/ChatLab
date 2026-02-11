@@ -341,9 +341,7 @@ function getSessionAvatar(session: AnalysisSession): string | null {
                     />
                   </div>
                   <p class="truncate text-xs text-gray-500 dark:text-gray-400">
-                    {{
-                      t('layout.sessionInfo', { count: session.messageCount, time: formatTime(session.importedAt) })
-                    }}
+                    {{ t('layout.sessionInfo', { count: session.messageCount, time: formatTime(session.importedAt) }) }}
                   </p>
                 </div>
               </div>

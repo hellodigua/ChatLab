@@ -103,8 +103,8 @@ watch(
         <!-- 单向关注 -->
         <!-- 有严重BUG，很不准，先隐藏 -->
         <SectionCard
-          class="hidden"
           v-if="mentionAnalysis.oneWay.length > 0"
+          class="hidden"
           :title="t('members.relationships.oneWay.title')"
           :description="t('members.relationships.oneWay.description', { count: mentionAnalysis.oneWay.length })"
         >
@@ -148,7 +148,9 @@ watch(
 
               <!-- 反向数据 -->
               <div class="shrink-0 text-right text-sm text-gray-500">
-                <span v-if="pair.toFromCount === 0" class="text-red-500">{{ t('members.relationships.oneWay.neverRespond') }}</span>
+                <span v-if="pair.toFromCount === 0" class="text-red-500">
+                  {{ t('members.relationships.oneWay.neverRespond') }}
+                </span>
                 <span v-else>{{ t('members.relationships.oneWay.reverse', { count: pair.toFromCount }) }}</span>
               </div>
 
@@ -243,7 +245,9 @@ watch(
 
           <!-- 该成员最常 @ 的人 -->
           <div v-if="selectedMemberDetail.topMentioned.length > 0" class="mb-4">
-            <h4 class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('members.relationships.modal.topMentioned') }}</h4>
+            <h4 class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+              {{ t('members.relationships.modal.topMentioned') }}
+            </h4>
             <div class="space-y-2">
               <div
                 v-for="(item, index) in selectedMemberDetail.topMentioned"
@@ -253,14 +257,18 @@ watch(
                 <span class="text-sm font-medium text-gray-900 dark:text-white">
                   {{ item.toName }}
                 </span>
-                <span class="text-xs text-gray-500">{{ t('members.relationships.modal.timesCount', { count: item.count }) }}</span>
+                <span class="text-xs text-gray-500">
+                  {{ t('members.relationships.modal.timesCount', { count: item.count }) }}
+                </span>
               </div>
             </div>
           </div>
 
           <!-- 最常 @ 该成员的人 -->
           <div v-if="selectedMemberDetail.topMentioners.length > 0">
-            <h4 class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('members.relationships.modal.topMentioners') }}</h4>
+            <h4 class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+              {{ t('members.relationships.modal.topMentioners') }}
+            </h4>
             <div class="space-y-2">
               <div
                 v-for="(item, index) in selectedMemberDetail.topMentioners"
@@ -270,17 +278,20 @@ watch(
                 <span class="text-sm font-medium text-gray-900 dark:text-white">
                   {{ item.fromName }}
                 </span>
-                <span class="text-xs text-gray-500">{{ t('members.relationships.modal.timesCount', { count: item.count }) }}</span>
+                <span class="text-xs text-gray-500">
+                  {{ t('members.relationships.modal.timesCount', { count: item.count }) }}
+                </span>
               </div>
             </div>
           </div>
 
           <div class="mt-4 flex justify-end">
-            <UButton variant="soft" @click="showMemberDetailModal = false">{{ t('members.relationships.modal.close') }}</UButton>
+            <UButton variant="soft" @click="showMemberDetailModal = false">
+              {{ t('members.relationships.modal.close') }}
+            </UButton>
           </div>
         </div>
       </template>
     </UModal>
   </div>
 </template>
-

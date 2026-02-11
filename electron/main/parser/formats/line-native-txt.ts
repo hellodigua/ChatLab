@@ -160,48 +160,48 @@ const SYSTEM_MSG_PATTERN = /^((?:上午|下午|午前|午後)?\d{1,2}:\d{2}(?:[A
  */
 const SPECIAL_MESSAGE_TYPES: Record<string, MessageType> = {
   // 图片 / Photo
-  '[Photo]': MessageType.IMAGE,       // EN
-  '[照片]': MessageType.IMAGE,        // ZH-CN / ZH-TW
-  '[写真]': MessageType.IMAGE,        // JA
-  Photos: MessageType.IMAGE,          // EN (fallback)
+  '[Photo]': MessageType.IMAGE, // EN
+  '[照片]': MessageType.IMAGE, // ZH-CN / ZH-TW
+  '[写真]': MessageType.IMAGE, // JA
+  Photos: MessageType.IMAGE, // EN (fallback)
 
   // 语音 / Voice
-  '[Voice message]': MessageType.VOICE,   // EN
-  '[语音信息]': MessageType.VOICE,        // ZH-CN
-  '[語音訊息]': MessageType.VOICE,        // ZH-TW
+  '[Voice message]': MessageType.VOICE, // EN
+  '[语音信息]': MessageType.VOICE, // ZH-CN
+  '[語音訊息]': MessageType.VOICE, // ZH-TW
   '[ボイスメッセージ]': MessageType.VOICE, // JA
-  Audio: MessageType.VOICE,               // EN (fallback)
+  Audio: MessageType.VOICE, // EN (fallback)
 
   // 视频 / Video
-  '[Video]': MessageType.VIDEO,       // EN
-  '[视频]': MessageType.VIDEO,        // ZH-CN
-  '[影片]': MessageType.VIDEO,        // ZH-TW
-  '[動画]': MessageType.VIDEO,        // JA
-  Videos: MessageType.VIDEO,          // EN (fallback)
+  '[Video]': MessageType.VIDEO, // EN
+  '[视频]': MessageType.VIDEO, // ZH-CN
+  '[影片]': MessageType.VIDEO, // ZH-TW
+  '[動画]': MessageType.VIDEO, // JA
+  Videos: MessageType.VIDEO, // EN (fallback)
 
   // 文件 / File
-  '[File]': MessageType.FILE,         // EN
-  '[文件]': MessageType.FILE,         // ZH-CN
-  '[檔案]': MessageType.FILE,         // ZH-TW
-  '[ファイル]': MessageType.FILE,     // JA
+  '[File]': MessageType.FILE, // EN
+  '[文件]': MessageType.FILE, // ZH-CN
+  '[檔案]': MessageType.FILE, // ZH-TW
+  '[ファイル]': MessageType.FILE, // JA
 
   // 贴纸 / Sticker
-  '[Sticker]': MessageType.EMOJI,     // EN
-  '[贴图]': MessageType.EMOJI,        // ZH-CN
-  '[貼圖]': MessageType.EMOJI,        // ZH-TW
-  '[スタンプ]': MessageType.EMOJI,    // JA
-  Stickers: MessageType.EMOJI,        // EN (fallback)
+  '[Sticker]': MessageType.EMOJI, // EN
+  '[贴图]': MessageType.EMOJI, // ZH-CN
+  '[貼圖]': MessageType.EMOJI, // ZH-TW
+  '[スタンプ]': MessageType.EMOJI, // JA
+  Stickers: MessageType.EMOJI, // EN (fallback)
 
   // 位置 / Location
   '[Location]': MessageType.LOCATION, // EN
-  '[位置]': MessageType.LOCATION,     // ZH-CN / ZH-TW
+  '[位置]': MessageType.LOCATION, // ZH-CN / ZH-TW
   '[位置情報]': MessageType.LOCATION, // JA
 
   // 记事本 / Notes
-  '[Notes]': MessageType.TEXT,        // EN
-  '[记事本]': MessageType.TEXT,       // ZH-CN
-  '[記事本]': MessageType.TEXT,       // ZH-TW
-  '[ノート]': MessageType.TEXT,       // JA
+  '[Notes]': MessageType.TEXT, // EN
+  '[记事本]': MessageType.TEXT, // ZH-CN
+  '[記事本]': MessageType.TEXT, // ZH-TW
+  '[ノート]': MessageType.TEXT, // JA
 }
 
 /**
@@ -223,42 +223,37 @@ function detectMessageType(content: string): MessageType {
   // 检查系统消息（多语言：EN / ZH-CN / ZH-TW / JA）
   if (
     // --- 加入群组 / Join group ---
-    content.includes(' joined the group') ||        // EN
-    content.includes('已加入该群') ||               // ZH-CN
-    content.includes('已加入群組') ||               // ZH-TW
+    content.includes(' joined the group') || // EN
+    content.includes('已加入该群') || // ZH-CN
+    content.includes('已加入群組') || // ZH-TW
     content.includes('がグループに参加しました') || // JA
-
     // --- 拉人进群 / Added to group ---
-    content.includes(' added ') ||                  // EN
-    content.includes(' to the group') ||            // EN
-    content.includes('已将') ||                     // ZH-CN
-    content.includes('添加至群') ||                 // ZH-CN
-    content.includes('添加到群') ||                 // ZH-CN (另一格式)
-    content.includes('已新增') ||                   // ZH-TW
-    content.includes('至群組') ||                   // ZH-TW
+    content.includes(' added ') || // EN
+    content.includes(' to the group') || // EN
+    content.includes('已将') || // ZH-CN
+    content.includes('添加至群') || // ZH-CN
+    content.includes('添加到群') || // ZH-CN (另一格式)
+    content.includes('已新增') || // ZH-TW
+    content.includes('至群組') || // ZH-TW
     content.includes('をグループに追加しました') || // JA
-
     // --- 退出群组 / Left group ---
-    content.includes(' left the group') ||          // EN
-    content.includes('已退群') ||                   // ZH-CN
-    content.includes('已離開群組') ||               // ZH-TW
+    content.includes(' left the group') || // EN
+    content.includes('已退群') || // ZH-CN
+    content.includes('已離開群組') || // ZH-TW
     content.includes('がグループを退会しました') || // JA
-
     // --- 设定公告 / Announcement ---
-    content.includes('made an announcement') ||     // EN
-    content.includes('发布了通告') ||               // ZH-CN
-    content.includes('已設定公告') ||               // ZH-TW
-    content.includes('がアナウンスしました') ||     // JA
-
+    content.includes('made an announcement') || // EN
+    content.includes('发布了通告') || // ZH-CN
+    content.includes('已設定公告') || // ZH-TW
+    content.includes('がアナウンスしました') || // JA
     // --- 收回讯息 / Unsent message ---
-    content.includes('unsent a message') ||         // EN
-    content === 'Message unsent.' ||                // EN
-    content.includes('撤回了一条消息') ||           // ZH-CN
-    content.includes('已收回訊息') ||               // ZH-TW
-    content.includes('送信を取り消しました') ||     // JA
-
+    content.includes('unsent a message') || // EN
+    content === 'Message unsent.' || // EN
+    content.includes('撤回了一条消息') || // ZH-CN
+    content.includes('已收回訊息') || // ZH-TW
+    content.includes('送信を取り消しました') || // JA
     // --- 其他 / Others ---
-    content.startsWith('Auto-reply')                // EN 自动回复
+    content.startsWith('Auto-reply') // EN 自动回复
   ) {
     return MessageType.SYSTEM
   }

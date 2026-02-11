@@ -40,7 +40,7 @@ export const GEMINI_INFO: ProviderInfo = {
  * 统一处理 Gemini 的 baseUrl，确保包含 /v1beta
  */
 function normalizeBaseUrl(baseUrl?: string): string {
-  let normalized = (baseUrl || DEFAULT_BASE_URL).replace(/\/+$/, '')
+  const normalized = (baseUrl || DEFAULT_BASE_URL).replace(/\/+$/, '')
 
   if (normalized.endsWith(DEFAULT_API_VERSION)) {
     return normalized

@@ -78,7 +78,6 @@ const posFilterModeOptions = computed(() => [
   { label: t('quotes.wordcloud.posFilter.custom'), value: 'custom' },
 ])
 
-
 // 词数选项
 const maxWordsOptions = [
   { label: '80', value: 80 },
@@ -256,7 +255,9 @@ onMounted(() => {
               <div class="text-2xl font-bold text-gray-900 dark:text-white">
                 {{ stats.totalMessages.toLocaleString() }}
               </div>
-              <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('quotes.wordcloud.stats.messagesLabel') }}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">
+                {{ t('quotes.wordcloud.stats.messagesLabel') }}
+              </div>
             </div>
           </div>
           <div class="h-8 w-px bg-gray-200 dark:bg-gray-700" />
@@ -286,25 +287,33 @@ onMounted(() => {
       <div class="w-[300px] shrink-0 space-y-4">
         <!-- 显示词数 -->
         <div>
-          <h4 class="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('quotes.wordcloud.config.maxWords') }}</h4>
+          <h4 class="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">
+            {{ t('quotes.wordcloud.config.maxWords') }}
+          </h4>
           <UITabs v-model="maxWords" size="xs" :items="maxWordsOptions" />
         </div>
 
         <!-- 字体大小 -->
         <div>
-          <h4 class="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('quotes.wordcloud.config.sizeScale') }}</h4>
+          <h4 class="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">
+            {{ t('quotes.wordcloud.config.sizeScale') }}
+          </h4>
           <UITabs v-model="sizeScale" size="xs" :items="sizeScaleOptions" />
         </div>
 
         <!-- 用户筛选 -->
         <div>
-          <h4 class="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('quotes.wordcloud.config.userFilter') }}</h4>
+          <h4 class="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">
+            {{ t('quotes.wordcloud.config.userFilter') }}
+          </h4>
           <UserSelect v-model="selectedMemberId" :session-id="props.sessionId" class="w-full" />
         </div>
 
         <!-- 词性过滤 -->
         <div>
-          <h4 class="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('quotes.wordcloud.config.posFilter') }}</h4>
+          <h4 class="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">
+            {{ t('quotes.wordcloud.config.posFilter') }}
+          </h4>
           <UITabs v-model="posFilterMode" size="xs" :items="posFilterModeOptions" />
         </div>
 
@@ -316,7 +325,9 @@ onMounted(() => {
         <!-- 自定义词性选择（仅在 custom 模式下显示） -->
         <div v-if="posFilterMode === 'custom'" class="space-y-2">
           <div class="flex items-center justify-between">
-            <h4 class="text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('quotes.wordcloud.posFilter.customHint') }}</h4>
+            <h4 class="text-xs font-medium text-gray-600 dark:text-gray-400">
+              {{ t('quotes.wordcloud.posFilter.customHint') }}
+            </h4>
             <!-- 快捷操作 -->
             <div class="flex gap-1">
               <UButton
