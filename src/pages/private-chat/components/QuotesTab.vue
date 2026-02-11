@@ -18,9 +18,9 @@ const props = defineProps<{
 
 // 子 Tab 配置（私聊：词云、口头禅、关键词分析）
 const subTabs = computed(() => [
-  { id: 'wordcloud', label: t('wordcloud'), icon: 'i-heroicons-cloud' },
-  { id: 'catchphrase', label: t('catchphrase'), icon: 'i-heroicons-chat-bubble-bottom-center-text' },
-  { id: 'keyword', label: t('keywordAnalysis'), icon: 'i-heroicons-magnifying-glass' },
+  { id: 'wordcloud', label: t('analysis.subTabs.quotes.wordcloud'), icon: 'i-heroicons-cloud' },
+  { id: 'catchphrase', label: t('analysis.subTabs.quotes.catchphrase'), icon: 'i-heroicons-chat-bubble-bottom-center-text' },
+  { id: 'keyword', label: t('analysis.subTabs.quotes.keywordAnalysis'), icon: 'i-heroicons-magnifying-glass' },
 ])
 
 const activeSubTab = ref('wordcloud')
@@ -68,18 +68,3 @@ const activeSubTab = ref('wordcloud')
   opacity: 0;
 }
 </style>
-
-<i18n>
-{
-  "zh-CN": {
-    "catchphrase": "口头禅",
-    "wordcloud": "词云",
-    "keywordAnalysis": "关键词分析"
-  },
-  "en-US": {
-    "catchphrase": "Catchphrases",
-    "wordcloud": "Word Cloud",
-    "keywordAnalysis": "Keyword Analysis"
-  }
-}
-</i18n>

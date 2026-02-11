@@ -41,14 +41,14 @@ const groupOnlyTabs = ['mbti', 'cyber-friend', 'campus']
 
 // 所有子 Tab 配置
 const allSubTabs = computed(() => [
-  { id: 'chat-explorer', label: t('chatExplorer'), icon: 'i-heroicons-chat-bubble-left-ellipsis' },
+  { id: 'chat-explorer', label: t('ai.tab.chatExplorer'), icon: 'i-heroicons-chat-bubble-left-ellipsis' },
   {
     id: 'manual',
-    label: t('filterAnalysis'),
-    desc: t('filterAnalysisDesc'),
+    label: t('ai.tab.filterAnalysis'),
+    desc: t('ai.tab.filterAnalysisDesc'),
     icon: 'i-heroicons-adjustments-horizontal',
   },
-  { id: 'sql-lab', label: t('sqlLab'), icon: 'i-heroicons-command-line' },
+  { id: 'sql-lab', label: t('ai.tab.sqlLab'), icon: 'i-heroicons-command-line' },
 ])
 
 // 根据聊天类型过滤显示的子 Tab
@@ -111,14 +111,14 @@ defineExpose({
             <div class="text-center">
               <UIcon :name="subTabs.find((t) => t.id === activeSubTab)?.icon" class="mx-auto h-12 w-12 text-gray-400" />
               <p class="mt-3 text-sm font-medium text-gray-600 dark:text-gray-400">
-                {{ t('featureInDev', { name: subTabs.find((tab) => tab.id === activeSubTab)?.label || '' }) }}
+                {{ t('ai.tab.featureInDev', { name: subTabs.find((tab) => tab.id === activeSubTab)?.label || '' }) }}
               </p>
               <p class="mt-1 max-w-md px-4 text-sm text-gray-500">
-                {{ subTabs.find((tab) => tab.id === activeSubTab)?.desc || t('comingSoon') }}
+                {{ subTabs.find((tab) => tab.id === activeSubTab)?.desc || t('ai.tab.comingSoon') }}
               </p>
 
               <div class="mt-8 flex items-center justify-center gap-1 text-xs text-gray-400">
-                <span>{{ t('followNotice') }}</span>
+                <span>{{ t('ai.tab.followNotice') }}</span>
                 <UButton
                   :to="followLink.url"
                   target="_blank"
@@ -148,26 +148,3 @@ defineExpose({
   opacity: 0;
 }
 </style>
-
-<i18n>
-{
-  "zh-CN": {
-    "chatExplorer": "对话式探索",
-    "sqlLab": "SQL实验室",
-    "filterAnalysis": "自定义筛选",
-    "filterAnalysisDesc": "计划实现高级筛选功能，可以先按人/按时间/按搜索内容手动筛选，然后再进行AI分析",
-    "featureInDev": "{name}功能开发中",
-    "comingSoon": "敬请期待...",
-    "followNotice": "功能上线通知，欢迎关注我的小红书"
-  },
-  "en-US": {
-    "chatExplorer": "Chat Explorer",
-    "sqlLab": "SQL Lab",
-    "filterAnalysis": "Filter Analysis",
-    "filterAnalysisDesc": "Advanced filtering feature is planned. You can filter by person, time, or search content before AI analysis",
-    "featureInDev": "{name} is in development",
-    "comingSoon": "Coming soon...",
-    "followNotice": "Follow me on X for updates"
-  }
-}
-</i18n>

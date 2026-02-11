@@ -101,17 +101,17 @@ onMounted(async () => {
 <template>
   <div class="main-content max-w-5xl p-6">
     <p class="mb-4 text-sm text-gray-500 dark:text-gray-400 no-capture">
-      {{ t('note') }}
+      {{ t('members.nicknameHistory.note') }}
     </p>
     <!-- 昵称变更记录 -->
     <SectionCard
-      :title="t('title')"
+      :title="t('members.nicknameHistory.title')"
       :description="
         isLoadingHistory
-          ? t('loading')
+          ? t('members.nicknameHistory.loading')
           : membersWithNicknameChanges.length > 0
-            ? t('hasChanges', { count: membersWithNicknameChanges.length })
-            : t('noChanges')
+            ? t('members.nicknameHistory.hasChanges', { count: membersWithNicknameChanges.length })
+            : t('members.nicknameHistory.noChanges')
       "
     >
       <div
@@ -136,7 +136,7 @@ onMounted(async () => {
                 >
                   {{ item.name }}
                 </span>
-                <UBadge v-if="item.endTs === null" color="primary" variant="soft" size="xs">{{ t('current') }}</UBadge>
+                <UBadge v-if="item.endTs === null" color="primary" variant="soft" size="xs">{{ t('members.nicknameHistory.current') }}</UBadge>
                 <span class="text-xs text-gray-400">({{ formatPeriod(item.startTs, item.endTs) }})</span>
               </div>
 
@@ -146,34 +146,10 @@ onMounted(async () => {
         </div>
       </div>
 
-      <EmptyState v-else-if="!isLoadingHistory" :text="t('empty')" />
+      <EmptyState v-else-if="!isLoadingHistory" :text="t('members.nicknameHistory.empty')" />
 
-      <LoadingState v-else :text="t('loadingText')" />
+      <LoadingState v-else :text="t('members.nicknameHistory.loadingText')" />
     </SectionCard>
   </div>
 </template>
 
-<i18n>
-{
-  "zh-CN": {
-    "note": "备注：QQ的旧版客户端支持导出聊天记录为txt版本，这个版本会获得最准确的昵称变更记录",
-    "title": "昵称变更记录",
-    "loading": "加载中...",
-    "hasChanges": "{count} 位成员曾修改过昵称",
-    "noChanges": "暂无成员修改昵称",
-    "current": "当前",
-    "empty": "该群组所有成员均未修改过昵称",
-    "loadingText": "正在加载昵称变更记录..."
-  },
-  "en-US": {
-    "note": "Note: QQ's legacy client can export chat history as txt format, which provides the most accurate nickname history",
-    "title": "Nickname History",
-    "loading": "Loading...",
-    "hasChanges": "{count} members have changed nicknames",
-    "noChanges": "No nickname changes",
-    "current": "Current",
-    "empty": "No members have changed their nicknames",
-    "loadingText": "Loading nickname history..."
-  }
-}
-</i18n>

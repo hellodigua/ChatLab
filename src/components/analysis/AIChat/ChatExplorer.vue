@@ -126,9 +126,9 @@ defineExpose({
 
 // 生成欢迎消息
 function generateWelcomeMessage() {
-  const configHint = hasLLMConfig.value ? t('ai.welcome.configReady') : t('ai.welcome.configNeeded')
+  const configHint = hasLLMConfig.value ? t('ai.chat.welcome.configReady') : t('ai.chat.welcome.configNeeded')
 
-  return t('ai.welcome.message', { sessionName: props.sessionName, configHint })
+  return t('ai.chat.welcome.message', { sessionName: props.sessionName, configHint })
 }
 
 // 发送消息
@@ -296,7 +296,7 @@ watch(
             <!-- 对话截屏按钮 -->
             <div v-if="qaPairs.length > 0 && !isAIThinking" class="flex justify-end">
               <CaptureButton
-                :label="t('ai.capture')"
+                :label="t('ai.chat.capture')"
                 size="xs"
                 type="element"
                 :target-element="conversationContentRef"
@@ -353,7 +353,7 @@ watch(
             class="absolute bottom-20 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-gray-800/90 px-3 py-1.5 text-xs text-white shadow-lg backdrop-blur-sm transition-all hover:bg-gray-700 dark:bg-gray-700/90 dark:hover:bg-gray-600"
           >
             <UIcon name="i-heroicons-arrow-down" class="h-3.5 w-3.5" />
-            <span>{{ t('ai.scrollToBottom') }}</span>
+            <span>{{ t('ai.chat.scrollToBottom') }}</span>
           </button>
         </Transition>
 
@@ -435,54 +435,3 @@ watch(
   opacity: 0;
 }
 </style>
-
-<i18n>
-{
-  "zh-CN": {
-    "ai": {
-      "welcome": {
-        "configReady": "✅ AI 服务已配置，可以开始对话了！",
-        "configNeeded": "**注意**：使用前请先在侧边栏底部的「设置」中配置 AI 服务 ⚙️",
-        "message": "👋 你好！我是 AI 助手，可以帮你探索「{sessionName}」的聊天记录。\n\n你可以这样问我：\n- 大家最近聊了什么有趣的话题\n- 谁是群里最活跃的人\n- 帮我找一下群里讨论买房的记录\n\n{configHint}"
-      },
-      "capture": "截屏对话",
-      "scrollToBottom": "返回底部",
-      "preset": {
-        "default": "默认预设",
-        "groupTitle": "群聊提示词预设",
-        "privateTitle": "私聊提示词预设"
-      },
-      "status": {
-        "processingResult": "处理结果中",
-        "called": "已调用:",
-        "analyzing": "正在分析问题...",
-        "connected": "AI 已连接",
-        "notConfigured": "请在全局设置中配置 AI 服务"
-      }
-    }
-  },
-  "en-US": {
-    "ai": {
-      "welcome": {
-        "configReady": "✅ AI service is configured and ready!",
-        "configNeeded": "**Note**: Please configure AI service in Settings (sidebar bottom) before using ⚙️",
-        "message": "👋 Hi! I'm your AI assistant, here to help you explore the chat history of \"{sessionName}\".\n\nYou can ask me things like:\n- What interesting topics have people been discussing lately?\n- Who is the most active person in this chat?\n- Find me the conversations about travel plans\n\n{configHint}"
-      },
-      "capture": "Capture Chat",
-      "scrollToBottom": "Back to Bottom",
-      "preset": {
-        "default": "Default Preset",
-        "groupTitle": "Group Chat Presets",
-        "privateTitle": "Private Chat Presets"
-      },
-      "status": {
-        "processingResult": "Processing result",
-        "called": "Called:",
-        "analyzing": "Analyzing question...",
-        "connected": "AI Connected",
-        "notConfigured": "Please configure AI service in Settings"
-      }
-    }
-  }
-}
-</i18n>

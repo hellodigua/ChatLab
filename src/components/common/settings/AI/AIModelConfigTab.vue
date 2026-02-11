@@ -1,19 +1,22 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useLLMStore, type AIServiceConfigDisplay } from '@/stores/llm'
 import AIModelEditModal from './AIModelEditModal.vue'
 import AlertTips from './AlertTips.vue'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 // Emits
 const emit = defineEmits<{
   'config-changed': []
 }>()
 
-const aiTips = JSON.parse(localStorage.getItem('chatlab_app_config') || '{}').aiTips || {}
+const aiTips = computed(() => {
+  const config = JSON.parse(localStorage.getItem(`chatlab_app_config_${locale.value}`) || localStorage.getItem('chatlab_app_config') || '{}')
+  return config.aiTips || {}
+})
 
 // ============ Store ============
 

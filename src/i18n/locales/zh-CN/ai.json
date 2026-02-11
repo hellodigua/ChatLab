@@ -1,0 +1,166 @@
+{
+  "tab": {
+    "chatExplorer": "对话式探索",
+    "sqlLab": "SQL实验室",
+    "filterAnalysis": "自定义筛选",
+    "filterAnalysisDesc": "计划实现高级筛选功能，可以先按人/按时间/按搜索内容手动筛选，然后再进行AI分析",
+    "featureInDev": "{name}功能开发中",
+    "comingSoon": "敬请期待...",
+    "followNotice": "功能上线通知，欢迎关注我的小红书"
+  },
+  "chat": {
+    "welcome": {
+      "configReady": "✅ AI 服务已配置，可以开始对话了！",
+      "configNeeded": "**注意**：使用前请先在侧边栏底部的「设置」中配置 AI 服务 ⚙️",
+      "message": "👋 你好！我是 AI 助手，可以帮你探索「{sessionName}」的聊天记录。\n\n你可以这样问我：\n- 大家最近聊了什么有趣的话题\n- 谁是群里最活跃的人\n- 帮我找一下群里讨论买房的记录\n\n{configHint}"
+    },
+    "capture": "截屏对话",
+    "scrollToBottom": "返回底部",
+    "input": {
+      "placeholder": "输入你的问题..."
+    },
+    "message": {
+      "userAvatar": "用户头像",
+      "calling": "调用",
+      "generating": "正在生成回复...",
+      "think": {
+        "labels": {
+          "think": "已思考",
+          "analysis": "分析",
+          "reasoning": "推理",
+          "reflection": "反思",
+          "other": "思考（{tag}）"
+        },
+        "loading": "思考中",
+        "duration": "耗时 {seconds}s"
+      },
+      "toolParams": {
+        "keywords": "关键词",
+        "time": "时间",
+        "getMessages": "获取 {count} 条消息",
+        "limit": "限制 {count} 条",
+        "contextWithMessages": "{msgCount} 条消息的前后各 {contextSize} 条上下文",
+        "context": "前后各 {size} 条上下文",
+        "topMembers": "前 {count} 名成员",
+        "search": "搜索",
+        "getMemberList": "获取成员列表",
+        "memberId": "成员ID",
+        "timeStats": {
+          "hourly": "按小时",
+          "weekday": "按星期",
+          "daily": "按日期"
+        }
+      }
+    },
+    "thinking": {
+      "processingResult": "处理结果中",
+      "called": "已调用:",
+      "analyzing": "正在分析问题..."
+    },
+    "statusBar": {
+      "preset": {
+        "default": "默认预设",
+        "groupTitle": "群聊提示词预设",
+        "privateTitle": "私聊提示词预设",
+        "manage": "管理提示词"
+      },
+      "model": {
+        "title": "AI 模型配置",
+        "notConfigured": "AI 未配置",
+        "empty": "暂无配置",
+        "manage": "管理配置",
+        "switchFailed": "切换模型失败"
+      },
+      "messageLimit": {
+        "label": "消息上限：",
+        "title": "每次发送的最大消息条数，点击配置"
+      },
+      "tokenUsageTitle": "本次会话累计 Token 使用量",
+      "log": {
+        "label": "日志",
+        "title": "打开当前 AI 日志文件",
+        "openFailed": "打开日志失败",
+        "openFailedDesc": "请稍后重试"
+      },
+      "status": {
+        "connected": "AI 已连接",
+        "notConfigured": "请在全局设置中配置 AI 服务"
+      }
+    },
+    "conversation": {
+      "title": "AI对话记录",
+      "newChat": "新对话",
+      "empty": "暂无历史记录",
+      "startNew": "开始新对话",
+      "titlePlaceholder": "输入标题...",
+      "export": {
+        "createdAt": "创建时间",
+        "user": "用户",
+        "assistant": "AI 助手",
+        "noMessages": "对话没有消息"
+      }
+    },
+    "dataSource": {
+      "title": "数据源",
+      "keywords": "关键词:",
+      "empty": "暂无数据",
+      "emptyHint": "发送问题后，相关记录会显示在这里",
+      "totalRecords": "共 {count} 条记录",
+      "loadMore": "加载更多"
+    }
+  },
+  "sqlLab": {
+    "editor": {
+      "errorEmptySQL": "请输入 SQL 语句",
+      "placeholder": "输入 SQL 查询语句...",
+      "tip": "提示：双击左侧列名可插入到 SQL",
+      "history": "历史",
+      "aiGenerate": "AI 生成",
+      "shortcut": "Ctrl/⌘ + Enter 执行",
+      "run": "运行"
+    },
+    "schema": {
+      "tables": "数据表",
+      "doubleClickToInsert": "双击插入到 SQL",
+      "primaryKey": "主键"
+    },
+    "result": {
+      "queryError": "查询错误",
+      "rows": "{count} 行",
+      "readableTime": "时间戳转日期",
+      "viewChat": "查看聊天记录",
+      "summarize": "总结一下",
+      "pageSize": "每页",
+      "pageInfo": "第 {current} / {total} 页",
+      "emptyResult": "查询结果为空",
+      "initialState": "输入 SQL 语句并运行查看结果",
+      "initialHint": "仅支持 SELECT 查询，建议添加 LIMIT 以提升性能",
+      "summaryTitle": "AI 结果总结",
+      "analyzing": "AI 正在分析结果...",
+      "errorSummary": "总结失败"
+    },
+    "generate": {
+      "title": "AI 生成 SQL",
+      "description": "用自然语言描述你想查询的内容，AI 将自动生成对应的 SQL 语句。",
+      "placeholder": "例如：查找发言最多的前 10 个成员、统计每天的消息数量、找出包含「买房」关键词的消息...",
+      "errorEmptyPrompt": "请输入查询需求",
+      "errorGenerate": "AI 生成失败",
+      "aiOutput": "AI 输出",
+      "waitingAI": "等待 AI 响应...",
+      "sqlStatement": "SQL 语句",
+      "explanation": "说明",
+      "generateSQL": "生成 SQL",
+      "useSQL": "使用 SQL",
+      "run": "运行"
+    },
+    "history": {
+      "title": "AI 生成历史",
+      "execute": "执行",
+      "empty": "暂无历史记录",
+      "justNow": "刚刚",
+      "minutesAgo": "{count} 分钟前",
+      "hoursAgo": "{count} 小时前",
+      "today": "今天"
+    }
+  }
+}

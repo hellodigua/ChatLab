@@ -47,7 +47,7 @@ function handleStop() {
     <div class="w-full">
       <UChatPrompt
         v-model="inputValue"
-        :placeholder="placeholder || t('chatInput.placeholder')"
+        :placeholder="placeholder || t('ai.chat.input.placeholder')"
         :disabled="disabled"
         variant="subtle"
         @submit="handleSubmit"
@@ -65,18 +65,3 @@ function handleStop() {
     </div>
   </div>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "chatInput": {
-      "placeholder": "输入你的问题..."
-    }
-  },
-  "en-US": {
-    "chatInput": {
-      "placeholder": "Enter your question..."
-    }
-  }
-}
-</i18n>

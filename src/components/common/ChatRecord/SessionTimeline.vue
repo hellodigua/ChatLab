@@ -301,7 +301,7 @@ onMounted(() => {
   >
     <UButton icon="i-heroicons-chevron-right" variant="ghost" size="xs" @click="isCollapsed = false" />
     <div class="mt-2 flex flex-1 items-center">
-      <span class="vertical-text text-xs text-gray-400">{{ t('timeline') }}</span>
+      <span class="vertical-text text-xs text-gray-400">{{ t('records.timeline.timeline') }}</span>
     </div>
   </div>
 
@@ -312,9 +312,9 @@ onMounted(() => {
   >
     <!-- 头部 -->
     <div class="flex items-center justify-between border-b border-gray-200 px-2 py-1.5 dark:border-gray-700">
-      <span class="text-xs font-medium text-gray-600 dark:text-gray-300">{{ t('timeline') }}</span>
+      <span class="text-xs font-medium text-gray-600 dark:text-gray-300">{{ t('records.timeline.timeline') }}</span>
       <div class="flex items-center gap-0.5">
-        <UTooltip :text="t('chatRecord.batchSummary.title', '批量生成摘要')">
+        <UTooltip :text="t('records.batchSummary.title')">
           <UButton icon="i-heroicons-sparkles" variant="ghost" size="xs" @click="showBatchSummaryModal = true" />
         </UTooltip>
         <UButton icon="i-heroicons-chevron-left" variant="ghost" size="xs" @click="isCollapsed = true" />
@@ -328,7 +328,7 @@ onMounted(() => {
 
     <!-- 空状态 -->
     <div v-else-if="allSessions.length === 0" class="flex flex-1 items-center justify-center p-2">
-      <span class="text-xs text-gray-400">{{ t('noSessions') }}</span>
+      <span class="text-xs text-gray-400">{{ t('records.timeline.noSessions') }}</span>
     </div>
 
     <!-- 虚拟滚动会话列表 -->
@@ -406,12 +406,12 @@ onMounted(() => {
                     class="h-3 w-3 animate-spin"
                   />
                   <UIcon v-else name="i-heroicons-sparkles" class="h-3 w-3" />
-                  <span>{{ t('generateSummary') }}</span>
+                  <span>{{ t('records.timeline.generateSummary') }}</span>
                 </span>
 
                 <!-- 消息数<3：显示提示 -->
                 <span v-else class="text-xs italic text-gray-300 dark:text-gray-600">
-                  {{ t('tooFewMessages') }}
+                  {{ t('records.timeline.tooFewMessages') }}
                 </span>
               </div>
             </button>
@@ -431,20 +431,3 @@ onMounted(() => {
   text-orientation: mixed;
 }
 </style>
-
-<i18n>
-{
-  "zh-CN": {
-    "timeline": "会话",
-    "noSessions": "暂无会话",
-    "generateSummary": "生成摘要",
-    "tooFewMessages": "消息太少"
-  },
-  "en-US": {
-    "timeline": "Sessions",
-    "noSessions": "No sessions",
-    "generateSummary": "Summarize",
-    "tooFewMessages": "Too few"
-  }
-}
-</i18n>

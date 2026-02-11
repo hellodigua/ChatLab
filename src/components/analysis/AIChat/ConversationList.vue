@@ -69,7 +69,7 @@ function formatTime(timestamp: number): string {
 
 // 获取对话标题
 function getTitle(conv: Conversation): string {
-  return conv.title || t('conversation.newChat')
+  return conv.title || t('ai.chat.conversation.newChat')
 }
 
 // 开始编辑标题
@@ -116,7 +116,7 @@ async function handleExport(conv: Conversation) {
 
     if (messages.length === 0) {
       toast.add({
-        title: t('conversation.export.noMessages'),
+        title: t('ai.chat.conversation.export.noMessages'),
         icon: 'i-heroicons-exclamation-triangle',
         color: 'warning',
         duration: 2000,
@@ -126,13 +126,13 @@ async function handleExport(conv: Conversation) {
 
     // 获取导出格式和标题
     const format = (aiGlobalSettings.value.exportFormat || 'markdown') as ExportFormat
-    const title = conv.title || t('conversation.newChat')
+    const title = conv.title || t('ai.chat.conversation.newChat')
 
     // 导出标签（国际化）
     const labels = {
-      createdAt: t('conversation.export.createdAt'),
-      user: t('conversation.export.user'),
-      assistant: t('conversation.export.assistant'),
+      createdAt: t('ai.chat.conversation.export.createdAt'),
+      user: t('ai.chat.conversation.export.user'),
+      assistant: t('ai.chat.conversation.export.assistant'),
     }
 
     // 转换消息时间戳（数据库存储的是秒级时间戳，需转换为毫秒级）
@@ -150,14 +150,14 @@ async function handleExport(conv: Conversation) {
       const exportedFilePath = result.filePath
       // 显示成功 toast
       toast.add({
-        title: t('conversation.export.success'),
+        title: t('common.exportSuccess'),
         description: filename,
         icon: 'i-heroicons-check-circle',
         color: 'primary',
         duration: 2000,
         actions: [
           {
-            label: t('conversation.export.openFolder'),
+            label: t('common.openFolder'),
             onClick: () => {
               window.cacheApi.showInFolder(exportedFilePath)
             },
@@ -166,7 +166,7 @@ async function handleExport(conv: Conversation) {
       })
     } else {
       toast.add({
-        title: t('conversation.export.failed'),
+        title: t('common.exportFailed'),
         description: result.error,
         icon: 'i-heroicons-x-circle',
         color: 'error',
@@ -176,7 +176,7 @@ async function handleExport(conv: Conversation) {
   } catch (error) {
     console.error('导出对话失败：', error)
     toast.add({
-      title: t('conversation.export.failed'),
+      title: t('common.exportFailed'),
       description: String(error),
       icon: 'i-heroicons-x-circle',
       color: 'error',
@@ -214,7 +214,7 @@ defineExpose({
     <!-- 头部 -->
     <div class="flex items-center justify-between border-b border-gray-200 p-2 dark:border-gray-800">
       <template v-if="!isCollapsed">
-        <span class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ t('conversation.title') }}</span>
+        <span class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ t('ai.chat.conversation.title') }}</span>
         <div class="flex items-center gap-1">
           <UButton
             icon="i-heroicons-plus"
@@ -254,9 +254,9 @@ defineExpose({
         <div class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 dark:bg-gray-800">
           <UIcon name="i-heroicons-chat-bubble-left" class="h-6 w-6 text-gray-300 dark:text-gray-600" />
         </div>
-        <p class="mt-3 text-xs text-gray-400">{{ t('conversation.empty') }}</p>
+        <p class="mt-3 text-xs text-gray-400">{{ t('ai.chat.conversation.empty') }}</p>
         <UButton class="mt-2" size="xs" variant="link" color="primary" @click="emit('create')">
-          {{ t('conversation.startNew') }}
+          {{ t('ai.chat.conversation.startNew') }}
         </UButton>
       </div>
 
@@ -278,7 +278,7 @@ defineExpose({
             <input
               v-model="editingTitle"
               class="w-full rounded border-none bg-white px-2 py-1 text-sm shadow-sm ring-1 ring-gray-200 focus:ring-2 focus:ring-primary-500 dark:bg-gray-900 dark:ring-gray-700"
-              :placeholder="t('conversation.titlePlaceholder')"
+              :placeholder="t('ai.chat.conversation.titlePlaceholder')"
               autoFocus
               @blur="saveTitle(conv.id)"
               @keyup.enter="saveTitle(conv.id)"
@@ -364,7 +364,7 @@ defineExpose({
       <!-- 新建按钮 -->
       <button
         class="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-pink-500 dark:hover:bg-gray-800"
-        :title="t('conversation.startNew')"
+        :title="t('ai.chat.conversation.startNew')"
         @click="emit('create')"
       >
         <UIcon name="i-heroicons-plus" class="h-4 w-4" />
@@ -387,44 +387,3 @@ defineExpose({
     </div>
   </div>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "conversation": {
-      "title": "AI对话记录",
-      "newChat": "新对话",
-      "empty": "暂无历史记录",
-      "startNew": "开始新对话",
-      "titlePlaceholder": "输入标题...",
-      "export": {
-        "createdAt": "创建时间",
-        "user": "用户",
-        "assistant": "AI 助手",
-        "success": "导出成功",
-        "failed": "导出失败",
-        "openFolder": "打开目录",
-        "noMessages": "对话没有消息"
-      }
-    }
-  },
-  "en-US": {
-    "conversation": {
-      "title": "AI Conversations",
-      "newChat": "New Chat",
-      "empty": "No history yet",
-      "startNew": "Start New Chat",
-      "titlePlaceholder": "Enter title...",
-      "export": {
-        "createdAt": "Created",
-        "user": "User",
-        "assistant": "AI Assistant",
-        "success": "Export successful",
-        "failed": "Export failed",
-        "openFolder": "Open folder",
-        "noMessages": "No messages to export"
-      }
-    }
-  }
-}
-</i18n>

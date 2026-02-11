@@ -38,7 +38,7 @@ const showViewAll = computed(() => props.items.length > props.topN)
 
 // 格式化总数描述
 const formattedCount = computed(() => {
-  const template = props.countTemplate || t('countTemplate')
+  const template = props.countTemplate || t('views.charts.listPro.countTemplate')
   return template.replace('{count}', String(props.items.length))
 })
 </script>
@@ -60,7 +60,7 @@ const formattedCount = computed(() => {
 
         <!-- 完整列表弹窗 -->
         <UModal v-model:open="isOpen" :ui="{ content: 'md:w-full max-w-3xl' }">
-          <UButton v-if="showViewAll" icon="i-heroicons-list-bullet" variant="ghost">{{ t('fullRanking') }}</UButton>
+          <UButton v-if="showViewAll" icon="i-heroicons-list-bullet" variant="ghost">{{ t('views.charts.listPro.fullRanking') }}</UButton>
           <template #content>
             <div ref="modalBodyRef" class="section-content flex flex-col">
               <!-- Header -->
@@ -98,23 +98,9 @@ const formattedCount = computed(() => {
     <!-- 空状态 -->
     <div v-if="items.length === 0">
       <slot name="empty">
-        <div class="px-5 py-8 text-center text-sm text-gray-400">{{ t('empty') }}</div>
+        <div class="px-5 py-8 text-center text-sm text-gray-400">{{ t('views.charts.listPro.empty') }}</div>
       </slot>
     </div>
   </div>
 </template>
 
-<i18n>
-{
-  "zh-CN": {
-    "countTemplate": "共 {count} 项",
-    "fullRanking": "完整排行",
-    "empty": "暂无数据"
-  },
-  "en-US": {
-    "countTemplate": "{count} items",
-    "fullRanking": "Full Ranking",
-    "empty": "No data"
-  }
-}
-</i18n>

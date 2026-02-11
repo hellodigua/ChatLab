@@ -25,7 +25,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 // 获取单位，优先使用 props，否则使用默认翻译
-const displayUnit = computed(() => props.unit || t('unit'))
+const displayUnit = computed(() => props.unit || t('views.charts.rankList.unit'))
 
 const displayMembers = computed(() => {
   return props.rankLimit > 0 ? props.members.slice(0, props.rankLimit) : props.members
@@ -90,13 +90,3 @@ function getRelativePercentage(index: number): number {
   </div>
 </template>
 
-<i18n>
-{
-  "zh-CN": {
-    "unit": "条"
-  },
-  "en-US": {
-    "unit": ""
-  }
-}
-</i18n>

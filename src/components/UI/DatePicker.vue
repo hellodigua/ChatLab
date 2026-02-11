@@ -73,7 +73,7 @@ function clearDate() {
 <template>
   <UPopover v-model:open="popoverOpen" :ui="{ content: 'z-[100]' }">
     <UButton
-      :label="dateDisplay || placeholder || t('selectDate')"
+      :label="dateDisplay || placeholder || t('common.datePicker.selectDate')"
       icon="i-heroicons-calendar-days"
       variant="outline"
       color="neutral"
@@ -84,22 +84,9 @@ function clearDate() {
       <UCalendar v-model="dateObj" :number-of-months="1" :fixed-weeks="false" :locale="calendarLocale" />
       <div v-if="clearable" class="px-2 pb-2">
         <UButton variant="ghost" size="xs" color="neutral" class="w-full" @click="clearDate">
-          {{ t('clearDate') }}
+          {{ t('common.datePicker.clearDate') }}
         </UButton>
       </div>
     </template>
   </UPopover>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "selectDate": "选择日期",
-    "clearDate": "清空日期"
-  },
-  "en-US": {
-    "selectDate": "Select Date",
-    "clearDate": "Clear"
-  }
-}
-</i18n>

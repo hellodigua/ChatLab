@@ -193,9 +193,9 @@ onMounted(() => {
     <div class="mb-6">
       <div class="flex items-center gap-3">
         <div>
-          <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ t('title') }}</h2>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ t('members.list.title') }}</h2>
           <p class="text-sm text-gray-500 dark:text-gray-400">
-            {{ t('description', { count: total }) }}
+            {{ t('members.list.description', { count: total }) }}
           </p>
         </div>
       </div>
@@ -214,7 +214,7 @@ onMounted(() => {
     <div class="mb-4">
       <UInput
         v-model="searchQuery"
-        :placeholder="t('searchPlaceholder')"
+        :placeholder="t('members.list.searchPlaceholder')"
         icon="i-heroicons-magnifying-glass"
         class="w-100"
       >
@@ -235,7 +235,7 @@ onMounted(() => {
       <div v-else-if="members.length === 0" class="flex h-60 flex-col items-center justify-center">
         <UIcon name="i-heroicons-user-group" class="mb-3 h-12 w-12 text-gray-300 dark:text-gray-600" />
         <p class="text-gray-500 dark:text-gray-400">
-          {{ searchQuery ? t('noMatch') : t('empty') }}
+          {{ searchQuery ? t('members.list.noMatch') : t('members.list.empty') }}
         </p>
       </div>
 
@@ -245,22 +245,22 @@ onMounted(() => {
           <table class="w-full">
             <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800">
               <tr class="text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">
-                <th class="px-4 py-4">{{ t('table.accountName') }}</th>
-                <th class="px-4 py-4">{{ t('table.groupNickname') }}</th>
+                <th class="px-4 py-4">{{ t('members.list.table.accountName') }}</th>
+                <th class="px-4 py-4">{{ t('members.list.table.groupNickname') }}</th>
                 <th class="px-4 py-4">
                   <button
                     class="flex items-center gap-1.5 hover:text-gray-700 dark:hover:text-gray-200"
                     @click="toggleSort"
                   >
-                    {{ t('table.messageCount') }}
+                    {{ t('members.list.table.messageCount') }}
                     <UIcon
                       :name="sortOrder === 'desc' ? 'i-heroicons-arrow-down' : 'i-heroicons-arrow-up'"
                       class="h-3.5 w-3.5"
                     />
                   </button>
                 </th>
-                <th class="px-4 py-4 w-64">{{ t('table.customAlias') }}</th>
-                <th class="px-4 py-4 text-right">{{ t('table.actions') }}</th>
+                <th class="px-4 py-4 w-64">{{ t('members.list.table.customAlias') }}</th>
+                <th class="px-4 py-4 text-right">{{ t('members.list.table.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -311,7 +311,7 @@ onMounted(() => {
                     <UInputTags
                       :model-value="member.aliases"
                       @update:model-value="(val) => updateAliases(member, val)"
-                      :placeholder="t('aliasPlaceholder')"
+                      :placeholder="t('members.list.aliasPlaceholder')"
                       class="w-80"
                     />
                     <!-- 保存中指示器 -->
@@ -323,7 +323,7 @@ onMounted(() => {
 
                 <!-- 操作 -->
                 <td class="px-4 py-4 text-right">
-                  <UButton :label="t('delete')" size="xs" @click="showDeleteConfirm(member)" />
+                  <UButton :label="t('members.list.delete')" size="xs" @click="showDeleteConfirm(member)" />
                 </td>
               </tr>
             </tbody>
@@ -337,7 +337,7 @@ onMounted(() => {
         >
           <p class="text-sm text-gray-500 dark:text-gray-400">
             {{
-              t('pagination', {
+              t('members.list.pagination', {
                 start: (currentPage - 1) * pageSize + 1,
                 end: Math.min(currentPage * pageSize, total),
                 total: total,
@@ -372,7 +372,7 @@ onMounted(() => {
       <UIcon name="i-heroicons-exclamation-triangle" class="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
       <div>
         <p class="text-sm font-medium text-amber-800 dark:text-amber-200">
-          {{ t('tip') }}
+          {{ t('members.list.tip') }}
         </p>
       </div>
     </div>
@@ -386,18 +386,18 @@ onMounted(() => {
           >
             <UIcon name="i-heroicons-exclamation-triangle" class="h-7 w-7 text-red-500" />
           </div>
-          <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{ t('modal.title') }}</h3>
+          <h3 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">{{ t('members.list.modal.title') }}</h3>
           <p class="mb-6 text-sm text-gray-500 dark:text-gray-400">
             {{
-              t('modal.content', {
+              t('members.list.modal.content', {
                 name: deletingMember ? getDisplayName(deletingMember) : '',
                 count: deletingMember?.messageCount.toLocaleString(),
               })
             }}
           </p>
           <div class="flex justify-center gap-3">
-            <UButton variant="outline" @click="cancelDelete">{{ t('modal.cancel') }}</UButton>
-            <UButton color="error" :loading="isDeleting" @click="confirmDelete">{{ t('modal.confirm') }}</UButton>
+            <UButton variant="outline" @click="cancelDelete">{{ t('members.list.modal.cancel') }}</UButton>
+            <UButton color="error" :loading="isDeleting" @click="confirmDelete">{{ t('members.list.modal.confirm') }}</UButton>
           </div>
         </div>
       </template>
@@ -405,55 +405,3 @@ onMounted(() => {
   </div>
 </template>
 
-<i18n>
-{
-  "zh-CN": {
-    "title": "成员管理",
-    "description": "共 {count} 位成员，可为成员添加别名备注或移除成员",
-    "searchPlaceholder": "搜索群昵称、账号名称、ID 或别名",
-    "noMatch": "没有找到匹配的成员",
-    "empty": "暂无成员数据",
-    "table": {
-      "accountName": "账号名称",
-      "groupNickname": "群昵称",
-      "messageCount": "消息数",
-      "customAlias": "自定义别名",
-      "actions": "操作"
-    },
-    "aliasPlaceholder": "输入后回车添加",
-    "delete": "删除",
-    "pagination": "显示 {start} - {end} 条，共 {total} 位成员",
-    "tip": "提示：添加别名可以更好地识别聊天记录中的对话对象，别名将用于搜索和 AI 分析中。",
-    "modal": {
-      "title": "确认删除成员？",
-      "content": "即将删除成员 {name} 及其 {count} 条消息，此操作不可恢复。",
-      "cancel": "取消",
-      "confirm": "确认删除"
-    }
-  },
-  "en-US": {
-    "title": "Group Member Management",
-    "description": "{count} members. Add aliases or remove members",
-    "searchPlaceholder": "Search nickname, account name, ID or alias",
-    "noMatch": "No matching members found",
-    "empty": "No member data available",
-    "table": {
-      "accountName": "Account Name",
-      "groupNickname": "Group Nickname",
-      "messageCount": "Messages",
-      "customAlias": "Custom Aliases",
-      "actions": "Actions"
-    },
-    "aliasPlaceholder": "Press Enter to add",
-    "delete": "Delete",
-    "pagination": "Showing {start} - {end} of {total} members",
-    "tip": "Tip: Adding aliases helps identify chat participants and improves search and AI analysis accuracy.",
-    "modal": {
-      "title": "Delete Member?",
-      "content": "This will delete member {name} and their {count} messages. This action cannot be undone.",
-      "cancel": "Cancel",
-      "confirm": "Confirm Delete"
-    }
-  }
-}
-</i18n>

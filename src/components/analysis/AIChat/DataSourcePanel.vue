@@ -49,7 +49,7 @@ function highlightKeywords(text: string): string {
         @click="emit('toggle')"
       >
         <UIcon name="i-heroicons-chevron-left" class="h-5 w-5" />
-        <span class="writing-vertical text-xs">{{ t('dataSource.title') }}</span>
+        <span class="writing-vertical text-xs">{{ t('ai.chat.dataSource.title') }}</span>
       </button>
     </template>
 
@@ -59,7 +59,7 @@ function highlightKeywords(text: string): string {
       <div class="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-800">
         <div class="flex items-center gap-2">
           <UIcon name="i-heroicons-document-magnifying-glass" class="h-5 w-5 text-gray-500" />
-          <span class="font-medium text-gray-900 dark:text-white">{{ t('dataSource.title') }}</span>
+          <span class="font-medium text-gray-900 dark:text-white">{{ t('ai.chat.dataSource.title') }}</span>
         </div>
         <UButton icon="i-heroicons-chevron-right" color="gray" variant="ghost" size="xs" @click="emit('toggle')" />
       </div>
@@ -67,7 +67,7 @@ function highlightKeywords(text: string): string {
       <!-- 当前关键词 -->
       <div v-if="keywords.length > 0" class="border-b border-gray-200 px-4 py-2 dark:border-gray-800">
         <div class="flex flex-wrap items-center gap-2">
-          <span class="text-xs text-gray-500">{{ t('dataSource.keywords') }}</span>
+          <span class="text-xs text-gray-500">{{ t('ai.chat.dataSource.keywords') }}</span>
           <span
             v-for="kw in keywords"
             :key="kw"
@@ -88,8 +88,8 @@ function highlightKeywords(text: string): string {
         <!-- 空状态 -->
         <div v-else-if="messages.length === 0" class="flex flex-col items-center justify-center py-8 text-center">
           <UIcon name="i-heroicons-inbox" class="h-10 w-10 text-gray-300 dark:text-gray-600" />
-          <p class="mt-2 text-sm text-gray-500">{{ t('dataSource.empty') }}</p>
-          <p class="text-xs text-gray-400">{{ t('dataSource.emptyHint') }}</p>
+          <p class="mt-2 text-sm text-gray-500">{{ t('ai.chat.dataSource.empty') }}</p>
+          <p class="text-xs text-gray-400">{{ t('ai.chat.dataSource.emptyHint') }}</p>
         </div>
 
         <!-- 消息列表 -->
@@ -113,8 +113,8 @@ function highlightKeywords(text: string): string {
       <!-- 底部统计 & 加载更多 -->
       <div v-if="messages.length > 0" class="border-t border-gray-200 px-4 py-2 dark:border-gray-800">
         <div class="flex items-center justify-between">
-          <span class="text-xs text-gray-500">{{ t('dataSource.totalRecords', { count: messages.length }) }}</span>
-          <UButton size="xs" variant="ghost" @click="emit('loadMore')">{{ t('dataSource.loadMore') }}</UButton>
+          <span class="text-xs text-gray-500">{{ t('ai.chat.dataSource.totalRecords', { count: messages.length }) }}</span>
+          <UButton size="xs" variant="ghost" @click="emit('loadMore')">{{ t('ai.chat.dataSource.loadMore') }}</UButton>
         </div>
       </div>
     </template>
@@ -147,28 +147,3 @@ function highlightKeywords(text: string): string {
   }
 }
 </style>
-
-<i18n>
-{
-  "zh-CN": {
-    "dataSource": {
-      "title": "数据源",
-      "keywords": "关键词:",
-      "empty": "暂无数据",
-      "emptyHint": "发送问题后，相关记录会显示在这里",
-      "totalRecords": "共 {count} 条记录",
-      "loadMore": "加载更多"
-    }
-  },
-  "en-US": {
-    "dataSource": {
-      "title": "Data Source",
-      "keywords": "Keywords:",
-      "empty": "No data",
-      "emptyHint": "Related records will appear here after asking questions",
-      "totalRecords": "{count} records",
-      "loadMore": "Load More"
-    }
-  }
-}
-</i18n>

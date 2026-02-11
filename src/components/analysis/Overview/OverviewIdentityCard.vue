@@ -35,8 +35,8 @@ const fullTimeRangeText = computed(() => {
           </span>
         </div>
         <p class="mt-2 text-lg font-medium text-pink-100 dark:text-gray-400">
-          {{ session.type === 'private' ? t('privateChat') : t('groupChat') }} ·
-          <span class="opacity-80">{{ t('analysisReport') }}</span>
+          {{ session.type === 'private' ? t('analysis.overview.identity.privateChat') : t('analysis.overview.identity.groupChat') }} ·
+          <span class="opacity-80">{{ t('analysis.overview.identity.analysisReport') }}</span>
         </p>
         <!-- 聊天记录起止时间 -->
         <p v-if="fullTimeRangeText" class="mt-2 text-sm font-medium text-pink-100/90 dark:text-gray-400">
@@ -49,38 +49,17 @@ const fullTimeRangeText = computed(() => {
           <p class="text-3xl font-black tracking-tight text-white">
             {{ session.messageCount.toLocaleString() }}
           </p>
-          <p class="mt-1 text-sm font-medium text-pink-100 dark:text-gray-400">{{ t('totalMessages') }}</p>
+          <p class="mt-1 text-sm font-medium text-pink-100 dark:text-gray-400">{{ t('analysis.overview.identity.totalMessages') }}</p>
         </div>
         <div class="rounded-2xl bg-white/10 px-6 py-4 dark:bg-gray-800">
           <p class="text-3xl font-black tracking-tight text-white">{{ totalDurationDays }}</p>
-          <p class="mt-1 text-sm font-medium text-pink-100 dark:text-gray-400">{{ t('durationDays') }}</p>
+          <p class="mt-1 text-sm font-medium text-pink-100 dark:text-gray-400">{{ t('analysis.overview.identity.durationDays') }}</p>
         </div>
         <div class="rounded-2xl bg-white/10 px-6 py-4 dark:bg-gray-800">
           <p class="text-3xl font-black tracking-tight text-white">{{ totalDailyAvgMessages }}</p>
-          <p class="mt-1 text-sm font-medium text-pink-100 dark:text-gray-400">{{ t('dailyAvgMessages') }}</p>
+          <p class="mt-1 text-sm font-medium text-pink-100 dark:text-gray-400">{{ t('analysis.overview.identity.dailyAvgMessages') }}</p>
         </div>
       </div>
     </div>
   </div>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "privateChat": "私聊",
-    "groupChat": "群聊",
-    "analysisReport": "数据分析报告",
-    "totalMessages": "消息总数",
-    "durationDays": "跨度天数",
-    "dailyAvgMessages": "日均消息"
-  },
-  "en-US": {
-    "privateChat": "Private",
-    "groupChat": "Group",
-    "analysisReport": "Analysis Report",
-    "totalMessages": "Total Messages",
-    "durationDays": "Duration Days",
-    "dailyAvgMessages": "Daily Avg"
-  }
-}
-</i18n>

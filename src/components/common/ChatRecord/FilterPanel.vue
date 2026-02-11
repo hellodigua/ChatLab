@@ -120,12 +120,12 @@ function resetFilter() {
   <div class="border-b border-gray-200 px-4 py-3 dark:border-gray-800">
     <!-- 第一行：消息ID、成员、时间范围 -->
     <div class="flex items-center gap-3">
-      <UInput v-model="formData.messageId" type="number" :placeholder="t('messageId')" size="sm" class="w-24" />
-      <UInput v-model="formData.memberName" :placeholder="t('memberNotSupported')" size="sm" class="w-28" disabled />
+      <UInput v-model="formData.messageId" type="number" :placeholder="t('records.filter.messageId')" size="sm" class="w-24" />
+      <UInput v-model="formData.memberName" :placeholder="t('records.filter.memberNotSupported')" size="sm" class="w-28" disabled />
       <div class="flex items-center gap-2">
-        <DatePicker v-model="formData.startDate" :placeholder="t('startDate')" />
+        <DatePicker v-model="formData.startDate" :placeholder="t('records.filter.startDate')" />
         <span class="text-xs text-gray-400">~</span>
-        <DatePicker v-model="formData.endDate" :placeholder="t('endDate')" />
+        <DatePicker v-model="formData.endDate" :placeholder="t('records.filter.endDate')" />
       </div>
     </div>
 
@@ -133,42 +133,19 @@ function resetFilter() {
     <div class="mt-2 flex items-center gap-3">
       <UInput
         v-model="formData.keywords"
-        :placeholder="t('keywordsPlaceholder')"
+        :placeholder="t('records.filter.keywordsPlaceholder')"
         size="sm"
         class="flex-1"
         @keydown="handleKeywordsKeydown"
       />
       <div class="flex gap-2">
         <UButton color="neutral" variant="ghost" size="sm" @click="resetFilter">
-          {{ t('reset') }}
+          {{ t('records.filter.reset') }}
         </UButton>
         <UButton color="primary" size="sm" @click="applyFilter">
-          {{ t('filter') }}
+          {{ t('records.filter.filter') }}
         </UButton>
       </div>
     </div>
   </div>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "messageId": "消息 ID",
-    "memberNotSupported": "成员（暂不支持）",
-    "keywordsPlaceholder": "关键词，多个用逗号分隔，回车搜索",
-    "startDate": "起始日期",
-    "endDate": "结束日期",
-    "reset": "重置",
-    "filter": "筛选"
-  },
-  "en-US": {
-    "messageId": "Message ID",
-    "memberNotSupported": "Member (not supported)",
-    "keywordsPlaceholder": "Keywords, comma separated, Enter to search",
-    "startDate": "Start Date",
-    "endDate": "End Date",
-    "reset": "Reset",
-    "filter": "Filter"
-  }
-}
-</i18n>

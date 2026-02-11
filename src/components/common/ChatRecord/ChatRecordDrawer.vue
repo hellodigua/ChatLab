@@ -184,7 +184,7 @@ watch(
           class="flex items-center justify-between border-b border-gray-200 px-4 dark:border-gray-800"
           :class="isWindows ? 'pt-10 pb-3' : 'py-3'"
         >
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('title') }}</h3>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('records.drawer.title') }}</h3>
           <UButton
             icon="i-heroicons-x-mark"
             color="neutral"
@@ -226,22 +226,10 @@ watch(
 
         <!-- 底部统计 -->
         <div v-if="messageCount > 0" class="shrink-0 border-t border-gray-200 px-4 py-2 dark:border-gray-800">
-          <span class="text-xs text-gray-500">{{ t('loadedCount', { count: messageCount }) }}</span>
+          <span class="text-xs text-gray-500">{{ t('records.drawer.loadedCount', { count: messageCount }) }}</span>
         </div>
       </div>
     </template>
   </UDrawer>
 </template>
 
-<i18n>
-{
-  "zh-CN": {
-    "title": "聊天记录查看器",
-    "loadedCount": "已加载 {count} 条消息"
-  },
-  "en-US": {
-    "title": "Chat Record Viewer",
-    "loadedCount": "{count} messages loaded"
-  }
-}
-</i18n>

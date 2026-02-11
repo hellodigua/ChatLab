@@ -46,6 +46,64 @@
     "successDetail": "成功追加 {count} 条新消息",
     "failed": "导入失败"
   },
+  "subTabs": {
+    "view": {
+      "message": "消息",
+      "interaction": "互动分析",
+      "ranking": "榜单"
+    },
+    "quotes": {
+      "wordcloud": "词云",
+      "hotRepeat": "最火复读",
+      "catchphrase": "口头禅",
+      "keywordAnalysis": "关键词分析"
+    },
+    "member": {
+      "memberList": "成员列表",
+      "relationships": "群关系",
+      "cluster": "互动频率",
+      "nicknameHistory": "昵称变更"
+    }
+  },
+  "overview": {
+    "messageTypeDistribution": "消息类型分布",
+    "memberDistribution": "成员水群分布",
+    "others": "其他人",
+    "messageRatio": "消息占比",
+    "messageUnit": "条",
+    "memberComparison": "双方消息占比",
+    "statCards": {
+      "dailyAvgMessages": "日均消息",
+      "messagesCount": "{count} 条",
+      "daysCount": "共 {count} 天",
+      "imageMessages": "图片消息",
+      "imagesCount": "{count} 张",
+      "peakHour": "最活跃时段:",
+      "mostActiveWeekday": "最活跃星期",
+      "messagesOnDay": "{count} 条消息",
+      "weekendActivity": "周末活跃度",
+      "weekendRatio": "周末消息占比",
+      "mostActiveDate": "最活跃日期",
+      "activeDays": "活跃天数",
+      "slashDays": "/ {count} 天",
+      "consecutiveStreak": "连续打卡",
+      "daysStreak": "{count} 天",
+      "longestStreak": "最长连续活跃",
+      "activityRate": "活跃率",
+      "activeDaysRatio": "有消息的天数占比"
+    },
+    "dailyTrend": {
+      "title": "每日消息趋势"
+    },
+    "identity": {
+      "privateChat": "私聊",
+      "groupChat": "群聊",
+      "analysisReport": "数据分析报告",
+      "totalMessages": "消息总数",
+      "durationDays": "跨度天数",
+      "dailyAvgMessages": "日均消息"
+    }
+  },
   "filter": {
     "title": "自定义筛选",
     "conditionMode": "条件筛选",

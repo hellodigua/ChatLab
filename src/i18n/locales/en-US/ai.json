@@ -1,0 +1,166 @@
+{
+  "tab": {
+    "chatExplorer": "Chat Explorer",
+    "sqlLab": "SQL Lab",
+    "filterAnalysis": "Filter Analysis",
+    "filterAnalysisDesc": "Advanced filtering feature is planned. You can filter by person, time, or search content before AI analysis",
+    "featureInDev": "{name} is in development",
+    "comingSoon": "Coming soon...",
+    "followNotice": "Follow me on X for updates"
+  },
+  "chat": {
+    "welcome": {
+      "configReady": "✅ AI service is configured and ready!",
+      "configNeeded": "**Note**: Please configure AI service in Settings (sidebar bottom) before using ⚙️",
+      "message": "👋 Hi! I'm your AI assistant, here to help you explore the chat history of \"{sessionName}\".\n\nYou can ask me things like:\n- What interesting topics have people been discussing lately?\n- Who is the most active person in this chat?\n- Find me the conversations about travel plans\n\n{configHint}"
+    },
+    "capture": "Capture Chat",
+    "scrollToBottom": "Back to Bottom",
+    "input": {
+      "placeholder": "Enter your question..."
+    },
+    "message": {
+      "userAvatar": "User Avatar",
+      "calling": "Calling",
+      "generating": "Generating response...",
+      "think": {
+        "labels": {
+          "think": "Thinking",
+          "analysis": "Analysis",
+          "reasoning": "Reasoning",
+          "reflection": "Reflection",
+          "other": "Thinking ({tag})"
+        },
+        "loading": "Thinking",
+        "duration": "Took {seconds}s"
+      },
+      "toolParams": {
+        "keywords": "Keywords",
+        "time": "Time",
+        "getMessages": "Get {count} messages",
+        "limit": "Limit {count}",
+        "contextWithMessages": "Context of {contextSize} messages around {msgCount} messages",
+        "context": "{size} messages context",
+        "topMembers": "Top {count} members",
+        "search": "Search",
+        "getMemberList": "Get member list",
+        "memberId": "Member ID",
+        "timeStats": {
+          "hourly": "Hourly",
+          "weekday": "By Weekday",
+          "daily": "Daily"
+        }
+      }
+    },
+    "thinking": {
+      "processingResult": "Processing result",
+      "called": "Called:",
+      "analyzing": "Analyzing question..."
+    },
+    "statusBar": {
+      "preset": {
+        "default": "Default Preset",
+        "groupTitle": "Group Chat Presets",
+        "privateTitle": "Private Chat Presets",
+        "manage": "Manage Presets"
+      },
+      "model": {
+        "title": "AI Model Configs",
+        "notConfigured": "AI Not Configured",
+        "empty": "No configs",
+        "manage": "Manage Configs",
+        "switchFailed": "Failed to switch model"
+      },
+      "messageLimit": {
+        "label": "Limit: ",
+        "title": "Max messages per request, click to configure"
+      },
+      "tokenUsageTitle": "Total token usage in this session",
+      "log": {
+        "label": "Logs",
+        "title": "Open current AI log file",
+        "openFailed": "Failed to open log",
+        "openFailedDesc": "Please try again later"
+      },
+      "status": {
+        "connected": "AI Connected",
+        "notConfigured": "Please configure AI service in Settings"
+      }
+    },
+    "conversation": {
+      "title": "AI Conversations",
+      "newChat": "New Chat",
+      "empty": "No history yet",
+      "startNew": "Start New Chat",
+      "titlePlaceholder": "Enter title...",
+      "export": {
+        "createdAt": "Created",
+        "user": "User",
+        "assistant": "AI Assistant",
+        "noMessages": "No messages to export"
+      }
+    },
+    "dataSource": {
+      "title": "Data Source",
+      "keywords": "Keywords:",
+      "empty": "No data",
+      "emptyHint": "Related records will appear here after asking questions",
+      "totalRecords": "{count} records",
+      "loadMore": "Load More"
+    }
+  },
+  "sqlLab": {
+    "editor": {
+      "errorEmptySQL": "Please enter an SQL statement",
+      "placeholder": "Enter SQL query...",
+      "tip": "Tip: Double-click column names to insert into SQL",
+      "history": "History",
+      "aiGenerate": "AI Generate",
+      "shortcut": "Ctrl/⌘ + Enter to run",
+      "run": "Run"
+    },
+    "schema": {
+      "tables": "Tables",
+      "doubleClickToInsert": "Double-click to insert into SQL",
+      "primaryKey": "Primary Key"
+    },
+    "result": {
+      "queryError": "Query Error",
+      "rows": "{count} rows",
+      "readableTime": "Readable time",
+      "viewChat": "View chat history",
+      "summarize": "Summarize",
+      "pageSize": "Per page",
+      "pageInfo": "Page {current} / {total}",
+      "emptyResult": "Query returned no results",
+      "initialState": "Enter SQL and run to see results",
+      "initialHint": "Only SELECT queries supported, add LIMIT for better performance",
+      "summaryTitle": "AI Result Summary",
+      "analyzing": "AI is analyzing results...",
+      "errorSummary": "Summary failed"
+    },
+    "generate": {
+      "title": "AI Generate SQL",
+      "description": "Describe what you want to query in natural language, and AI will generate the corresponding SQL.",
+      "placeholder": "E.g.: Find top 10 members by message count, count daily messages, find messages containing 'keyword'...",
+      "errorEmptyPrompt": "Please enter your query requirement",
+      "errorGenerate": "AI generation failed",
+      "aiOutput": "AI Output",
+      "waitingAI": "Waiting for AI response...",
+      "sqlStatement": "SQL Statement",
+      "explanation": "Explanation",
+      "generateSQL": "Generate SQL",
+      "useSQL": "Use SQL",
+      "run": "Run"
+    },
+    "history": {
+      "title": "AI Generation History",
+      "execute": "Execute",
+      "empty": "No history records",
+      "justNow": "Just now",
+      "minutesAgo": "{count} min ago",
+      "hoursAgo": "{count} hr ago",
+      "today": "Today"
+    }
+  }
+}

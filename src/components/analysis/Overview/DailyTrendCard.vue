@@ -14,20 +14,9 @@ defineProps<{
 </script>
 
 <template>
-  <SectionCard v-if="dailyActivity.length > 0" :title="t('title')" :show-divider="false">
+  <SectionCard v-if="dailyActivity.length > 0" :title="t('analysis.overview.dailyTrend.title')" :show-divider="false">
     <div class="p-5">
       <EChartLine :data="dailyChartData" :height="288" />
     </div>
   </SectionCard>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "title": "每日消息趋势"
-  },
-  "en-US": {
-    "title": "Daily Message Trend"
-  }
-}
-</i18n>

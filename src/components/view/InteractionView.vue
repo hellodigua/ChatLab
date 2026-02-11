@@ -82,32 +82,32 @@ watch(
       <div class="flex items-center gap-4">
         <!-- 布局切换 -->
         <div class="flex items-center gap-2">
-          <span class="text-xs text-gray-400">{{ t('layout') }}:</span>
+          <span class="text-xs text-gray-400">{{ t('views.interaction.layout') }}:</span>
           <UButtonGroup size="xs">
             <UButton
               :color="layoutType === 'circular' ? 'primary' : 'neutral'"
               :variant="layoutType === 'circular' ? 'solid' : 'ghost'"
               @click="layoutType = 'circular'"
             >
-              {{ t('circular') }}
+              {{ t('views.interaction.circular') }}
             </UButton>
             <UButton
               :color="layoutType === 'force' ? 'primary' : 'neutral'"
               :variant="layoutType === 'force' ? 'solid' : 'ghost'"
               @click="layoutType = 'force'"
             >
-              {{ t('force') }}
+              {{ t('views.interaction.force') }}
             </UButton>
           </UButtonGroup>
         </div>
         <!-- 方向切换 -->
         <div class="flex items-center gap-2">
-          <span class="text-xs text-gray-400">{{ t('directed') }}:</span>
+          <span class="text-xs text-gray-400">{{ t('views.interaction.directed') }}:</span>
           <USwitch v-model="showDirection" size="xs" />
         </div>
         <!-- 重置视图 -->
         <UButton size="xs" color="neutral" variant="ghost" icon="i-heroicons-arrow-path" @click="handleResetView">
-          {{ t('reset') }}
+          {{ t('views.interaction.reset') }}
         </UButton>
       </div>
     </div>
@@ -133,13 +133,13 @@ watch(
           <div
             class="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-gray-100/80 px-3 py-1 text-xs text-gray-500 backdrop-blur-sm dark:bg-gray-800/80 dark:text-gray-400"
           >
-            {{ t('graphHint', { nodes: graphData.nodes.length, links: graphData.links.length }) }}
+            {{ t('views.interaction.graphHint', { nodes: graphData.nodes.length, links: graphData.links.length }) }}
           </div>
         </div>
         <div v-else class="flex h-full items-center justify-center text-gray-400">
           <div class="text-center">
             <UIcon name="i-heroicons-user-group" class="mx-auto h-10 w-10 text-gray-300 dark:text-gray-600" />
-            <p class="mt-2 text-sm">{{ t('noInteraction') }}</p>
+            <p class="mt-2 text-sm">{{ t('views.interaction.noInteraction') }}</p>
           </div>
         </div>
       </template>
@@ -147,27 +147,3 @@ watch(
   </div>
 </template>
 
-<i18n>
-{
-  "zh-CN": {
-    "mentionGraph": "艾特互动关系图",
-    "layout": "布局",
-    "circular": "环形",
-    "force": "力导向",
-    "directed": "有向",
-    "reset": "重置",
-    "graphHint": "共 {nodes} 位成员，{links} 条互动关系",
-    "noInteraction": "暂无艾特互动数据"
-  },
-  "en-US": {
-    "mentionGraph": "Mention Interaction Graph",
-    "layout": "Layout",
-    "circular": "Circular",
-    "force": "Force",
-    "directed": "Directed",
-    "reset": "Reset",
-    "graphHint": "{nodes} members, {links} interactions",
-    "noInteraction": "No mention interaction data"
-  }
-}
-</i18n>

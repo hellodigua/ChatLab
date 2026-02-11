@@ -238,14 +238,14 @@ async function exportResult() {
     if (result.success && result.filePath) {
       const filename = result.filePath.split('/').pop() || result.filePath
       toast.add({
-        title: t('exportSuccess'),
+        title: t('common.exportSuccess'),
         description: filename,
         icon: 'i-heroicons-check-circle',
         color: 'primary',
         duration: 3000,
         actions: [
           {
-            label: t('openFolder'),
+            label: t('common.openFolder'),
             onClick: () => {
               window.cacheApi.showInFolder(result.filePath!)
             },
@@ -254,7 +254,7 @@ async function exportResult() {
       })
     } else {
       toast.add({
-        title: t('exportFailed'),
+        title: t('common.exportFailed'),
         description: result.error,
         icon: 'i-heroicons-x-circle',
         color: 'error',
@@ -264,8 +264,8 @@ async function exportResult() {
   } catch (err) {
     console.error('导出失败:', err)
     toast.add({
-      title: t('exportFailed'),
-      description: String(err),
+        title: t('common.exportFailed'),
+        description: String(err),
       icon: 'i-heroicons-x-circle',
       color: 'error',
       duration: 3000,
@@ -321,7 +321,7 @@ async function openSummaryModal() {
 async function generateSummary() {
   const hasConfig = await window.llmApi.hasConfig()
   if (!hasConfig) {
-    summaryError.value = t('errorNoAIConfig')
+    summaryError.value = t('common.errorNoAIConfig')
     return
   }
 
@@ -370,7 +370,7 @@ ${resultSummary}
     if (result.success) {
       summaryContent.value = streamingContent.value
     } else {
-      summaryError.value = result.error || t('errorSummary')
+      summaryError.value = result.error || t('ai.sqlLab.result.errorSummary')
     }
   } catch (err: any) {
     summaryError.value = err.message || String(err)
@@ -397,7 +397,7 @@ defineExpose({ resetSort })
       <div class="flex items-start gap-2">
         <UIcon name="i-heroicons-exclamation-circle" class="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
         <div class="min-w-0 flex-1">
-          <p class="text-sm font-medium text-red-800 dark:text-red-200">{{ t('queryError') }}</p>
+          <p class="text-sm font-medium text-red-800 dark:text-red-200">{{ t('ai.sqlLab.result.queryError') }}</p>
           <p class="mt-1 break-all font-mono text-xs text-red-600 dark:text-red-400">{{ error }}</p>
         </div>
       </div>
@@ -412,12 +412,12 @@ defineExpose({ resetSort })
         <!-- 时间戳转日期开关 -->
         <label class="flex cursor-pointer items-center gap-1.5">
           <UCheckbox :model-value="showReadableTime" size="xs" @update:model-value="toggleReadableTime" />
-          <span class="text-xs">{{ t('readableTime') }}</span>
+          <span class="text-xs">{{ t('ai.sqlLab.result.readableTime') }}</span>
         </label>
         <span class="text-gray-300 dark:text-gray-600">|</span>
         <span>
           <UIcon name="i-heroicons-table-cells" class="mr-1 inline h-4 w-4" />
-          {{ t('rows', { count: result.rowCount }) }}
+          {{ t('ai.sqlLab.result.rows', { count: result.rowCount }) }}
         </span>
         <span>
           <UIcon name="i-heroicons-clock" class="mr-1 inline h-4 w-4" />
@@ -427,11 +427,11 @@ defineExpose({ resetSort })
       <div class="flex items-center gap-2">
         <UButton variant="ghost" size="xs" @click="openSummaryModal">
           <UIcon name="i-heroicons-sparkles" class="mr-1 h-4 w-4" />
-          {{ t('summarize') }}
+          {{ t('ai.sqlLab.result.summarize') }}
         </UButton>
         <UButton variant="ghost" size="xs" :loading="isExporting" @click="exportResult">
           <UIcon name="i-heroicons-arrow-down-tray" class="mr-1 h-4 w-4" />
-          {{ t('export') }}
+          {{ t('common.export') }}
         </UButton>
       </div>
     </div>
@@ -483,7 +483,7 @@ defineExpose({ resetSort })
                 color="neutral"
                 variant="ghost"
                 size="xs"
-                :title="t('viewChat')"
+                :title="t('ai.sqlLab.result.viewChat')"
                 @click="viewMessageContext(row[messageIdColumnIndex] as number)"
               />
             </td>
@@ -531,7 +531,7 @@ defineExpose({ resetSort })
       </div>
       <!-- 每页数量选择 -->
       <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-        <span>{{ t('pageSize') }}</span>
+        <span>{{ t('ai.sqlLab.result.pageSize') }}</span>
         <USelect
           :model-value="pageSize"
           :items="pageSizeOptions.map((n) => ({ label: String(n), value: n }))"
@@ -549,7 +549,7 @@ defineExpose({ resetSort })
     >
       <div class="text-center">
         <UIcon name="i-heroicons-inbox" class="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600" />
-        <p class="mt-2 text-sm">{{ t('emptyResult') }}</p>
+        <p class="mt-2 text-sm">{{ t('ai.sqlLab.result.emptyResult') }}</p>
       </div>
     </div>
 
@@ -557,8 +557,8 @@ defineExpose({ resetSort })
     <div v-if="!result && !error" class="flex flex-1 items-center justify-center text-gray-500 dark:text-gray-400">
       <div class="text-center">
         <UIcon name="i-heroicons-command-line" class="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600" />
-        <p class="mt-2 text-sm">{{ t('initialState') }}</p>
-        <p class="mt-1 text-xs text-gray-400">{{ t('initialHint') }}</p>
+        <p class="mt-2 text-sm">{{ t('ai.sqlLab.result.initialState') }}</p>
+        <p class="mt-1 text-xs text-gray-400">{{ t('ai.sqlLab.result.initialHint') }}</p>
       </div>
     </div>
 
@@ -568,13 +568,13 @@ defineExpose({ resetSort })
         <div class="max-h-[70vh] overflow-hidden p-6">
           <div class="mb-4 flex items-center gap-2">
             <UIcon name="i-heroicons-sparkles" class="h-5 w-5 text-pink-500" />
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('summaryTitle') }}</h3>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('ai.sqlLab.result.summaryTitle') }}</h3>
           </div>
 
           <!-- 加载状态 -->
           <div v-if="isSummarizing && !streamingContent" class="flex items-center justify-center py-8">
             <UIcon name="i-heroicons-arrow-path" class="h-6 w-6 animate-spin text-pink-500" />
-            <span class="ml-2 text-sm text-gray-500">{{ t('analyzing') }}</span>
+            <span class="ml-2 text-sm text-gray-500">{{ t('ai.sqlLab.result.analyzing') }}</span>
           </div>
 
           <!-- 流式输出 / 最终结果 -->
@@ -585,7 +585,7 @@ defineExpose({ resetSort })
             />
             <div v-if="isSummarizing" class="mt-2 flex items-center text-xs text-gray-400">
               <UIcon name="i-heroicons-arrow-path" class="mr-1 h-3 w-3 animate-spin" />
-              {{ t('generating') }}
+              {{ t('common.generating') }}
             </div>
           </div>
 
@@ -598,65 +598,14 @@ defineExpose({ resetSort })
           <div class="mt-4 flex justify-end gap-2">
             <UButton v-if="!isSummarizing && summaryContent" variant="outline" @click="generateSummary">
               <UIcon name="i-heroicons-arrow-path" class="mr-1 h-4 w-4" />
-              {{ t('regenerate') }}
+              {{ t('common.regenerate') }}
             </UButton>
-            <UButton variant="ghost" @click="closeSummaryModal">{{ t('close') }}</UButton>
+            <UButton variant="ghost" @click="closeSummaryModal">{{ t('common.close') }}</UButton>
           </div>
         </div>
       </template>
     </UModal>
   </div>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "queryError": "查询错误",
-    "rows": "{count} 行",
-    "readableTime": "时间戳转日期",
-    "viewChat": "查看聊天记录",
-    "summarize": "总结一下",
-    "export": "导出",
-    "exportSuccess": "导出成功",
-    "exportFailed": "导出失败",
-    "openFolder": "打开目录",
-    "pageSize": "每页",
-    "pageInfo": "第 {current} / {total} 页",
-    "emptyResult": "查询结果为空",
-    "initialState": "输入 SQL 语句并运行查看结果",
-    "initialHint": "仅支持 SELECT 查询，建议添加 LIMIT 以提升性能",
-    "summaryTitle": "AI 结果总结",
-    "analyzing": "AI 正在分析结果...",
-    "generating": "生成中...",
-    "regenerate": "重新生成",
-    "close": "关闭",
-    "errorNoAIConfig": "请先在设置中配置 AI 服务",
-    "errorSummary": "总结失败"
-  },
-  "en-US": {
-    "queryError": "Query Error",
-    "rows": "{count} rows",
-    "readableTime": "Readable time",
-    "viewChat": "View chat history",
-    "summarize": "Summarize",
-    "export": "Export",
-    "exportSuccess": "Export successful",
-    "exportFailed": "Export failed",
-    "openFolder": "Open folder",
-    "pageSize": "Per page",
-    "pageInfo": "Page {current} / {total}",
-    "emptyResult": "Query returned no results",
-    "initialState": "Enter SQL and run to see results",
-    "initialHint": "Only SELECT queries supported, add LIMIT for better performance",
-    "summaryTitle": "AI Result Summary",
-    "analyzing": "AI is analyzing results...",
-    "generating": "Generating...",
-    "regenerate": "Regenerate",
-    "close": "Close",
-    "errorNoAIConfig": "Please configure AI service in settings first",
-    "errorSummary": "Summary failed"
-  }
-}
-</i18n>
 
 <!-- Markdown 样式已提取到全局 src/assets/styles/markdown.css -->

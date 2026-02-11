@@ -51,15 +51,15 @@ watch(
 <template>
   <div class="main-content mx-auto max-w-3xl p-6">
     <!-- 加载中 -->
-    <LoadingState v-if="isLoading" :text="t('loading')" />
+    <LoadingState v-if="isLoading" :text="t('quotes.catchphrase.loading')" />
 
     <!-- 口头禅列表 -->
     <ListPro
       v-else-if="catchphraseAnalysis && catchphraseAnalysis.members.length > 0"
       :items="catchphraseAnalysis.members"
-      :title="t('title')"
-      :description="t('description', { count: catchphraseAnalysis.members.length })"
-      :countTemplate="t('countTemplate')"
+      :title="t('quotes.catchphrase.title')"
+      :description="t('quotes.catchphrase.description', { count: catchphraseAnalysis.members.length })"
+      :countTemplate="t('quotes.catchphrase.countTemplate')"
     >
       <template #item="{ item: member }">
         <div class="flex items-start gap-4">
@@ -89,7 +89,7 @@ watch(
               >
                 {{ truncateContent(phrase.content) }}
               </span>
-              <span class="text-xs text-gray-400">{{ t('times', { count: phrase.count }) }}</span>
+              <span class="text-xs text-gray-400">{{ t('quotes.catchphrase.times', { count: phrase.count }) }}</span>
             </div>
           </div>
         </div>
@@ -97,29 +97,8 @@ watch(
     </ListPro>
 
     <!-- 空状态 -->
-    <SectionCard v-else :title="t('title')">
-      <EmptyState :text="t('empty')" />
+    <SectionCard v-else :title="t('quotes.catchphrase.title')">
+      <EmptyState :text="t('quotes.catchphrase.empty')" />
     </SectionCard>
   </div>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "title": "💬 口头禅分析",
-    "loading": "正在分析口头禅数据...",
-    "description": "分析了 {count} 位成员的高频发言",
-    "countTemplate": "共 {count} 位成员",
-    "times": "{count}次",
-    "empty": "暂无口头禅数据"
-  },
-  "en-US": {
-    "title": "💬 Catchphrase Analysis",
-    "loading": "Analyzing catchphrases...",
-    "description": "Analyzed frequent phrases from {count} members",
-    "countTemplate": "{count} members",
-    "times": "{count}x",
-    "empty": "No catchphrase data available"
-  }
-}
-</i18n>

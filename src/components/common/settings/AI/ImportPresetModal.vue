@@ -36,21 +36,21 @@ const presetGroups = computed(() => [
     key: 'common',
     icon: 'i-heroicons-squares-2x2',
     iconColor: 'text-emerald-500',
-    titleKey: 'importPreset.commonPresets',
+    titleKey: 'settings.aiPrompt.importPreset.commonPresets',
     presets: remotePresets.value.filter((p) => p.chatType === 'common' || !p.chatType),
   },
   {
     key: 'group',
     icon: 'i-heroicons-chat-bubble-left-right',
     iconColor: 'text-violet-500',
-    titleKey: 'importPreset.groupPresets',
+    titleKey: 'settings.aiPrompt.importPreset.groupPresets',
     presets: remotePresets.value.filter((p) => p.chatType === 'group'),
   },
   {
     key: 'private',
     icon: 'i-heroicons-user',
     iconColor: 'text-blue-500',
-    titleKey: 'importPreset.privatePresets',
+    titleKey: 'settings.aiPrompt.importPreset.privatePresets',
     presets: remotePresets.value.filter((p) => p.chatType === 'private'),
   },
 ])
@@ -65,10 +65,10 @@ async function loadRemotePresets() {
     remotePresets.value = presets
 
     if (presets.length === 0) {
-      error.value = t('importPreset.noPresets')
+      error.value = t('settings.aiPrompt.importPreset.noPresets')
     }
   } catch (e) {
-    error.value = t('importPreset.loadError')
+    error.value = t('settings.aiPrompt.importPreset.loadError')
   } finally {
     isLoading.value = false
   }
@@ -96,7 +96,7 @@ async function handlePreview(preset: RemotePresetData) {
       remotePresets.value[index] = fullPreset
     }
   } else {
-    previewError.value = t('importPreset.fetchError')
+    previewError.value = t('settings.aiPrompt.importPreset.fetchError')
   }
 
   isPreviewLoading.value = false
@@ -169,20 +169,20 @@ watch(
         <div class="mb-4 flex items-center justify-between">
           <div class="flex items-center gap-2">
             <UIcon name="i-heroicons-cloud-arrow-down" class="h-5 w-5 text-primary-500" />
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('importPreset.title') }}</h2>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('settings.aiPrompt.importPreset.title') }}</h2>
           </div>
           <UButton icon="i-heroicons-x-mark" variant="ghost" size="sm" @click="closeModal" />
         </div>
 
         <!-- 描述 -->
-        <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">{{ t('importPreset.description') }}</p>
+        <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">{{ t('settings.aiPrompt.importPreset.description') }}</p>
 
         <!-- 内容区域 -->
         <div class="max-h-[400px] overflow-y-auto">
           <!-- 加载中 -->
           <div v-if="isLoading" class="flex flex-col items-center justify-center py-12">
             <UIcon name="i-heroicons-arrow-path" class="h-8 w-8 animate-spin text-primary-500" />
-            <p class="mt-2 text-sm text-gray-500">{{ t('importPreset.loading') }}</p>
+            <p class="mt-2 text-sm text-gray-500">{{ t('settings.aiPrompt.importPreset.loading') }}</p>
           </div>
 
           <!-- 错误状态 -->
@@ -190,7 +190,7 @@ watch(
             <UIcon name="i-heroicons-exclamation-circle" class="h-8 w-8 text-red-500" />
             <p class="mt-2 text-sm text-gray-500">{{ error }}</p>
             <UButton variant="soft" size="sm" class="mt-4" @click="loadRemotePresets">
-              {{ t('importPreset.retry') }}
+              {{ t('common.retry') }}
             </UButton>
           </div>
 
@@ -212,14 +212,14 @@ watch(
                     <div class="flex-1 min-w-0">
                       <p class="text-sm font-medium text-gray-900 dark:text-white">{{ preset.name }}</p>
                       <p class="mt-0.5 line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
-                        {{ preset.description || t('importPreset.noDescription') }}
+                        {{ preset.description || t('settings.aiPrompt.importPreset.noDescription') }}
                       </p>
                     </div>
                     <div class="flex items-center gap-1.5 ml-2 shrink-0">
                       <!-- 预览按钮 -->
                       <UButton color="gray" size="xs" @click="handlePreview(preset)">
                         <UIcon name="i-heroicons-eye" class="mr-1 h-3.5 w-3.5" />
-                        {{ t('importPreset.preview') }}
+                        {{ t('settings.aiPrompt.importPreset.preview') }}
                       </UButton>
                       <!-- 添加按钮 -->
                       <UButton
@@ -230,7 +230,7 @@ watch(
                         disabled
                       >
                         <UIcon name="i-heroicons-check" class="mr-1 h-3.5 w-3.5" />
-                        {{ t('importPreset.added') }}
+                        {{ t('settings.aiPrompt.importPreset.added') }}
                       </UButton>
                       <UButton
                         v-else
@@ -241,7 +241,7 @@ watch(
                         @click="handleAddPreset(preset)"
                       >
                         <UIcon v-if="addingPresetId !== preset.id" name="i-heroicons-plus" class="mr-1 h-3.5 w-3.5" />
-                        {{ t('importPreset.add') }}
+                        {{ t('settings.aiPrompt.importPreset.add') }}
                       </UButton>
                     </div>
                   </div>
@@ -268,7 +268,7 @@ watch(
         <!-- 加载中 -->
         <div v-if="isPreviewLoading" class="flex items-center justify-center py-8">
           <UIcon name="i-heroicons-arrow-path" class="h-6 w-6 animate-spin text-primary-500" />
-          <span class="ml-2 text-sm text-gray-500">{{ t('importPreset.fetchingContent') }}</span>
+          <span class="ml-2 text-sm text-gray-500">{{ t('settings.aiPrompt.importPreset.fetchingContent') }}</span>
         </div>
 
         <!-- 错误 -->
@@ -281,7 +281,7 @@ watch(
         <div v-else-if="previewPreset?.roleDefinition" class="max-h-[60vh] overflow-y-auto space-y-4">
           <div>
             <p class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-              {{ t('importPreset.roleDefinition') }}
+              {{ t('settings.aiPrompt.importPreset.roleDefinition') }}
             </p>
             <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
               <p class="whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-400">
@@ -291,7 +291,7 @@ watch(
           </div>
           <div>
             <p class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-              {{ t('importPreset.responseRules') }}
+              {{ t('settings.aiPrompt.importPreset.responseRules') }}
             </p>
             <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
               <p class="whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-400">
@@ -307,7 +307,7 @@ watch(
           class="mt-4 flex justify-end gap-2 border-t border-gray-200 pt-4 dark:border-gray-700"
         >
           <UButton variant="ghost" color="gray" @click="closePreview">
-            {{ t('importPreset.close') }}
+            {{ t('common.close') }}
           </UButton>
           <UButton
             v-if="!promptStore.isRemotePresetAdded(previewPreset.id)"
@@ -316,63 +316,14 @@ watch(
             @click="handleAddPresetFromPreview"
           >
             <UIcon v-if="addingPresetId !== previewPreset.id" name="i-heroicons-plus" class="mr-1 h-4 w-4" />
-            {{ t('importPreset.add') }}
+            {{ t('settings.aiPrompt.importPreset.add') }}
           </UButton>
           <UButton v-else variant="soft" color="gray" disabled>
             <UIcon name="i-heroicons-check" class="mr-1 h-4 w-4" />
-            {{ t('importPreset.added') }}
+            {{ t('settings.aiPrompt.importPreset.added') }}
           </UButton>
         </div>
       </div>
     </template>
   </UModal>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "importPreset": {
-      "title": "导入预设",
-      "description": "从远程获取推荐的系统提示词预设",
-      "loading": "正在加载远程预设...",
-      "loadError": "加载远程预设失败",
-      "noPresets": "暂无可用的远程预设",
-      "retry": "重试",
-      "commonPresets": "通用预设",
-      "groupPresets": "群聊专用预设",
-      "privatePresets": "私聊专用预设",
-      "add": "添加",
-      "added": "已添加",
-      "preview": "预览",
-      "roleDefinition": "角色定义",
-      "responseRules": "回复规则",
-      "noDescription": "暂无描述",
-      "fetchingContent": "正在加载内容...",
-      "fetchError": "加载内容失败",
-      "close": "关闭"
-    }
-  },
-  "en-US": {
-    "importPreset": {
-      "title": "Import Presets",
-      "description": "Get recommended system prompt presets from remote",
-      "loading": "Loading remote presets...",
-      "loadError": "Failed to load remote presets",
-      "noPresets": "No remote presets available",
-      "retry": "Retry",
-      "commonPresets": "Universal Presets",
-      "groupPresets": "Group Chat Only",
-      "privatePresets": "Private Chat Only",
-      "add": "Add",
-      "added": "Added",
-      "preview": "Preview",
-      "roleDefinition": "Role Definition",
-      "responseRules": "Response Rules",
-      "noDescription": "No description",
-      "fetchingContent": "Loading content...",
-      "fetchError": "Failed to load content",
-      "close": "Close"
-    }
-  }
-}
-</i18n>

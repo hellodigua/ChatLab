@@ -47,8 +47,8 @@ const isModified = computed(() => {
 })
 
 const modalTitle = computed(() => {
-  if (isBuiltIn.value) return t('modal.editBuiltin')
-  return isEditMode.value ? t('modal.editCustom') : t('modal.addCustom')
+  if (isBuiltIn.value) return t('settings.aiPrompt.modal.editBuiltin')
+  return isEditMode.value ? t('settings.aiPrompt.modal.editCustom') : t('settings.aiPrompt.modal.addCustom')
 })
 
 const canSave = computed(() => {
@@ -199,16 +199,16 @@ ${formData.value.responseRules}`
           <!-- 预设名称 -->
           <div>
             <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              {{ t('modal.presetName') }}
+              {{ t('settings.aiPrompt.modal.presetName') }}
             </label>
-            <UInput v-model="formData.name" :placeholder="t('modal.presetNamePlaceholder')" class="w-60" />
+            <UInput v-model="formData.name" :placeholder="t('settings.aiPrompt.modal.presetNamePlaceholder')" class="w-60" />
           </div>
 
           <!-- 适用场景（仅自定义预设显示） -->
           <div v-if="!isBuiltIn">
             <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              {{ t('modal.applicableTo') }}
-              <span class="font-normal text-gray-500">{{ t('modal.applicableToHint') }}</span>
+              {{ t('settings.aiPrompt.modal.applicableTo') }}
+              <span class="font-normal text-gray-500">{{ t('settings.aiPrompt.modal.applicableToHint') }}</span>
             </label>
             <div class="flex items-center gap-4">
               <label class="flex cursor-pointer items-center gap-2">
@@ -217,7 +217,7 @@ ${formData.value.responseRules}`
                   v-model="formData.supportGroup"
                   class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                 />
-                <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('modal.groupChat') }}</span>
+                <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.aiPrompt.modal.groupChat') }}</span>
               </label>
               <label class="flex cursor-pointer items-center gap-2">
                 <input
@@ -225,7 +225,7 @@ ${formData.value.responseRules}`
                   v-model="formData.supportPrivate"
                   class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                 />
-                <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('modal.privateChat') }}</span>
+                <span class="text-sm text-gray-700 dark:text-gray-300">{{ t('settings.aiPrompt.modal.privateChat') }}</span>
               </label>
             </div>
           </div>
@@ -233,12 +233,12 @@ ${formData.value.responseRules}`
           <!-- 角色定义 -->
           <div>
             <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              {{ t('modal.roleDefinition') }}
+              {{ t('settings.aiPrompt.modal.roleDefinition') }}
             </label>
             <UTextarea
               v-model="formData.roleDefinition"
               :rows="8"
-              :placeholder="t('modal.roleDefinitionPlaceholder')"
+              :placeholder="t('settings.aiPrompt.modal.roleDefinitionPlaceholder')"
               class="w-120 font-mono text-sm"
             />
           </div>
@@ -246,13 +246,13 @@ ${formData.value.responseRules}`
           <!-- 回答要求 -->
           <div>
             <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              {{ t('modal.responseRules') }}
-              <span class="font-normal text-gray-500">{{ t('modal.responseRulesHint') }}</span>
+              {{ t('settings.aiPrompt.modal.responseRules') }}
+              <span class="font-normal text-gray-500">{{ t('settings.aiPrompt.modal.responseRulesHint') }}</span>
             </label>
             <UTextarea
               v-model="formData.responseRules"
               :rows="5"
-              :placeholder="t('modal.responseRulesPlaceholder')"
+              :placeholder="t('settings.aiPrompt.modal.responseRulesPlaceholder')"
               class="w-120 font-mono text-sm"
             />
           </div>
@@ -261,8 +261,8 @@ ${formData.value.responseRules}`
           <div>
             <label class="mb-1.5 flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
               <UIcon name="i-heroicons-eye" class="h-4 w-4 text-violet-500" />
-              {{ t('modal.preview') }}
-              <span class="font-normal text-gray-500">{{ t('modal.previewHint') }}</span>
+              {{ t('settings.aiPrompt.modal.preview') }}
+              <span class="font-normal text-gray-500">{{ t('settings.aiPrompt.modal.previewHint') }}</span>
             </label>
             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
               <pre class="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300">{{ previewContent }}</pre>
@@ -275,67 +275,14 @@ ${formData.value.responseRules}`
           <!-- 内置预设：显示重置按钮 -->
           <UButton v-if="isBuiltIn && isModified" variant="outline" color="warning" @click="handleReset">
             <UIcon name="i-heroicons-arrow-path" class="mr-1 h-4 w-4" />
-            {{ t('modal.resetToDefault') }}
+            {{ t('settings.aiPrompt.modal.resetToDefault') }}
           </UButton>
-          <UButton variant="ghost" @click="closeModal">{{ t('modal.cancel') }}</UButton>
+          <UButton variant="ghost" @click="closeModal">{{ t('common.cancel') }}</UButton>
           <UButton color="primary" :disabled="!canSave" @click="handleSave">
-            {{ isEditMode ? t('modal.saveChanges') : t('modal.addPreset') }}
+            {{ isEditMode ? t('settings.aiPrompt.modal.saveChanges') : t('settings.aiPrompt.modal.addPreset') }}
           </UButton>
         </div>
       </div>
     </template>
   </UModal>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "modal": {
-      "editBuiltin": "编辑系统提示词",
-      "editCustom": "编辑自定义提示词",
-      "addCustom": "添加自定义提示词",
-      "presetName": "预设名称",
-      "presetNamePlaceholder": "为预设起个名字",
-      "applicableTo": "适用场景",
-      "applicableToHint": "（勾选后可在对应分析类型中使用）",
-      "groupChat": "群聊分析",
-      "privateChat": "私聊分析",
-      "roleDefinition": "角色定义",
-      "roleDefinitionPlaceholder": "定义 AI 助手的角色和任务...",
-      "responseRules": "回答要求",
-      "responseRulesHint": "（指导 AI 如何回答）",
-      "responseRulesPlaceholder": "定义 AI 回答的格式和要求...",
-      "preview": "完整提示词预览",
-      "previewHint": "（预览为群聊模式，实际会根据分析类型自动调整）",
-      "resetToDefault": "重置为默认",
-      "cancel": "取消",
-      "saveChanges": "保存修改",
-      "addPreset": "添加预设"
-    }
-  },
-  "en-US": {
-    "modal": {
-      "editBuiltin": "Edit System Prompt",
-      "editCustom": "Edit Custom Prompt",
-      "addCustom": "Add Custom Prompt",
-      "presetName": "Preset Name",
-      "presetNamePlaceholder": "Give your preset a name",
-      "applicableTo": "Applicable To",
-      "applicableToHint": " (Check to enable for corresponding analysis type)",
-      "groupChat": "Group Chat",
-      "privateChat": "Private Chat",
-      "roleDefinition": "Role Definition",
-      "roleDefinitionPlaceholder": "Define the AI assistant's role and tasks...",
-      "responseRules": "Response Rules",
-      "responseRulesHint": " (Guide how AI should respond)",
-      "responseRulesPlaceholder": "Define AI response format and requirements...",
-      "preview": "Full Prompt Preview",
-      "previewHint": " (Preview shows group chat mode, actual will adjust based on analysis type)",
-      "resetToDefault": "Reset to Default",
-      "cancel": "Cancel",
-      "saveChanges": "Save Changes",
-      "addPreset": "Add Preset"
-    }
-  }
-}
-</i18n>

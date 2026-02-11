@@ -23,25 +23,13 @@ defineProps<{
       <div class="text-center">
         <UIcon name="i-heroicons-chart-bar" class="mx-auto h-12 w-12 text-gray-400" />
         <p class="mt-3 text-sm font-medium text-gray-600 dark:text-gray-400">
-          {{ t('title') }}
+          {{ t('views.timeline.title') }}
         </p>
         <p class="mt-1 max-w-md px-4 text-sm text-gray-500">
-          {{ t('description') }}
+          {{ t('views.timeline.description') }}
         </p>
       </div>
     </div>
   </div>
 </template>
 
-<i18n>
-{
-  "zh-CN": {
-    "title": "时间线视图",
-    "description": "消息时间分布、活跃周期变化趋势等可视化内容"
-  },
-  "en-US": {
-    "title": "Timeline View",
-    "description": "Message time distribution, active period trends and other visualizations"
-  }
-}
-</i18n>

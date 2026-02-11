@@ -531,7 +531,7 @@ defineExpose({
     <div v-if="isLoading" class="flex h-full items-center justify-center">
       <div class="text-center">
         <UIcon name="i-heroicons-arrow-path" class="h-8 w-8 animate-spin text-gray-400" />
-        <p class="mt-2 text-sm text-gray-500">{{ t('loading') }}</p>
+        <p class="mt-2 text-sm text-gray-500">{{ t('records.messageList.loading') }}</p>
       </div>
     </div>
 
@@ -539,8 +539,8 @@ defineExpose({
     <div v-else-if="messages.length === 0" class="flex h-full items-center justify-center">
       <div class="text-center">
         <UIcon name="i-heroicons-chat-bubble-left-right" class="h-12 w-12 text-gray-300 dark:text-gray-600" />
-        <p class="mt-2 text-sm text-gray-500">{{ t('noMessages') }}</p>
-        <p class="mt-1 text-xs text-gray-400">{{ t('tryAdjustFilter') }}</p>
+        <p class="mt-2 text-sm text-gray-500">{{ t('records.messageList.noMessages') }}</p>
+        <p class="mt-1 text-xs text-gray-400">{{ t('records.messageList.tryAdjustFilter') }}</p>
       </div>
     </div>
 
@@ -550,9 +550,9 @@ defineExpose({
       <div v-if="hasMoreBefore" class="flex justify-center py-2">
         <span v-if="isLoadingMore" class="text-xs text-gray-400">
           <UIcon name="i-heroicons-arrow-path" class="mr-1 inline h-3 w-3 animate-spin" />
-          {{ t('loadingMore') }}
+          {{ t('records.messageList.loadingMore') }}
         </span>
-        <span v-else class="text-xs text-gray-400">{{ t('scrollUpForMore') }}</span>
+        <span v-else class="text-xs text-gray-400">{{ t('records.messageList.scrollUpForMore') }}</span>
       </div>
 
       <!-- 虚拟滚动列表 -->
@@ -592,31 +592,10 @@ defineExpose({
       <div v-if="hasMoreAfter" class="flex justify-center py-2">
         <span v-if="isLoadingMore" class="text-xs text-gray-400">
           <UIcon name="i-heroicons-arrow-path" class="mr-1 inline h-3 w-3 animate-spin" />
-          {{ t('loadingMore') }}
+          {{ t('records.messageList.loadingMore') }}
         </span>
-        <span v-else class="text-xs text-gray-400">{{ t('scrollDownForMore') }}</span>
+        <span v-else class="text-xs text-gray-400">{{ t('records.messageList.scrollDownForMore') }}</span>
       </div>
     </div>
   </div>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "loading": "加载中...",
-    "noMessages": "暂无消息",
-    "tryAdjustFilter": "尝试调整筛选条件",
-    "loadingMore": "加载更多...",
-    "scrollUpForMore": "↑ 向上滚动加载更多",
-    "scrollDownForMore": "↓ 向下滚动加载更多"
-  },
-  "en-US": {
-    "loading": "Loading...",
-    "noMessages": "No messages",
-    "tryAdjustFilter": "Try adjusting the filter",
-    "loadingMore": "Loading more...",
-    "scrollUpForMore": "↑ Scroll up to load more",
-    "scrollDownForMore": "↓ Scroll down to load more"
-  }
-}
-</i18n>

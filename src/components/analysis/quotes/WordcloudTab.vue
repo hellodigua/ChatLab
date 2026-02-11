@@ -73,9 +73,9 @@ const locale = computed(() => settingsStore.locale as 'zh-CN' | 'en-US')
 
 // 词性过滤模式选项
 const posFilterModeOptions = computed(() => [
-  { label: t('posFilter.all'), value: 'all' },
-  { label: t('posFilter.meaningful'), value: 'meaningful' },
-  { label: t('posFilter.custom'), value: 'custom' },
+  { label: t('quotes.wordcloud.posFilter.all'), value: 'all' },
+  { label: t('quotes.wordcloud.posFilter.meaningful'), value: 'meaningful' },
+  { label: t('quotes.wordcloud.posFilter.custom'), value: 'custom' },
 ])
 
 
@@ -90,10 +90,10 @@ const maxWordsOptions = [
 
 // 字体大小选项
 const sizeScaleOptions = computed(() => [
-  { label: t('size.small'), value: 0.75 },
-  { label: t('size.medium'), value: 1 },
-  { label: t('size.large'), value: 1.25 },
-  { label: t('size.xlarge'), value: 1.5 },
+  { label: t('quotes.wordcloud.size.small'), value: 0.75 },
+  { label: t('quotes.wordcloud.size.medium'), value: 1 },
+  { label: t('quotes.wordcloud.size.large'), value: 1.25 },
+  { label: t('quotes.wordcloud.size.xlarge'), value: 1.5 },
 ])
 
 // 词性标签选项（用于多选，带词数）
@@ -222,7 +222,7 @@ onMounted(() => {
           <!-- 加载状态 -->
           <LoadingState
             v-if="isLoading"
-            :text="t('loading')"
+            :text="t('quotes.wordcloud.loading')"
             class="absolute inset-0 z-10 rounded-lg bg-white/80 dark:bg-gray-900/80"
           />
 
@@ -230,8 +230,8 @@ onMounted(() => {
           <EmptyState
             v-else-if="wordcloudData.words.length === 0"
             icon="i-heroicons-cloud"
-            :title="t('empty.title')"
-            :description="t('empty.description')"
+            :title="t('quotes.wordcloud.empty.title')"
+            :description="t('quotes.wordcloud.empty.description')"
             class="h-full"
           />
 
@@ -256,7 +256,7 @@ onMounted(() => {
               <div class="text-2xl font-bold text-gray-900 dark:text-white">
                 {{ stats.totalMessages.toLocaleString() }}
               </div>
-              <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('stats.messagesLabel') }}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('quotes.wordcloud.stats.messagesLabel') }}</div>
             </div>
           </div>
           <div class="h-8 w-px bg-gray-200 dark:bg-gray-700" />
@@ -266,7 +266,7 @@ onMounted(() => {
               <div class="text-2xl font-bold text-gray-900 dark:text-white">
                 {{ stats.totalWords.toLocaleString() }}
               </div>
-              <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('stats.wordsLabel') }}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('quotes.wordcloud.stats.wordsLabel') }}</div>
             </div>
           </div>
           <div class="h-8 w-px bg-gray-200 dark:bg-gray-700" />
@@ -276,7 +276,7 @@ onMounted(() => {
               <div class="text-2xl font-bold text-gray-900 dark:text-white">
                 {{ stats.uniqueWords.toLocaleString() }}
               </div>
-              <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('stats.uniqueLabel') }}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">{{ t('quotes.wordcloud.stats.uniqueLabel') }}</div>
             </div>
           </div>
         </div>
@@ -286,37 +286,37 @@ onMounted(() => {
       <div class="w-[300px] shrink-0 space-y-4">
         <!-- 显示词数 -->
         <div>
-          <h4 class="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('config.maxWords') }}</h4>
+          <h4 class="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('quotes.wordcloud.config.maxWords') }}</h4>
           <UITabs v-model="maxWords" size="xs" :items="maxWordsOptions" />
         </div>
 
         <!-- 字体大小 -->
         <div>
-          <h4 class="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('config.sizeScale') }}</h4>
+          <h4 class="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('quotes.wordcloud.config.sizeScale') }}</h4>
           <UITabs v-model="sizeScale" size="xs" :items="sizeScaleOptions" />
         </div>
 
         <!-- 用户筛选 -->
         <div>
-          <h4 class="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('config.userFilter') }}</h4>
+          <h4 class="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('quotes.wordcloud.config.userFilter') }}</h4>
           <UserSelect v-model="selectedMemberId" :session-id="props.sessionId" class="w-full" />
         </div>
 
         <!-- 词性过滤 -->
         <div>
-          <h4 class="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('config.posFilter') }}</h4>
+          <h4 class="mb-2 text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('quotes.wordcloud.config.posFilter') }}</h4>
           <UITabs v-model="posFilterMode" size="xs" :items="posFilterModeOptions" />
         </div>
 
         <!-- 停用词过滤 -->
         <div class="flex items-center">
-          <UCheckbox v-model="enableStopwords" :label="t('config.enableStopwords')" />
+          <UCheckbox v-model="enableStopwords" :label="t('quotes.wordcloud.config.enableStopwords')" />
         </div>
 
         <!-- 自定义词性选择（仅在 custom 模式下显示） -->
         <div v-if="posFilterMode === 'custom'" class="space-y-2">
           <div class="flex items-center justify-between">
-            <h4 class="text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('posFilter.customHint') }}</h4>
+            <h4 class="text-xs font-medium text-gray-600 dark:text-gray-400">{{ t('quotes.wordcloud.posFilter.customHint') }}</h4>
             <!-- 快捷操作 -->
             <div class="flex gap-1">
               <UButton
@@ -325,7 +325,7 @@ onMounted(() => {
                 color="neutral"
                 @click="customPosTags = posTagDefinitions.filter((t) => t.meaningful).map((t) => t.tag)"
               >
-                {{ t('posFilter.selectMeaningful') }}
+                {{ t('quotes.wordcloud.posFilter.selectMeaningful') }}
               </UButton>
               <UButton
                 size="xs"
@@ -333,10 +333,10 @@ onMounted(() => {
                 color="neutral"
                 @click="customPosTags = posTagDefinitions.map((t) => t.tag)"
               >
-                {{ t('posFilter.selectAll') }}
+                {{ t('quotes.wordcloud.posFilter.selectAll') }}
               </UButton>
               <UButton size="xs" variant="ghost" color="neutral" @click="customPosTags = []">
-                {{ t('posFilter.clearAll') }}
+                {{ t('quotes.wordcloud.posFilter.clearAll') }}
               </UButton>
             </div>
           </div>
@@ -367,84 +367,3 @@ onMounted(() => {
     </div>
   </div>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "loading": "正在分析词频...",
-    "sidebar": {
-      "filter": "筛选配置",
-      "style": "样式设置"
-    },
-    "stats": {
-      "messagesLabel": "消息数",
-      "wordsLabel": "总词数",
-      "uniqueLabel": "独立词"
-    },
-    "config": {
-      "maxWords": "显示词数",
-      "sizeScale": "字体大小",
-      "userFilter": "用户筛选",
-      "posFilter": "词性过滤",
-      "enableStopwords": "过滤停用词"
-    },
-    "size": {
-      "small": "小",
-      "medium": "中",
-      "large": "大",
-      "xlarge": "特大"
-    },
-    "posFilter": {
-      "all": "全部词性",
-      "meaningful": "有意义",
-      "custom": "自定义",
-      "customHint": "自定义词性",
-      "selectMeaningful": "有意义",
-      "selectAll": "全选",
-      "clearAll": "清空"
-    },
-    "empty": {
-      "title": "暂无词云数据",
-      "description": "当前筛选条件下没有足够的文本消息用于生成词云"
-    }
-  },
-  "en-US": {
-    "loading": "Analyzing word frequency...",
-    "sidebar": {
-      "filter": "Filters",
-      "style": "Style"
-    },
-    "stats": {
-      "messagesLabel": "Messages",
-      "wordsLabel": "Total words",
-      "uniqueLabel": "Unique"
-    },
-    "config": {
-      "maxWords": "Max words",
-      "sizeScale": "Font size",
-      "userFilter": "User filter",
-      "posFilter": "POS filter",
-      "enableStopwords": "Filter stopwords"
-    },
-    "size": {
-      "small": "S",
-      "medium": "M",
-      "large": "L",
-      "xlarge": "XL"
-    },
-    "posFilter": {
-      "all": "All",
-      "meaningful": "Meaningful",
-      "custom": "Custom",
-      "customHint": "Custom POS",
-      "selectMeaningful": "Meaningful",
-      "selectAll": "All",
-      "clearAll": "Clear"
-    },
-    "empty": {
-      "title": "No word cloud data",
-      "description": "Not enough text messages to generate a word cloud with current filters"
-    }
-  }
-}
-</i18n>

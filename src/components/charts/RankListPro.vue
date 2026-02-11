@@ -56,7 +56,7 @@ const showViewAll = computed(() => {
 
         <!-- 完整排行榜 Dialog -->
         <UModal v-model:open="isOpen" :ui="{ content: 'md:w-full max-w-3xl' }">
-          <UButton v-if="showViewAll" icon="i-heroicons-list-bullet" variant="ghost">{{ t('fullRanking') }}</UButton>
+          <UButton v-if="showViewAll" icon="i-heroicons-list-bullet" variant="ghost">{{ t('views.charts.rankListPro.fullRanking') }}</UButton>
           <template #content>
             <div ref="modalBodyRef" class="section-content flex flex-col">
               <!-- Header -->
@@ -65,7 +65,7 @@ const showViewAll = computed(() => {
               >
                 <div class="flex items-center gap-2">
                   <h3 class="text-lg font-semibold text-gray-900 whitespace-nowrap dark:text-white">{{ title }}</h3>
-                  <span class="text-sm text-gray-500">（{{ t('memberCount', { count: members.length }) }}）</span>
+                  <span class="text-sm text-gray-500">（{{ t('views.charts.rankListPro.memberCount', { count: members.length }) }}）</span>
                 </div>
                 <CaptureButton size="xs" type="element" :target-element="modalBodyRef" />
               </div>
@@ -83,15 +83,3 @@ const showViewAll = computed(() => {
   </div>
 </template>
 
-<i18n>
-{
-  "zh-CN": {
-    "fullRanking": "完整排行",
-    "memberCount": "共 {count} 位成员"
-  },
-  "en-US": {
-    "fullRanking": "Full Ranking",
-    "memberCount": "{count} members"
-  }
-}
-</i18n>

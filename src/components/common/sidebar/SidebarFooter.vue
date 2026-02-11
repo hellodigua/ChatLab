@@ -29,7 +29,7 @@ const isManagePage = computed(() => route.name === 'manage')
     <!-- 设置 -->
     <SidebarButton
       icon="i-heroicons-cog-6-tooth"
-      :title="t('sidebar.footer.settings')"
+      :title="t('layout.footer.settings')"
       @click="layoutStore.showSettingModal = true"
     />
   </div>

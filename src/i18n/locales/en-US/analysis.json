@@ -46,6 +46,64 @@
     "successDetail": "Successfully appended {count} new messages",
     "failed": "Import failed"
   },
+  "subTabs": {
+    "view": {
+      "message": "Messages",
+      "interaction": "Interactions",
+      "ranking": "Rankings"
+    },
+    "quotes": {
+      "wordcloud": "Word Cloud",
+      "hotRepeat": "Hot Repeats",
+      "catchphrase": "Catchphrases",
+      "keywordAnalysis": "Keyword Analysis"
+    },
+    "member": {
+      "memberList": "Member List",
+      "relationships": "Relationships",
+      "cluster": "Interaction",
+      "nicknameHistory": "Nickname History"
+    }
+  },
+  "overview": {
+    "messageTypeDistribution": "Message Type Distribution",
+    "memberDistribution": "Member Activity Distribution",
+    "others": "Others",
+    "messageRatio": "Message Ratio",
+    "messageUnit": "messages",
+    "memberComparison": "Member Comparison",
+    "statCards": {
+      "dailyAvgMessages": "Daily Avg Messages",
+      "messagesCount": "{count} msgs",
+      "daysCount": "{count} days total",
+      "imageMessages": "Image Messages",
+      "imagesCount": "{count} images",
+      "peakHour": "Peak hour:",
+      "mostActiveWeekday": "Most Active Day",
+      "messagesOnDay": "{count} messages",
+      "weekendActivity": "Weekend Activity",
+      "weekendRatio": "Weekend message ratio",
+      "mostActiveDate": "Most Active Date",
+      "activeDays": "Active Days",
+      "slashDays": "/ {count} days",
+      "consecutiveStreak": "Streak",
+      "daysStreak": "{count} days",
+      "longestStreak": "Longest active streak",
+      "activityRate": "Activity Rate",
+      "activeDaysRatio": "Days with messages"
+    },
+    "dailyTrend": {
+      "title": "Daily Message Trend"
+    },
+    "identity": {
+      "privateChat": "Private",
+      "groupChat": "Group",
+      "analysisReport": "Analysis Report",
+      "totalMessages": "Total Messages",
+      "durationDays": "Duration Days",
+      "dailyAvgMessages": "Daily Avg"
+    }
+  },
   "filter": {
     "title": "Filter Analysis",
     "conditionMode": "Condition Filter",

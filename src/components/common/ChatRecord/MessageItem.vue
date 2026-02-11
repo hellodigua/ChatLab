@@ -173,7 +173,7 @@ function highlightContent(content: string): string {
               v-if="message.replyToMessageId"
               class="mb-2 border-l-2 border-gray-300 dark:border-gray-600 pl-2 text-xs text-gray-500 dark:text-gray-400"
             >
-              <span class="font-medium">{{ t('replyTo') }}</span>
+              <span class="font-medium">{{ t('records.messageItem.replyTo') }}</span>
               <span v-if="message.replyToSenderName" class="ml-1 text-gray-600 dark:text-gray-300">
                 {{ message.replyToSenderName }}
               </span>
@@ -191,7 +191,7 @@ function highlightContent(content: string): string {
           <button
             v-if="isFiltered"
             class="mt-1 flex h-6 w-6 items-center justify-center rounded opacity-0 transition-opacity hover:bg-gray-200 group-hover:opacity-100 dark:hover:bg-gray-700"
-            :title="t('viewContext')"
+            :title="t('records.messageItem.viewContext')"
             @click="$emit('view-context', message.id)"
           >
             <UIcon name="i-heroicons-chat-bubble-left-ellipsis" class="h-4 w-4 text-gray-400" />
@@ -201,20 +201,3 @@ function highlightContent(content: string): string {
     </div>
   </div>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "viewContext": "查看上下文",
-    "contextTitle": "消息上下文（前后各10条）",
-    "noContext": "暂无上下文",
-    "replyTo": "回复"
-  },
-  "en-US": {
-    "viewContext": "View Context",
-    "contextTitle": "Message Context (10 before and after)",
-    "noContext": "No context available",
-    "replyTo": "Reply to"
-  }
-}
-</i18n>

@@ -152,10 +152,10 @@ onMounted(() => {
             </div>
             <div>
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                {{ t('sessionIndex.title') }}
+                {{ t('records.sessionIndex.title') }}
               </h3>
               <p class="text-sm text-gray-500 dark:text-gray-400">
-                {{ t('sessionIndex.subtitle') }}
+                {{ t('records.sessionIndex.subtitle') }}
               </p>
             </div>
           </div>
@@ -178,10 +178,10 @@ onMounted(() => {
                 <UIcon name="i-heroicons-exclamation-triangle" class="h-5 w-5 shrink-0 text-amber-500" />
                 <div>
                   <p class="text-sm font-medium text-amber-800 dark:text-amber-200">
-                    {{ t('sessionIndex.notGenerated') }}
+                    {{ t('records.sessionIndex.notGenerated') }}
                   </p>
                   <p class="mt-1 text-sm text-amber-700 dark:text-amber-300">
-                    {{ t('sessionIndex.notGeneratedHint') }}
+                    {{ t('records.sessionIndex.notGeneratedHint') }}
                   </p>
                 </div>
               </div>
@@ -189,20 +189,20 @@ onMounted(() => {
 
             <div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-800/50">
               <h4 class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                {{ t('sessionIndex.whatIsIt') }}
+                {{ t('records.sessionIndex.whatIsIt') }}
               </h4>
               <ul class="space-y-1 text-sm text-gray-600 dark:text-gray-400">
                 <li class="flex items-start gap-2">
                   <UIcon name="i-heroicons-check" class="mt-0.5 h-4 w-4 shrink-0 text-green-500" />
-                  {{ t('sessionIndex.benefit1') }}
+                  {{ t('records.sessionIndex.benefit1') }}
                 </li>
                 <li class="flex items-start gap-2">
                   <UIcon name="i-heroicons-check" class="mt-0.5 h-4 w-4 shrink-0 text-green-500" />
-                  {{ t('sessionIndex.benefit2') }}
+                  {{ t('records.sessionIndex.benefit2') }}
                 </li>
                 <li class="flex items-start gap-2">
                   <UIcon name="i-heroicons-check" class="mt-0.5 h-4 w-4 shrink-0 text-green-500" />
-                  {{ t('sessionIndex.benefit3') }}
+                  {{ t('records.sessionIndex.benefit3') }}
                 </li>
               </ul>
             </div>
@@ -217,17 +217,17 @@ onMounted(() => {
                 <UIcon name="i-heroicons-check-circle" class="h-5 w-5 shrink-0 text-green-500" />
                 <div>
                   <p class="text-sm font-medium text-green-800 dark:text-green-200">
-                    {{ t('sessionIndex.generated') }}
+                    {{ t('records.sessionIndex.generated') }}
                   </p>
                   <p class="mt-1 text-sm text-green-700 dark:text-green-300">
-                    {{ t('sessionIndex.sessionCount', { count: sessionCount }) }}
+                    {{ t('records.sessionIndex.sessionCount', { count: sessionCount }) }}
                   </p>
                 </div>
               </div>
             </div>
 
             <p class="text-sm text-gray-500 dark:text-gray-400">
-              {{ t('sessionIndex.regenerateHint') }}
+              {{ t('records.sessionIndex.regenerateHint') }}
             </p>
           </div>
         </template>
@@ -235,7 +235,7 @@ onMounted(() => {
         <!-- 操作按钮 -->
         <div class="mt-6 flex justify-end gap-2">
           <UButton v-if="canClose" variant="ghost" @click="close">
-            {{ t('sessionIndex.cancel') }}
+            {{ t('records.sessionIndex.cancel') }}
           </UButton>
           <UButton color="primary" :loading="isGenerating" @click="generateSessionIndex">
             <UIcon
@@ -245,10 +245,10 @@ onMounted(() => {
             />
             {{
               isGenerating
-                ? t('sessionIndex.generating')
+                ? t('records.sessionIndex.generating')
                 : hasIndex
-                  ? t('sessionIndex.regenerate')
-                  : t('sessionIndex.generate')
+                  ? t('records.sessionIndex.regenerate')
+                  : t('records.sessionIndex.generate')
             }}
           </UButton>
         </div>
@@ -256,46 +256,3 @@ onMounted(() => {
     </template>
   </UModal>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "sessionIndex": {
-      "title": "会话索引",
-      "subtitle": "用于聊天记录的时间线导航",
-      "notGenerated": "尚未生成会话索引",
-      "notGeneratedHint": "生成会话索引后，您可以在聊天记录查看器中使用时间线快速导航到不同的会话。",
-      "whatIsIt": "会话索引的作用：",
-      "benefit1": "根据消息时间间隔自动识别会话边界",
-      "benefit2": "在聊天记录查看器中提供时间线导航",
-      "benefit3": "为 AI 分析提供对话上下文理解能力",
-      "generated": "会话索引已生成",
-      "sessionCount": "共识别出 {count} 个会话",
-      "regenerateHint": "如果您调整了会话间隔阈值，可以重新生成索引。",
-      "generate": "生成索引",
-      "regenerate": "重新生成",
-      "generating": "生成中...",
-      "cancel": "取消"
-    }
-  },
-  "en-US": {
-    "sessionIndex": {
-      "title": "Session Index",
-      "subtitle": "For timeline navigation in chat records",
-      "notGenerated": "Session index not generated",
-      "notGeneratedHint": "After generating session index, you can use timeline navigation in the chat record viewer to quickly jump to different sessions.",
-      "whatIsIt": "What session index does:",
-      "benefit1": "Identify conversation boundaries based on message time gaps",
-      "benefit2": "Provide timeline navigation in chat record viewer",
-      "benefit3": "Enable AI analysis to understand conversation context",
-      "generated": "Session index generated",
-      "sessionCount": "{count} sessions identified",
-      "regenerateHint": "You can regenerate the index if you've adjusted the session gap threshold.",
-      "generate": "Generate Index",
-      "regenerate": "Regenerate",
-      "generating": "Generating...",
-      "cancel": "Cancel"
-    }
-  }
-}
-</i18n>

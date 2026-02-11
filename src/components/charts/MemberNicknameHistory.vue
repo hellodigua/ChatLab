@@ -29,13 +29,13 @@ function formatDate(ts: number): string {
 function formatPeriod(startTs: number, endTs: number | null): string {
   const start = formatDate(startTs)
   if (endTs === null) {
-    return t('periodToNow', { start })
+    return t('views.charts.nicknameHistory.periodToNow', { start })
   }
   const end = formatDate(endTs)
   if (start === end) {
     return start
   }
-  return t('periodRange', { start, end })
+  return t('views.charts.nicknameHistory.periodRange', { start, end })
 }
 
 /**
@@ -84,7 +84,7 @@ const singleNickname = computed(() => props.history.length === 1)
             <span class="text-gray-900 dark:text-white" :class="{ 'font-semibold text-[#de335e]': isCurrent(item) }">
               {{ item.name }}
             </span>
-            <UBadge v-if="isCurrent(item)" color="primary" variant="soft" size="xs">{{ t('current') }}</UBadge>
+            <UBadge v-if="isCurrent(item)" color="primary" variant="soft" size="xs">{{ t('views.charts.nicknameHistory.current') }}</UBadge>
           </div>
           <div class="mt-0.5">
             <span class="text-xs text-gray-500 dark:text-gray-400">{{ formatPeriod(item.startTs, item.endTs) }}</span>
@@ -96,23 +96,7 @@ const singleNickname = computed(() => props.history.length === 1)
 
   <!-- 无历史记录 -->
   <div v-else class="py-4 text-center">
-    <span class="text-sm text-gray-400">{{ t('empty') }}</span>
+    <span class="text-sm text-gray-400">{{ t('views.charts.nicknameHistory.empty') }}</span>
   </div>
 </template>
 
-<i18n>
-{
-  "zh-CN": {
-    "periodToNow": "{start} ~ 至今",
-    "periodRange": "{start} ~ {end}",
-    "current": "当前",
-    "empty": "暂无昵称记录"
-  },
-  "en-US": {
-    "periodToNow": "{start} ~ Now",
-    "periodRange": "{start} ~ {end}",
-    "current": "Current",
-    "empty": "No nickname history"
-  }
-}
-</i18n>

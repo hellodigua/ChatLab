@@ -344,7 +344,7 @@ function formatTs(ts: number) {
       <UCard>
         <template #header>
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold">{{ t('chatRecord.batchSummary.title', '批量生成摘要') }}</h3>
+            <h3 class="text-lg font-semibold">{{ t('records.batchSummary.title', '批量生成摘要') }}</h3>
             <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark" size="sm" @click="close" />
           </div>
         </template>
@@ -359,7 +359,7 @@ function formatTs(ts: number) {
               @click="queryMode = 'range'"
               :disabled="isGenerating"
             >
-              {{ t('chatRecord.batchSummary.byRange', '按范围') }}
+              {{ t('records.batchSummary.byRange', '按范围') }}
             </UButton>
             <UButton
               :color="queryMode === 'time' ? 'primary' : 'neutral'"
@@ -368,14 +368,14 @@ function formatTs(ts: number) {
               @click="queryMode = 'time'"
               :disabled="isGenerating"
             >
-              {{ t('chatRecord.batchSummary.byTime', '按时间') }}
+              {{ t('records.batchSummary.byTime', '按时间') }}
             </UButton>
           </div>
 
           <!-- 按范围选择 -->
           <div v-if="queryMode === 'range'">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {{ t('chatRecord.batchSummary.selectRange', '选择范围') }}
+              {{ t('records.batchSummary.selectRange', '选择范围') }}
             </label>
             <div class="space-y-3">
               <div class="flex items-center gap-4">
@@ -385,13 +385,13 @@ function formatTs(ts: number) {
                 </span>
               </div>
               <div class="text-xs text-gray-500 flex justify-between">
-                <span>{{ t('chatRecord.batchSummary.rangeStart', '最早') }}</span>
+                <span>{{ t('records.batchSummary.rangeStart', '最早') }}</span>
                 <span v-if="totalSessionCount > 0">
-                  {{ t('chatRecord.batchSummary.rangeInfo', '约') }}
+                  {{ t('records.batchSummary.rangeInfo', '约') }}
                   {{ Math.ceil((totalSessionCount * rangePercent) / 100) }} / {{ totalSessionCount }}
-                  {{ t('chatRecord.batchSummary.sessionsUnit', '个会话') }}
+                  {{ t('records.batchSummary.sessionsUnit', '个会话') }}
                 </span>
-                <span>{{ t('chatRecord.batchSummary.rangeEnd', '最近') }}</span>
+                <span>{{ t('records.batchSummary.rangeEnd', '最近') }}</span>
               </div>
             </div>
           </div>
@@ -399,16 +399,16 @@ function formatTs(ts: number) {
           <!-- 按时间范围选择 -->
           <div v-else-if="queryMode === 'time'">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {{ t('chatRecord.batchSummary.timeRange', '选择时间范围') }}
+              {{ t('records.batchSummary.timeRange', '选择时间范围') }}
             </label>
             <div class="flex flex-wrap gap-2">
               <UButton
                 v-for="preset in [
-                  { key: 'today', label: t('chatRecord.batchSummary.today', '今天') },
-                  { key: 'yesterday', label: t('chatRecord.batchSummary.yesterday', '昨天') },
-                  { key: 'week', label: t('chatRecord.batchSummary.week', '最近7天') },
-                  { key: 'month', label: t('chatRecord.batchSummary.month', '最近30天') },
-                  { key: 'custom', label: t('chatRecord.batchSummary.custom', '自定义') },
+                  { key: 'today', label: t('records.batchSummary.today', '今天') },
+                  { key: 'yesterday', label: t('records.batchSummary.yesterday', '昨天') },
+                  { key: 'week', label: t('records.batchSummary.week', '最近7天') },
+                  { key: 'month', label: t('records.batchSummary.month', '最近30天') },
+                  { key: 'custom', label: t('records.batchSummary.custom', '自定义') },
                 ]"
                 :key="preset.key"
                 :color="selectedPreset === preset.key ? 'primary' : 'neutral'"
@@ -433,20 +433,20 @@ function formatTs(ts: number) {
           <div v-if="!isLoading && !isChecking" class="text-sm text-gray-600 dark:text-gray-400">
             <template v-if="sessions.length > 0">
               <p>
-                {{ t('chatRecord.batchSummary.found', '找到') }} {{ sessions.length }}
-                {{ t('chatRecord.batchSummary.sessionsUnit', '个会话') }}
+                {{ t('records.batchSummary.found', '找到') }} {{ sessions.length }}
+                {{ t('records.batchSummary.sessionsUnit', '个会话') }}
                 <template v-if="existingSummaryCount > 0 || tooFewMessagesCount > 0">
                   <span class="text-gray-500">
                     （
                     <template v-if="existingSummaryCount > 0">
                       <span class="text-green-600 dark:text-green-400">
-                        {{ existingSummaryCount }} {{ t('chatRecord.batchSummary.hasSummary', '个已有摘要') }}
+                        {{ existingSummaryCount }} {{ t('records.batchSummary.hasSummary', '个已有摘要') }}
                       </span>
                     </template>
                     <template v-if="existingSummaryCount > 0 && tooFewMessagesCount > 0">，</template>
                     <template v-if="tooFewMessagesCount > 0">
                       <span class="text-gray-400">
-                        {{ tooFewMessagesCount }} {{ t('chatRecord.batchSummary.tooFewMessages', '个消息太少') }}
+                        {{ tooFewMessagesCount }} {{ t('records.batchSummary.tooFewMessages', '个消息太少') }}
                       </span>
                     </template>
                     ）
@@ -454,30 +454,30 @@ function formatTs(ts: number) {
                 </template>
               </p>
               <p v-if="pendingSessions.length > 0" class="mt-1 font-medium">
-                {{ t('chatRecord.batchSummary.pending', '待生成:') }} {{ pendingSessions.length }}
-                {{ t('chatRecord.batchSummary.unit', '个') }}
+                {{ t('records.batchSummary.pending', '待生成:') }} {{ pendingSessions.length }}
+                {{ t('records.batchSummary.unit', '个') }}
               </p>
               <p v-else class="mt-1 text-gray-400">
-                {{ t('chatRecord.batchSummary.noPending', '没有可生成的会话') }}
+                {{ t('records.batchSummary.noPending', '没有可生成的会话') }}
               </p>
             </template>
             <p v-else class="text-gray-400">
-              {{ t('chatRecord.batchSummary.noSessions', '该时间范围内没有会话') }}
+              {{ t('records.batchSummary.noSessions', '该时间范围内没有会话') }}
             </p>
           </div>
           <div v-else-if="isChecking" class="flex items-center gap-2 text-sm text-gray-500">
             <UIcon name="i-heroicons-arrow-path" class="animate-spin" />
-            {{ t('chatRecord.batchSummary.checking', '检查中...') }}
+            {{ t('records.batchSummary.checking', '检查中...') }}
           </div>
           <div v-else class="flex items-center gap-2 text-sm text-gray-500">
             <UIcon name="i-heroicons-arrow-path" class="animate-spin" />
-            {{ t('chatRecord.batchSummary.loading', '加载中...') }}
+            {{ t('records.batchSummary.loading', '加载中...') }}
           </div>
 
           <!-- 进度条 -->
           <div v-if="isGenerating || results.length > 0" class="space-y-2">
             <div class="flex items-center justify-between text-sm">
-              <span>{{ t('chatRecord.batchSummary.progress', '进度') }}</span>
+              <span>{{ t('records.batchSummary.progress', '进度') }}</span>
               <span>{{ currentIndex }} / {{ totalToGenerate || pendingSessions.length }}</span>
             </div>
             <!-- 进行中：显示动画进度条 -->
@@ -515,7 +515,7 @@ function formatTs(ts: number) {
                   }"
                 />
                 <span class="flex-1 font-medium">
-                  {{ t('chatRecord.batchSummary.session', '会话') }} #{{ result.id }}
+                  {{ t('records.batchSummary.session', '会话') }} #{{ result.id }}
                 </span>
                 <span
                   class="flex-shrink-0 text-xs"
@@ -527,10 +527,10 @@ function formatTs(ts: number) {
                 >
                   {{
                     result.status === 'success'
-                      ? t('chatRecord.batchSummary.statusSuccess', '成功')
+                      ? t('records.batchSummary.statusSuccess', '成功')
                       : result.status === 'skipped'
-                        ? t('chatRecord.batchSummary.statusSkipped', '跳过')
-                        : t('chatRecord.batchSummary.statusFailed', '失败')
+                        ? t('records.batchSummary.statusSkipped', '跳过')
+                        : t('records.batchSummary.statusFailed', '失败')
                   }}
                 </span>
               </div>
@@ -542,7 +542,7 @@ function formatTs(ts: number) {
                 {{ result.message }}
               </div>
               <div v-else-if="result.status === 'skipped'" class="pl-6 text-xs text-gray-400 italic">
-                {{ t('chatRecord.batchSummary.tooFewMessages', '消息数量太少') }}
+                {{ t('records.batchSummary.tooFewMessages', '消息数量太少') }}
               </div>
             </div>
           </div>
@@ -551,15 +551,15 @@ function formatTs(ts: number) {
           <div v-if="!isGenerating && results.length > 0" class="flex items-center gap-4 text-sm">
             <span class="text-green-600 dark:text-green-400">
               <UIcon name="i-heroicons-check-circle" class="mr-1" />
-              {{ t('chatRecord.batchSummary.success', '成功:') }} {{ stats.success }}
+              {{ t('records.batchSummary.success', '成功:') }} {{ stats.success }}
             </span>
             <span v-if="stats.failed > 0" class="text-red-600 dark:text-red-400">
               <UIcon name="i-heroicons-x-circle" class="mr-1" />
-              {{ t('chatRecord.batchSummary.failed', '失败:') }} {{ stats.failed }}
+              {{ t('records.batchSummary.failed', '失败:') }} {{ stats.failed }}
             </span>
             <span v-if="stats.skipped > 0" class="text-gray-500">
               <UIcon name="i-heroicons-minus-circle" class="mr-1" />
-              {{ t('chatRecord.batchSummary.skipped', '跳过:') }} {{ stats.skipped }}
+              {{ t('records.batchSummary.skipped', '跳过:') }} {{ stats.skipped }}
             </span>
           </div>
         </div>
@@ -575,10 +575,10 @@ function formatTs(ts: number) {
               @click="startGenerate"
               :disabled="pendingSessions.length === 0 || isLoading"
             >
-              {{ t('chatRecord.batchSummary.start', '开始生成') }}
+              {{ t('records.batchSummary.start', '开始生成') }}
             </UButton>
             <UButton v-else color="error" @click="stopGenerate">
-              {{ t('chatRecord.batchSummary.stop', '停止') }}
+              {{ t('records.batchSummary.stop', '停止') }}
             </UButton>
           </div>
         </template>

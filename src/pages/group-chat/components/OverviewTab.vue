@@ -71,7 +71,7 @@ const memberChartData = computed<EChartPieData>(() => {
   const values = top10.map((m) => m.messageCount)
 
   if (othersCount > 0) {
-    labels.push(t('others'))
+    labels.push(t('analysis.overview.others'))
     values.push(othersCount)
   }
 
@@ -130,14 +130,14 @@ watch(
     <!-- 图表区域：消息类型 & 成员分布 -->
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <!-- 消息类型分布 -->
-      <SectionCard :title="t('messageTypeDistribution')" :show-divider="false">
+      <SectionCard :title="t('analysis.overview.messageTypeDistribution')" :show-divider="false">
         <div class="p-5">
           <EChartPie :data="typeChartData" :height="256" />
         </div>
       </SectionCard>
 
       <!-- 成员水群分布 -->
-      <SectionCard :title="t('memberDistribution')" :show-divider="false">
+      <SectionCard :title="t('analysis.overview.memberDistribution')" :show-divider="false">
         <div class="p-5">
           <EChartPie :data="memberChartData" :height="256" />
         </div>
@@ -148,18 +148,3 @@ watch(
     <DailyTrendCard :daily-activity="dailyActivity" :daily-chart-data="dailyChartData" />
   </div>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "messageTypeDistribution": "消息类型分布",
-    "memberDistribution": "成员水群分布",
-    "others": "其他人"
-  },
-  "en-US": {
-    "messageTypeDistribution": "Message Type Distribution",
-    "memberDistribution": "Member Activity Distribution",
-    "others": "Others"
-  }
-}
-</i18n>

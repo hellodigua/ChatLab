@@ -100,9 +100,9 @@ onMounted(() => {
     <div class="mb-6">
       <div class="flex items-center gap-3">
         <div>
-          <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ t('title') }}</h2>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ t('members.private.title') }}</h2>
           <p class="text-sm text-gray-500 dark:text-gray-400">
-            {{ t('description', { count: members.length }) }}
+            {{ t('members.private.description', { count: members.length }) }}
           </p>
         </div>
       </div>
@@ -158,7 +158,7 @@ onMounted(() => {
         <div class="mt-4 flex items-center gap-4">
           <div class="flex-1">
             <div class="flex items-baseline justify-between">
-              <span class="text-sm text-gray-500 dark:text-gray-400">{{ t('messageCount') }}</span>
+              <span class="text-sm text-gray-500 dark:text-gray-400">{{ t('members.private.messageCount') }}</span>
               <span class="text-lg font-bold text-gray-900 dark:text-white">
                 {{ member.messageCount.toLocaleString() }}
               </span>
@@ -171,19 +171,19 @@ onMounted(() => {
               />
             </div>
             <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-              {{ t('percentage', { value: getPercentage(member.messageCount) }) }}
+              {{ t('members.private.percentage', { value: getPercentage(member.messageCount) }) }}
             </p>
           </div>
         </div>
 
         <!-- 别名编辑 -->
         <div class="mt-4 border-t border-gray-100 pt-4 dark:border-gray-800">
-          <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('customAlias') }}</label>
+          <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('members.private.customAlias') }}</label>
           <div class="relative">
             <UInputTags
               :model-value="member.aliases"
               @update:model-value="(val) => updateAliases(member, val)"
-              :placeholder="t('aliasPlaceholder')"
+              :placeholder="t('members.private.aliasPlaceholder')"
               class="w-full"
             />
             <!-- 保存中指示器 -->
@@ -198,45 +198,19 @@ onMounted(() => {
     <!-- 空状态 -->
     <div v-if="!isLoading && members.length === 0" class="flex h-60 flex-col items-center justify-center">
       <UIcon name="i-heroicons-user-group" class="mb-3 h-12 w-12 text-gray-300 dark:text-gray-600" />
-      <p class="text-gray-500 dark:text-gray-400">{{ t('empty') }}</p>
+      <p class="text-gray-500 dark:text-gray-400">{{ t('members.private.empty') }}</p>
     </div>
 
     <!-- 提示信息 -->
     <div v-if="members.length > 0" class="mt-6 flex items-start gap-3 rounded-xl bg-blue-50 p-4 dark:bg-blue-900/20">
       <UIcon name="i-heroicons-information-circle" class="mt-0.5 h-5 w-5 shrink-0 text-blue-500" />
       <div>
-        <p class="text-sm font-medium text-blue-800 dark:text-blue-200">{{ t('tipTitle') }}</p>
+        <p class="text-sm font-medium text-blue-800 dark:text-blue-200">{{ t('members.private.tipTitle') }}</p>
         <p class="mt-1 text-sm text-blue-700 dark:text-blue-300">
-          {{ t('tipContent') }}
+          {{ t('members.private.tipContent') }}
         </p>
       </div>
     </div>
   </div>
 </template>
 
-<i18n>
-{
-  "zh-CN": {
-    "title": "对话成员",
-    "description": "共 {count} 位成员，可为成员添加别名备注用于搜索和 AI 分析",
-    "messageCount": "消息数",
-    "percentage": "占比 {value}%",
-    "customAlias": "自定义别名",
-    "aliasPlaceholder": "输入后回车添加别名",
-    "empty": "暂无成员数据",
-    "tipTitle": "提示",
-    "tipContent": "添加别名可以更好地识别聊天记录中的对话对象，别名将用于搜索和 AI 分析中。"
-  },
-  "en-US": {
-    "title": "Chat Members",
-    "description": "{count} members. Add aliases for search and AI analysis",
-    "messageCount": "Messages",
-    "percentage": "{value}% of total",
-    "customAlias": "Custom Aliases",
-    "aliasPlaceholder": "Press Enter to add alias",
-    "empty": "No member data available",
-    "tipTitle": "Tip",
-    "tipContent": "Adding aliases helps identify chat participants and improves search and AI analysis accuracy."
-  }
-}
-</i18n>

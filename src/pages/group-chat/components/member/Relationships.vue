@@ -77,7 +77,7 @@ watch(
 <template>
   <div class="main-content space-y-6 p-6">
     <!-- @ 互动分析模块 -->
-    <LoadingState v-if="isLoadingMention" :text="t('loading')" />
+    <LoadingState v-if="isLoadingMention" :text="t('members.relationships.loading')" />
 
     <template v-else-if="mentionAnalysis && mentionAnalysis.totalMentions > 0">
       <!-- @ 排行榜 -->
@@ -85,17 +85,17 @@ watch(
         <RankListPro
           v-if="mentionerRankData.length > 0"
           :members="mentionerRankData"
-          :title="t('topMentioners')"
-          :description="t('totalMentions', { count: mentionAnalysis.totalMentions })"
-          :unit="t('times')"
+          :title="t('members.relationships.topMentioners')"
+          :description="t('members.relationships.totalMentions', { count: mentionAnalysis.totalMentions })"
+          :unit="t('members.relationships.times')"
         />
 
         <RankListPro
           v-if="mentionedRankData.length > 0"
           :members="mentionedRankData"
-          :title="t('topMentioned')"
-          :description="t('popularMember')"
-          :unit="t('times')"
+          :title="t('members.relationships.topMentioned')"
+          :description="t('members.relationships.popularMember')"
+          :unit="t('members.relationships.times')"
         />
       </div>
 
@@ -105,8 +105,8 @@ watch(
         <SectionCard
           class="hidden"
           v-if="mentionAnalysis.oneWay.length > 0"
-          :title="t('oneWay.title')"
-          :description="t('oneWay.description', { count: mentionAnalysis.oneWay.length })"
+          :title="t('members.relationships.oneWay.title')"
+          :description="t('members.relationships.oneWay.description', { count: mentionAnalysis.oneWay.length })"
         >
           <div class="divide-y divide-gray-100 dark:divide-gray-800">
             <div
@@ -148,13 +148,13 @@ watch(
 
               <!-- 反向数据 -->
               <div class="shrink-0 text-right text-sm text-gray-500">
-                <span v-if="pair.toFromCount === 0" class="text-red-500">{{ t('oneWay.neverRespond') }}</span>
-                <span v-else>{{ t('oneWay.reverse', { count: pair.toFromCount }) }}</span>
+                <span v-if="pair.toFromCount === 0" class="text-red-500">{{ t('members.relationships.oneWay.neverRespond') }}</span>
+                <span v-else>{{ t('members.relationships.oneWay.reverse', { count: pair.toFromCount }) }}</span>
               </div>
 
               <!-- 单向比例标签 -->
               <UBadge color="pink" variant="soft" size="xs">
-                {{ t('oneWay.ratio', { value: Math.round(pair.ratio * 100) }) }}
+                {{ t('members.relationships.oneWay.ratio', { value: Math.round(pair.ratio * 100) }) }}
               </UBadge>
             </div>
           </div>
@@ -163,8 +163,8 @@ watch(
         <!-- 双向奔赴（CP检测） -->
         <SectionCard
           v-if="mentionAnalysis.twoWay.length > 0"
-          :title="t('twoWay.title')"
-          :description="t('twoWay.description', { count: mentionAnalysis.twoWay.length })"
+          :title="t('members.relationships.twoWay.title')"
+          :description="t('members.relationships.twoWay.description', { count: mentionAnalysis.twoWay.length })"
         >
           <div class="divide-y divide-gray-100 dark:divide-gray-800">
             <div
@@ -212,7 +212,7 @@ watch(
               <!-- 总互动次数 -->
               <div class="shrink-0 text-right">
                 <span class="text-lg font-bold text-pink-600">{{ pair.total }}</span>
-                <span class="ml-1 text-sm text-gray-500">{{ t('twoWay.interactions') }}</span>
+                <span class="ml-1 text-sm text-gray-500">{{ t('members.relationships.twoWay.interactions') }}</span>
               </div>
 
               <!-- 平衡度标签 -->
@@ -221,7 +221,7 @@ watch(
                 variant="soft"
                 size="xs"
               >
-                {{ t('twoWay.balance', { value: Math.round(pair.balance * 100) }) }}
+                {{ t('members.relationships.twoWay.balance', { value: Math.round(pair.balance * 100) }) }}
               </UBadge>
             </div>
           </div>
@@ -229,8 +229,8 @@ watch(
       </div>
     </template>
 
-    <SectionCard v-else-if="!isLoadingMention" :title="t('emptyTitle')">
-      <EmptyState :text="t('empty')" />
+    <SectionCard v-else-if="!isLoadingMention" :title="t('members.relationships.emptyTitle')">
+      <EmptyState :text="t('members.relationships.empty')" />
     </SectionCard>
 
     <!-- 成员 @ 详情弹窗 -->
@@ -238,12 +238,12 @@ watch(
       <template #content>
         <div v-if="selectedMemberDetail" class="p-5">
           <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-            {{ t('modal.title', { name: selectedMemberDetail.name }) }}
+            {{ t('members.relationships.modal.title', { name: selectedMemberDetail.name }) }}
           </h3>
 
           <!-- 该成员最常 @ 的人 -->
           <div v-if="selectedMemberDetail.topMentioned.length > 0" class="mb-4">
-            <h4 class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('modal.topMentioned') }}</h4>
+            <h4 class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('members.relationships.modal.topMentioned') }}</h4>
             <div class="space-y-2">
               <div
                 v-for="(item, index) in selectedMemberDetail.topMentioned"
@@ -253,14 +253,14 @@ watch(
                 <span class="text-sm font-medium text-gray-900 dark:text-white">
                   {{ item.toName }}
                 </span>
-                <span class="text-xs text-gray-500">{{ t('modal.timesCount', { count: item.count }) }}</span>
+                <span class="text-xs text-gray-500">{{ t('members.relationships.modal.timesCount', { count: item.count }) }}</span>
               </div>
             </div>
           </div>
 
           <!-- 最常 @ 该成员的人 -->
           <div v-if="selectedMemberDetail.topMentioners.length > 0">
-            <h4 class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('modal.topMentioners') }}</h4>
+            <h4 class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('members.relationships.modal.topMentioners') }}</h4>
             <div class="space-y-2">
               <div
                 v-for="(item, index) in selectedMemberDetail.topMentioners"
@@ -270,13 +270,13 @@ watch(
                 <span class="text-sm font-medium text-gray-900 dark:text-white">
                   {{ item.fromName }}
                 </span>
-                <span class="text-xs text-gray-500">{{ t('modal.timesCount', { count: item.count }) }}</span>
+                <span class="text-xs text-gray-500">{{ t('members.relationships.modal.timesCount', { count: item.count }) }}</span>
               </div>
             </div>
           </div>
 
           <div class="mt-4 flex justify-end">
-            <UButton variant="soft" @click="showMemberDetailModal = false">{{ t('modal.close') }}</UButton>
+            <UButton variant="soft" @click="showMemberDetailModal = false">{{ t('members.relationships.modal.close') }}</UButton>
           </div>
         </div>
       </template>
@@ -284,67 +284,3 @@ watch(
   </div>
 </template>
 
-<i18n>
-{
-  "zh-CN": {
-    "loading": "正在分析 {'@'} 互动数据...",
-    "topMentioners": "📢 谁最喜欢 {'@'} 别人",
-    "totalMentions": "共 {count} 次 {'@'}",
-    "topMentioned": "🎯 谁最常被 {'@'}",
-    "popularMember": "群里的人气王",
-    "times": "次",
-    "oneWay": {
-      "title": "🐕 单向关注检测",
-      "description": "发现 {count} 对单向关注关系（一方 {'@'} 另一方占比 ≥80%）",
-      "neverRespond": "从不回应",
-      "reverse": "反向 {count} 次",
-      "ratio": "{value}% 单向"
-    },
-    "twoWay": {
-      "title": "💕 双向奔赴检测",
-      "description": "发现 {count} 对互动频繁的 CP（互相 {'@'} 且平衡度 ≥30%）",
-      "interactions": "次互动",
-      "balance": "{value}% 平衡"
-    },
-    "emptyTitle": "📱 {'@'} 互动分析",
-    "empty": "暂无 {'@'} 互动数据",
-    "modal": {
-      "title": "{name} 的 {'@'} 关系",
-      "topMentioned": "最常 {'@'} 的人",
-      "topMentioners": "最常 {'@'} TA 的人",
-      "timesCount": "{count} 次",
-      "close": "关闭"
-    }
-  },
-  "en-US": {
-    "loading": "Analyzing {'@'} interaction data...",
-    "topMentioners": "📢 Top {'@'} Initiators",
-    "totalMentions": "{count} total {'@'}s",
-    "topMentioned": "🎯 Most {'@'} Mentioned",
-    "popularMember": "Most popular in the group",
-    "times": "times",
-    "oneWay": {
-      "title": "🐕 One-way Detection",
-      "description": "Found {count} one-way relationships (one party {'@'} another ≥80%)",
-      "neverRespond": "Never responds",
-      "reverse": "{count}x reverse",
-      "ratio": "{value}% one-way"
-    },
-    "twoWay": {
-      "title": "💕 Mutual Detection",
-      "description": "Found {count} frequent CP pairs (mutual {'@'} with ≥30% balance)",
-      "interactions": "interactions",
-      "balance": "{value}% balanced"
-    },
-    "emptyTitle": "📱 {'@'} Interaction Analysis",
-    "empty": "No {'@'} interaction data available",
-    "modal": {
-      "title": "{name}'s {'@'} Relationships",
-      "topMentioned": "Most frequently {'@'}s",
-      "topMentioners": "Most frequently {'@'}d by",
-      "timesCount": "{count}x",
-      "close": "Close"
-    }
-  }
-}
-</i18n>

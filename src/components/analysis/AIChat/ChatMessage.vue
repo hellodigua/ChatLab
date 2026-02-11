@@ -46,20 +46,20 @@ function renderMarkdown(text: string): string {
 // 思考标签名称映射
 function getThinkLabel(tag: string): string {
   const normalized = tag?.toLowerCase() || 'think'
-  if (normalized === 'analysis') return t('think.labels.analysis')
-  if (normalized === 'reasoning') return t('think.labels.reasoning')
-  if (normalized === 'reflection') return t('think.labels.reflection')
+  if (normalized === 'analysis') return t('ai.chat.message.think.labels.analysis')
+  if (normalized === 'reasoning') return t('ai.chat.message.think.labels.reasoning')
+  if (normalized === 'reflection') return t('ai.chat.message.think.labels.reflection')
   if (normalized === 'think' || normalized === 'thought' || normalized === 'thinking') {
-    return t('think.labels.think')
+    return t('ai.chat.message.think.labels.think')
   }
-  return t('think.labels.other', { tag })
+  return t('ai.chat.message.think.labels.other', { tag })
 }
 
 // 格式化思考耗时（毫秒 -> 秒）
 function formatThinkDuration(durationMs?: number): string {
   if (!durationMs) return ''
   const seconds = (durationMs / 1000).toFixed(1)
-  return t('think.duration', { seconds })
+  return t('ai.chat.message.think.duration', { seconds })
 }
 
 // 渲染后的 HTML（用于用户消息或纯文本 AI 消息）
@@ -148,12 +148,12 @@ function formatToolParams(tool: ToolBlockContent): string {
     const parts: string[] = []
 
     if (keywords && keywords.length > 0) {
-      parts.push(`${t('toolParams.keywords')}: ${keywords.join(', ')}`)
+      parts.push(`${t('ai.chat.message.toolParams.keywords')}: ${keywords.join(', ')}`)
     }
 
     const timeStr = formatTimeParams(params)
     if (timeStr) {
-      parts.push(`${t('toolParams.time')}: ${timeStr}`)
+      parts.push(`${t('ai.chat.message.toolParams.time')}: ${timeStr}`)
     }
 
     return parts.join(' | ')
@@ -161,7 +161,7 @@ function formatToolParams(tool: ToolBlockContent): string {
 
   if (name === 'get_recent_messages') {
     const parts: string[] = []
-    parts.push(t('toolParams.getMessages', { count: params.limit || 100 }))
+    parts.push(t('ai.chat.message.toolParams.getMessages', { count: params.limit || 100 }))
 
     const timeStr = formatTimeParams(params)
     if (timeStr) {
@@ -176,11 +176,11 @@ function formatToolParams(tool: ToolBlockContent): string {
 
     const timeStr = formatTimeParams(params)
     if (timeStr) {
-      parts.push(`${t('toolParams.time')}: ${timeStr}`)
+      parts.push(`${t('ai.chat.message.toolParams.time')}: ${timeStr}`)
     }
 
     if (params.limit) {
-      parts.push(t('toolParams.limit', { count: params.limit }))
+      parts.push(t('ai.chat.message.toolParams.limit', { count: params.limit }))
     }
 
     return parts.join(' | ')
@@ -190,29 +190,29 @@ function formatToolParams(tool: ToolBlockContent): string {
     const ids = params.message_ids as number[] | undefined
     const size = params.context_size || 20
     if (ids && ids.length > 0) {
-      return t('toolParams.contextWithMessages', { msgCount: ids.length, contextSize: size })
+      return t('ai.chat.message.toolParams.contextWithMessages', { msgCount: ids.length, contextSize: size })
     }
-    return t('toolParams.context', { size })
+    return t('ai.chat.message.toolParams.context', { size })
   }
 
   if (name === 'get_member_stats') {
-    return t('toolParams.topMembers', { count: params.top_n || 10 })
+    return t('ai.chat.message.toolParams.topMembers', { count: params.top_n || 10 })
   }
 
   if (name === 'get_time_stats') {
     const typeKey = params.type as string
-    return t(`toolParams.timeStats.${typeKey}`) || String(params.type)
+    return t(`ai.chat.message.toolParams.timeStats.${typeKey}`) || String(params.type)
   }
 
   if (name === 'get_group_members') {
     if (params.search) {
-      return `${t('toolParams.search')}: ${params.search}`
+      return `${t('ai.chat.message.toolParams.search')}: ${params.search}`
     }
-    return t('toolParams.getMemberList')
+    return t('ai.chat.message.toolParams.getMemberList')
   }
 
   if (name === 'get_member_name_history') {
-    return `${t('toolParams.memberId')}: ${params.member_id}`
+    return `${t('ai.chat.message.toolParams.memberId')}: ${params.member_id}`
   }
 
   return ''
@@ -223,7 +223,7 @@ function formatToolParams(tool: ToolBlockContent): string {
   <div class="flex items-start gap-3" :class="[isUser ? 'flex-row-reverse' : '']">
     <!-- 头像 -->
     <div v-if="isUser" class="h-8 w-8 shrink-0 overflow-hidden rounded-full">
-      <img :src="userAvatar" :alt="t('message.userAvatar')" class="h-full w-full object-cover" />
+      <img :src="userAvatar" :alt="t('ai.chat.message.userAvatar')" class="h-full w-full object-cover" />
     </div>
     <div
       v-else
@@ -275,7 +275,7 @@ function formatToolParams(tool: ToolBlockContent): string {
                   v-if="isStreaming && idx === visibleBlocks.length - 1"
                   class="ml-2 inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500"
                 >
-                  <span>{{ t('think.loading') }}</span>
+                  <span>{{ t('ai.chat.message.think.loading') }}</span>
                   <span class="flex gap-0.5">
                     <span class="h-1 w-1 animate-bounce rounded-full bg-gray-400 [animation-delay:0ms]" />
                     <span class="h-1 w-1 animate-bounce rounded-full bg-gray-400 [animation-delay:150ms]" />
@@ -321,7 +321,7 @@ function formatToolParams(tool: ToolBlockContent): string {
               <!-- 工具信息 -->
               <div class="min-w-0 flex-1">
                 <!-- 调用前缀 -->
-                <span class="text-xs text-gray-400 dark:text-gray-500 mr-1">{{ t('message.calling') }}</span>
+                <span class="text-xs text-gray-400 dark:text-gray-500 mr-1">{{ t('ai.chat.message.calling') }}</span>
                 <span class="font-medium text-gray-700 dark:text-gray-300">
                   {{ block.tool.displayName }}
                 </span>
@@ -342,7 +342,7 @@ function formatToolParams(tool: ToolBlockContent): string {
               <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-pink-500 [animation-delay:150ms]" />
               <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-pink-500 [animation-delay:300ms]" />
             </span>
-            <span>{{ t('message.generating') }}</span>
+            <span>{{ t('ai.chat.message.generating') }}</span>
           </div>
         </div>
       </template>
@@ -369,80 +369,5 @@ function formatToolParams(tool: ToolBlockContent): string {
     </div>
   </div>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "message": {
-      "userAvatar": "用户头像",
-      "calling": "调用",
-      "generating": "正在生成回复..."
-    },
-    "think": {
-      "labels": {
-        "think": "已思考",
-        "analysis": "分析",
-        "reasoning": "推理",
-        "reflection": "反思",
-        "other": "思考（{tag}）"
-      },
-      "loading": "思考中",
-      "duration": "耗时 {seconds}s"
-    },
-    "toolParams": {
-      "keywords": "关键词",
-      "time": "时间",
-      "getMessages": "获取 {count} 条消息",
-      "limit": "限制 {count} 条",
-      "contextWithMessages": "{msgCount} 条消息的前后各 {contextSize} 条上下文",
-      "context": "前后各 {size} 条上下文",
-      "topMembers": "前 {count} 名成员",
-      "search": "搜索",
-      "getMemberList": "获取成员列表",
-      "memberId": "成员ID",
-      "timeStats": {
-        "hourly": "按小时",
-        "weekday": "按星期",
-        "daily": "按日期"
-      }
-    }
-  },
-  "en-US": {
-    "message": {
-      "userAvatar": "User Avatar",
-      "calling": "Calling",
-      "generating": "Generating response..."
-    },
-    "think": {
-      "labels": {
-        "think": "Thinking",
-        "analysis": "Analysis",
-        "reasoning": "Reasoning",
-        "reflection": "Reflection",
-        "other": "Thinking ({tag})"
-      },
-      "loading": "Thinking",
-      "duration": "Took {seconds}s"
-    },
-    "toolParams": {
-      "keywords": "Keywords",
-      "time": "Time",
-      "getMessages": "Get {count} messages",
-      "limit": "Limit {count}",
-      "contextWithMessages": "Context of {contextSize} messages around {msgCount} messages",
-      "context": "{size} messages context",
-      "topMembers": "Top {count} members",
-      "search": "Search",
-      "getMemberList": "Get member list",
-      "memberId": "Member ID",
-      "timeStats": {
-        "hourly": "Hourly",
-        "weekday": "By Weekday",
-        "daily": "Daily"
-      }
-    }
-  }
-}
-</i18n>
 
 <!-- Markdown 样式已提取到全局 src/assets/styles/markdown.css -->

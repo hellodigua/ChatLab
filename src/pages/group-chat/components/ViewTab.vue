@@ -28,12 +28,12 @@ const props = defineProps<{
 // 子 Tab 配置（群聊专属：包含互动分析和榜单）
 const subTabs = computed(() => {
   const tabs = [
-    { id: 'message', label: t('message'), icon: 'i-heroicons-chat-bubble-left-right' },
-    { id: 'interaction', label: t('interaction'), icon: 'i-heroicons-arrows-right-left' },
+    { id: 'message', label: t('analysis.subTabs.view.message'), icon: 'i-heroicons-chat-bubble-left-right' },
+    { id: 'interaction', label: t('analysis.subTabs.view.interaction'), icon: 'i-heroicons-arrows-right-left' },
   ]
   // 榜单仅在中文下显示
   if (isFeatureSupported('groupRanking', locale.value as LocaleType)) {
-    tabs.push({ id: 'ranking', label: t('ranking'), icon: 'i-heroicons-trophy' })
+    tabs.push({ id: 'ranking', label: t('analysis.subTabs.view.ranking'), icon: 'i-heroicons-trophy' })
   }
   return tabs
 })
@@ -92,18 +92,3 @@ const selectedMemberId = ref<number | null>(null)
   opacity: 0;
 }
 </style>
-
-<i18n>
-{
-  "zh-CN": {
-    "message": "消息",
-    "interaction": "互动分析",
-    "ranking": "榜单"
-  },
-  "en-US": {
-    "message": "Messages",
-    "interaction": "Interactions",
-    "ranking": "Rankings"
-  }
-}
-</i18n>

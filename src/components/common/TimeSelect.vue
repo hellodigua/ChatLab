@@ -109,18 +109,18 @@ function getYearRange(year: number): { startTs: number; endTs: number } {
 // ==================== 选项配置 ====================
 
 const modeOptions = computed(() => [
-  { label: t('mode.recent'), value: 'recent' as const },
-  { label: t('mode.quarter'), value: 'quarter' as const },
-  { label: t('mode.year'), value: 'year' as const },
-  { label: t('mode.custom'), value: 'custom' as const },
+  { label: t('common.timeSelect.mode.recent'), value: 'recent' as const },
+  { label: t('common.timeSelect.mode.quarter'), value: 'quarter' as const },
+  { label: t('common.timeSelect.mode.year'), value: 'year' as const },
+  { label: t('common.timeSelect.mode.custom'), value: 'custom' as const },
 ])
 
 const recentOptions = computed(() => [
-  { label: t('recent.halfYear'), value: 180 },
-  { label: t('recent.oneYear'), value: 365 },
-  { label: t('recent.twoYears'), value: 730 },
-  { label: t('recent.fiveYears'), value: 1825 },
-  { label: t('recent.all'), value: 0 },
+  { label: t('common.timeSelect.recent.halfYear'), value: 180 },
+  { label: t('common.timeSelect.recent.oneYear'), value: 365 },
+  { label: t('common.timeSelect.recent.twoYears'), value: 730 },
+  { label: t('common.timeSelect.recent.fiveYears'), value: 1825 },
+  { label: t('common.timeSelect.recent.all'), value: 0 },
 ])
 
 // ==================== 导航边界 ====================
@@ -166,14 +166,14 @@ const canNextYear = computed(() => {
 // ==================== 显示标签 ====================
 
 const quarterDisplayLabel = computed(() => {
-  return t('quarter.label', {
+  return t('common.timeSelect.quarter.label', {
     year: selectedQuarterYear.value,
     quarter: selectedQuarter.value,
   })
 })
 
 const yearDisplayLabel = computed(() => {
-  return t('year.label', { year: selectedYear.value })
+  return t('common.timeSelect.year.label', { year: selectedYear.value })
 })
 
 // ==================== 核心：构建输出值 ====================
@@ -181,10 +181,10 @@ const yearDisplayLabel = computed(() => {
 /** 最近模式 displayLabel 映射 */
 function getRecentDisplayLabel(days: number): string {
   const map: Record<number, string> = {
-    180: t('display.recent180'),
-    365: t('display.recent365'),
-    730: t('display.recent730'),
-    1825: t('display.recent1825'),
+    180: t('common.timeSelect.display.recent180'),
+    365: t('common.timeSelect.display.recent365'),
+    730: t('common.timeSelect.display.recent730'),
+    1825: t('common.timeSelect.display.recent1825'),
   }
   return map[days] || ''
 }
@@ -527,62 +527,3 @@ watch(
     </div>
   </div>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "mode": {
-      "recent": "最近",
-      "quarter": "按季",
-      "year": "按年",
-      "custom": "自定义"
-    },
-    "recent": {
-      "halfYear": "近半年",
-      "oneYear": "近一年",
-      "twoYears": "近两年",
-      "fiveYears": "近五年",
-      "all": "全部"
-    },
-    "display": {
-      "recent180": "最近半年",
-      "recent365": "最近一年",
-      "recent730": "最近两年",
-      "recent1825": "最近五年"
-    },
-    "quarter": {
-      "label": "{year}年 第{quarter}季度"
-    },
-    "year": {
-      "label": "{year}年"
-    }
-  },
-  "en-US": {
-    "mode": {
-      "recent": "Recent",
-      "quarter": "Quarter",
-      "year": "Year",
-      "custom": "Custom"
-    },
-    "recent": {
-      "halfYear": "Last 6M",
-      "oneYear": "Last 1Y",
-      "twoYears": "Last 2Y",
-      "fiveYears": "Last 5Y",
-      "all": "All"
-    },
-    "display": {
-      "recent180": "Last 6 months",
-      "recent365": "Last 1 year",
-      "recent730": "Last 2 years",
-      "recent1825": "Last 5 years"
-    },
-    "quarter": {
-      "label": "{year} Q{quarter}"
-    },
-    "year": {
-      "label": "{year}"
-    }
-  }
-}
-</i18n>

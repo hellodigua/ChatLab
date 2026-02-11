@@ -128,7 +128,7 @@ watch(
     />
 
     <!-- 双方消息对比 -->
-    <SectionCard v-if="memberComparisonData" :title="t('messageRatio')" :show-divider="false">
+    <SectionCard v-if="memberComparisonData" :title="t('analysis.overview.messageRatio')" :show-divider="false">
       <div class="p-5">
         <div class="flex items-center gap-8">
           <!-- 左侧成员 -->
@@ -155,7 +155,7 @@ watch(
               {{ memberComparisonData.member1.percentage }}%
             </p>
             <p class="text-sm text-gray-500 dark:text-gray-400">
-              {{ memberComparisonData.member1.count.toLocaleString() }} {{ t('messageUnit') }}
+              {{ memberComparisonData.member1.count.toLocaleString() }} {{ t('analysis.overview.messageUnit') }}
             </p>
           </div>
 
@@ -201,7 +201,7 @@ watch(
               {{ memberComparisonData.member2.percentage }}%
             </p>
             <p class="text-sm text-gray-500 dark:text-gray-400">
-              {{ memberComparisonData.member2.count.toLocaleString() }} {{ t('messageUnit') }}
+              {{ memberComparisonData.member2.count.toLocaleString() }} {{ t('analysis.overview.messageUnit') }}
             </p>
           </div>
         </div>
@@ -227,14 +227,14 @@ watch(
     <!-- 图表区域：消息类型 & 双方占比 -->
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <!-- 消息类型分布 -->
-      <SectionCard :title="t('messageTypeDistribution')" :show-divider="false">
+      <SectionCard :title="t('analysis.overview.messageTypeDistribution')" :show-divider="false">
         <div class="p-5">
           <EChartPie :data="typeChartData" :height="256" />
         </div>
       </SectionCard>
 
       <!-- 双方消息占比饼图 -->
-      <SectionCard v-if="memberComparisonData" :title="t('memberComparison')" :show-divider="false">
+      <SectionCard v-if="memberComparisonData" :title="t('analysis.overview.memberComparison')" :show-divider="false">
         <div class="p-5">
           <EChartPie :data="comparisonChartData" :height="256" />
         </div>
@@ -245,20 +245,3 @@ watch(
     <DailyTrendCard :daily-activity="dailyActivity" :daily-chart-data="dailyChartData" />
   </div>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "messageRatio": "消息占比",
-    "messageUnit": "条",
-    "messageTypeDistribution": "消息类型分布",
-    "memberComparison": "双方消息占比"
-  },
-  "en-US": {
-    "messageRatio": "Message Ratio",
-    "messageUnit": "messages",
-    "messageTypeDistribution": "Message Type Distribution",
-    "memberComparison": "Member Comparison"
-  }
-}
-</i18n>

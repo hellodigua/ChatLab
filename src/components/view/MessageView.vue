@@ -39,29 +39,29 @@ const lengthGrouped = ref<Array<{ range: string; count: number }>>([])
 
 // 星期名称（按 1=周一 到 7=周日 的顺序）
 const weekdayNames = computed(() => [
-  t('weekdays.mon'),
-  t('weekdays.tue'),
-  t('weekdays.wed'),
-  t('weekdays.thu'),
-  t('weekdays.fri'),
-  t('weekdays.sat'),
-  t('weekdays.sun'),
+  t('common.weekday.mon'),
+  t('common.weekday.tue'),
+  t('common.weekday.wed'),
+  t('common.weekday.thu'),
+  t('common.weekday.fri'),
+  t('common.weekday.sat'),
+  t('common.weekday.sun'),
 ])
 
 // 月份名称
 const monthNames = computed(() => [
-  t('months.jan'),
-  t('months.feb'),
-  t('months.mar'),
-  t('months.apr'),
-  t('months.may'),
-  t('months.jun'),
-  t('months.jul'),
-  t('months.aug'),
-  t('months.sep'),
-  t('months.oct'),
-  t('months.nov'),
-  t('months.dec'),
+  t('common.month.jan'),
+  t('common.month.feb'),
+  t('common.month.mar'),
+  t('common.month.apr'),
+  t('common.month.may'),
+  t('common.month.jun'),
+  t('common.month.jul'),
+  t('common.month.aug'),
+  t('common.month.sep'),
+  t('common.month.oct'),
+  t('common.month.nov'),
+  t('common.month.dec'),
 ])
 
 // 消息类型饼图数据
@@ -294,7 +294,7 @@ watch(
 
     <template v-else>
       <!-- 消息类型分布 -->
-      <SectionCard :title="t('typeDistribution')" :show-divider="false">
+      <SectionCard :title="t('views.message.typeDistribution')" :show-divider="false">
         <div class="p-5">
           <div v-if="typeChartData.values.length > 0" class="flex flex-col gap-6 lg:flex-row lg:items-center">
             <!-- 左侧饼图 -->
@@ -335,7 +335,7 @@ watch(
             </div>
           </div>
           <div v-else class="flex h-48 items-center justify-center text-gray-400">
-            {{ t('noData') }}
+            {{ t('views.message.noData') }}
           </div>
         </div>
       </SectionCard>
@@ -343,14 +343,14 @@ watch(
       <!-- 时间分布图表（小时 & 星期） -->
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <!-- 小时分布 -->
-        <SectionCard :title="t('hourlyDistribution')" :show-divider="false">
+        <SectionCard :title="t('views.message.hourlyDistribution')" :show-divider="false">
           <div class="p-5">
             <EChartBar :data="hourlyChartData" :height="200" />
           </div>
         </SectionCard>
 
         <!-- 星期分布 -->
-        <SectionCard :title="t('weekdayDistribution')" :show-divider="false">
+        <SectionCard :title="t('views.message.weekdayDistribution')" :show-divider="false">
           <div class="p-5">
             <EChartBar :data="weekdayChartData" :height="200" />
           </div>
@@ -360,18 +360,18 @@ watch(
       <!-- 时间分布图表（月份 & 年份） -->
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <!-- 月份分布 -->
-        <SectionCard :title="t('monthlyDistribution')" :show-divider="false">
+        <SectionCard :title="t('views.message.monthlyDistribution')" :show-divider="false">
           <div class="p-5">
             <EChartBar :data="monthlyChartData" :height="200" />
           </div>
         </SectionCard>
 
         <!-- 年份分布 -->
-        <SectionCard :title="t('yearlyDistribution')" :show-divider="false">
+        <SectionCard :title="t('views.message.yearlyDistribution')" :show-divider="false">
           <div class="p-5">
             <EChartBar v-if="yearlyChartData.values.length > 0" :data="yearlyChartData" :height="200" />
             <div v-else class="flex h-48 items-center justify-center text-gray-400">
-              {{ t('noData') }}
+              {{ t('views.message.noData') }}
             </div>
           </div>
         </SectionCard>
@@ -380,9 +380,9 @@ watch(
       <!-- 消息长度分布（左右两图） -->
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <!-- 左侧：1-25字逐字分布 -->
-        <SectionCard :title="t('lengthDetailTitle')" :show-divider="false">
+        <SectionCard :title="t('views.message.lengthDetailTitle')" :show-divider="false">
           <template #headerRight>
-            <span class="text-xs text-gray-400">{{ t('lengthDetailHint') }}</span>
+            <span class="text-xs text-gray-400">{{ t('views.message.lengthDetailHint') }}</span>
           </template>
           <div class="p-5">
             <EChartBar
@@ -391,15 +391,15 @@ watch(
               :height="200"
             />
             <div v-else class="flex h-48 items-center justify-center text-gray-400">
-              {{ t('noTextMessages') }}
+              {{ t('views.message.noTextMessages') }}
             </div>
           </div>
         </SectionCard>
 
         <!-- 右侧：分组分布 -->
-        <SectionCard :title="t('lengthGroupedTitle')" :show-divider="false">
+        <SectionCard :title="t('views.message.lengthGroupedTitle')" :show-divider="false">
           <template #headerRight>
-            <span class="text-xs text-gray-400">{{ t('lengthGroupedHint') }}</span>
+            <span class="text-xs text-gray-400">{{ t('views.message.lengthGroupedHint') }}</span>
           </template>
           <div class="p-5">
             <EChartBar
@@ -408,16 +408,16 @@ watch(
               :height="200"
             />
             <div v-else class="flex h-48 items-center justify-center text-gray-400">
-              {{ t('noTextMessages') }}
+              {{ t('views.message.noTextMessages') }}
             </div>
           </div>
         </SectionCard>
       </div>
 
       <!-- 时间热力图 -->
-      <SectionCard :title="t('timeHeatmap')" :show-divider="false">
+      <SectionCard :title="t('views.message.timeHeatmap')" :show-divider="false">
         <template #headerRight>
-          <span class="text-xs text-gray-400">{{ t('heatmapHint') }}</span>
+          <span class="text-xs text-gray-400">{{ t('views.message.heatmapHint') }}</span>
         </template>
         <div class="p-5">
           <EChartHeatmap :data="heatmapChartData" :height="320" />
@@ -425,10 +425,10 @@ watch(
       </SectionCard>
 
       <!-- 日历热力图（GitHub 贡献图风格） -->
-      <SectionCard :title="t('calendarHeatmap')" :show-divider="false">
+      <SectionCard :title="t('views.message.calendarHeatmap')" :show-divider="false">
         <template #headerRight>
           <div class="flex items-center gap-2">
-            <span class="text-xs text-gray-400">{{ t('calendarHint') }}</span>
+            <span class="text-xs text-gray-400">{{ t('views.message.calendarHint') }}</span>
             <USelect
               v-if="calendarYears.length > 1"
               v-model="selectedCalendarYear"
@@ -446,7 +446,7 @@ watch(
             :height="180"
           />
           <div v-else class="flex h-32 items-center justify-center text-gray-400">
-            {{ t('noData') }}
+            {{ t('views.message.noData') }}
           </div>
         </div>
       </SectionCard>
@@ -454,87 +454,3 @@ watch(
   </div>
 </template>
 
-<i18n>
-{
-  "zh-CN": {
-    "typeDistribution": "消息类型分布",
-    "hourlyDistribution": "小时分布",
-    "weekdayDistribution": "星期分布",
-    "monthlyDistribution": "月份分布",
-    "yearlyDistribution": "年份分布",
-    "timeHeatmap": "时间热力图",
-    "heatmapHint": "展示聊天时间规律",
-    "calendarHeatmap": "消息日历",
-    "calendarHint": "每日消息分布",
-    "lengthDetailTitle": "短消息分布 (1-25字)",
-    "lengthDetailHint": "逐字统计",
-    "lengthGroupedTitle": "长度区间分布",
-    "lengthGroupedHint": "每5字一组",
-    "noTextMessages": "暂无文字消息",
-    "noData": "暂无数据",
-    "weekdays": {
-      "sun": "周日",
-      "mon": "周一",
-      "tue": "周二",
-      "wed": "周三",
-      "thu": "周四",
-      "fri": "周五",
-      "sat": "周六"
-    },
-    "months": {
-      "jan": "1月",
-      "feb": "2月",
-      "mar": "3月",
-      "apr": "4月",
-      "may": "5月",
-      "jun": "6月",
-      "jul": "7月",
-      "aug": "8月",
-      "sep": "9月",
-      "oct": "10月",
-      "nov": "11月",
-      "dec": "12月"
-    }
-  },
-  "en-US": {
-    "typeDistribution": "Message Type Distribution",
-    "hourlyDistribution": "Hourly Distribution",
-    "weekdayDistribution": "Weekday Distribution",
-    "monthlyDistribution": "Monthly Distribution",
-    "yearlyDistribution": "Yearly Distribution",
-    "timeHeatmap": "Time Heatmap",
-    "heatmapHint": "Shows chat time patterns",
-    "calendarHeatmap": "Message Calendar",
-    "calendarHint": "Daily message distribution",
-    "lengthDetailTitle": "Short Messages (1-25 chars)",
-    "lengthDetailHint": "Per character",
-    "lengthGroupedTitle": "Length Range Distribution",
-    "lengthGroupedHint": "Grouped by 5",
-    "noTextMessages": "No text messages",
-    "noData": "No data",
-    "weekdays": {
-      "sun": "Sun",
-      "mon": "Mon",
-      "tue": "Tue",
-      "wed": "Wed",
-      "thu": "Thu",
-      "fri": "Fri",
-      "sat": "Sat"
-    },
-    "months": {
-      "jan": "Jan",
-      "feb": "Feb",
-      "mar": "Mar",
-      "apr": "Apr",
-      "may": "May",
-      "jun": "Jun",
-      "jul": "Jul",
-      "aug": "Aug",
-      "sep": "Sep",
-      "oct": "Oct",
-      "nov": "Nov",
-      "dec": "Dec"
-    }
-  }
-}
-</i18n>

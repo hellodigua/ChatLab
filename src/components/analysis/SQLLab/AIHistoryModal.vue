@@ -23,10 +23,10 @@ function formatHistoryTime(timestamp: number): string {
   const now = new Date()
   const diff = now.getTime() - timestamp
 
-  if (diff < 60000) return t('justNow')
-  if (diff < 3600000) return t('minutesAgo', { count: Math.floor(diff / 60000) })
-  if (diff < 86400000) return t('hoursAgo', { count: Math.floor(diff / 3600000) })
-  if (date.toDateString() === now.toDateString()) return t('today')
+  if (diff < 60000) return t('ai.sqlLab.history.justNow')
+  if (diff < 3600000) return t('ai.sqlLab.history.minutesAgo', { count: Math.floor(diff / 60000) })
+  if (diff < 86400000) return t('ai.sqlLab.history.hoursAgo', { count: Math.floor(diff / 3600000) })
+  if (date.toDateString() === now.toDateString()) return t('ai.sqlLab.history.today')
 
   return `${date.getMonth() + 1}/${date.getDate()}`
 }
@@ -38,7 +38,7 @@ function formatHistoryTime(timestamp: number): string {
       <div class="max-h-[70vh] overflow-hidden p-6">
         <div class="mb-4 flex items-center gap-2">
           <UIcon name="i-heroicons-clock" class="h-5 w-5 text-pink-500" />
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('title') }}</h3>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('ai.sqlLab.history.title') }}</h3>
         </div>
 
         <!-- 历史列表 -->
@@ -73,7 +73,7 @@ function formatHistoryTime(timestamp: number): string {
               </UButton>
               <UButton size="xs" @click="emit('execute', record)">
                 <UIcon name="i-heroicons-play" class="mr-1 h-3.5 w-3.5" />
-                {{ t('execute') }}
+                {{ t('ai.sqlLab.history.execute') }}
               </UButton>
             </div>
           </div>
@@ -82,39 +82,14 @@ function formatHistoryTime(timestamp: number): string {
         <!-- 空状态 -->
         <div v-else class="py-8 text-center text-gray-500 dark:text-gray-400">
           <UIcon name="i-heroicons-clock" class="mx-auto mb-2 h-8 w-8 text-gray-300 dark:text-gray-600" />
-          <p class="text-sm">{{ t('empty') }}</p>
+          <p class="text-sm">{{ t('ai.sqlLab.history.empty') }}</p>
         </div>
 
         <!-- 底部按钮 -->
         <div class="mt-4 flex justify-end">
-          <UButton variant="ghost" @click="emit('update:open', false)">{{ t('close') }}</UButton>
+          <UButton variant="ghost" @click="emit('update:open', false)">{{ t('common.close') }}</UButton>
         </div>
       </div>
     </template>
   </UModal>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "title": "AI 生成历史",
-    "execute": "执行",
-    "empty": "暂无历史记录",
-    "close": "关闭",
-    "justNow": "刚刚",
-    "minutesAgo": "{count} 分钟前",
-    "hoursAgo": "{count} 小时前",
-    "today": "今天"
-  },
-  "en-US": {
-    "title": "AI Generation History",
-    "execute": "Execute",
-    "empty": "No history records",
-    "close": "Close",
-    "justNow": "Just now",
-    "minutesAgo": "{count} min ago",
-    "hoursAgo": "{count} hr ago",
-    "today": "Today"
-  }
-}
-</i18n>

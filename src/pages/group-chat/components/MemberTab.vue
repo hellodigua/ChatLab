@@ -27,10 +27,10 @@ const emit = defineEmits<{
 
 // 子 Tab 配置
 const subTabs = computed(() => [
-  { id: 'list', label: t('memberList'), icon: 'i-heroicons-users' },
-  { id: 'relationships', label: t('relationships'), icon: 'i-heroicons-heart' },
-  { id: 'cluster', label: t('cluster'), icon: 'i-heroicons-user-group' },
-  { id: 'history', label: t('nicknameHistory'), icon: 'i-heroicons-clock' },
+  { id: 'list', label: t('analysis.subTabs.member.memberList'), icon: 'i-heroicons-users' },
+  { id: 'relationships', label: t('analysis.subTabs.member.relationships'), icon: 'i-heroicons-heart' },
+  { id: 'cluster', label: t('analysis.subTabs.member.cluster'), icon: 'i-heroicons-user-group' },
+  { id: 'history', label: t('analysis.subTabs.member.nicknameHistory'), icon: 'i-heroicons-clock' },
 ])
 
 const activeSubTab = ref('list')
@@ -83,20 +83,3 @@ function handleDataChanged() {
   opacity: 0;
 }
 </style>
-
-<i18n>
-{
-  "zh-CN": {
-    "memberList": "成员列表",
-    "relationships": "群关系",
-    "cluster": "互动频率",
-    "nicknameHistory": "昵称变更"
-  },
-  "en-US": {
-    "memberList": "Member List",
-    "relationships": "Relationships",
-    "cluster": "Interaction",
-    "nicknameHistory": "Nickname History"
-  }
-}
-</i18n>

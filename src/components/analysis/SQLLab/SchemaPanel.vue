@@ -71,7 +71,7 @@ onMounted(() => {
   >
     <!-- 面板头部 -->
     <div class="flex items-center justify-between border-b border-gray-200 p-2 dark:border-gray-800">
-      <span v-if="!isCollapsed" class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ t('tables') }}</span>
+      <span v-if="!isCollapsed" class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ t('ai.sqlLab.schema.tables') }}</span>
       <button
         class="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
         @click="isCollapsed = !isCollapsed"
@@ -105,14 +105,14 @@ onMounted(() => {
             v-for="column in table.columns"
             :key="column.name"
             class="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-xs transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-            :title="t('doubleClickToInsert')"
+            :title="t('ai.sqlLab.schema.doubleClickToInsert')"
             @dblclick="handleInsertColumn(table.name, column.name)"
           >
             <UIcon
               v-if="column.pk"
               name="i-heroicons-key"
               class="h-3 w-3 shrink-0 text-yellow-500"
-              :title="t('primaryKey')"
+              :title="t('ai.sqlLab.schema.primaryKey')"
             />
             <span class="font-mono text-gray-700 dark:text-gray-300">{{ column.name }}</span>
             <span class="flex-1 truncate text-right text-[10px] text-gray-400">
@@ -137,18 +137,3 @@ onMounted(() => {
     </div>
   </div>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "tables": "数据表",
-    "doubleClickToInsert": "双击插入到 SQL",
-    "primaryKey": "主键"
-  },
-  "en-US": {
-    "tables": "Tables",
-    "doubleClickToInsert": "Double-click to insert into SQL",
-    "primaryKey": "Primary Key"
-  }
-}
-</i18n>

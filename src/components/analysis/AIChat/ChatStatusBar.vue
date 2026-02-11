@@ -66,7 +66,7 @@ async function switchModelConfig(configId: string) {
     isModelPopoverOpen.value = false
   } else {
     toast.add({
-      title: t('model.switchFailed'),
+      title: t('ai.chat.statusBar.model.switchFailed'),
       icon: 'i-heroicons-x-circle',
       color: 'error',
       duration: 2000,
@@ -88,8 +88,8 @@ async function openAiLogFile() {
     const result = await window.aiApi.showAiLogFile()
     if (!result?.success) {
       toast.add({
-        title: t('log.openFailed'),
-        description: result?.error || t('log.openFailedDesc'),
+        title: t('ai.chat.statusBar.log.openFailed'),
+        description: result?.error || t('ai.chat.statusBar.log.openFailedDesc'),
         icon: 'i-heroicons-x-circle',
         color: 'error',
         duration: 2000,
@@ -98,7 +98,7 @@ async function openAiLogFile() {
   } catch (error) {
     console.error('打开 AI 日志失败：', error)
     toast.add({
-      title: t('log.openFailed'),
+      title: t('ai.chat.statusBar.log.openFailed'),
       description: String(error),
       icon: 'i-heroicons-x-circle',
       color: 'error',
@@ -119,13 +119,13 @@ async function openAiLogFile() {
           class="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-300"
         >
           <UIcon name="i-heroicons-chat-bubble-bottom-center-text" class="h-3.5 w-3.5" />
-          <span class="max-w-[120px] truncate">{{ currentActivePreset?.name || t('preset.default') }}</span>
+          <span class="max-w-[120px] truncate">{{ currentActivePreset?.name || t('ai.chat.statusBar.preset.default') }}</span>
           <UIcon name="i-heroicons-chevron-down" class="h-3 w-3" />
         </button>
         <template #content>
           <div class="w-48 py-1">
             <div class="px-3 py-1.5 text-xs font-medium text-gray-400 dark:text-gray-500">
-              {{ chatType === 'group' ? t('preset.groupTitle') : t('preset.privateTitle') }}
+              {{ chatType === 'group' ? t('ai.chat.statusBar.preset.groupTitle') : t('ai.chat.statusBar.preset.privateTitle') }}
             </div>
             <button
               v-for="preset in currentPresets"
@@ -157,7 +157,7 @@ async function openAiLogFile() {
               @click="openPresetSettings"
             >
               <UIcon name="i-heroicons-cog-6-tooth" class="h-4 w-4 shrink-0" />
-              <span>{{ t('preset.manage') }}</span>
+              <span>{{ t('ai.chat.statusBar.preset.manage') }}</span>
             </button>
           </div>
         </template>
@@ -170,13 +170,13 @@ async function openAiLogFile() {
           :disabled="isLoadingLLM"
         >
           <UIcon name="i-heroicons-cpu-chip" class="h-3.5 w-3.5" />
-          <span class="max-w-[120px] truncate">{{ activeConfig?.name || t('model.notConfigured') }}</span>
+          <span class="max-w-[120px] truncate">{{ activeConfig?.name || t('ai.chat.statusBar.model.notConfigured') }}</span>
           <UIcon name="i-heroicons-chevron-down" class="h-3 w-3" />
         </button>
         <template #content>
           <div class="w-48 py-1">
             <div class="px-3 py-1.5 text-xs font-medium text-gray-400 dark:text-gray-500">
-              {{ t('model.title') }}
+              {{ t('ai.chat.statusBar.model.title') }}
             </div>
 
             <!-- 配置列表 -->
@@ -203,7 +203,7 @@ async function openAiLogFile() {
 
             <!-- 空状态 -->
             <div v-else class="px-3 py-2 text-sm text-gray-400 dark:text-gray-500">
-              {{ t('model.empty') }}
+              {{ t('ai.chat.statusBar.model.empty') }}
             </div>
 
             <!-- 分隔线 -->
@@ -215,7 +215,7 @@ async function openAiLogFile() {
               @click="openModelSettings"
             >
               <UIcon name="i-heroicons-cog-6-tooth" class="h-4 w-4 shrink-0" />
-              <span>{{ t('model.manage') }}</span>
+              <span>{{ t('ai.chat.statusBar.model.manage') }}</span>
             </button>
           </div>
         </template>
@@ -227,86 +227,21 @@ async function openAiLogFile() {
       <!-- 消息条数限制（点击跳转设置） -->
       <button
         class="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
-        :title="t('messageLimit.title')"
+        :title="t('ai.chat.statusBar.messageLimit.title')"
         @click="openChatSettings"
       >
-        <span>{{ t('messageLimit.label') }}{{ aiGlobalSettings.maxMessagesPerRequest }}</span>
+        <span>{{ t('ai.chat.statusBar.messageLimit.label') }}{{ aiGlobalSettings.maxMessagesPerRequest }}</span>
       </button>
       <!-- 日志按钮 -->
       <button
         class="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-gray-800 dark:hover:text-gray-300"
-        :title="t('log.title')"
+        :title="t('ai.chat.statusBar.log.title')"
         :disabled="isOpeningLog"
         @click="openAiLogFile"
       >
         <UIcon name="i-heroicons-folder-open" class="h-3.5 w-3.5" />
-        <span>{{ t('log.label') }}</span>
+        <span>{{ t('ai.chat.statusBar.log.label') }}</span>
       </button>
     </div>
   </div>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "preset": {
-      "default": "默认预设",
-      "groupTitle": "群聊提示词预设",
-      "privateTitle": "私聊提示词预设",
-      "manage": "管理提示词"
-    },
-    "model": {
-      "title": "AI 模型配置",
-      "notConfigured": "AI 未配置",
-      "empty": "暂无配置",
-      "manage": "管理配置",
-      "switchFailed": "切换模型失败"
-    },
-    "messageLimit": {
-      "label": "消息上限：",
-      "title": "每次发送的最大消息条数，点击配置"
-    },
-    "tokenUsageTitle": "本次会话累计 Token 使用量",
-    "log": {
-      "label": "日志",
-      "title": "打开当前 AI 日志文件",
-      "openFailed": "打开日志失败",
-      "openFailedDesc": "请稍后重试"
-    },
-    "status": {
-      "connected": "AI 已连接",
-      "notConfigured": "请在全局设置中配置 AI 服务"
-    }
-  },
-  "en-US": {
-    "preset": {
-      "default": "Default Preset",
-      "groupTitle": "Group Chat Presets",
-      "privateTitle": "Private Chat Presets",
-      "manage": "Manage Presets"
-    },
-    "model": {
-      "title": "AI Model Configs",
-      "notConfigured": "AI Not Configured",
-      "empty": "No configs",
-      "manage": "Manage Configs",
-      "switchFailed": "Failed to switch model"
-    },
-    "messageLimit": {
-      "label": "Limit: ",
-      "title": "Max messages per request, click to configure"
-    },
-    "tokenUsageTitle": "Total token usage in this session",
-    "log": {
-      "label": "Logs",
-      "title": "Open current AI log file",
-      "openFailed": "Failed to open log",
-      "openFailedDesc": "Please try again later"
-    },
-    "status": {
-      "connected": "AI Connected",
-      "notConfigured": "Please configure AI service in Settings"
-    }
-  }
-}
-</i18n>

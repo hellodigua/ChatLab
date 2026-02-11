@@ -120,7 +120,7 @@ const matrixData = computed(() => {
 // 构建热力图选项
 function buildHeatmapOptions(): EChartsOption {
   if (!matrixData.value) {
-    return { graphic: { type: 'text', style: { text: t('noData'), fill: '#999' } } }
+    return { graphic: { type: 'text', style: { text: t('views.cluster.noData'), fill: '#999' } } }
   }
 
   const { names, data, maxValue } = matrixData.value
@@ -290,7 +290,7 @@ watch(viewMode, async (newMode, oldMode) => {
     chartInstance.dispose()
     chartInstance = null
   }
-  
+
   // 切换到矩阵视图时，重新初始化
   if (newMode === 'matrix') {
     await nextTick()
@@ -361,21 +361,21 @@ onUnmounted(() => {
             :variant="viewMode === 'matrix' ? 'solid' : 'ghost'"
             @click="viewMode = 'matrix'"
           >
-            {{ t('matrixView') }}
+            {{ t('views.cluster.matrixView') }}
           </UButton>
           <UButton
             :color="viewMode === 'member' ? 'primary' : 'neutral'"
             :variant="viewMode === 'member' ? 'solid' : 'ghost'"
             @click="viewMode = 'member'"
           >
-            {{ t('memberView') }}
+            {{ t('views.cluster.memberView') }}
           </UButton>
           <UButton
             :color="viewMode === 'circle' ? 'primary' : 'neutral'"
             :variant="viewMode === 'circle' ? 'solid' : 'ghost'"
             @click="viewMode = 'circle'"
           >
-            {{ t('rankingView') }}
+            {{ t('views.cluster.rankingView') }}
           </UButton>
         </UButtonGroup>
       </div>
@@ -386,10 +386,10 @@ onUnmounted(() => {
           <UButton variant="ghost" size="xs" icon="i-heroicons-adjustments-horizontal" />
           <template #content>
             <div class="p-3 w-64">
-              <h4 class="text-sm font-medium mb-3">{{ t('modelSettings') }}</h4>
+              <h4 class="text-sm font-medium mb-3">{{ t('views.cluster.modelSettings') }}</h4>
               <div class="space-y-3">
                 <div>
-                  <label class="text-xs text-gray-500 mb-1 block">{{ t('lookAhead') }}</label>
+                  <label class="text-xs text-gray-500 mb-1 block">{{ t('views.cluster.lookAhead') }}</label>
                   <UInput
                     v-model.number="modelOptions.lookAhead"
                     type="number"
@@ -398,10 +398,10 @@ onUnmounted(() => {
                     size="xs"
                     placeholder="1-10"
                   />
-                  <p class="text-xs text-gray-400 mt-1">{{ t('lookAheadDesc') }}</p>
+                  <p class="text-xs text-gray-400 mt-1">{{ t('views.cluster.lookAheadDesc') }}</p>
                 </div>
                 <div>
-                  <label class="text-xs text-gray-500 mb-1 block">{{ t('decaySeconds') }}</label>
+                  <label class="text-xs text-gray-500 mb-1 block">{{ t('views.cluster.decaySeconds') }}</label>
                   <UInput
                     v-model.number="modelOptions.decaySeconds"
                     type="number"
@@ -410,10 +410,10 @@ onUnmounted(() => {
                     size="xs"
                     placeholder="30-3600"
                   />
-                  <p class="text-xs text-gray-400 mt-1">{{ t('decaySecondsDesc') }}</p>
+                  <p class="text-xs text-gray-400 mt-1">{{ t('views.cluster.decaySecondsDesc') }}</p>
                 </div>
                 <UButton size="xs" color="primary" class="w-full mt-2" @click="loadData">
-                  {{ t('applySettings') }}
+                  {{ t('views.cluster.applySettings') }}
                 </UButton>
               </div>
             </div>
@@ -436,7 +436,7 @@ onUnmounted(() => {
       <div v-else-if="!graphData || graphData.nodes.length === 0" class="h-full flex items-center justify-center">
         <div class="text-center text-gray-400">
           <UIcon name="i-heroicons-user-group" class="w-12 h-12 mx-auto mb-2 opacity-50" />
-          <p>{{ t('noData') }}</p>
+          <p>{{ t('views.cluster.noData') }}</p>
         </div>
       </div>
 
@@ -452,7 +452,7 @@ onUnmounted(() => {
           <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
             <h3 class="text-sm font-medium flex items-center gap-2">
               <UIcon name="i-heroicons-users" class="w-4 h-4" />
-              {{ t('selectMember') }}
+              {{ t('views.cluster.selectMember') }}
             </h3>
           </div>
           <div class="flex-1 overflow-y-auto">
@@ -476,7 +476,7 @@ onUnmounted(() => {
           <div v-if="!selectedMember" class="flex-1 flex items-center justify-center">
             <div class="text-center text-gray-400">
               <UIcon name="i-heroicons-cursor-arrow-rays" class="w-12 h-12 mx-auto mb-2 opacity-50" />
-              <p>{{ t('selectMemberHint') }}</p>
+              <p>{{ t('views.cluster.selectMemberHint') }}</p>
             </div>
           </div>
 
@@ -491,8 +491,8 @@ onUnmounted(() => {
               <div>
                 <div class="font-medium">{{ selectedMember.name }}</div>
                 <div class="text-xs text-gray-400">
-                  {{ t('msgCount') }}: {{ selectedMember.messageCount }} | 
-                  {{ t('relationCount') }}: {{ selectedMemberRelations.length }}
+                  {{ t('views.cluster.msgCount') }}: {{ selectedMember.messageCount }} |
+                  {{ t('views.cluster.relationCount') }}: {{ selectedMemberRelations.length }}
                 </div>
               </div>
             </div>
@@ -501,13 +501,13 @@ onUnmounted(() => {
             <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
               <h3 class="text-sm font-medium flex items-center gap-2">
                 <UIcon name="i-heroicons-heart" class="w-4 h-4 text-pink-500" />
-                {{ t('relationsByIntimacy') }}
+                {{ t('views.cluster.relationsByIntimacy') }}
               </h3>
             </div>
 
             <div class="flex-1 overflow-y-auto">
               <div v-if="selectedMemberRelations.length === 0" class="p-4 text-center text-gray-400">
-                {{ t('noRelations') }}
+                {{ t('views.cluster.noRelations') }}
               </div>
               <div
                 v-for="(relation, index) in selectedMemberRelations"
@@ -524,8 +524,8 @@ onUnmounted(() => {
                   <div class="flex-1 min-w-0">
                     <div class="text-sm font-medium truncate">{{ relation.otherName }}</div>
                     <div class="flex items-center gap-3 mt-0.5 text-xs text-gray-400">
-                      <span>{{ t('intimacy') }}: {{ (relation.value * 100).toFixed(0) }}%</span>
-                      <span>{{ t('coOccurrence') }}: {{ relation.coOccurrenceCount }}{{ t('times') }}</span>
+                      <span>{{ t('views.cluster.intimacy') }}: {{ (relation.value * 100).toFixed(0) }}%</span>
+                      <span>{{ t('views.cluster.coOccurrence') }}: {{ relation.coOccurrenceCount }}{{ t('views.cluster.times') }}</span>
                     </div>
                   </div>
                   <!-- 亲密度条（以最高分为100%基准） -->
@@ -547,7 +547,7 @@ onUnmounted(() => {
         <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
           <h3 class="text-sm font-medium flex items-center gap-2">
             <UIcon name="i-heroicons-trophy" class="w-4 h-4 text-yellow-500" />
-            {{ t('interactionRanking') }}
+            {{ t('views.cluster.interactionRanking') }}
           </h3>
         </div>
         <div class="flex-1 overflow-y-auto">
@@ -566,8 +566,8 @@ onUnmounted(() => {
                   <span class="font-medium truncate">{{ link.target }}</span>
                 </div>
                 <div class="flex items-center gap-3 mt-1 text-xs text-gray-400">
-                  <span>{{ t('score') }}: {{ link.value.toFixed(2) }}</span>
-                  <span>{{ t('coOccurrence') }}: {{ link.coOccurrenceCount }}{{ t('times') }}</span>
+                  <span>{{ t('views.cluster.score') }}: {{ link.value.toFixed(2) }}</span>
+                  <span>{{ t('views.cluster.coOccurrence') }}: {{ link.coOccurrenceCount }}{{ t('views.cluster.times') }}</span>
                 </div>
               </div>
               <!-- 临近度条（以最高分为100%基准） -->
@@ -585,72 +585,12 @@ onUnmounted(() => {
 
       <!-- 底部统计 -->
       <div v-if="graphData" class="px-4 py-2 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-400 flex items-center gap-4 bg-gray-50 dark:bg-gray-800/50">
-        <span>{{ t('totalMembers') }}: {{ graphData.stats.totalMembers }}</span>
-        <span>{{ t('totalMessages') }}: {{ graphData.stats.totalMessages.toLocaleString() }}</span>
-        <span>{{ t('involvedMembers') }}: {{ graphData.stats.involvedMembers }}</span>
-        <span>{{ t('edgeCount') }}: {{ graphData.stats.edgeCount }}</span>
+        <span>{{ t('views.cluster.totalMembers') }}: {{ graphData.stats.totalMembers }}</span>
+        <span>{{ t('views.cluster.totalMessages') }}: {{ graphData.stats.totalMessages.toLocaleString() }}</span>
+        <span>{{ t('views.cluster.involvedMembers') }}: {{ graphData.stats.involvedMembers }}</span>
+        <span>{{ t('views.cluster.edgeCount') }}: {{ graphData.stats.edgeCount }}</span>
       </div>
     </div>
   </div>
 </template>
 
-<i18n>
-{
-  "zh-CN": {
-    "title": "互动频率",
-    "rankingView": "排行视图",
-    "memberView": "成员视图",
-    "matrixView": "矩阵视图",
-    "modelSettings": "模型参数",
-    "lookAhead": "邻居数量",
-    "lookAheadDesc": "每条消息向后看几个发言者",
-    "decaySeconds": "时间衰减（秒）",
-    "decaySecondsDesc": "值越大，远距离消息权重越高",
-    "applySettings": "应用设置",
-    "noData": "暂无数据",
-    "selectMember": "选择成员",
-    "selectMemberHint": "请从左侧选择一个成员",
-    "msgCount": "发言数",
-    "relationCount": "关系数",
-    "relationsByIntimacy": "发言临近度排行",
-    "noRelations": "暂无关系数据",
-    "intimacy": "临近度",
-    "interactionRanking": "互动排行",
-    "score": "临近度",
-    "coOccurrence": "共现",
-    "times": "次",
-    "totalMembers": "群成员",
-    "totalMessages": "消息总数",
-    "involvedMembers": "参与成员",
-    "edgeCount": "关系数"
-  },
-  "en-US": {
-    "title": "Interaction Frequency",
-    "rankingView": "Ranking",
-    "memberView": "Member View",
-    "matrixView": "Matrix View",
-    "modelSettings": "Model Settings",
-    "lookAhead": "Look Ahead",
-    "lookAheadDesc": "Messages to look ahead per sender",
-    "decaySeconds": "Time Decay (sec)",
-    "decaySecondsDesc": "Higher = distant messages matter more",
-    "applySettings": "Apply",
-    "noData": "No data",
-    "selectMember": "Select Member",
-    "selectMemberHint": "Select a member from the left",
-    "msgCount": "Messages",
-    "relationCount": "Relations",
-    "relationsByIntimacy": "Proximity Ranking",
-    "noRelations": "No relations",
-    "intimacy": "Proximity",
-    "interactionRanking": "Interaction Ranking",
-    "score": "Proximity",
-    "coOccurrence": "Co-occur",
-    "times": " times",
-    "totalMembers": "Total Members",
-    "totalMessages": "Total Messages",
-    "involvedMembers": "Involved",
-    "edgeCount": "Relations"
-  }
-}
-</i18n>

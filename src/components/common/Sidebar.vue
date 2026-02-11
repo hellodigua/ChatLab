@@ -138,17 +138,17 @@ function getContextMenuItems(session: AnalysisSession) {
   return [
     [
       {
-        label: isPinned ? t('sidebar.contextMenu.unpin') : t('sidebar.contextMenu.pin'),
+        label: isPinned ? t('layout.contextMenu.unpin') : t('layout.contextMenu.pin'),
         class: 'p-2',
         onSelect: () => sessionStore.togglePinSession(session.id),
       },
       {
-        label: t('sidebar.contextMenu.rename'),
+        label: t('layout.contextMenu.rename'),
         class: 'p-2',
         onSelect: () => openRenameModal(session),
       },
       {
-        label: t('sidebar.contextMenu.delete'),
+        label: t('layout.contextMenu.delete'),
         color: 'error' as const,
         class: 'p-2',
         onSelect: () => openDeleteModal(session),
@@ -203,12 +203,12 @@ function getSessionAvatar(session: AnalysisSession): string | null {
       >
         <div v-if="!isCollapsed" class="ml-2 flex items-baseline">
           <div class="text-2xl font-black tracking-tight text-pink-500">
-            {{ t('sidebar.brand') }}
+            {{ t('layout.brand') }}
           </div>
           <span class="ml-2 text-xs text-gray-400">v{{ version }}</span>
         </div>
         <UTooltip
-          :text="isCollapsed ? t('sidebar.tooltip.expand') : t('sidebar.tooltip.collapse')"
+          :text="isCollapsed ? t('layout.tooltip.expand') : t('layout.tooltip.collapse')"
           :popper="{ placement: 'right' }"
           style="-webkit-app-region: no-drag"
         >
@@ -224,7 +224,7 @@ function getSessionAvatar(session: AnalysisSession): string | null {
       </div>
 
       <!-- 新建分析 -->
-      <SidebarButton icon="i-heroicons-plus" :title="t('sidebar.newAnalysis')" @click="handleImport" />
+      <SidebarButton icon="i-heroicons-plus" :title="t('layout.newAnalysis')" @click="handleImport" />
     </div>
 
     <!-- Session List -->
@@ -232,13 +232,13 @@ function getSessionAvatar(session: AnalysisSession): string | null {
       <!-- 聊天记录标题 - 固定在顶部，不随列表滚动 -->
       <div v-if="!isCollapsed && sessions.length > 0" class="px-4 mb-2">
         <div class="flex items-center justify-between">
-          <UTooltip :text="t('sidebar.tooltip.hint')" :popper="{ placement: 'right' }">
+          <UTooltip :text="t('layout.tooltip.hint')" :popper="{ placement: 'right' }">
             <div class="flex items-center gap-1 pl-3">
-              <div class="text-sm font-medium text-gray-500">{{ t('sidebar.chatHistory') }}</div>
+              <div class="text-sm font-medium text-gray-500">{{ t('layout.chatHistory') }}</div>
               <UIcon name="i-heroicons-question-mark-circle" class="size-3.5 text-gray-400" />
             </div>
           </UTooltip>
-          <UTooltip :text="t('sidebar.tooltip.search')" :popper="{ placement: 'right' }">
+          <UTooltip :text="t('layout.tooltip.search')" :popper="{ placement: 'right' }">
             <UButton
               :icon="showSearch ? 'i-heroicons-x-mark' : 'i-heroicons-magnifying-glass'"
               color="neutral"
@@ -252,7 +252,7 @@ function getSessionAvatar(session: AnalysisSession): string | null {
         <div v-if="showSearch" class="mt-2">
           <UInput
             v-model="searchQuery"
-            :placeholder="t('sidebar.searchPlaceholder')"
+            :placeholder="t('layout.searchPlaceholder')"
             icon="i-heroicons-magnifying-glass"
             size="sm"
             autofocus
@@ -263,7 +263,7 @@ function getSessionAvatar(session: AnalysisSession): string | null {
       <!-- 聊天记录列表 - 可滚动区域，滚动条贴边 -->
       <div class="flex-1 overflow-y-auto">
         <div v-if="sessions.length === 0 && !isCollapsed" class="py-8 text-center text-sm text-gray-500">
-          {{ t('sidebar.noRecords') }}
+          {{ t('layout.noRecords') }}
         </div>
 
         <!-- 搜索无结果 -->
@@ -271,7 +271,7 @@ function getSessionAvatar(session: AnalysisSession): string | null {
           v-else-if="filteredSortedSessions.length === 0 && searchQuery.trim() && !isCollapsed"
           class="py-8 text-center text-sm text-gray-500"
         >
-          {{ t('sidebar.noSearchResult') }}
+          {{ t('layout.noSearchResult') }}
         </div>
 
         <div class="space-y-1 pb-8" :class="[isCollapsed ? '' : 'px-4']">
@@ -342,7 +342,7 @@ function getSessionAvatar(session: AnalysisSession): string | null {
                   </div>
                   <p class="truncate text-xs text-gray-500 dark:text-gray-400">
                     {{
-                      t('sidebar.sessionInfo', { count: session.messageCount, time: formatTime(session.importedAt) })
+                      t('layout.sessionInfo', { count: session.messageCount, time: formatTime(session.importedAt) })
                     }}
                   </p>
                 </div>
@@ -361,11 +361,11 @@ function getSessionAvatar(session: AnalysisSession): string | null {
     <UModal v-model:open="showRenameModal">
       <template #content>
         <div class="p-4">
-          <h3 class="mb-3 font-semibold text-gray-900 dark:text-white">{{ t('sidebar.renameModal.title') }}</h3>
+          <h3 class="mb-3 font-semibold text-gray-900 dark:text-white">{{ t('layout.renameModal.title') }}</h3>
           <UInput
             ref="renameInputRef"
             v-model="newName"
-            :placeholder="t('sidebar.renameModal.placeholder')"
+            :placeholder="t('layout.renameModal.placeholder')"
             class="mb-4 w-100"
             @keydown.enter="handleRename"
           />
@@ -383,9 +383,9 @@ function getSessionAvatar(session: AnalysisSession): string | null {
     <UModal v-model:open="showDeleteModal">
       <template #content>
         <div class="p-4">
-          <h3 class="mb-3 font-semibold text-gray-900 dark:text-white">{{ t('sidebar.deleteModal.title') }}</h3>
+          <h3 class="mb-3 font-semibold text-gray-900 dark:text-white">{{ t('layout.deleteModal.title') }}</h3>
           <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-            {{ t('sidebar.deleteModal.message', { name: deleteTarget?.name }) }}
+            {{ t('layout.deleteModal.message', { name: deleteTarget?.name }) }}
           </p>
           <div class="flex justify-end gap-2">
             <UButton variant="soft" @click="closeDeleteModal">{{ t('common.cancel') }}</UButton>

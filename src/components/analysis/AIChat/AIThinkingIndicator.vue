@@ -66,7 +66,7 @@ defineProps<{
             v-else-if="currentToolStatus.status === 'done'"
             class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"
           >
-            <span>{{ t('processingResult') }}</span>
+            <span>{{ t('ai.chat.thinking.processingResult') }}</span>
             <span class="flex gap-1">
               <span class="h-1 w-1 animate-bounce rounded-full bg-gray-400 [animation-delay:0ms]" />
               <span class="h-1 w-1 animate-bounce rounded-full bg-gray-400 [animation-delay:150ms]" />
@@ -77,7 +77,7 @@ defineProps<{
 
         <!-- 已使用的工具列表 -->
         <div v-if="toolsUsed.length > 1" class="flex flex-wrap gap-1">
-          <span class="text-xs text-gray-400">{{ t('called') }}</span>
+          <span class="text-xs text-gray-400">{{ t('ai.chat.thinking.called') }}</span>
           <span
             v-for="tool in toolsUsed.slice(0, -1)"
             :key="tool"
@@ -91,7 +91,7 @@ defineProps<{
 
       <!-- 默认状态（无工具调用） -->
       <div v-else class="flex items-center gap-2">
-        <span class="text-sm text-gray-600 dark:text-gray-400">{{ t('analyzing') }}</span>
+        <span class="text-sm text-gray-600 dark:text-gray-400">{{ t('ai.chat.thinking.analyzing') }}</span>
         <span class="flex gap-1">
           <span class="h-2 w-2 animate-bounce rounded-full bg-pink-500 [animation-delay:0ms]" />
           <span class="h-2 w-2 animate-bounce rounded-full bg-pink-500 [animation-delay:150ms]" />
@@ -101,18 +101,3 @@ defineProps<{
     </div>
   </div>
 </template>
-
-<i18n>
-{
-  "zh-CN": {
-    "processingResult": "处理结果中",
-    "called": "已调用:",
-    "analyzing": "正在分析问题..."
-  },
-  "en-US": {
-    "processingResult": "Processing result",
-    "called": "Called:",
-    "analyzing": "Analyzing question..."
-  }
-}
-</i18n>
