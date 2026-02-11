@@ -51,13 +51,9 @@
     "zod": "^4.3.5"
   },
   "devDependencies": {
-    "@electron-toolkit/eslint-config": "^1.0.2",
-    "@electron-toolkit/eslint-config-ts": "^2.0.0",
     "@electron-toolkit/tsconfig": "^1.0.1",
     "@electron/rebuild": "^4.0.1",
-    "@intlify/unplugin-vue-i18n": "^11.0.3",
     "@nuxt/ui": "^4.2.1",
-    "@rushstack/eslint-patch": "^1.15.0",
     "@tailwindcss/vite": "^4.0.0",
     "@types/better-sqlite3": "^7.6.13",
     "@types/stream-json": "^1.7.8",

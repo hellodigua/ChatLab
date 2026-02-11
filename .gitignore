@@ -15,10 +15,6 @@ yarn-error.log*
 *.log
 error-log-*.txt
 
-# Editor
-!.vscode/settings.json
-!.vscode/snippets.code-snippets
-
 # Project
 dist/
 .history/
@@ -34,6 +30,8 @@ yarn.lock
 
 # AI
 .cursor
-.vscode
+.vscode/*
+!.vscode/settings.json
+!.vscode/snippets.code-snippets
 .docs
 
