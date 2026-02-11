@@ -233,7 +233,7 @@ export function generateIncrementalSessions(
 
         if (isFirst) {
           // 第一条新消息：检查是否能并入最后一个已有会话
-          if (lastSession && msg.ts - lastSession.end_ts <= gapThreshold * 1000) {
+          if (lastSession && msg.ts - lastSession.end_ts <= gapThreshold) {
             // 并入已有会话
             currentSessionId = lastSession.id
             currentEndTs = lastSession.end_ts
@@ -244,7 +244,7 @@ export function generateIncrementalSessions(
         } else {
           // 后续消息：检查与上一条的时间差
           const prevMsg = newMessages[i - 1]
-          if (msg.ts - prevMsg.ts > gapThreshold * 1000) {
+          if (msg.ts - prevMsg.ts > gapThreshold) {
             // 如果之前在追加已有会话，先更新它
             if (currentSessionId && appendCount > 0) {
               updateSessionEndAndCount.run(currentEndTs, appendCount, currentSessionId)

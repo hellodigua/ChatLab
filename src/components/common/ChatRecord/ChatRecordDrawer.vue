@@ -85,17 +85,26 @@ function handleMessageTimestampsChange(timestamps: number[]) {
 }
 
 // 处理当前可见消息变化（用于联动高亮时间线）
-function handleVisibleMessageChange(messageId: number) {
+function handleVisibleMessageChange(payload: { id: number; timestamp: number }) {
   if (!sessionsCache.value.length) return
 
-  // 根据消息 ID 查找所属会话
-  // 由于会话是按 firstMessageId 排序的，我们找最后一个 firstMessageId <= messageId 的会话
+  // 优先按时间范围匹配所属会话，避免增量导入后 messageId 与时间顺序不一致导致联动错误。
   let targetSession: { id: number } | undefined
   for (const session of sessionsCache.value) {
-    if (session.firstMessageId <= messageId) {
+    if (payload.timestamp >= session.startTs && payload.timestamp <= session.endTs) {
       targetSession = session
-    } else {
       break
+    }
+  }
+
+  // 兜底：若时间匹配失败，再退回旧的 messageId 规则，保证历史行为可用。
+  if (!targetSession) {
+    for (const session of sessionsCache.value) {
+      if (session.firstMessageId <= payload.id) {
+        targetSession = session
+      } else {
+        break
+      }
     }
   }
 

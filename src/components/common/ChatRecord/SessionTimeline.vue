@@ -3,7 +3,7 @@
  * 会话时间线组件
  * 使用 @tanstack/vue-virtual 实现虚拟滚动
  */
-import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useVirtualizer } from '@tanstack/vue-virtual'
 import BatchSummaryModal from './BatchSummaryModal.vue'
@@ -287,10 +287,6 @@ watch(
   },
   { immediate: true }
 )
-
-onMounted(() => {
-  loadSessions()
-})
 </script>
 
 <template>

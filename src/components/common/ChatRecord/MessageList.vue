@@ -38,7 +38,7 @@ const emit = defineEmits<{
   /** 消息数量变化 */
   (e: 'count-change', count: number): void
   /** 当前可见消息变化（用于联动时间线） */
-  (e: 'visible-message-change', messageId: number): void
+  (e: 'visible-message-change', payload: { id: number; timestamp: number }): void
   /** 跳转到指定消息（用于查看上下文） */
   (e: 'jump-to-message', messageId: number): void
   /** 滚动到底部（外部模式专用，用于加载下一个块） */
@@ -429,7 +429,8 @@ function updateVisibleMessage() {
   const message = messages.value[middleItem.index]
   if (message && message.id !== lastEmittedMessageId) {
     lastEmittedMessageId = message.id
-    emit('visible-message-change', message.id)
+    // 同时上报消息 ID 与时间戳，供父组件优先按时间范围匹配会话。
+    emit('visible-message-change', { id: message.id, timestamp: message.timestamp })
   }
 }
 
