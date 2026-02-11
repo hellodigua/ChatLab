@@ -41,7 +41,7 @@
     "duplicates": "重复消息",
     "noNewMessages": "文件中没有新消息，所有消息都已存在",
     "importing": "正在导入...",
-    "import": "导入 {count} 条消息",
+    "import": "确认导入 {count} 条消息",
     "success": "导入成功",
     "successDetail": "成功追加 {count} 条新消息",
     "failed": "导入失败"

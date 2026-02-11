@@ -301,7 +301,7 @@ function translateError(error: string): string {
     </template>
 
     <template #footer>
-      <div class="flex justify-end gap-2">
+      <div class="flex w-full justify-end gap-2">
         <!-- 选择阶段 -->
         <template v-if="stage === 'select'">
           <UButton color="neutral" variant="ghost" @click="isOpen = false">
