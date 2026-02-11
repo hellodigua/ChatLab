@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import MarkdownIt from 'markdown-it'
@@ -48,35 +48,6 @@ onMounted(() => {
     }
   }
 })
-
-// 倒计时状态
-const countdown = ref(10)
-let timer: ReturnType<typeof setInterval> | null = null
-
-// 监听 modal 打开状态，启动倒计时
-watch(isOpen, (open) => {
-  if (open) {
-    countdown.value = 10
-    timer = setInterval(() => {
-      if (countdown.value > 0) {
-        countdown.value--
-      } else if (timer) {
-        clearInterval(timer)
-        timer = null
-      }
-    }, 1000)
-  } else if (timer) {
-    clearInterval(timer)
-    timer = null
-  }
-})
-
-onUnmounted(() => {
-  if (timer) clearInterval(timer)
-})
-
-// 是否可以点击同意按钮（版本更新时无需等待倒计时）
-const canAgree = computed(() => isVersionUpdated.value || countdown.value === 0)
 
 // 创建 markdown-it 实例
 const md = new MarkdownIt({
@@ -176,11 +147,10 @@ defineExpose({ open })
           <UButton
             color="primary"
             size="lg"
-            :disabled="!canAgree"
-            class="bg-pink-500 hover:bg-pink-600 dark:bg-pink-600 dark:hover:bg-pink-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="bg-pink-500 hover:bg-pink-600 dark:bg-pink-600 dark:hover:bg-pink-700"
             @click="handleAgree"
           >
-            {{ canAgree ? t('common.agreement.agree') : t('common.agreement.countdown', { seconds: countdown }) }}
+            {{ t('common.agreement.agree') }}
           </UButton>
         </div>
       </div>

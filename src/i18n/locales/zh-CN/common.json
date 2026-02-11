@@ -68,7 +68,6 @@
     "subtitle": "使用前请仔细阅读",
     "disagree": "我不同意",
     "agree": "我已阅读并同意",
-    "countdown": "请阅读 ({seconds}s)",
     "updateNotice": "协议内容有重要更新，请重新阅读并确认"
   },
   "datePicker": {
