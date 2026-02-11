@@ -64,10 +64,8 @@ const {
   timeRangeValue,
   fullTimeRange,
   timeFilter,
-  timeFilterKey,
   selectedYearForOverview,
   initialTimeState,
-  resetTimeRange,
 } = useTimeSelect(route, router, {
   activeTab,
   isInitialLoad,
@@ -158,13 +156,10 @@ watch(
   }
 )
 
-// 监听会话变化（切换会话时清空时间范围，等待 TimeSelect 重新拉取）
+// 监听会话变化（切换会话时由 TimeSelect 自行发出新范围，避免 Tab Content 双重重建）
 watch(
   currentSessionId,
-  (newId, oldId) => {
-    if (oldId !== undefined && newId !== oldId) {
-      resetTimeRange()
-    }
+  () => {
     loadData()
   },
   { immediate: true }
@@ -287,7 +282,7 @@ onMounted(() => {
           <Transition name="tab-slide" mode="out-in">
             <OverviewTab
               v-if="activeTab === 'overview'"
-              :key="'overview-' + timeFilterKey"
+              :key="'overview-' + currentSessionId"
               :session="session"
               :member-activity="memberActivity"
               :message-types="messageTypes"
@@ -301,20 +296,24 @@ onMounted(() => {
             />
             <ViewTab
               v-else-if="activeTab === 'view'"
-              :key="'view-' + timeFilterKey"
+              :key="'view-' + currentSessionId"
               :session-id="currentSessionId!"
               :time-filter="timeFilter"
             />
             <QuotesTab
               v-else-if="activeTab === 'quotes'"
-              :key="'quotes-' + timeFilterKey"
+              :key="'quotes-' + currentSessionId"
               :session-id="currentSessionId!"
               :time-filter="timeFilter"
             />
-            <MemberTab v-else-if="activeTab === 'member'" :key="'member'" :session-id="currentSessionId!" />
+            <MemberTab
+              v-else-if="activeTab === 'member'"
+              :key="'member-' + currentSessionId"
+              :session-id="currentSessionId!"
+            />
             <AITab
               v-else-if="activeTab === 'ai'"
-              :key="'ai'"
+              :key="'ai-' + currentSessionId"
               :session-id="currentSessionId!"
               :session-name="session.name"
               chat-type="private"
