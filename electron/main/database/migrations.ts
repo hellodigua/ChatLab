@@ -11,15 +11,16 @@
  */
 
 import type Database from 'better-sqlite3'
+import { t } from '../i18n'
 
 /** 迁移脚本接口 */
 interface Migration {
   /** 版本号（必须递增） */
   version: number
-  /** 迁移描述（技术说明） */
-  description: string
-  /** 用户可读的升级原因（显示在弹窗中） */
-  userMessage: string
+  /** 迁移描述 i18n key（技术说明） */
+  descriptionKey: string
+  /** 用户可读的升级原因 i18n key（显示在弹窗中） */
+  userMessageKey: string
   /** 迁移执行函数 */
   up: (db: Database.Database) => void
 }
@@ -43,8 +44,8 @@ export const CURRENT_SCHEMA_VERSION = 3
 const migrations: Migration[] = [
   {
     version: 1,
-    description: '添加 owner_id 字段到 meta 表',
-    userMessage: '支持「Owner」功能，可在成员列表中设置自己的身份',
+    descriptionKey: 'database.migrationV1Desc',
+    userMessageKey: 'database.migrationV1Message',
     up: (db) => {
       // 检查 owner_id 列是否已存在（防止重复执行）
       const tableInfo = db.prepare('PRAGMA table_info(meta)').all() as Array<{ name: string }>
@@ -56,8 +57,8 @@ const migrations: Migration[] = [
   },
   {
     version: 2,
-    description: '添加 roles、reply_to_message_id、platform_message_id 字段',
-    userMessage: '支持成员角色、消息回复关系和回复内容预览',
+    descriptionKey: 'database.migrationV2Desc',
+    userMessageKey: 'database.migrationV2Message',
     up: (db) => {
       // 检查 roles 列是否已存在（防止重复执行）
       const memberTableInfo = db.prepare('PRAGMA table_info(member)').all() as Array<{ name: string }>
@@ -91,8 +92,8 @@ const migrations: Migration[] = [
   },
   {
     version: 3,
-    description: '添加会话索引相关表（chat_session、message_context）和 session_gap_threshold 字段',
-    userMessage: '支持会话时间轴浏览和 AI 增强分析功能',
+    descriptionKey: 'database.migrationV3Desc',
+    userMessageKey: 'database.migrationV3Message',
     up: (db) => {
       // 创建 chat_session 会话表
       db.exec(`
@@ -192,14 +193,14 @@ function checkDatabaseIntegrity(db: Database.Database): { valid: boolean; error?
     if (tables.length === 0) {
       return {
         valid: false,
-        error: '数据库结构不完整：缺少 meta 表。建议删除此数据库文件后重新导入。',
+        error: t('database.integrityError'),
       }
     }
     return { valid: true }
   } catch (error) {
     return {
       valid: false,
-      error: `数据库检查失败: ${error instanceof Error ? error.message : String(error)}`,
+      error: t('database.checkFailed', { error: error instanceof Error ? error.message : String(error) }),
     }
   }
 }
@@ -264,7 +265,7 @@ export function getPendingMigrationInfos(fromVersion = 0): MigrationInfo[] {
     .filter((m) => m.version > fromVersion)
     .map((m) => ({
       version: m.version,
-      description: m.description,
-      userMessage: m.userMessage,
+      description: t(m.descriptionKey),
+      userMessage: t(m.userMessageKey),
     }))
 }

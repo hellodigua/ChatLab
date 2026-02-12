@@ -23,6 +23,7 @@ import { GeminiService, GEMINI_INFO } from './gemini'
 import { OpenAICompatibleService, OPENAI_COMPATIBLE_INFO } from './openai-compatible'
 import { aiLogger, extractErrorInfo, extractErrorStack } from '../logger'
 import { encryptApiKey, decryptApiKey, isEncrypted } from './crypto'
+import { t } from '../../i18n'
 
 // 导出类型
 export * from './types'
@@ -299,7 +300,7 @@ export function addConfig(config: Omit<AIServiceConfig, 'id' | 'createdAt' | 'up
   const store = loadConfigStore()
 
   if (store.configs.length >= MAX_CONFIG_COUNT) {
-    return { success: false, error: `最多只能添加 ${MAX_CONFIG_COUNT} 个配置` }
+    return { success: false, error: t('llm.maxConfigs', { count: MAX_CONFIG_COUNT }) }
   }
 
   const now = Date.now()
@@ -332,7 +333,7 @@ export function updateConfig(
   const index = store.configs.findIndex((c) => c.id === id)
 
   if (index === -1) {
-    return { success: false, error: '配置不存在' }
+    return { success: false, error: t('llm.configNotFound') }
   }
 
   store.configs[index] = {
@@ -353,7 +354,7 @@ export function deleteConfig(id: string): { success: boolean; error?: string } {
   const index = store.configs.findIndex((c) => c.id === id)
 
   if (index === -1) {
-    return { success: false, error: '配置不存在' }
+    return { success: false, error: t('llm.configNotFound') }
   }
 
   store.configs.splice(index, 1)
@@ -375,7 +376,7 @@ export function setActiveConfig(id: string): { success: boolean; error?: string 
   const config = store.configs.find((c) => c.id === id)
 
   if (!config) {
-    return { success: false, error: '配置不存在' }
+    return { success: false, error: t('llm.configNotFound') }
   }
 
   store.activeConfigId = id
@@ -542,7 +543,7 @@ export async function chat(
   const service = getCurrentLLMService()
   if (!service) {
     aiLogger.error('LLM', '服务未配置')
-    throw new Error('LLM 服务未配置，请先在设置中配置 API Key')
+    throw new Error(t('llm.notConfigured'))
   }
 
   try {
@@ -597,7 +598,7 @@ export async function* chatStream(messages: ChatMessage[], options?: ChatOptions
   const service = getCurrentLLMService()
   if (!service) {
     aiLogger.error('LLM', '服务未配置（流式）')
-    throw new Error('LLM 服务未配置，请先在设置中配置 API Key')
+    throw new Error(t('llm.notConfigured'))
   }
 
   let chunkCount = 0

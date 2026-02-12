@@ -7,6 +7,7 @@ import { initAnalytics, trackDailyActive } from './analytics'
 import { initProxy } from './network/proxy'
 import { needsLegacyMigration, migrateFromLegacyDir, ensureAppDirs, cleanupPendingDeleteDir } from './paths'
 import { migrateAllDatabases, checkMigrationNeeded } from './database/core'
+import { initLocale } from './i18n'
 
 class MainProcess {
   mainWindow: BrowserWindow | null
@@ -57,6 +58,9 @@ class MainProcess {
 
     // 确保应用目录存在
     ensureAppDirs()
+
+    // 初始化主进程国际化（在 ensureAppDirs 之后，确保 settings 目录存在）
+    await initLocale()
 
     // 执行数据库 schema 迁移（确保所有数据库在 Worker 查询前已是最新 schema）
     this.migrateDatabasesIfNeeded()

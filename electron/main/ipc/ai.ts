@@ -8,6 +8,7 @@ import * as rag from '../ai/rag'
 import { aiLogger } from '../ai/logger'
 import { getLogsDir } from '../paths'
 import { Agent, type AgentStreamChunk, type PromptConfig } from '../ai/agent'
+import { t } from '../i18n'
 import type { ToolContext } from '../ai/tools/types'
 import type { IpcContext } from './types'
 
@@ -374,7 +375,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
         if (activeConfig) {
           return llm.deleteConfig(activeConfig.id)
         }
-        return { success: false, error: '没有激活的配置' }
+        return { success: false, error: t('llm.noActiveConfig') }
       }
       return llm.deleteConfig(id)
     } catch (error) {

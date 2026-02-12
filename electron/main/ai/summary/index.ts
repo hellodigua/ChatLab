@@ -11,6 +11,7 @@ import Database from 'better-sqlite3'
 import { chat } from '../llm'
 import { getDbPath, openDatabase } from '../../database/core'
 import { aiLogger } from '../logger'
+import { t } from '../../i18n'
 
 /** 最小消息数阈值（少于此数量不生成摘要） */
 const MIN_MESSAGE_COUNT = 3
@@ -122,6 +123,7 @@ function getSummaryLengthLimit(messageCount: number): number {
 
 /**
  * 判断消息是否有意义（用于过滤）
+ * 支持中英文内容过滤
  */
 function isValidMessage(content: string): boolean {
   const trimmed = content.trim()
@@ -129,19 +131,45 @@ function isValidMessage(content: string): boolean {
   // 过滤空内容
   if (!trimmed) return false
 
-  // 过滤单字/双字无意义回复
+  // 过滤单字/双字无意义回复（中文）
   if (trimmed.length <= 2) {
-    // 允许一些有意义的短词
-    const meaningfulShort = ['好的', '不是', '是的', '可以', '不行', '好吧', '明白', '知道', '同意']
-    if (!meaningfulShort.includes(trimmed)) return false
+    const meaningfulShortZh = ['好的', '不是', '是的', '可以', '不行', '好吧', '明白', '知道', '同意']
+    if (!meaningfulShortZh.includes(trimmed)) return false
   }
+
+  // 过滤短无意义回复（英文，不区分大小写）
+  const lowerTrimmed = trimmed.toLowerCase()
+  const meaninglessShortEn = [
+    'ok',
+    'k',
+    'yes',
+    'no',
+    'ya',
+    'yep',
+    'nope',
+    'lol',
+    'haha',
+    'hehe',
+    'hmm',
+    'ah',
+    'oh',
+    'wow',
+    'thx',
+    'ty',
+    'np',
+    'gg',
+    'brb',
+    'idk',
+  ]
+  if (meaninglessShortEn.includes(lowerTrimmed)) return false
 
   // 过滤纯表情消息
   const emojiOnlyPattern = /^[\p{Emoji}\s[\]（）()]+$/u
   if (emojiOnlyPattern.test(trimmed)) return false
 
-  // 过滤占位符文本
+  // 过滤占位符文本（中文 + 英文）
   const placeholders = [
+    // 中文占位符（QQ/微信导出格式）
     '[图片]',
     '[语音]',
     '[视频]',
@@ -153,12 +181,38 @@ function isValidMessage(content: string): boolean {
     '[红包]',
     '[转账]',
     '[撤回消息]',
+    // 英文占位符
+    '[image]',
+    '[voice]',
+    '[video]',
+    '[file]',
+    '[sticker]',
+    '[animated sticker]',
+    '[location]',
+    '[contact]',
+    '[red packet]',
+    '[transfer]',
+    '[recalled message]',
+    '[photo]',
+    '[audio]',
+    '[gif]',
   ]
-  if (placeholders.some((p) => trimmed === p)) return false
+  if (placeholders.some((p) => lowerTrimmed === p.toLowerCase())) return false
 
-  // 过滤系统消息（入群、退群等）
-  const systemPatterns = [/^.*邀请.*加入了群聊$/, /^.*退出了群聊$/, /^.*撤回了一条消息$/, /^你撤回了一条消息$/]
-  if (systemPatterns.some((p) => p.test(trimmed))) return false
+  // 过滤系统消息（中文：入群、退群等）
+  const systemPatternsZh = [/^.*邀请.*加入了群聊$/, /^.*退出了群聊$/, /^.*撤回了一条消息$/, /^你撤回了一条消息$/]
+  if (systemPatternsZh.some((p) => p.test(trimmed))) return false
+
+  // 过滤系统消息（英文）
+  const systemPatternsEn = [
+    /^.*invited.*to the group$/i,
+    /^.*left the group$/i,
+    /^.*recalled a message$/i,
+    /^you recalled a message$/i,
+    /^.*joined the group$/i,
+    /^.*has been removed$/i,
+  ]
+  if (systemPatternsEn.some((p) => p.test(trimmed))) return false
 
   return true
 }
@@ -282,17 +336,14 @@ export async function generateSessionSummary(
     // 2. 获取会话消息
     const sessionData = getSessionMessagesForSummary(dbSessionId, chatSessionId)
     if (!sessionData) {
-      return { success: false, error: '会话不存在或数据库打开失败' }
+      return { success: false, error: t('summary.sessionNotFound') }
     }
 
     // 3. 检查消息数量
     if (sessionData.messageCount < MIN_MESSAGE_COUNT) {
       return {
         success: false,
-        error:
-          locale === 'zh-CN'
-            ? `消息数量少于${MIN_MESSAGE_COUNT}条，无需生成摘要`
-            : `Message count less than ${MIN_MESSAGE_COUNT}, no need to generate summary`,
+        error: t('summary.tooFewMessages', { count: MIN_MESSAGE_COUNT }),
       }
     }
 
@@ -301,10 +352,7 @@ export async function generateSessionSummary(
     if (validMessages.length < MIN_MESSAGE_COUNT) {
       return {
         success: false,
-        error:
-          locale === 'zh-CN'
-            ? `有效消息数量少于${MIN_MESSAGE_COUNT}条，无需生成摘要`
-            : `Valid message count less than ${MIN_MESSAGE_COUNT}, no need to generate summary`,
+        error: t('summary.tooFewValidMessages', { count: MIN_MESSAGE_COUNT }),
       }
     }
 
@@ -362,7 +410,7 @@ export async function generateSessionSummary(
 async function generateDirectSummary(content: string, lengthLimit: number, locale: string): Promise<string> {
   const response = await chat(
     [
-      { role: 'system', content: '你是一个对话摘要专家，擅长用简洁的语言总结对话内容。' },
+      { role: 'system', content: t('summary.systemPromptDirect') },
       { role: 'user', content: buildSummaryPrompt(content, lengthLimit, locale) },
     ],
     {
@@ -391,7 +439,7 @@ async function generateMapReduceSummary(
     const segmentContent = formatMessages(segments[i])
     const response = await chat(
       [
-        { role: 'system', content: '你是一个对话摘要专家，擅长用简洁的语言总结对话内容。' },
+        { role: 'system', content: t('summary.systemPromptDirect') },
         { role: 'user', content: buildSubSummaryPrompt(segmentContent, locale) },
       ],
       {
@@ -409,7 +457,7 @@ async function generateMapReduceSummary(
 
   const mergeResponse = await chat(
     [
-      { role: 'system', content: '你是一个对话摘要专家，擅长将多个摘要合并成一个连贯的总结。' },
+      { role: 'system', content: t('summary.systemPromptMerge') },
       { role: 'user', content: buildMergePrompt(subSummaries, lengthLimit, locale) },
     ],
     {
@@ -447,7 +495,7 @@ export async function generateSessionSummaries(
 
     if (result.success) {
       success++
-    } else if (result.error?.includes('少于') || result.error?.includes('less than')) {
+    } else if (result.error?.includes('少于') || result.error?.includes('less than') || result.error?.includes('few')) {
       skipped++
     } else {
       failed++
@@ -479,20 +527,20 @@ export function checkSessionsCanGenerateSummary(
     const sessionData = getSessionMessagesForSummary(dbSessionId, chatSessionId)
 
     if (!sessionData) {
-      results.set(chatSessionId, { canGenerate: false, reason: '会话不存在' })
+      results.set(chatSessionId, { canGenerate: false, reason: t('summary.sessionNotExist') })
       continue
     }
 
     // 检查原始消息数量
     if (sessionData.messageCount < MIN_MESSAGE_COUNT) {
-      results.set(chatSessionId, { canGenerate: false, reason: '消息太少' })
+      results.set(chatSessionId, { canGenerate: false, reason: t('summary.messagesTooFew') })
       continue
     }
 
     // 预处理：过滤无意义消息
     const validMessages = preprocessMessages(sessionData.messages)
     if (validMessages.length < MIN_MESSAGE_COUNT) {
-      results.set(chatSessionId, { canGenerate: false, reason: '有效消息太少' })
+      results.set(chatSessionId, { canGenerate: false, reason: t('summary.validMessagesTooFew') })
       continue
     }
 

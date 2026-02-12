@@ -4,6 +4,7 @@ import { platform } from '@electron-toolkit/utils'
 import { logger } from './logger'
 import { getActiveProxyUrl } from './network/proxy'
 import { closeWorkerAsync } from './worker/workerManager'
+import { t } from './i18n'
 
 // R2 镜像源 URL（速度更快，作为主要更新源）
 const R2_MIRROR_URL = 'https://chatlab.1app.top/releases/download'
@@ -143,10 +144,10 @@ const checkUpdate = (win) => {
 
     dialog
       .showMessageBox({
-        title: '发现新版本 v' + info.version,
-        message: '发现新版本 v' + info.version,
-        detail: '是否立即下载并安装新版本？',
-        buttons: ['立即下载', '取消'],
+        title: t('update.newVersionTitle', { version: info.version }),
+        message: t('update.newVersionMessage', { version: info.version }),
+        detail: t('update.newVersionDetail'),
+        buttons: [t('update.downloadNow'), t('update.cancel')],
         defaultId: 0,
         cancelId: 1,
         type: 'question',
@@ -178,9 +179,9 @@ const checkUpdate = (win) => {
   autoUpdater.on('update-downloaded', () => {
     dialog
       .showMessageBox({
-        title: '下载完成',
-        message: '新版本已准备就绪，是否现在安装？',
-        buttons: ['安装', platform.isMacOS ? '之后提醒' : '稍后（应用退出后自动安装）'],
+        title: t('update.downloadComplete'),
+        message: t('update.readyToInstall'),
+        buttons: [t('update.install'), platform.isMacOS ? t('update.remindLater') : t('update.installOnQuit')],
         defaultId: 1,
         cancelId: 2,
         type: 'question',
@@ -219,7 +220,7 @@ const checkUpdate = (win) => {
     } else {
       win.webContents.send('show-message', {
         type: 'success',
-        message: '已是最新版本',
+        message: t('update.upToDate'),
       })
     }
   })
@@ -279,10 +280,10 @@ const manualCheckForUpdates = () => {
  */
 const simulateUpdateDialog = (win) => {
   dialog.showMessageBox({
-    title: '发现新版本 v9.9.9',
-    message: '发现新版本 v9.9.9',
-    detail: '是否立即下载并安装新版本？',
-    buttons: ['立即下载', '取消'],
+    title: t('update.newVersionTitle', { version: '9.9.9' }),
+    message: t('update.newVersionMessage', { version: '9.9.9' }),
+    detail: t('update.newVersionDetail'),
+    buttons: [t('update.downloadNow'), t('update.cancel')],
     defaultId: 0,
     cancelId: 1,
     type: 'question',

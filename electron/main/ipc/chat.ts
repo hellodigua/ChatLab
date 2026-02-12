@@ -10,6 +10,7 @@ import { detectFormat, diagnoseFormat, scanMultiChatFile, type ParseProgress } f
 import type { IpcContext } from './types'
 import { CURRENT_SCHEMA_VERSION, getPendingMigrationInfos, type MigrationInfo } from '../database/migrations'
 import { exportSessionToTempFile, cleanupTempExportFiles } from '../merger'
+import { t } from '../i18n'
 
 /**
  * 注册聊天记录相关 IPC 处理器
@@ -60,14 +61,14 @@ export function registerChatHandlers(ctx: IpcContext): void {
   ipcMain.handle('chat:selectFile', async () => {
     try {
       const { canceled, filePaths } = await dialog.showOpenDialog({
-        title: '选择聊天记录文件',
+        title: t('dialog.selectChatFile'),
         defaultPath: app.getPath('documents'),
         properties: ['openFile'],
         filters: [
-          { name: '聊天记录', extensions: ['json', 'jsonl', 'txt'] },
-          { name: '所有文件', extensions: ['*'] },
+          { name: t('dialog.chatRecords'), extensions: ['json', 'jsonl', 'txt'] },
+          { name: t('dialog.allFiles'), extensions: ['*'] },
         ],
-        buttonLabel: '导入',
+        buttonLabel: t('dialog.import'),
       })
 
       if (canceled || filePaths.length === 0) {

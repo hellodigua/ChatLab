@@ -9,6 +9,7 @@ import { getAllToolDefinitions, executeToolCalls } from './tools'
 import type { ToolContext, OwnerInfo } from './tools/types'
 import { aiLogger } from './logger'
 import { randomUUID } from 'crypto'
+import { t as i18nT } from '../i18n'
 
 // 思考类标签列表（可按需扩展）
 const THINK_TAGS = ['think', 'analysis', 'reasoning', 'reflection', 'thought', 'thinking']
@@ -311,78 +312,11 @@ export interface PromptConfig {
   responseRules: string
 }
 
-// 国际化内容
-const i18nContent = {
-  'zh-CN': {
-    currentDateIs: '当前日期是',
-    chatTypeDesc: { private: '私聊记录', group: '群聊记录' },
-    chatContext: { private: '对话', group: '群聊' },
-    ownerNote: (displayName: string, platformId: string, chatContext: string) => `当前用户身份：
-- 用户在${chatContext}中的身份是「${displayName}」（platformId: ${platformId}）
-- 当用户提到"我"、"我的"时，指的就是「${displayName}」
-- 查询"我"的发言时，使用 sender_id 参数筛选该成员
-`,
-    memberNotePrivate: `成员查询策略：
-- 私聊只有两个人，可以直接获取成员列表
-- 当用户提到"对方"、"他/她"时，通过 get_group_members 获取另一方信息
-`,
-    memberNoteGroup: `成员查询策略：
-- 当用户提到特定群成员（如"张三说过什么"、"小明的发言"等）时，应先调用 get_group_members 获取成员列表
-- 群成员有三种名称：accountName（原始昵称）、groupNickname（群昵称）、aliases（用户自定义别名）
-- 通过 get_group_members 的 search 参数可以模糊搜索这三种名称
-- 找到成员后，使用其 id 字段作为 search_messages 的 sender_id 参数来获取该成员的发言
-`,
-    timeParamsIntro: '时间参数：按用户提到的精度组合 year/month/day/hour',
-    timeParamExample1: (year: number) => `"10月" → year: ${year}, month: 10`,
-    timeParamExample2: (year: number) => `"10月1号" → year: ${year}, month: 10, day: 1`,
-    timeParamExample3: (year: number) => `"10月1号下午3点" → year: ${year}, month: 10, day: 1, hour: 15`,
-    defaultYearNote: (year: number, prevYear: number) => `未指定年份默认${year}年，若该月份未到则用${prevYear}年`,
-    responseInstruction: '根据用户的问题，选择合适的工具获取数据，然后基于数据给出回答。',
-    responseRulesTitle: '回答要求：',
-    // Fallback 角色定义：适中幽默，允许 B 站/网络热梗与表情
-    fallbackRoleDefinition: (chatType: string) => `你是一个专业但风格轻松的${chatType}记录分析助手。
-你的任务是帮助用户理解和分析他们的${chatType}记录数据，同时可以适度使用 B 站/网络热梗和表情/颜文字活跃气氛，但不影响结论的准确性。`,
-    // Fallback 回答要求：强调严谨优先，适度玩梗
-    fallbackResponseRules: `1. 基于工具返回的数据回答，不要编造信息
-2. 如果数据不足以回答问题，请说明
-3. 回答要简洁明了，使用 Markdown 格式
-4. 可以适度加入 B 站/网络热梗、表情/颜文字（强度适中）
-5. 玩梗不得影响事实准确与结论清晰，避免低俗或冒犯性表达`,
-  },
-  'en-US': {
-    currentDateIs: 'Current date is',
-    chatTypeDesc: { private: 'private chat records', group: 'group chat records' },
-    chatContext: { private: 'conversation', group: 'group chat' },
-    ownerNote: (displayName: string, platformId: string, chatContext: string) => `Current user identity:
-- The user's identity in this ${chatContext} is "${displayName}" (platformId: ${platformId})
-- When the user refers to "I" or "my", it refers to "${displayName}"
-- When querying "my" messages, use the sender_id parameter to filter for this member
-`,
-    memberNotePrivate: `Member query strategy:
-- Private chats only have two participants, so the member list can be directly obtained
-- When the user refers to "the other party" or "he/she", get the other participant's information via get_group_members
-`,
-    memberNoteGroup: `Member query strategy:
-- When the user refers to specific group members (e.g., "what did John say", "Mary's messages"), first call get_group_members to get the member list
-- Group members have three names: accountName (original nickname), groupNickname (group nickname), aliases (user-defined aliases)
-- The search parameter of get_group_members can be used for fuzzy searching these three names
-- Once a member is found, use their id field as the sender_id parameter for search_messages to retrieve their messages
-`,
-    timeParamsIntro: 'Time parameters: combine year/month/day/hour based on user mention',
-    timeParamExample1: (year: number) => `"October" → year: ${year}, month: 10`,
-    timeParamExample2: (year: number) => `"October 1st" → year: ${year}, month: 10, day: 1`,
-    timeParamExample3: (year: number) => `"October 1st 3 PM" → year: ${year}, month: 10, day: 1, hour: 15`,
-    defaultYearNote: (year: number, prevYear: number) =>
-      `If year is not specified, defaults to ${year}. If the month has not yet occurred, ${prevYear} is used.`,
-    responseInstruction:
-      "Based on the user's question, select appropriate tools to retrieve data, then provide an answer based on the data.",
-    responseRulesTitle: 'Response requirements:',
-    fallbackRoleDefinition: (chatType: string) => `You are a professional ${chatType} analysis assistant.
-Your task is to help users understand and analyze their ${chatType} data.`,
-    fallbackResponseRules: `1. Answer based on data returned by tools, do not fabricate information
-2. If data is insufficient to answer, please state so
-3. Keep answers concise and clear, use Markdown format`,
-  },
+// ==================== 国际化辅助（使用 i18next） ====================
+
+/** 获取 Agent 翻译，根据传入的 locale 参数 */
+function agentT(key: string, locale: string, options?: Record<string, unknown>): string {
+  return i18nT(key, { lng: locale, ...options })
 }
 
 /**
@@ -400,9 +334,8 @@ function getLockedPromptSection(
   ownerInfo?: OwnerInfo,
   locale: string = 'zh-CN'
 ): string {
-  const content = i18nContent[locale as keyof typeof i18nContent] || i18nContent['zh-CN']
   const now = new Date()
-  const dateLocale = locale === 'zh-CN' ? 'zh-CN' : 'en-US'
+  const dateLocale = locale.startsWith('zh') ? 'zh-CN' : 'en-US'
   const currentDate = now.toLocaleDateString(dateLocale, {
     year: 'numeric',
     month: 'long',
@@ -411,27 +344,35 @@ function getLockedPromptSection(
   })
 
   const isPrivate = chatType === 'private'
-  const chatContext = content.chatContext[chatType]
+  const chatContext = agentT(`ai.agent.chatContext.${chatType}`, locale)
 
   // Owner 说明（当用户设置了"我是谁"时）
-  const ownerNote = ownerInfo ? content.ownerNote(ownerInfo.displayName, ownerInfo.platformId, chatContext) : ''
+  const ownerNote = ownerInfo
+    ? agentT('ai.agent.ownerNote', locale, {
+        displayName: ownerInfo.displayName,
+        platformId: ownerInfo.platformId,
+        chatContext,
+      })
+    : ''
 
   // 成员说明（私聊只有2人）
-  const memberNote = isPrivate ? content.memberNotePrivate : content.memberNoteGroup
+  const memberNote = isPrivate
+    ? agentT('ai.agent.memberNotePrivate', locale)
+    : agentT('ai.agent.memberNoteGroup', locale)
 
   const year = now.getFullYear()
   const prevYear = year - 1
 
-  return `${content.currentDateIs} ${currentDate}。
+  return `${agentT('ai.agent.currentDateIs', locale)} ${currentDate}。
 ${ownerNote}
 ${memberNote}
-${content.timeParamsIntro}
-- ${content.timeParamExample1(year)}
-- ${content.timeParamExample2(year)}
-- ${content.timeParamExample3(year)}
-${content.defaultYearNote(year, prevYear)}
+${agentT('ai.agent.timeParamsIntro', locale)}
+- ${agentT('ai.agent.timeParamExample1', locale, { year })}
+- ${agentT('ai.agent.timeParamExample2', locale, { year })}
+- ${agentT('ai.agent.timeParamExample3', locale, { year })}
+${agentT('ai.agent.defaultYearNote', locale, { year, prevYear })}
 
-${content.responseInstruction}`
+${agentT('ai.agent.responseInstruction', locale)}`
 }
 
 /**
@@ -439,10 +380,7 @@ ${content.responseInstruction}`
  * 仅在前端未传递 promptConfig 时使用
  */
 function getFallbackRoleDefinition(chatType: 'group' | 'private', locale: string = 'zh-CN'): string {
-  const content = i18nContent[locale as keyof typeof i18nContent] || i18nContent['zh-CN']
-  const chatTypeDesc =
-    chatType === 'private' ? (locale === 'zh-CN' ? '私聊' : 'private chat') : locale === 'zh-CN' ? '群聊' : 'group chat'
-  return content.fallbackRoleDefinition(chatTypeDesc)
+  return agentT(`ai.agent.fallbackRoleDefinition.${chatType}`, locale)
 }
 
 /**
@@ -450,8 +388,7 @@ function getFallbackRoleDefinition(chatType: 'group' | 'private', locale: string
  * 仅在前端未传递 promptConfig 时使用
  */
 function getFallbackResponseRules(locale: string = 'zh-CN'): string {
-  const content = i18nContent[locale as keyof typeof i18nContent] || i18nContent['zh-CN']
-  return content.fallbackResponseRules
+  return agentT('ai.agent.fallbackResponseRules', locale)
 }
 
 /**
@@ -471,8 +408,6 @@ function buildSystemPrompt(
   ownerInfo?: OwnerInfo,
   locale: string = 'zh-CN'
 ): string {
-  const content = i18nContent[locale as keyof typeof i18nContent] || i18nContent['zh-CN']
-
   // 使用用户配置或 fallback
   const roleDefinition = promptConfig?.roleDefinition || getFallbackRoleDefinition(chatType, locale)
   const responseRules = promptConfig?.responseRules || getFallbackResponseRules(locale)
@@ -485,7 +420,7 @@ function buildSystemPrompt(
 
 ${lockedSection}
 
-${content.responseRulesTitle}
+${agentT('ai.agent.responseRulesTitle', locale)}
 ${responseRules}`
 }
 
@@ -634,7 +569,7 @@ export class Agent {
     aiLogger.warn('Agent', '达到最大工具调用轮数', { maxRounds: this.config.maxToolRounds })
     this.messages.push({
       role: 'user',
-      content: '请根据已获取的信息给出回答，不要再调用工具。',
+      content: agentT('ai.agent.answerWithoutTools', this.locale),
     })
 
     const finalResponse = await chat(this.messages, this.config.llmOptions)
@@ -877,7 +812,7 @@ export class Agent {
 
     this.messages.push({
       role: 'user',
-      content: '请根据已获取的信息给出回答，不要再调用工具。',
+      content: agentT('ai.agent.answerWithoutTools', this.locale),
     })
 
     // 最后一轮不带 tools（传入 abortSignal）
@@ -993,7 +928,9 @@ export class Agent {
       // 添加工具结果消息
       this.messages.push({
         role: 'tool',
-        content: result.success ? JSON.stringify(result.result) : `错误: ${result.error}`,
+        content: result.success
+          ? JSON.stringify(result.result)
+          : agentT('ai.agent.toolError', this.locale, { error: result.error }),
         tool_call_id: tc.id,
       })
     }

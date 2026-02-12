@@ -6,6 +6,7 @@ import { ipcMain, app, dialog, clipboard, shell } from 'electron'
 import * as fs from 'fs/promises'
 import type { IpcContext } from './types'
 import { simulateUpdateDialog, manualCheckForUpdates } from '../update'
+import { t } from '../i18n'
 
 /**
  * 注册窗口和文件系统操作 IPC 处理器
@@ -153,17 +154,17 @@ export function registerWindowHandlers(ctx: IpcContext): void {
   ipcMain.handle('selectDir', async (_, defaultPath = '') => {
     try {
       const { canceled, filePaths } = await dialog.showOpenDialog({
-        title: '选择目录',
+        title: t('dialog.selectDirectory'),
         defaultPath: defaultPath || app.getPath('documents'),
         properties: ['openDirectory', 'createDirectory'],
-        buttonLabel: '选择文件夹',
+        buttonLabel: t('dialog.selectFolder'),
       })
       if (!canceled) {
         return filePaths[0]
       }
       return null
     } catch (err) {
-      console.error('选择文件夹时发生错误：', err)
+      console.error(t('dialog.selectFolderError'), err)
       throw err
     }
   })
