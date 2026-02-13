@@ -11,6 +11,7 @@
     "searchResult": "找到 {count} / {total} 个",
     "noSearchResult": "未找到匹配的聊天记录",
     "selectAll": "全选",
+    "shiftClickHint": "按住 Shift 点击可范围多选",
     "selected": "已选 {count} 个",
     "empty": "暂无聊天记录",
     "delete": "删除选中",

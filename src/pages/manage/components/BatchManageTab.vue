@@ -85,6 +85,9 @@ function toggleSelectAll() {
   }
 }
 
+// 上次点击的索引（基于 filteredSessions），用于 Shift+Click 范围选择
+const lastClickedIndex = ref<number | null>(null)
+
 // 切换单个选择
 function toggleSelect(id: string) {
   const newSet = new Set(selectedIds.value)
@@ -94,6 +97,28 @@ function toggleSelect(id: string) {
     newSet.add(id)
   }
   selectedIds.value = newSet
+}
+
+// 处理行点击（支持 Shift+Click 范围多选）
+function handleRowClick(index: number, id: string, event: MouseEvent) {
+  if (event.shiftKey && lastClickedIndex.value !== null) {
+    // Shift+Click：选中 lastClickedIndex 到 index 之间的所有项
+    const start = Math.min(lastClickedIndex.value, index)
+    const end = Math.max(lastClickedIndex.value, index)
+    const newSet = new Set(selectedIds.value)
+    for (let i = start; i <= end; i++) {
+      const session = filteredSessions.value[i]
+      if (session) {
+        newSet.add(session.id)
+      }
+    }
+    selectedIds.value = newSet
+  } else {
+    // 普通点击：切换选中状态
+    toggleSelect(id)
+  }
+  // 始终更新 lastClickedIndex
+  lastClickedIndex.value = index
 }
 
 // 判断是否选中
@@ -359,6 +384,11 @@ onMounted(() => {
           @update:model-value="toggleSelectAll"
         />
 
+        <!-- Shift 多选提示 -->
+        <span class="text-xs text-gray-400 dark:text-gray-500">
+          {{ t('tools.batchManage.shiftClickHint') }}
+        </span>
+
         <!-- 已选数量 -->
         <span v-if="selectedIds.size > 0" class="text-sm text-gray-500 dark:text-gray-400">
           {{ t('tools.batchManage.selected', { count: selectedIds.size }) }}
@@ -425,11 +455,11 @@ onMounted(() => {
           isSelected(session.id) ? 'bg-pink-50 dark:bg-pink-900/20' : '',
           index !== filteredSessions.length - 1 ? 'border-b border-gray-100 dark:border-gray-800' : '',
         ]"
-        @click="toggleSelect(session.id)"
+        @click="handleRowClick(index, session.id, $event)"
       >
         <!-- 复选框 -->
         <div class="w-6">
-          <UCheckbox :model-value="isSelected(session.id)" @click.stop @update:model-value="toggleSelect(session.id)" />
+          <UCheckbox :model-value="isSelected(session.id)" @click.stop="handleRowClick(index, session.id, $event)" />
         </div>
 
         <!-- 头像 -->
