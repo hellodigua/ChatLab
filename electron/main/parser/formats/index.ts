@@ -14,6 +14,7 @@ import weflow from './weflow'
 import yccccccyEchotrace from './ycccccccy-echotrace'
 import tyrrrzDiscordExporter from './tyrrrz-discord-exporter'
 import telegramNative from './telegram-native'
+import telegramNativeSingle from './telegram-native-single'
 import whatsappNativeTxt from './whatsapp-native-txt'
 import qqNativeTxt from './qq-native-txt'
 import instagramNative from './instagram-native'
@@ -29,7 +30,8 @@ export const formats: FormatModule[] = [
   weflow, // 优先级 15 - WeFlow 微信导出
   yccccccyEchotrace, // 优先级 16 - ycccccccy/echotrace 微信导出
   tyrrrzDiscordExporter, // 优先级 20 - Tyrrrz/DiscordChatExporter
-  telegramNative, // 优先级 22 - Telegram 官方导出 JSON
+  telegramNative, // 优先级 22 - Telegram 官方全量导出 JSON
+  telegramNativeSingle, // 优先级 23 - Telegram 单聊天导出 JSON
   instagramNative, // 优先级 25 - Instagram 官方导出
   whatsappNativeTxt, // 优先级 26 - WhatsApp 官方导出 TXT
   qqNativeTxt, // 优先级 30 - QQ 官方导出 TXT
@@ -48,6 +50,7 @@ export {
   yccccccyEchotrace,
   tyrrrzDiscordExporter,
   telegramNative,
+  telegramNativeSingle,
   instagramNative,
   whatsappNativeTxt,
   qqNativeTxt,

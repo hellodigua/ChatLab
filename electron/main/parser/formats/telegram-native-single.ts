@@ -1,24 +1,22 @@
 /**
- * Telegram 官方全量导出 JSON 格式解析器
- * 适配 Telegram Desktop (macOS) 的「导出聊天记录」→ 全部导出
+ * Telegram 单聊天导出 JSON 格式解析器
+ * 适配 Telegram Desktop (Windows) 的「导出聊天记录」→ 单个聊天导出
  *
  * 格式特征：
- * - 单个 JSON 文件包含用户所有聊天（contacts, chats 等）
- * - 聊天数据在 chats.list[] 下，每个聊天有独立的 messages 数组
- * - 消息的 text 字段可以是纯字符串或 mixed 数组（含富文本实体）
- * - 支持 personal_chat / private_group / private_supergroup / saved_messages 等类型
+ * - 单个 JSON 文件只包含一个聊天
+ * - 顶层直接是聊天对象：{ name, type, id, messages }
+ * - 没有 about / personal_information / chats 等外层包装
+ * - 消息结构与全量导出一致（date_unixtime, from_id, text_entities 等）
+ * - 支持 personal_chat / bot_chat / private_group / public_channel 等类型
  *
- * 导入流程（多聊天选择器）：
- * 1. 用户选择 telegram.json → 格式识别
- * 2. scanChats() 快速扫描提取聊天列表
- * 3. 用户选择要导入的聊天
- * 4. parser 使用 formatOptions.chatIndex 定位并流式解析选定聊天
+ * 导入流程（直接导入，无需聊天选择器）：
+ * 1. 用户选择单聊天 JSON 文件 → 格式识别
+ * 2. parser 直接读取并解析该文件
  */
 
 import * as fs from 'fs'
 import { chain } from 'stream-chain'
 import { parser } from 'stream-json'
-import { pick } from 'stream-json/filters/Pick'
 import { streamValues } from 'stream-json/streamers/StreamValues'
 
 import { KNOWN_PLATFORMS, ChatType } from '../../../../src/types/base'
@@ -41,96 +39,32 @@ import {
 } from './utils/telegram-utils'
 import type { TelegramChat } from './utils/telegram-utils'
 
-// ==================== 类型定义 ====================
-
-/** Telegram 聊天信息（扫描结果） */
-export interface TelegramChatInfo {
-  /** 在 chats.list[] 中的索引 */
-  index: number
-  /** 聊天名称 */
-  name: string
-  /** Telegram 聊天类型 */
-  type: string
-  /** Telegram 聊天 ID */
-  id: number
-  /** 消息数量 */
-  messageCount: number
-}
-
 // ==================== 特征定义 ====================
 
 export const feature: FormatFeature = {
-  id: 'telegram-native',
-  name: 'Telegram 官方导出 (JSON)',
+  id: 'telegram-native-single',
+  name: 'Telegram 单聊天导出 (JSON)',
   platform: KNOWN_PLATFORMS.TELEGRAM,
-  priority: 22,
+  priority: 23,
   extensions: ['.json'],
   signatures: {
-    // Telegram 导出 JSON 的特征（语言无关：品牌名在所有语言导出中都存在）
-    head: [
-      /Telegram/i,
-    ],
-    // 注意：personal_information 在某些导出配置中是可选的，不能作为必需字段
-    requiredFields: ['chats'],
+    // Telegram 单聊天导出特征：文件以 "name" 作为第一个 JSON 键
+    // 这与全量导出（以 "about" 开头）有效区分，避免嵌套字段误匹配
+    head: [/^\s*\{\s*\r?\n\s*"name"\s*:/],
+    requiredFields: ['messages'],
+    fieldPatterns: {
+      // Telegram 特有的聊天类型值，精确区分
+      telegramChatType: /\"type\"\s*:\s*\"(personal_chat|bot_chat|private_group|private_supergroup|public_group|public_supergroup|public_channel|private_channel|saved_messages)\"/,
+    },
   },
-  multiChat: true,
-}
-
-// ==================== 扫描函数 ====================
-
-/**
- * 快速扫描 Telegram 导出 JSON，提取聊天列表
- * 使用 stream-json 流式处理，避免全量加载大文件到内存
- *
- * @param filePath 文件路径
- * @returns 聊天列表信息
- */
-export async function scanChats(filePath: string): Promise<TelegramChatInfo[]> {
-  const chats: TelegramChatInfo[] = []
-
-  return new Promise<TelegramChatInfo[]>((resolve, reject) => {
-    const readStream = fs.createReadStream(filePath, { encoding: 'utf-8' })
-
-    // 使用 stream-json 解析 chats.list 数组中的每个聊天对象
-    // ignore 过滤掉 messages 的实际内容以加速扫描
-    const pipeline = chain([
-      readStream,
-      parser(),
-      pick({ filter: /^chats\.list\.\d+$/ }),
-      streamValues(),
-    ])
-
-    pipeline.on('data', ({ value }: { value: TelegramChat }) => {
-      const chat = value
-      chats.push({
-        index: chats.length,
-        name: chat.name || `Chat ${chat.id}`,
-        type: chat.type,
-        id: chat.id,
-        messageCount: Array.isArray(chat.messages) ? chat.messages.length : 0,
-      })
-    })
-
-    pipeline.on('end', () => {
-      resolve(chats)
-    })
-
-    pipeline.on('error', (err: Error) => {
-      reject(new Error(`扫描 Telegram 文件失败: ${err.message}`))
-    })
-  })
 }
 
 // ==================== 解析器实现 ====================
 
-async function* parseTelegram(options: ParseOptions): AsyncGenerator<ParseEvent, void, unknown> {
-  const { filePath, batchSize = 5000, formatOptions, onProgress, onLog } = options
-
-  // 获取目标聊天索引
-  const chatIndex = (formatOptions?.chatIndex as number) ?? 0
+async function* parseTelegramSingle(options: ParseOptions): AsyncGenerator<ParseEvent, void, unknown> {
+  const { filePath, batchSize = 5000, onProgress, onLog } = options
 
   const totalBytes = getFileSize(filePath)
-  let bytesRead = 0
   let messagesProcessed = 0
 
   // 发送初始进度
@@ -138,32 +72,25 @@ async function* parseTelegram(options: ParseOptions): AsyncGenerator<ParseEvent,
   yield { type: 'progress', data: initialProgress }
   onProgress?.(initialProgress)
 
-  onLog?.('info', `开始解析 Telegram JSON 文件，大小: ${(totalBytes / 1024 / 1024).toFixed(2)} MB`)
-  onLog?.('info', `目标聊天索引: ${chatIndex}`)
+  onLog?.('info', `开始解析 Telegram 单聊天 JSON 文件，大小: ${(totalBytes / 1024 / 1024).toFixed(2)} MB`)
 
-  // 使用 stream-json 流式解析目标聊天
-  // 定位到 chats.list[chatIndex] 对象
-  const chatPathFilter = `chats.list.${chatIndex}`
-
+  // 流式读取整个文件（顶层即为聊天对象）
   const chatData = await new Promise<TelegramChat | null>((resolve, reject) => {
     const readStream = fs.createReadStream(filePath, { encoding: 'utf-8' })
-
-    readStream.on('data', (chunk: string | Buffer) => {
-      bytesRead += typeof chunk === 'string' ? Buffer.byteLength(chunk) : chunk.length
-    })
 
     const pipeline = chain([
       readStream,
       parser(),
-      pick({ filter: new RegExp(`^${chatPathFilter.replace('.', '\\.')}$`) }),
       streamValues(),
     ])
 
     let found = false
 
     pipeline.on('data', ({ value }: { value: TelegramChat }) => {
-      found = true
-      resolve(value)
+      if (!found) {
+        found = true
+        resolve(value)
+      }
     })
 
     pipeline.on('end', () => {
@@ -174,12 +101,12 @@ async function* parseTelegram(options: ParseOptions): AsyncGenerator<ParseEvent,
   })
 
   if (!chatData) {
-    onLog?.('error', `未找到索引 ${chatIndex} 对应的聊天`)
-    yield { type: 'error', data: new Error(`未找到索引 ${chatIndex} 对应的聊天`) }
+    onLog?.('error', '无法解析 Telegram 单聊天文件')
+    yield { type: 'error', data: new Error('无法解析 Telegram 单聊天文件') }
     return
   }
 
-  onLog?.('info', `找到聊天: "${chatData.name}", 类型: ${chatData.type}, 消息数: ${chatData.messages?.length || 0}`)
+  onLog?.('info', `聊天: "${chatData.name}", 类型: ${chatData.type}, 消息数: ${chatData.messages?.length || 0}`)
 
   // 确定聊天类型
   const chatType = mapChatType(chatData.type)
@@ -245,7 +172,7 @@ async function* parseTelegram(options: ParseOptions): AsyncGenerator<ParseEvent,
 
       const progress = createProgress(
         'parsing',
-        bytesRead,
+        0,
         totalBytes,
         messagesProcessed,
         `已处理 ${messagesProcessed} 条消息...`
@@ -280,13 +207,12 @@ async function* parseTelegram(options: ParseOptions): AsyncGenerator<ParseEvent,
 
 export const parser_: Parser = {
   feature,
-  parse: parseTelegram,
+  parse: parseTelegramSingle,
 }
 
 const module_: FormatModule = {
   feature,
   parser: parser_,
-  scanChats,
 }
 
 export default module_
