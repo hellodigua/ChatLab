@@ -120,6 +120,23 @@ export function getAllSessions(): any[] {
           memberAvatar = getPrivateChatMemberAvatar(db, meta.name, meta.owner_id)
         }
 
+        // 摘要数量：安全查询（chat_session 表可能不存在）
+        let summaryCount = 0
+        try {
+          const hasChatSessionTable = db
+            .prepare("SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name='chat_session'")
+            .get() as { cnt: number }
+          if (hasChatSessionTable.cnt > 0) {
+            summaryCount = (
+              db
+                .prepare("SELECT COUNT(*) as count FROM chat_session WHERE summary IS NOT NULL AND summary != ''")
+                .get() as { count: number }
+            ).count
+          }
+        } catch {
+          // 忽略查询错误
+        }
+
         sessions.push({
           id: sessionId,
           name: meta.name,
@@ -133,6 +150,8 @@ export function getAllSessions(): any[] {
           groupAvatar: meta.group_avatar || null,
           ownerId: meta.owner_id || null,
           memberAvatar, // 私聊对方头像
+          summaryCount,
+          aiConversationCount: 0, // 将在 IPC 层由主进程填充
         })
       }
 

@@ -255,6 +255,18 @@ export function registerChatHandlers(ctx: IpcContext): void {
   ipcMain.handle('chat:getSessions', async () => {
     try {
       const sessions = await worker.getAllSessions()
+
+      // 填充 AI 对话计数（AI 数据库在主进程管理）
+      try {
+        const { getConversationCountsBySession } = await import('../ai/conversations')
+        const aiCounts = getConversationCountsBySession()
+        for (const session of sessions) {
+          session.aiConversationCount = aiCounts.get(session.id) || 0
+        }
+      } catch {
+        // AI 数据库未初始化时忽略
+      }
+
       return sessions
     } catch (error) {
       console.error('[IpcMain] Error getting sessions:', error)

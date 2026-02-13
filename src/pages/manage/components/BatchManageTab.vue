@@ -443,6 +443,8 @@ onMounted(() => {
         <div class="min-w-0 flex-1">{{ t('tools.batchManage.columns.name') }}</div>
         <div class="w-20 text-center">{{ t('tools.batchManage.columns.platform') }}</div>
         <div class="w-24 text-right">{{ t('tools.batchManage.columns.messages') }}</div>
+        <div class="w-16 text-right">{{ t('tools.batchManage.columns.summaries') }}</div>
+        <div class="w-16 text-right">{{ t('tools.batchManage.columns.aiChats') }}</div>
         <div class="w-28 text-right">{{ t('tools.batchManage.columns.importedAt') }}</div>
       </div>
 
@@ -523,6 +525,16 @@ onMounted(() => {
         <!-- 消息数 -->
         <div class="w-24 text-right text-sm text-gray-600 dark:text-gray-300">
           {{ session.messageCount.toLocaleString() }}
+        </div>
+
+        <!-- 摘要数 -->
+        <div class="w-16 text-right text-sm text-gray-600 dark:text-gray-300">
+          {{ session.summaryCount || 0 }}
+        </div>
+
+        <!-- AI 对话数 -->
+        <div class="w-16 text-right text-sm text-gray-600 dark:text-gray-300">
+          {{ session.aiConversationCount || 0 }}
         </div>
 
         <!-- 导入时间 -->

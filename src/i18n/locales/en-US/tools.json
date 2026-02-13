@@ -26,6 +26,8 @@
       "name": "Name",
       "platform": "Platform",
       "messages": "Messages",
+      "summaries": "Summaries",
+      "aiChats": "AI Chats",
       "importedAt": "Imported"
     },
     "clickToEdit": "Click to edit name",

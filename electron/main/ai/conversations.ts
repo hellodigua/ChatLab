@@ -172,6 +172,25 @@ export function createConversation(sessionId: string, title?: string): AIConvers
 /**
  * 获取会话的所有对话列表
  */
+/**
+ * 获取所有会话的 AI 对话计数（按 session_id 分组）
+ */
+export function getConversationCountsBySession(): Map<string, number> {
+  const result = new Map<string, number>()
+  try {
+    const db = getAiDb()
+    const rows = db
+      .prepare('SELECT session_id, COUNT(*) as count FROM ai_conversation GROUP BY session_id')
+      .all() as Array<{ session_id: string; count: number }>
+    for (const row of rows) {
+      result.set(row.session_id, row.count)
+    }
+  } catch {
+    // AI 数据库可能尚未初始化
+  }
+  return result
+}
+
 export function getConversations(sessionId: string): AIConversation[] {
   const db = getAiDb()
 

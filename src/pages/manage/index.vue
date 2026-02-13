@@ -9,7 +9,12 @@ const { t } = useI18n()
 <template>
   <div class="relative z-0 flex h-full flex-col bg-white pt-8 dark:bg-[var(--color-page-dark)]">
     <!-- Header -->
-    <PageHeader :title="t('tools.title')" :description="t('tools.description')" icon="i-heroicons-rectangle-stack" />
+    <PageHeader
+      :title="t('tools.title')"
+      :description="t('tools.description')"
+      icon="i-heroicons-rectangle-stack"
+      icon-class="bg-primary-600 dark:bg-primary-500"
+    />
 
     <!-- Content -->
     <div class="flex-1 overflow-auto p-6">
