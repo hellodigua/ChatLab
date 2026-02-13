@@ -194,7 +194,7 @@ function getSessionAvatar(session: AnalysisSession): string | null {
     class="flex h-full flex-col border-r border-gray-200/50 transition-all duration-300 ease-in-out dark:border-gray-800/50"
     :class="[isCollapsed ? 'w-20' : 'w-72', isHomePage ? '' : 'bg-gray-50 dark:bg-gray-900']"
   >
-    <div class="flex flex-col p-4 pt-8">
+    <div class="flex flex-col p-4 pt-5">
       <!-- Header -->
       <div
         class="mb-2 flex items-center"

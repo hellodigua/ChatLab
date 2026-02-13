@@ -15,9 +15,9 @@ defineProps<{
 
 <template>
   <div class="relative border-b border-gray-200/50 px-6 pb-2 dark:border-gray-800/50">
-    <!-- 拖拽区域 - 仅覆盖顶部区域 (包含上方 padding 的 32px + 头部内部 16px) -->
+    <!-- 拖拽区域 - 仅覆盖顶部区域 (包含上方 padding 的 16px + 头部内部 16px) -->
     <!-- 这样既保证了顶部可以拖拽，又不会遮挡 Header 内部的按钮和交互元素 -->
-    <div class="absolute -top-8 left-0 right-0 h-12 z-50" style="-webkit-app-region: drag" />
+    <div class="absolute -top-4 left-0 right-0 h-8 z-50" style="-webkit-app-region: drag" />
 
     <!-- 标题区域 -->
     <div class="flex items-center justify-between">

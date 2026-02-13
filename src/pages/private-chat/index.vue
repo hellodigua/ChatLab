@@ -195,7 +195,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex h-full flex-col bg-white pt-8 dark:bg-gray-900">
+  <div class="flex h-full flex-col bg-white pt-4 dark:bg-gray-900">
     <!-- Loading State -->
     <LoadingState v-if="isInitialLoad" variant="page" :text="t('analysis.privateChat.loading')" />
 

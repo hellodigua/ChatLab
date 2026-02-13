@@ -40,7 +40,7 @@ const features = computed(() => [
 </script>
 
 <template>
-  <div class="relative flex h-full w-full overflow-hidden pt-8">
+  <div class="relative flex h-full w-full overflow-hidden pt-4">
     <!-- Content Container -->
     <div class="relative h-full w-full overflow-y-auto">
       <div class="flex min-h-full w-full flex-col items-center justify-center px-4 py-12">
