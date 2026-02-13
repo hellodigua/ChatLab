@@ -137,6 +137,46 @@ export class FormatSniffer {
   }
 
   /**
+   * 嗅探所有匹配的格式（按优先级排序）
+   * 用于 fallback 机制：当第一个格式解析失败时尝试下一个
+   * @param filePath 文件路径
+   * @returns 所有匹配的格式特征列表
+   */
+  sniffAll(filePath: string): FormatFeature[] {
+    const ext = getExtension(filePath)
+    const headContent = readFileHead(filePath)
+    const results: FormatFeature[] = []
+
+    for (const { feature } of this.formats) {
+      if (this.matchFeature(feature, ext, headContent, filePath)) {
+        results.push(feature)
+      }
+    }
+
+    return results
+  }
+
+  /**
+   * 获取所有匹配的解析器（按优先级排序）
+   * 用于 fallback 机制
+   * @param filePath 文件路径
+   * @returns 所有匹配的解析器列表
+   */
+  getParserCandidates(filePath: string): Parser[] {
+    const ext = getExtension(filePath)
+    const headContent = readFileHead(filePath)
+    const results: Parser[] = []
+
+    for (const { feature, parser } of this.formats) {
+      if (this.matchFeature(feature, ext, headContent, filePath)) {
+        results.push(parser)
+      }
+    }
+
+    return results
+  }
+
+  /**
    * 根据格式 ID 获取解析器
    */
   getParserById(formatId: string): Parser | null {

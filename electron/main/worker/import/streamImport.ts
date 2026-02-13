@@ -9,11 +9,13 @@ import * as path from 'path'
 import {
   streamParseFile,
   detectFormat,
+  detectAllFormats,
   getPreprocessor,
   needsPreprocess,
   type ParsedMeta,
   type ParsedMember,
   type ParsedMessage,
+  type FormatFeature,
 } from '../../parser'
 import { getDbDir } from '../core'
 import {
@@ -141,12 +143,75 @@ export async function streamImport(
   requestId: string,
   formatOptions?: Record<string, unknown>
 ): Promise<StreamImportResult> {
-  // 检测格式
-  const formatFeature = detectFormat(filePath)
-  if (!formatFeature) {
+  // 检测所有匹配的格式（按优先级排序）
+  const candidates = detectAllFormats(filePath)
+  if (candidates.length === 0) {
     return { success: false, error: 'error.unrecognized_format' }
   }
 
+  // 如果有多个候选格式，使用 fallback 机制逐个尝试
+  if (candidates.length > 1) {
+    return streamImportWithFallback(filePath, requestId, candidates, formatOptions)
+  }
+
+  // 单个候选格式，走常规逻辑（无额外开销）
+  const formatFeature = candidates[0]
+  return streamImportSingle(filePath, requestId, formatFeature, formatOptions)
+}
+
+/**
+ * 带 fallback 的流式导入
+ * 当高优先级格式解析出 0 条消息时，自动尝试下一个候选格式
+ */
+async function streamImportWithFallback(
+  filePath: string,
+  requestId: string,
+  candidates: FormatFeature[],
+  formatOptions?: Record<string, unknown>
+): Promise<StreamImportResult> {
+  for (let i = 0; i < candidates.length; i++) {
+    const candidate = candidates[i]
+    const isLast = i === candidates.length - 1
+
+    console.log(
+      `[StreamImport] Trying format ${i + 1}/${candidates.length}: ${candidate.name} (${candidate.id})`
+    )
+
+    const result = await streamImportSingle(filePath, requestId, candidate, formatOptions)
+
+    if (result.success) {
+      if (i > 0) {
+        console.log(
+          `[StreamImport] Fallback succeeded: ${candidate.name} (after ${i} failed attempt${i > 1 ? 's' : ''})`
+        )
+      }
+      return result
+    }
+
+    // 如果是最后一个候选，直接返回失败结果
+    if (isLast) {
+      return result
+    }
+
+    // 当前格式解析失败（0 消息），尝试下一个
+    console.log(
+      `[StreamImport] Format ${candidate.name} produced 0 messages, falling back to next candidate...`
+    )
+  }
+
+  // 不应该到这里，但以防万一
+  return { success: false, error: 'error.no_messages' }
+}
+
+/**
+ * 使用指定格式进行单次流式导入
+ */
+async function streamImportSingle(
+  filePath: string,
+  requestId: string,
+  formatFeature: FormatFeature,
+  formatOptions?: Record<string, unknown>
+): Promise<StreamImportResult> {
   // 初始化性能日志（实时写入文件）
   resetPerfLog()
   const sessionId = generateSessionId()
@@ -526,7 +591,7 @@ export async function streamImport(
           }
         }
       },
-    })
+    }, formatFeature.id)
 
     // 提交最后的消息事务
     if (inTransaction) {

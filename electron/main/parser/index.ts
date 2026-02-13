@@ -37,6 +37,16 @@ export function detectFormat(filePath: string): FormatFeature | null {
 }
 
 /**
+ * 检测所有匹配的文件格式（按优先级排序）
+ * 用于 fallback 机制：当第一个格式解析失败时尝试下一个
+ * @param filePath 文件路径
+ * @returns 所有匹配的格式特征列表
+ */
+export function detectAllFormats(filePath: string): FormatFeature[] {
+  return sniffer.sniffAll(filePath)
+}
+
+/**
  * 诊断文件格式
  * 当检测失败时，返回详细的诊断信息，帮助用户了解问题所在
  * @param filePath 文件路径
@@ -121,6 +131,26 @@ export async function* parseFile(options: ParseOptions): AsyncGenerator<ParseEve
   }
 
   console.log(`[Parser V2] Using parser: ${parser.feature.name}`)
+  yield* parser.parse(options)
+}
+
+/**
+ * 使用指定格式解析文件（用于 fallback 机制）
+ * @param formatId 格式 ID
+ * @param options 解析选项
+ * @yields 解析事件流
+ */
+export async function* parseFileWithFormat(
+  formatId: string,
+  options: ParseOptions
+): AsyncGenerator<ParseEvent, void, unknown> {
+  const parser = sniffer.getParserById(formatId)
+  if (!parser) {
+    yield { type: 'error', data: new Error(`未知的格式 ID: ${formatId}`) }
+    return
+  }
+
+  console.log(`[Parser V2] Using parser (explicit): ${parser.feature.name}`)
   yield* parser.parse(options)
 }
 
@@ -270,14 +300,23 @@ export interface StreamParseOptions extends StreamParseCallbacks {
 /**
  * 回调模式的流式解析
  * 内部使用 AsyncGenerator，对外提供回调接口
+ * @param filePath 文件路径
+ * @param callbacks 回调选项
+ * @param formatId 可选，指定格式 ID（用于 fallback 机制，跳过自动检测）
  */
 export async function streamParseFile(
   filePath: string,
-  callbacks: Omit<StreamParseOptions, 'filePath'>
+  callbacks: Omit<StreamParseOptions, 'filePath'>,
+  formatId?: string
 ): Promise<void> {
   const { onProgress, onMeta, onMembers, onMessageBatch, onLog, batchSize = 5000, formatOptions } = callbacks
 
-  for await (const event of parseFile({ filePath, batchSize, formatOptions, onProgress, onLog })) {
+  // 根据是否指定 formatId 选择解析方式
+  const generator = formatId
+    ? parseFileWithFormat(formatId, { filePath, batchSize, formatOptions, onProgress, onLog })
+    : parseFile({ filePath, batchSize, formatOptions, onProgress, onLog })
+
+  for await (const event of generator) {
     switch (event.type) {
       case 'meta':
         onMeta(event.data)
