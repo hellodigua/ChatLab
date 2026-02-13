@@ -11,6 +11,7 @@
     "searchResult": "Found {count} / {total}",
     "noSearchResult": "No matching chat records found",
     "selectAll": "Select All",
+    "shiftClickHint": "Hold Shift to select a range",
     "selected": "{count} selected",
     "empty": "No chat records",
     "delete": "Delete Selected",
