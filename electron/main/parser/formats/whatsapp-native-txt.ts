@@ -57,17 +57,16 @@ export const feature: FormatFeature = {
   extensions: ['.txt'],
   signatures: {
     // WhatsApp 导出文件的特征（中文/英文）
+    // 注意：仅保留 WhatsApp 独有的特征，避免误匹配其他 TXT 格式（如 LINE）
     head: [
-      /消息和通话已进行端到端加密/, // 中文加密提示
-      /Messages and calls are end-to-end encrypted/i, // 英文加密提示
-      /WhatsApp/i, // 通用 WhatsApp 关键词
-      /你发送给自己的消息已进行端到端加密/, // 中文自己对话提示
-      /有人添加了你/, // 中文群聊添加提示
-      /\d{4}\/\d{1,2}\/\d{1,2} \d{1,2}:\d{2} - /, // 消息行格式特征（无方括号）
-      /\[\d{1,4}\/\d{1,2}\/\d{2,4},? \d{1,2}:\d{2}:\d{2}\] /, // 消息行格式特征（方括号，支持 2/4 位年份）
+      /消息和通话已进行端到端加密/, // 中文加密提示（WhatsApp 独有）
+      /Messages and calls are end-to-end encrypted/i, // 英文加密提示（WhatsApp 独有）
+      /你发送给自己的消息已进行端到端加密/, // 中文自己对话提示（WhatsApp 独有）
+      /\d{4}\/\d{1,2}\/\d{1,2} \d{1,2}:\d{2} - /, // 消息行格式特征（无方括号，含 " - " 分隔符，WhatsApp 独有）
+      /\[\d{1,4}\/\d{1,2}\/\d{2,4},? \d{1,2}:\d{2}:\d{2}\] /, // 消息行格式特征（方括号 + 秒级时间戳，WhatsApp 独有）
     ],
     // 文件名特征：与xxx的 WhatsApp 聊天.txt
-    filename: [/^与.+的\s*WhatsApp\s*聊天\.txt$/i],
+    filename: [/^与.+的\s*WhatsApp\s*聊天\.txt$/i, /WhatsApp/i],
   },
 }
 

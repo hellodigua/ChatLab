@@ -50,7 +50,17 @@ export const feature: FormatFeature = {
       /^(?:\[LINE\] )?Chat history (?:with|in) /m,
       // Tab 分隔的消息格式（支持多种时间格式）
       /^((?:上午|下午|午前|午後)?\d{1,2}:\d{2}(?:[AaPp][Mm])?)\t[^\t\n]+\t/m,
+      // 空格分隔的消息格式（部分 LINE 导出）
+      /^((?:上午|下午|午前|午後)?\d{1,2}:\d{2}(?:[AaPp][Mm])?) [^\s]+ /m,
+      // LINE 独有的日期行格式：YYYY.MM.DD DayOfWeek（英文星期全称）
+      /^\d{4}\.\d{2}\.\d{2}\s+(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)/m,
+      // LINE 日文/中文日期行格式：YYYY/M/D(曜日)
+      /^\d{4}\/\d{1,2}\/\d{1,2}[（(][月火水木金土日]/m,
+      // LINE 中文日期行格式：YYYY/M/D周X
+      /^\d{4}\/\d{1,2}\/\d{1,2}周/m,
     ],
+    // 文件名特征：[LINE] 出现在文件名中
+    filename: [/\[LINE\]/i],
   },
 }
 
