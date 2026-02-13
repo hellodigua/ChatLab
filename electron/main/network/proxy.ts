@@ -130,7 +130,7 @@ export async function applyProxyToSession(): Promise<void> {
         await session.defaultSession.setProxy({
           mode: 'direct',
         })
-        console.log('[Proxy] 代理已关闭（直接连接）')
+        console.log('[Proxy] Proxy disabled (direct connection)')
         break
 
       case 'system':
@@ -138,7 +138,7 @@ export async function applyProxyToSession(): Promise<void> {
         await session.defaultSession.setProxy({
           mode: 'system',
         })
-        console.log('[Proxy] 使用系统代理')
+        console.log('[Proxy] Using system proxy')
         break
 
       case 'manual':
@@ -149,20 +149,20 @@ export async function applyProxyToSession(): Promise<void> {
             await session.defaultSession.setProxy({
               proxyRules: config.url,
             })
-            console.log(`[Proxy] 手动代理已启用: ${config.url}`)
+            console.log(`[Proxy] Manual proxy enabled: ${config.url}`)
           } else {
             // URL 无效，回退到系统代理
             await session.defaultSession.setProxy({
               mode: 'system',
             })
-            console.log('[Proxy] 手动代理 URL 无效，回退到系统代理')
+            console.log('[Proxy] Invalid manual proxy URL, falling back to system proxy')
           }
         } else {
           // 没有填写 URL，回退到系统代理
           await session.defaultSession.setProxy({
             mode: 'system',
           })
-          console.log('[Proxy] 手动代理未配置 URL，回退到系统代理')
+          console.log('[Proxy] Manual proxy URL not configured, falling back to system proxy')
         }
         break
 
@@ -171,10 +171,10 @@ export async function applyProxyToSession(): Promise<void> {
         await session.defaultSession.setProxy({
           mode: 'system',
         })
-        console.log('[Proxy] 未知代理模式，使用系统代理')
+        console.log('[Proxy] Unknown proxy mode, using system proxy')
     }
   } catch (error) {
-    console.error('[Proxy] 设置代理失败:', error)
+    console.error('[Proxy] Failed to set proxy:', error)
   }
 }
 

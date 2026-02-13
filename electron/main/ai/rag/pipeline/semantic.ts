@@ -50,7 +50,7 @@ async function rewriteQuery(query: string, abortSignal?: AbortSignal): Promise<s
     const rewritten = response.content.trim()
     return rewritten || query
   } catch (error) {
-    logger.warn('[Semantic Pipeline] Query 改写失败，使用原始查询:', error)
+    logger.warn('[Semantic Pipeline] Query rewrite failed, using original query:', error)
     return query
   }
 }
@@ -112,13 +112,13 @@ export async function executeSemanticPipeline(options: SemanticPipelineOptions):
   const candidateLimit = options.candidateLimit ?? ragConfig.candidateLimit ?? 50
   const topK = options.topK ?? ragConfig.topK ?? 10
 
-  logger.info('RAG', `🔍 开始语义搜索: "${userMessage.slice(0, 50)}..."`)
+  logger.info('RAG', `🔍 Starting semantic search: "${userMessage.slice(0, 50)}..."`)
 
   try {
     // 1. 检查 Embedding 服务
     const embeddingService = await getEmbeddingService()
     if (!embeddingService) {
-      logger.warn('RAG', '语义搜索跳过: Embedding 服务未启用')
+      logger.warn('RAG', 'Semantic search skipped: Embedding service not enabled')
       return {
         success: false,
         results: [],
@@ -142,7 +142,7 @@ export async function executeSemanticPipeline(options: SemanticPipelineOptions):
     })
 
     if (chunks.length === 0) {
-      logger.warn('RAG', '语义搜索跳过: 没有可用的会话切片')
+      logger.warn('RAG', 'Semantic search skipped: no session chunks available')
       return {
         success: true,
         rewrittenQuery,
@@ -224,7 +224,7 @@ export async function executeSemanticPipeline(options: SemanticPipelineOptions):
     const topResults = scoredResults.slice(0, topK)
 
     const topScore = topResults[0]?.score ?? 0
-    logger.info('RAG', `✅ 语义搜索完成: 返回 ${topResults.length} 个结果，最高相关度 ${(topScore * 100).toFixed(1)}%`)
+    logger.info('RAG', `✅ Semantic search done: returned ${topResults.length}  results, top relevance ${(topScore * 100).toFixed(1)}%`)
 
     // 7. 生成证据块
     const evidenceBlock = formatEvidenceBlock(rewrittenQuery, topResults)
@@ -236,7 +236,7 @@ export async function executeSemanticPipeline(options: SemanticPipelineOptions):
       evidenceBlock,
     }
   } catch (error) {
-    logger.error('RAG', '❌ 语义搜索失败', error)
+    logger.error('RAG', '❌ Semantic search failed', error)
     return {
       success: false,
       results: [],

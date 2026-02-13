@@ -21,7 +21,7 @@ export function registerNlpHandlers(_ctx: IpcContext): void {
       const result = await worker.query('getWordFrequency', params)
       return result as WordFrequencyResult
     } catch (error) {
-      console.error('[NLP] 获取词频统计失败:', error)
+      console.error('[NLP] Failed to get word frequency stats:', error)
       return {
         words: [],
         totalWords: 0,
@@ -42,7 +42,7 @@ export function registerNlpHandlers(_ctx: IpcContext): void {
         const result = await worker.query('segmentText', { text, locale, minLength })
         return result as string[]
       } catch (error) {
-        console.error('[NLP] 分词失败:', error)
+        console.error('[NLP] Segmentation failed:', error)
         return []
       }
     }
@@ -56,7 +56,7 @@ export function registerNlpHandlers(_ctx: IpcContext): void {
       const result = await worker.query('getPosTags', {})
       return result as PosTagInfo[]
     } catch (error) {
-      console.error('[NLP] 获取词性标签失败:', error)
+      console.error('[NLP] Failed to get POS tags:', error)
       return []
     }
   })

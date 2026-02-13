@@ -42,7 +42,7 @@ function getSessionMessagesForSummary(
 ): SessionMessagesResult | null {
   const db = openDatabase(dbSessionId, true)
   if (!db) {
-    aiLogger.error('Summary', `数据库打开失败: ${dbSessionId}`)
+    aiLogger.error('Summary', `Failed to open database: ${dbSessionId}`)
     return null
   }
 
@@ -69,7 +69,7 @@ function getSessionMessagesForSummary(
       messages,
     }
   } catch (error) {
-    aiLogger.error('Summary', `获取会话消息失败: ${error}`)
+    aiLogger.error('Summary', `Failed to get session messages: ${error}`)
     return null
   }
 }
@@ -392,11 +392,11 @@ export async function generateSessionSummary(
     // 9. 保存到数据库
     saveSessionSummaryToDb(dbSessionId, chatSessionId, summary)
 
-    aiLogger.info('Summary', `摘要生成成功: "${summary.slice(0, 50)}..."`)
+    aiLogger.info('Summary', `Summary generated: "${summary.slice(0, 50)}..."`)
 
     return { success: true, summary }
   } catch (error) {
-    aiLogger.error('Summary', '摘要生成失败', error)
+    aiLogger.error('Summary', 'Summary generation failed', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : String(error),
@@ -431,7 +431,7 @@ async function generateMapReduceSummary(
 ): Promise<string> {
   // 1. Map：分段生成子摘要
   const segments = splitIntoSegments(messages, MAX_CONTENT_PER_CALL)
-  aiLogger.info('Summary', `长会话分段处理: ${segments.length} 个段落`)
+  aiLogger.info('Summary', `Long session segmented: ${segments.length}  segments`)
 
   const subSummaries: string[] = []
 

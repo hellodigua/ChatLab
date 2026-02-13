@@ -153,10 +153,10 @@ export async function streamImport(
   initPerfLog(sessionId)
 
   // 记录导入开始信息
-  logInfo(`文件路径: ${filePath}`)
-  logInfo(`检测到格式: ${formatFeature.name} (${formatFeature.id})`)
-  logInfo(`平台: ${formatFeature.platform}`)
-  logPerf('开始导入', 0)
+  logInfo(`File path: ${filePath}`)
+  logInfo(`Detected format: ${formatFeature.name} (${formatFeature.id})`)
+  logInfo(`Platform: ${formatFeature.platform}`)
+  logPerf('Import started', 0)
 
   // 预处理：如果格式需要且文件较大，先精简
   let actualFilePath = filePath
@@ -164,7 +164,7 @@ export async function streamImport(
   const preprocessor = getPreprocessor(filePath)
 
   if (preprocessor && needsPreprocess(filePath)) {
-    logInfo('文件需要预处理，开始精简大文件...')
+    logInfo('File needs preprocessing, simplifying large file...')
     sendProgress(requestId, {
       stage: 'parsing',
       bytesRead: 0,
@@ -182,9 +182,9 @@ export async function streamImport(
         })
       })
       actualFilePath = tempFilePath
-      logInfo(`预处理完成，临时文件: ${tempFilePath}`)
+      logInfo(`Preprocessing done, temp file: ${tempFilePath}`)
     } catch (err) {
-      const errorMsg = `预处理失败: ${err instanceof Error ? err.message : String(err)}`
+      const errorMsg = `Preprocessing failed: ${err instanceof Error ? err.message : String(err)}`
       logError(errorMsg, err instanceof Error ? err : undefined)
       return {
         success: false,
@@ -268,7 +268,7 @@ export async function streamImport(
       inTransaction = false
 
       // 记录性能日志
-      logPerf(`提交事务`, totalMessageCount, BATCH_COMMIT_SIZE)
+      logPerf(`Commit transaction`, totalMessageCount, BATCH_COMMIT_SIZE)
 
       // 定期执行 WAL checkpoint（防止 WAL 文件过大导致变慢）
       if (totalMessageCount - lastCheckpointCount >= CHECKPOINT_INTERVAL) {
@@ -312,7 +312,7 @@ export async function streamImport(
     skippedNoType: 0,
   }
 
-  logInfo('开始调用 streamParseFile...')
+  logInfo('Starting streamParseFile...')
 
   try {
     await streamParseFile(actualFilePath, {
@@ -338,7 +338,7 @@ export async function streamImport(
       onMeta: (meta: ParsedMeta) => {
         callbackStats.onMetaCalls++
         if (!metaInserted) {
-          logInfo(`写入 meta: name=${meta.name}, type=${meta.type}, platform=${meta.platform}`)
+          logInfo(`Writing meta: name=${meta.name}, type=${meta.type}, platform=${meta.platform}`)
           insertMeta.run(
             meta.name,
             meta.platform,
@@ -355,7 +355,7 @@ export async function streamImport(
       onMembers: (members: ParsedMember[]) => {
         callbackStats.onMembersCalls++
         callbackStats.totalMembersReceived += members.length
-        logInfo(`收到成员批次: ${members.length} 个成员`)
+        logInfo(`Received member batch: ${members.length} members`)
         for (const member of members) {
           insertMember.run(
             member.platformId,
@@ -376,7 +376,7 @@ export async function streamImport(
         callbackStats.totalMessagesReceived += messages.length
         // 每收到 10 批消息记录一次日志
         if (callbackStats.onMessageBatchCalls <= 3 || callbackStats.onMessageBatchCalls % 10 === 0) {
-          logInfo(`收到消息批次 #${callbackStats.onMessageBatchCalls}: ${messages.length} 条消息`)
+          logInfo(`Received message batch #${callbackStats.onMessageBatchCalls}: ${messages.length} messages`)
         }
 
         // 分阶段计时
@@ -506,10 +506,10 @@ export async function streamImport(
           if (messageCountInBatch >= BATCH_COMMIT_SIZE) {
             // 记录详细分阶段耗时
             const detail =
-              `[详细] 成员查找: ${memberLookupTime}ms (${memberLookupCount}次) | ` +
-              `成员插入: ${memberInsertTime}ms (${memberInsertCount}次) | ` +
-              `消息插入: ${messageInsertTime}ms | ` +
-              `昵称追踪: ${nicknameTrackTime}ms (变化${nicknameChangeCount}次)`
+              `[Detail] Member lookup: ${memberLookupTime}ms (${memberLookupCount} times) | ` +
+              `Member insert: ${memberInsertTime}ms (${memberInsertCount} times) | ` +
+              `Message insert: ${messageInsertTime}ms | ` +
+              `Nickname tracking: ${nicknameTrackTime}ms (${nicknameChangeCount} changes)`
             logPerfDetail(detail)
 
             commitAndBeginNew()
@@ -543,7 +543,7 @@ export async function streamImport(
       percentage: 100,
       message: '', // Frontend translates based on stage
     })
-    logPerf('开始写入昵称历史', totalMessageCount)
+    logPerf('Writing nickname history', totalMessageCount)
 
     // 开始新事务
     db.exec('BEGIN TRANSACTION')
@@ -622,7 +622,7 @@ export async function streamImport(
     }
 
     db.exec('COMMIT')
-    logPerf(`昵称历史写入完成 (${historyCount}条)`, totalMessageCount)
+    logPerf(`Nickname history written (${historyCount} entries)`, totalMessageCount)
 
     // 创建索引（导入完成后批量创建，比边导入边更新快很多）
     sendProgress(requestId, {
@@ -633,9 +633,9 @@ export async function streamImport(
       percentage: 100,
       message: '', // Frontend translates based on stage
     })
-    logPerf('开始创建索引', totalMessageCount)
+    logPerf('Creating indexes', totalMessageCount)
     createIndexes(db)
-    logPerf('索引创建完成', totalMessageCount)
+    logPerf('Indexes created', totalMessageCount)
 
     // 最终 WAL checkpoint
     sendProgress(requestId, {
@@ -647,17 +647,17 @@ export async function streamImport(
       message: '', // Frontend translates based on stage
     })
     doCheckpoint()
-    logPerf('WAL checkpoint 完成', totalMessageCount)
-    logPerf('导入完成', totalMessageCount)
+    logPerf('WAL checkpoint done', totalMessageCount)
+    logPerf('Import completed', totalMessageCount)
 
     // 记录解析器回调统计（诊断信息）
-    logInfo(`=== 解析器回调统计 ===`)
-    logInfo(`onProgress 调用次数: ${callbackStats.onProgressCalls}`)
-    logInfo(`onLog 调用次数: ${callbackStats.onLogCalls}`)
-    logInfo(`onMeta 调用次数: ${callbackStats.onMetaCalls}`)
-    logInfo(`onMembers 调用次数: ${callbackStats.onMembersCalls}, 总成员数: ${callbackStats.totalMembersReceived}`)
+    logInfo(`=== Parser Callback Stats ===`)
+    logInfo(`onProgress calls: ${callbackStats.onProgressCalls}`)
+    logInfo(`onLog calls: ${callbackStats.onLogCalls}`)
+    logInfo(`onMeta calls: ${callbackStats.onMetaCalls}`)
+    logInfo(`onMembers calls: ${callbackStats.onMembersCalls}, total members: ${callbackStats.totalMembersReceived}`)
     logInfo(
-      `onMessageBatch 调用次数: ${callbackStats.onMessageBatchCalls}, 总消息数: ${callbackStats.totalMessagesReceived}`
+      `onMessageBatch calls: ${callbackStats.onMessageBatchCalls}, total messages: ${callbackStats.totalMessagesReceived}`
     )
     if (
       callbackStats.skippedNoSenderId > 0 ||
@@ -665,13 +665,13 @@ export async function streamImport(
       callbackStats.skippedInvalidTimestamp > 0 ||
       callbackStats.skippedNoType > 0
     ) {
-      logInfo(`=== 消息跳过统计 ===`)
-      if (callbackStats.skippedNoSenderId > 0) logInfo(`  无 senderPlatformId: ${callbackStats.skippedNoSenderId}`)
+      logInfo(`=== Skipped Messages Stats ===`)
+      if (callbackStats.skippedNoSenderId > 0) logInfo(`  missing senderPlatformId: ${callbackStats.skippedNoSenderId}`)
       if (callbackStats.skippedNoAccountName > 0)
-        logInfo(`  无 senderAccountName: ${callbackStats.skippedNoAccountName}`)
+        logInfo(`  missing senderAccountName: ${callbackStats.skippedNoAccountName}`)
       if (callbackStats.skippedInvalidTimestamp > 0)
-        logInfo(`  无效 timestamp: ${callbackStats.skippedInvalidTimestamp}`)
-      if (callbackStats.skippedNoType > 0) logInfo(`  无 type: ${callbackStats.skippedNoType}`)
+        logInfo(`  invalid timestamp: ${callbackStats.skippedInvalidTimestamp}`)
+      if (callbackStats.skippedNoType > 0) logInfo(`  missing type: ${callbackStats.skippedNoType}`)
     }
 
     // 写入日志摘要
@@ -680,7 +680,7 @@ export async function streamImport(
     // 检查消息数量，如果为 0 则视为导入失败
     if (totalMessageCount === 0) {
       logError(
-        `导入失败：未解析到任何消息 (收到 ${callbackStats.totalMessagesReceived} 条消息，全部被跳过或未收到任何消息)`
+        `Import failed: no messages parsed (received ${callbackStats.totalMessagesReceived} messages, all skipped or none received)`
       )
       // 标记需要删除数据库文件（将在 finally 中执行，确保数据库已关闭）
       shouldDeleteDb = true
@@ -688,7 +688,7 @@ export async function streamImport(
     }
   } catch (error) {
     // 记录错误日志
-    logError('导入失败', error instanceof Error ? error : undefined)
+    logError('Import failed', error instanceof Error ? error : undefined)
 
     // 回滚当前事务
     if (inTransaction) {
@@ -728,7 +728,7 @@ export async function streamImport(
           fs.unlinkSync(shmPath)
         }
       } catch (cleanupError) {
-        logError('清理失败的数据库文件时出错', cleanupError instanceof Error ? cleanupError : undefined)
+        logError('Error cleaning up failed database files', cleanupError instanceof Error ? cleanupError : undefined)
       }
     }
   }

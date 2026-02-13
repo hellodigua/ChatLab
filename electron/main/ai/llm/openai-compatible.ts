@@ -243,7 +243,7 @@ export class OpenAICompatibleService implements ILLMService {
     // 推理模型判断：完全依赖用户配置
     this.isReasoning = isReasoningModelConfig ?? false
     if (this.isReasoning) {
-      aiLogger.info(this.providerId, `用户配置为推理模型: ${resolvedModel}`)
+      aiLogger.info(this.providerId, `User configured reasoning model: ${resolvedModel}`)
     }
 
     this.provider = createOpenAI({
@@ -316,7 +316,7 @@ export class OpenAICompatibleService implements ILLMService {
     // 推理模型（如 DeepSeek-R1）不支持 tool-calling，需要禁用 tools
     const toolSet = this.isReasoning ? undefined : buildToolSet(options?.tools)
 
-    aiLogger.info(this.providerId, '开始非流式请求', {
+    aiLogger.info(this.providerId, 'Starting non-streaming request', {
       model: this.model,
       isReasoning: this.isReasoning,
       hasTools: !!toolSet,
@@ -336,7 +336,7 @@ export class OpenAICompatibleService implements ILLMService {
 
     // 对于推理模型，reasoningText 包含思考内容
     if (this.isReasoning && result.reasoningText) {
-      aiLogger.info(this.providerId, '推理模型返回思考内容', {
+      aiLogger.info(this.providerId, 'Reasoning model returned thinking content', {
         reasoningLength: result.reasoningText.length,
         textLength: result.text.length,
       })
@@ -359,7 +359,7 @@ export class OpenAICompatibleService implements ILLMService {
     // 参考: https://sdk.vercel.ai/docs/guides/r1#limitations
     const toolSet = this.isReasoning ? undefined : buildToolSet(options?.tools)
 
-    aiLogger.info(this.providerId, '开始流式请求', {
+    aiLogger.info(this.providerId, 'Starting streaming request', {
       model: this.model,
       isReasoning: this.isReasoning,
       hasTools: !!toolSet,
@@ -400,7 +400,7 @@ export class OpenAICompatibleService implements ILLMService {
           const errorPart = part as { type: 'error'; error: unknown }
           const detailedError = extractDetailedError(errorPart.error)
 
-          aiLogger.error(this.providerId, 'Stream 收到 error part', {
+          aiLogger.error(this.providerId, 'Stream received error part', {
             detailedError,
             originalError: String(errorPart.error),
           })
@@ -440,7 +440,7 @@ export class OpenAICompatibleService implements ILLMService {
           const usage = mapUsage(part.totalUsage)
 
           // 详细记录流式请求完成信息，包括工具调用
-          aiLogger.info(this.providerId, '流式请求完成', {
+          aiLogger.info(this.providerId, 'Streaming request completed', {
             partCount,
             textChunkCount,
             reasoningChunkCount,
@@ -463,7 +463,7 @@ export class OpenAICompatibleService implements ILLMService {
       }
 
       // 兜底：如果没有收到 finish 事件，手动获取结果
-      aiLogger.warn(this.providerId, '流结束但未收到 finish 事件', {
+      aiLogger.warn(this.providerId, 'Stream ended without receiving finish event', {
         partCount,
         textChunkCount,
         reasoningChunkCount,
@@ -481,7 +481,7 @@ export class OpenAICompatibleService implements ILLMService {
         usage,
       }
     } catch (error) {
-      aiLogger.error(this.providerId, '流式请求异常', {
+      aiLogger.error(this.providerId, 'Streaming request error', {
         partCount,
         textChunkCount,
         reasoningChunkCount,

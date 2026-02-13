@@ -39,7 +39,7 @@ function loadAnalyticsData(): AnalyticsData {
       return { ...defaultAnalyticsData, ...JSON.parse(data) }
     }
   } catch (error) {
-    console.error('[Analytics] 读取分析数据失败:', error)
+    console.error('[Analytics] Failed to read analytics data:', error)
   }
   return { ...defaultAnalyticsData }
 }
@@ -50,7 +50,7 @@ function saveAnalyticsData(data: AnalyticsData): void {
     const filePath = getAnalyticsPath()
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8')
   } catch (error) {
-    console.error('[Analytics] 保存分析数据失败:', error)
+    console.error('[Analytics] Failed to save analytics data:', error)
   }
 }
 
@@ -71,9 +71,9 @@ export function initAnalytics(): void {
 
   try {
     initialize(ANALYTICS_APP_KEY)
-    console.log('[Analytics] Aptabase 初始化成功')
+    console.log('[Analytics] Aptabase initialized')
   } catch (error) {
-    console.error('[Analytics] Aptabase 初始化失败:', error)
+    console.error('[Analytics] Failed to initialize Aptabase:', error)
   }
 }
 
@@ -133,7 +133,7 @@ export function trackDailyActive(): void {
     data.lastReportDate = today
     saveAnalyticsData(data)
   } catch (error) {
-    console.error('[Analytics] 上报每日活跃失败:', error)
+    console.error('[Analytics] Failed to report daily active:', error)
   }
 }
 
@@ -153,6 +153,6 @@ export function trackAppEvent(eventName: string, properties?: Record<string, str
   try {
     trackEvent(eventName, properties)
   } catch (error) {
-    console.error(`[Analytics] 上报事件 ${eventName} 失败:`, error)
+    console.error(`[Analytics] Failed to report event ${eventName}:`, error)
   }
 }

@@ -244,7 +244,7 @@ export class GeminiService implements ILLMService {
         yield { content: '', isFinished: true, finishReason: 'stop' }
         return
       }
-      aiLogger.error('Gemini', '流式请求失败', { error: String(error) })
+      aiLogger.error('Gemini', 'Stream request failed', { error: String(error) })
       throw error
     }
   }

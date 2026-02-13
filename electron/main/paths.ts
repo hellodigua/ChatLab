@@ -168,8 +168,8 @@ export function setCustomDataDir(
           `[Paths] 数据迁移完成: 复制 ${migrateResult.copied} 项, 跳过 ${migrateResult.skipped} 项, 错误 ${migrateResult.errors.length} 项`
         )
         if (migrateResult.errors.length > 0) {
-          console.warn('[Paths] 迁移过程中出现错误:', migrateResult.errors)
-          console.warn('[Paths] 迁移失败，旧数据目录将不会自动删除')
+          console.warn('[Paths] Errors during migration:', migrateResult.errors)
+          console.warn('[Paths] Migration failed, old data directory will not be deleted')
           // 迁移失败日志写入 app.log
           writeMigrationLog(
             getLogsDir(),
@@ -226,8 +226,8 @@ export function setCustomDataDir(
         `[Paths] 数据迁移完成: 复制 ${migrateResult.copied} 项, 跳过 ${migrateResult.skipped} 项, 错误 ${migrateResult.errors.length} 项`
       )
       if (migrateResult.errors.length > 0) {
-        console.warn('[Paths] 迁移过程中出现错误:', migrateResult.errors)
-        console.warn('[Paths] 迁移失败，旧数据目录将不会自动删除')
+        console.warn('[Paths] Errors during migration:', migrateResult.errors)
+        console.warn('[Paths] Migration failed, old data directory will not be deleted')
         // 迁移失败日志写入 app.log
         writeMigrationLog(
           getLogsDir(),
@@ -274,7 +274,7 @@ export function cleanupPendingDeleteDir(): void {
 
     // 安全检查：不能删除当前正在使用的目录
     if (pendingDir === currentDir) {
-      console.log('[Paths] 跳过清理：待删除目录与当前目录相同')
+      console.log('[Paths] Skipping cleanup: pending dir is same as current dir')
       // 清除待删除标记
       writeStorageConfig({ dataDir: config.dataDir })
       return
@@ -282,7 +282,7 @@ export function cleanupPendingDeleteDir(): void {
 
     // 安全检查：不能删除系统关键目录
     if (!isPathSafe(pendingDir)) {
-      console.log('[Paths] 跳过清理：待删除目录是系统关键目录:', pendingDir)
+      console.log('[Paths] Skipping cleanup: pending dir is a system directory:', pendingDir)
       // 清除待删除标记
       writeStorageConfig({ dataDir: config.dataDir })
       return
@@ -290,7 +290,7 @@ export function cleanupPendingDeleteDir(): void {
 
     // 安全检查：确保待删除目录确实是 ChatLab 数据目录（标记文件 + 关键子目录）
     if (fs.existsSync(pendingDir) && !isExistingChatLabDir(pendingDir, CHATLAB_MARKER_FILE, CHATLAB_REQUIRED_DIRS)) {
-      console.log('[Paths] 跳过清理：待删除目录不是 ChatLab 数据目录:', pendingDir)
+      console.log('[Paths] Skipping cleanup: pending dir is not a ChatLab data dir:', pendingDir)
       // 清除待删除标记
       writeStorageConfig({ dataDir: config.dataDir })
       return
@@ -298,21 +298,21 @@ export function cleanupPendingDeleteDir(): void {
 
     // 检查目录是否存在
     if (!fs.existsSync(pendingDir)) {
-      console.log('[Paths] 待删除目录不存在，跳过清理:', pendingDir)
+      console.log('[Paths] Pending dir does not exist, skipping cleanup:', pendingDir)
       // 清除待删除标记
       writeStorageConfig({ dataDir: config.dataDir })
       return
     }
 
     // 删除旧目录
-    console.log('[Paths] 正在清理旧数据目录:', pendingDir)
+    console.log('[Paths] Cleaning up old data directory:', pendingDir)
     fs.rmSync(pendingDir, { recursive: true, force: true })
-    console.log('[Paths] 旧数据目录已删除:', pendingDir)
+    console.log('[Paths] Old data directory deleted:', pendingDir)
 
     // 清除待删除标记
     writeStorageConfig({ dataDir: config.dataDir })
   } catch (error) {
-    console.error('[Paths] 清理旧目录失败:', error)
+    console.error('[Paths] Failed to clean up old directory:', error)
   }
 }
 

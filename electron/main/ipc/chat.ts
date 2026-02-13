@@ -35,7 +35,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
         pendingMigrations,
       }
     } catch (error) {
-      console.error('[IpcMain] 检查迁移失败:', error)
+      console.error('[IpcMain] Migration check failed:', error)
       return { needsMigration: false, count: 0, currentVersion: CURRENT_SCHEMA_VERSION, pendingMigrations: [] }
     }
   })
@@ -48,7 +48,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       const result = databaseCore.migrateAllDatabases()
       return result
     } catch (error) {
-      console.error('[IpcMain] 执行迁移失败:', error)
+      console.error('[IpcMain] Migration execution failed:', error)
       return { success: false, migratedCount: 0, error: String(error) }
     }
   })
@@ -198,7 +198,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       const chats = await scanMultiChatFile(filePath)
       return { success: true, chats }
     } catch (error) {
-      console.error('[IpcMain] 扫描多聊天文件失败:', error)
+      console.error('[IpcMain] Failed to scan multi-chat files:', error)
       return { success: false, error: String(error), chats: [] }
     }
   })
@@ -269,7 +269,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
     try {
       return await worker.getSession(sessionId)
     } catch (error) {
-      console.error('获取会话信息失败：', error)
+      console.error('Failed to get session info:', error)
       return null
     }
   })
@@ -285,7 +285,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       const result = databaseCore.deleteSession(sessionId)
       return result
     } catch (error) {
-      console.error('删除会话失败：', error)
+      console.error('Failed to delete session:', error)
       return false
     }
   })
@@ -300,7 +300,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       // 执行重命名
       return databaseCore.renameSession(sessionId, newName)
     } catch (error) {
-      console.error('重命名会话失败：', error)
+      console.error('Failed to rename session:', error)
       return false
     }
   })
@@ -312,7 +312,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
     try {
       return await worker.getAvailableYears(sessionId)
     } catch (error) {
-      console.error('获取可用年份失败：', error)
+      console.error('Failed to get available years:', error)
       return []
     }
   })
@@ -326,7 +326,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       try {
         return await worker.getMemberActivity(sessionId, filter)
       } catch (error) {
-        console.error('获取成员活跃度失败：', error)
+        console.error('Failed to get member activity:', error)
         return []
       }
     }
@@ -339,7 +339,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
     try {
       return await worker.getMemberNameHistory(sessionId, memberId)
     } catch (error) {
-      console.error('获取成员历史昵称失败：', error)
+      console.error('Failed to get member name history:', error)
       return []
     }
   })
@@ -353,7 +353,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       try {
         return await worker.getHourlyActivity(sessionId, filter)
       } catch (error) {
-        console.error('获取小时活跃度失败：', error)
+        console.error('Failed to get hourly activity:', error)
         return []
       }
     }
@@ -368,7 +368,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       try {
         return await worker.getDailyActivity(sessionId, filter)
       } catch (error) {
-        console.error('获取日活跃度失败：', error)
+        console.error('Failed to get daily activity:', error)
         return []
       }
     }
@@ -383,7 +383,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       try {
         return await worker.getWeekdayActivity(sessionId, filter)
       } catch (error) {
-        console.error('获取星期活跃度失败：', error)
+        console.error('Failed to get weekday activity:', error)
         return []
       }
     }
@@ -398,7 +398,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       try {
         return await worker.getMonthlyActivity(sessionId, filter)
       } catch (error) {
-        console.error('获取月份活跃度失败：', error)
+        console.error('Failed to get monthly activity:', error)
         return []
       }
     }
@@ -413,7 +413,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       try {
         return await worker.getYearlyActivity(sessionId, filter)
       } catch (error) {
-        console.error('获取年份活跃度失败：', error)
+        console.error('Failed to get yearly activity:', error)
         return []
       }
     }
@@ -428,7 +428,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       try {
         return await worker.getMessageLengthDistribution(sessionId, filter)
       } catch (error) {
-        console.error('获取消息长度分布失败：', error)
+        console.error('Failed to get message length distribution:', error)
         return []
       }
     }
@@ -443,7 +443,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       try {
         return await worker.getMessageTypeDistribution(sessionId, filter)
       } catch (error) {
-        console.error('获取消息类型分布失败：', error)
+        console.error('Failed to get message type distribution:', error)
         return []
       }
     }
@@ -456,7 +456,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
     try {
       return await worker.getTimeRange(sessionId)
     } catch (error) {
-      console.error('获取时间范围失败：', error)
+      console.error('Failed to get time range:', error)
       return null
     }
   })
@@ -468,7 +468,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
     try {
       return worker.getDbDirectory()
     } catch (error) {
-      console.error('获取数据库目录失败：', error)
+      console.error('Failed to get database directory:', error)
       return null
     }
   })
@@ -489,7 +489,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       try {
         return await worker.getRepeatAnalysis(sessionId, filter)
       } catch (error) {
-        console.error('获取复读分析失败：', error)
+        console.error('Failed to get repeat analysis:', error)
         return { originators: [], initiators: [], breakers: [], totalRepeatChains: 0 }
       }
     }
@@ -504,7 +504,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       try {
         return await worker.getCatchphraseAnalysis(sessionId, filter)
       } catch (error) {
-        console.error('获取口头禅分析失败：', error)
+        console.error('Failed to get catchphrase analysis:', error)
         return { members: [] }
       }
     }
@@ -519,7 +519,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       try {
         return await worker.getNightOwlAnalysis(sessionId, filter)
       } catch (error) {
-        console.error('获取夜猫分析失败：', error)
+        console.error('Failed to get night owl analysis:', error)
         return {
           nightOwlRank: [],
           lastSpeakerRank: [],
@@ -541,7 +541,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       try {
         return await worker.getDragonKingAnalysis(sessionId, filter)
       } catch (error) {
-        console.error('获取龙王分析失败：', error)
+        console.error('Failed to get top poster analysis:', error)
         return { rank: [], totalDays: 0 }
       }
     }
@@ -556,7 +556,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       try {
         return await worker.getDivingAnalysis(sessionId, filter)
       } catch (error) {
-        console.error('获取潜水分析失败：', error)
+        console.error('Failed to get lurker analysis:', error)
         return { rank: [] }
       }
     }
@@ -571,7 +571,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       try {
         return await worker.getMentionAnalysis(sessionId, filter)
       } catch (error) {
-        console.error('获取 @ 互动分析失败：', error)
+        console.error('Failed to get @mention analysis:', error)
         return { topMentioners: [], topMentioned: [], oneWay: [], twoWay: [], totalMentions: 0, memberDetails: [] }
       }
     }
@@ -586,7 +586,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       try {
         return await worker.getMentionGraph(sessionId, filter)
       } catch (error) {
-        console.error('获取 @ 互动关系图失败：', error)
+        console.error('Failed to get @mention graph:', error)
         return { nodes: [], links: [], maxLinkValue: 0 }
       }
     }
@@ -611,7 +611,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       try {
         return await worker.getClusterGraph(sessionId, filter, options)
       } catch (error) {
-        console.error('获取小团体关系图失败：', error)
+        console.error('Failed to get clique graph:', error)
         return {
           nodes: [],
           links: [],
@@ -638,7 +638,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       try {
         return await worker.getLaughAnalysis(sessionId, filter, keywords)
       } catch (error) {
-        console.error('获取含笑量分析失败：', error)
+        console.error('Failed to get humor analysis:', error)
         return {
           rankByRate: [],
           rankByCount: [],
@@ -660,7 +660,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       try {
         return await worker.getMemeBattleAnalysis(sessionId, filter)
       } catch (error) {
-        console.error('获取斗图分析失败：', error)
+        console.error('Failed to get meme battle analysis:', error)
         return {
           longestBattle: null,
           rankByCount: [],
@@ -680,7 +680,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       try {
         return await worker.getCheckInAnalysis(sessionId, filter)
       } catch (error) {
-        console.error('获取打卡分析失败：', error)
+        console.error('Failed to get check-in analysis:', error)
         return {
           streakRank: [],
           loyaltyRank: [],
@@ -699,7 +699,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
     try {
       return await worker.getMembers(sessionId)
     } catch (error) {
-      console.error('获取成员列表失败：', error)
+      console.error('Failed to get member list:', error)
       return []
     }
   })
@@ -717,7 +717,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       try {
         return await worker.getMembersPaginated(sessionId, params)
       } catch (error) {
-        console.error('获取成员列表（分页）失败：', error)
+        console.error('Failed to get member list (paginated):', error)
         return { members: [], total: 0, page: 1, pageSize: 20, totalPages: 0 }
       }
     }
@@ -730,7 +730,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
     try {
       return await worker.updateMemberAliases(sessionId, memberId, aliases)
     } catch (error) {
-      console.error('更新成员别名失败：', error)
+      console.error('Failed to update member alias:', error)
       return false
     }
   })
@@ -745,7 +745,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       // 执行删除
       return await worker.deleteMember(sessionId, memberId)
     } catch (error) {
-      console.error('删除成员失败：', error)
+      console.error('Failed to delete member:', error)
       return false
     }
   })
@@ -760,7 +760,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       // 执行更新
       return databaseCore.updateSessionOwnerId(sessionId, ownerId)
     } catch (error) {
-      console.error('更新会话所有者失败：', error)
+      console.error('Failed to update session owner:', error)
       return false
     }
   })
@@ -774,7 +774,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
     try {
       return await worker.executeRawSQL(sessionId, sql)
     } catch (error) {
-      console.error('执行 SQL 失败：', error)
+      console.error('Failed to execute SQL:', error)
       throw error
     }
   })
@@ -786,7 +786,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
     try {
       return await worker.getSchema(sessionId)
     } catch (error) {
-      console.error('获取 Schema 失败：', error)
+      console.error('Failed to get schema:', error)
       return []
     }
   })
@@ -800,7 +800,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
     try {
       return await worker.generateSessions(sessionId, gapThreshold)
     } catch (error) {
-      console.error('生成会话索引失败：', error)
+      console.error('Failed to generate session index:', error)
       throw error
     }
   })
@@ -812,7 +812,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
     try {
       return await worker.hasSessionIndex(sessionId)
     } catch (error) {
-      console.error('检查会话索引失败：', error)
+      console.error('Failed to check session index:', error)
       return false
     }
   })
@@ -824,7 +824,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
     try {
       return await worker.getSessionStats(sessionId)
     } catch (error) {
-      console.error('获取会话统计失败：', error)
+      console.error('Failed to get session stats:', error)
       return { sessionCount: 0, hasIndex: false, gapThreshold: 1800 }
     }
   })
@@ -837,7 +837,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       await worker.clearSessions(sessionId)
       return true
     } catch (error) {
-      console.error('清空会话索引失败：', error)
+      console.error('Failed to clear session index:', error)
       return false
     }
   })
@@ -850,7 +850,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       await worker.updateSessionGapThreshold(sessionId, gapThreshold)
       return true
     } catch (error) {
-      console.error('更新阈值失败：', error)
+      console.error('Failed to update threshold:', error)
       return false
     }
   })
@@ -862,7 +862,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
     try {
       return await worker.getSessions(sessionId)
     } catch (error) {
-      console.error('获取会话列表失败：', error)
+      console.error('Failed to get session list:', error)
       return []
     }
   })
@@ -875,7 +875,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
   ipcMain.handle(
     'session:generateSummary',
     async (_, dbSessionId: string, chatSessionId: number, locale?: string, forceRegenerate?: boolean) => {
-      console.log('[IPC] session:generateSummary 收到请求:', { dbSessionId, chatSessionId, locale, forceRegenerate })
+      console.log('[IPC] session:generateSummary request received:', { dbSessionId, chatSessionId, locale, forceRegenerate })
       try {
         const { generateSessionSummary } = await import('../ai/summary')
         const result = await generateSessionSummary(
@@ -884,10 +884,10 @@ export function registerChatHandlers(ctx: IpcContext): void {
           locale || 'zh-CN',
           forceRegenerate || false
         )
-        console.log('[IPC] session:generateSummary 返回:', result)
+        console.log('[IPC] session:generateSummary result:', result)
         return result
       } catch (error) {
-        console.error('[IPC] 生成会话摘要失败：', error)
+        console.error('[IPC] Failed to generate session summary:', error)
         return { success: false, error: String(error) }
       }
     }
@@ -903,7 +903,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
         const { generateSessionSummaries } = await import('../ai/summary')
         return await generateSessionSummaries(dbSessionId, chatSessionIds, locale || 'zh-CN')
       } catch (error) {
-        console.error('批量生成会话摘要失败：', error)
+        console.error('Failed to batch generate session summaries:', error)
         return { success: 0, failed: chatSessionIds.length, skipped: 0 }
       }
     }
@@ -923,7 +923,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       }
       return obj
     } catch (error) {
-      console.error('批量检查会话摘要失败：', error)
+      console.error('Failed to batch check session summaries:', error)
       return {}
     }
   })
@@ -932,8 +932,8 @@ export function registerChatHandlers(ctx: IpcContext): void {
    * 根据时间范围查询会话列表
    */
   ipcMain.handle('session:getByTimeRange', async (_, dbSessionId: string, startTs: number, endTs: number) => {
-    console.log('[session:getByTimeRange] 查询参数:', { dbSessionId, startTs, endTs })
-    console.log('[session:getByTimeRange] 时间范围:', {
+    console.log('[session:getByTimeRange] Query params:', { dbSessionId, startTs, endTs })
+    console.log('[session:getByTimeRange] Time range:', {
       start: new Date(startTs * 1000).toISOString(),
       end: new Date(endTs * 1000).toISOString(),
     })
@@ -942,7 +942,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       const { openDatabase } = await import('../database/core')
       const db = openDatabase(dbSessionId, true)
       if (!db) {
-        console.log('[session:getByTimeRange] 数据库打开失败')
+        console.log('[session:getByTimeRange] Failed to open database')
         return []
       }
 
@@ -950,7 +950,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       const stats = db
         .prepare('SELECT COUNT(*) as count, MIN(start_ts) as minTs, MAX(start_ts) as maxTs FROM chat_session')
         .get() as { count: number; minTs: number; maxTs: number }
-      console.log('[session:getByTimeRange] 数据库会话统计:', {
+      console.log('[session:getByTimeRange] Database session stats:', {
         count: stats.count,
         minTs: stats.minTs ? new Date(stats.minTs * 1000).toISOString() : null,
         maxTs: stats.maxTs ? new Date(stats.maxTs * 1000).toISOString() : null,
@@ -978,10 +978,10 @@ export function registerChatHandlers(ctx: IpcContext): void {
         summary: string | null
       }>
 
-      console.log('[session:getByTimeRange] 查询结果数量:', sessions.length)
+      console.log('[session:getByTimeRange] Query result count:', sessions.length)
       return sessions
     } catch (error) {
-      console.error('查询时间范围会话失败：', error)
+      console.error('Failed to query sessions by time range:', error)
       return []
     }
   })
@@ -990,18 +990,18 @@ export function registerChatHandlers(ctx: IpcContext): void {
    * 获取最近 N 条会话
    */
   ipcMain.handle('session:getRecent', async (_, dbSessionId: string, limit: number) => {
-    console.log('[session:getRecent] 查询参数:', { dbSessionId, limit })
+    console.log('[session:getRecent] Query params:', { dbSessionId, limit })
     try {
       const { openDatabase } = await import('../database/core')
       const db = openDatabase(dbSessionId, true)
       if (!db) {
-        console.log('[session:getRecent] 数据库打开失败')
+        console.log('[session:getRecent] Failed to open database')
         return []
       }
 
       // 先检查表是否存在
       const tableInfo = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='chat_session'").get()
-      console.log('[session:getRecent] chat_session 表:', tableInfo ? '存在' : '不存在')
+      console.log('[session:getRecent] chat_session table:', tableInfo ? 'exists' : 'not exists')
 
       if (!tableInfo) {
         return []
@@ -1029,10 +1029,10 @@ export function registerChatHandlers(ctx: IpcContext): void {
         summary: string | null
       }>
 
-      console.log('[session:getRecent] 查询结果数量:', sessions.length)
+      console.log('[session:getRecent] Query result count:', sessions.length)
       return sessions
     } catch (error) {
-      console.error('查询最近会话失败：', error)
+      console.error('Failed to query recent sessions:', error)
       return []
     }
   })
@@ -1060,7 +1060,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       const result = await worker.analyzeIncrementalImport(sessionId, filePath)
       return result
     } catch (error) {
-      console.error('[IpcMain] 分析增量导入失败:', error)
+      console.error('[IpcMain] Failed to analyze incremental import:', error)
       return { error: String(error) }
     }
   })
@@ -1090,13 +1090,13 @@ export function registerChatHandlers(ctx: IpcContext): void {
         try {
           await worker.generateIncrementalSessions(sessionId)
         } catch (e) {
-          console.error('[IpcMain] 增量生成会话索引失败:', e)
+          console.error('[IpcMain] Failed to incrementally generate session index:', e)
         }
       }
 
       return result
     } catch (error) {
-      console.error('[IpcMain] 执行增量导入失败:', error)
+      console.error('[IpcMain] Failed to execute incremental import:', error)
       return { success: false, error: String(error) }
     }
   })
@@ -1115,7 +1115,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       }
       return { success: true, tempFiles }
     } catch (error) {
-      console.error('[IpcMain] 导出会话失败:', error)
+      console.error('[IpcMain] Failed to export session:', error)
       return { success: false, error: String(error), tempFiles: [] }
     }
   })
@@ -1128,7 +1128,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       cleanupTempExportFiles(filePaths)
       return { success: true }
     } catch (error) {
-      console.error('[IpcMain] 清理临时文件失败:', error)
+      console.error('[IpcMain] Failed to clean up temp files:', error)
       return { success: false, error: String(error) }
     }
   })

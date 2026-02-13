@@ -332,9 +332,9 @@ export function deleteTempDatabase(dbPath: string): void {
     if (fs.existsSync(walPath)) fs.unlinkSync(walPath)
     if (fs.existsSync(shmPath)) fs.unlinkSync(shmPath)
 
-    console.log(`[TempCache] 已删除临时数据库: ${dbPath}`)
+    console.log(`[TempCache] Deleted temp database: ${dbPath}`)
   } catch (error) {
-    console.error(`[TempCache] 删除临时数据库失败: ${dbPath}`, error)
+    console.error(`[TempCache] Failed to delete temp database: ${dbPath}`, error)
   }
 }
 
@@ -353,8 +353,8 @@ export function cleanupAllTempDatabases(): void {
         deleteTempDatabase(filePath)
       }
     }
-    console.log('[TempCache] 已清理所有临时数据库')
+    console.log('[TempCache] Cleaned up all temp databases')
   } catch (error) {
-    console.error('[TempCache] 清理临时数据库失败:', error)
+    console.error('[TempCache] Failed to clean up temp databases:', error)
   }
 }

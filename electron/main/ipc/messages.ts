@@ -27,7 +27,7 @@ export function registerMessagesHandlers({ win }: IpcContext): void {
       try {
         return await worker.searchMessages(sessionId, keywords, filter, limit, offset, senderId)
       } catch (error) {
-        console.error('搜索消息失败：', error)
+        console.error('Failed to search messages:', error)
         return { messages: [], total: 0 }
       }
     }
@@ -42,7 +42,7 @@ export function registerMessagesHandlers({ win }: IpcContext): void {
       try {
         return await worker.getMessageContext(sessionId, messageIds, contextSize)
       } catch (error) {
-        console.error('获取消息上下文失败：', error)
+        console.error('Failed to get message context:', error)
         return []
       }
     }
@@ -57,7 +57,7 @@ export function registerMessagesHandlers({ win }: IpcContext): void {
       try {
         return await worker.getRecentMessages(sessionId, filter, limit)
       } catch (error) {
-        console.error('获取最近消息失败：', error)
+        console.error('Failed to get recent messages:', error)
         return { messages: [], total: 0 }
       }
     }
@@ -72,7 +72,7 @@ export function registerMessagesHandlers({ win }: IpcContext): void {
       try {
         return await worker.getAllRecentMessages(sessionId, filter, limit)
       } catch (error) {
-        console.error('获取所有最近消息失败：', error)
+        console.error('Failed to get all recent messages:', error)
         return { messages: [], total: 0 }
       }
     }
@@ -94,7 +94,7 @@ export function registerMessagesHandlers({ win }: IpcContext): void {
       try {
         return await worker.getConversationBetween(sessionId, memberId1, memberId2, filter, limit)
       } catch (error) {
-        console.error('获取对话失败：', error)
+        console.error('Failed to get conversation:', error)
         return { messages: [], total: 0, member1Name: '', member2Name: '' }
       }
     }
@@ -117,7 +117,7 @@ export function registerMessagesHandlers({ win }: IpcContext): void {
       try {
         return await worker.getMessagesBefore(sessionId, beforeId, limit, filter, senderId, keywords)
       } catch (error) {
-        console.error('获取之前消息失败：', error)
+        console.error('Failed to get previous messages:', error)
         return { messages: [], hasMore: false }
       }
     }
@@ -140,7 +140,7 @@ export function registerMessagesHandlers({ win }: IpcContext): void {
       try {
         return await worker.getMessagesAfter(sessionId, afterId, limit, filter, senderId, keywords)
       } catch (error) {
-        console.error('获取之后消息失败：', error)
+        console.error('Failed to get next messages:', error)
         return { messages: [], hasMore: false }
       }
     }
@@ -174,7 +174,7 @@ export function registerMessagesHandlers({ win }: IpcContext): void {
           pageSize
         )
       } catch (error) {
-        console.error('筛选消息失败：', error)
+        console.error('Failed to filter messages:', error)
         return {
           blocks: [],
           stats: { totalMessages: 0, hitMessages: 0, totalChars: 0 },
@@ -193,7 +193,7 @@ export function registerMessagesHandlers({ win }: IpcContext): void {
       try {
         return await worker.getMultipleSessionsMessages(sessionId, chatSessionIds, page, pageSize)
       } catch (error) {
-        console.error('获取多个会话消息失败：', error)
+        console.error('Failed to get multi-session messages:', error)
         return {
           blocks: [],
           stats: { totalMessages: 0, hitMessages: 0, totalChars: 0 },
@@ -228,7 +228,7 @@ export function registerMessagesHandlers({ win }: IpcContext): void {
           win.webContents.send('ai:exportProgress', progress)
         })
       } catch (error) {
-        console.error('导出筛选结果失败：', error)
+        console.error('Failed to export filtered results:', error)
         return { success: false, error: String(error) }
       }
     }

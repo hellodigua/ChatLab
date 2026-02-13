@@ -775,7 +775,7 @@ export async function getSessionSummaries(
 
     return results
   } catch (error) {
-    console.error('获取会话摘要失败:', error)
+    console.error('Failed to get session summaries:', error)
     return []
   }
 }

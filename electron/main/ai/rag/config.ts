@@ -70,7 +70,7 @@ export function loadEmbeddingConfigStore(): EmbeddingConfigStore {
       enabled: data.enabled ?? false,
     }
   } catch (error) {
-    logger.error('RAG', '加载 Embedding 配置失败', error)
+    logger.error('RAG', 'Failed to load Embedding configs', error)
     return { ...DEFAULT_EMBEDDING_CONFIG_STORE }
   }
 }
@@ -87,7 +87,7 @@ export function saveEmbeddingConfigStore(store: EmbeddingConfigStore): void {
   }
 
   fs.writeFileSync(configPath, JSON.stringify(store, null, 2), 'utf-8')
-  logger.info('RAG', 'Embedding 配置已保存')
+  logger.info('RAG', 'Embedding configs saved')
 }
 
 /**
@@ -144,7 +144,7 @@ export function addEmbeddingConfig(config: Omit<EmbeddingServiceConfig, 'id' | '
   }
 
   saveEmbeddingConfigStore(store)
-  logger.info('RAG', `添加 Embedding 配置: ${newConfig.name}`)
+  logger.info('RAG', `Adding Embedding config: ${newConfig.name}`)
   return { success: true, config: newConfig }
 }
 
@@ -169,7 +169,7 @@ export function updateEmbeddingConfig(
   }
 
   saveEmbeddingConfigStore(store)
-  logger.info('RAG', `更新 Embedding 配置: ${store.configs[index].name}`)
+  logger.info('RAG', `Updating Embedding config: ${store.configs[index].name}`)
   return { success: true }
 }
 
@@ -193,7 +193,7 @@ export function deleteEmbeddingConfig(id: string): { success: boolean; error?: s
   }
 
   saveEmbeddingConfigStore(store)
-  logger.info('RAG', `删除 Embedding 配置: ${deletedName}`)
+  logger.info('RAG', `Deleting Embedding config: ${deletedName}`)
   return { success: true }
 }
 
@@ -210,7 +210,7 @@ export function setActiveEmbeddingConfig(id: string): { success: boolean; error?
 
   store.activeConfigId = id
   saveEmbeddingConfigStore(store)
-  logger.info('RAG', `激活 Embedding 配置: ${config.name}`)
+  logger.info('RAG', `Activating Embedding config: ${config.name}`)
   return { success: true }
 }
 
@@ -250,7 +250,7 @@ export function loadRAGConfig(): RAGConfig {
     // 合并默认配置，确保新字段有默认值
     return mergeConfig(DEFAULT_RAG_CONFIG, config)
   } catch (error) {
-    logger.error('RAG', '加载配置失败', error)
+    logger.error('RAG', 'Failed to load configs', error)
     return { ...DEFAULT_RAG_CONFIG }
   }
 }
@@ -268,9 +268,9 @@ export function saveRAGConfig(config: RAGConfig): void {
     }
 
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf-8')
-    logger.info('RAG', '配置已保存')
+    logger.info('RAG', 'Configs saved')
   } catch (error) {
-    logger.error('RAG', '保存配置失败', error)
+    logger.error('RAG', 'Failed to save configs', error)
     throw error
   }
 }

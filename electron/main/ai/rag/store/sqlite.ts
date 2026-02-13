@@ -79,7 +79,7 @@ export class SQLiteVectorStore implements IVectorStore {
       // 索引可能已存在
     }
 
-    logger.info(`[SQLite Store] 初始化完成: ${this.dbPath}`)
+    logger.info(`[SQLite Store] Initialized: ${this.dbPath}`)
   }
 
   /**
@@ -180,7 +180,7 @@ export class SQLiteVectorStore implements IVectorStore {
    */
   async clear(): Promise<void> {
     this.db.exec('DELETE FROM vectors')
-    logger.info('[SQLite Store] 已清空所有向量')
+    logger.info('[SQLite Store] All vectors cleared')
   }
 
   /**
@@ -214,6 +214,6 @@ export class SQLiteVectorStore implements IVectorStore {
    */
   async close(): Promise<void> {
     this.db.close()
-    logger.info('[SQLite Store] 已关闭')
+    logger.info('[SQLite Store] Closed')
   }
 }

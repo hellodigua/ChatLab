@@ -100,12 +100,12 @@ function writeLog(level: LogLevel, category: string, message: string, data?: any
       // 限制数据长度，避免日志过大
       const maxLength = 2000
       if (dataStr.length > maxLength) {
-        logLine += `\n${dataStr.slice(0, maxLength)}...[截断，共 ${dataStr.length} 字符]`
+        logLine += `\n${dataStr.slice(0, maxLength)}...[truncated, ${dataStr.length} chars total]`
       } else {
         logLine += `\n${dataStr}`
       }
     } catch {
-      logLine += `\n[无法序列化的数据]`
+      logLine += `\n[unserializable data]`
     }
   }
 
@@ -116,7 +116,7 @@ function writeLog(level: LogLevel, category: string, message: string, data?: any
     const stream = getLogStream()
     stream.write(logLine)
   } catch (error) {
-    console.error('[AILogger] 写入日志失败：', error)
+    console.error('[AILogger] Failed to write log:', error)
   }
 
   // 只在需要时输出到控制台（WARN/ERROR 或明确指定）

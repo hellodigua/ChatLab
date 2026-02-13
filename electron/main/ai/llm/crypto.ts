@@ -25,7 +25,7 @@ function deriveKey(): Buffer {
       .digest()
   } catch (error) {
     // 如果无法获取机器 ID，使用固定的回退值（安全性降低）
-    console.warn('无法获取机器 ID，使用回退密钥:', error)
+    console.warn('Failed to get machine ID, using fallback key:', error)
     return createHash('sha256')
       .update('chatlab-fallback-key' + SALT)
       .digest()
@@ -82,7 +82,7 @@ export function decryptApiKey(encrypted: string): string {
     // 解析格式: enc:iv:authTag:ciphertext
     const parts = encrypted.slice(ENCRYPTED_PREFIX.length).split(':')
     if (parts.length !== 3) {
-      console.warn('加密数据格式错误')
+      console.warn('Encrypted data format error')
       return ''
     }
 
@@ -98,7 +98,7 @@ export function decryptApiKey(encrypted: string): string {
 
     return decrypted
   } catch (error) {
-    console.error('解密 API Key 失败:', error)
+    console.error('Failed to decrypt API Key:', error)
     return ''
   }
 }

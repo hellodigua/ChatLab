@@ -44,7 +44,7 @@ export async function getEmbeddingService(): Promise<IEmbeddingService | null> {
     activeConfigId = config.id
     return activeService
   } catch (error) {
-    logger.error('RAG', '创建 Embedding 服务失败', error)
+    logger.error('RAG', 'Failed to create Embedding service', error)
     return null
   }
 }
@@ -54,7 +54,7 @@ export async function getEmbeddingService(): Promise<IEmbeddingService | null> {
  */
 async function createEmbeddingService(config: EmbeddingServiceConfig): Promise<IEmbeddingService> {
   const apiConfig = resolveApiConfig(config)
-  logger.info('RAG', `使用 Embedding: ${config.name} (${apiConfig.model})`)
+  logger.info('RAG', `Using Embedding: ${config.name} (${apiConfig.model})`)
 
   return new OpenAICompatibleEmbeddingService(apiConfig)
 }
@@ -120,7 +120,7 @@ export async function resetEmbeddingService(): Promise<void> {
     await activeService.dispose()
     activeService = null
     activeConfigId = null
-    logger.info('RAG', 'Embedding 服务已重置')
+    logger.info('RAG', 'Embedding service reset')
   }
 }
 

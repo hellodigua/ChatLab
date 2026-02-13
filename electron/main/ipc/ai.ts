@@ -93,12 +93,12 @@ function formatAIError(error: unknown): string {
 
   if (statusCode === 429 || lowerMessage.includes('quota') || lowerMessage.includes('resource_exhausted')) {
     return retrySeconds
-      ? `Gemini 配额已用尽，请等待 ${retrySeconds} 秒后重试，或更换/升级配额。`
-      : 'Gemini 配额已用尽，请稍后重试或更换/升级配额。'
+      ? `Gemini quota exhausted, please retry after ${retrySeconds}s or upgrade your quota.`
+      : 'Gemini quota exhausted, please retry later or upgrade your quota.'
   }
 
   if (statusCode === 503 || lowerMessage.includes('overloaded') || lowerMessage.includes('unavailable')) {
-    return 'Gemini 模型繁忙，请稍后重试。'
+    return 'Gemini model is overloaded, please retry later.'
   }
 
   if (fallbackMessage.length > 300) {
@@ -127,7 +127,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
       try {
         return aiConversations.createConversation(title, sessionId, dataSource)
       } catch (error) {
-        console.error('创建 AI 对话失败：', error)
+        console.error('Failed to create AI conversation:', error)
         throw error
       }
     }
@@ -140,7 +140,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
     try {
       return aiConversations.getConversations(sessionId)
     } catch (error) {
-      console.error('获取 AI 对话列表失败：', error)
+      console.error('Failed to get AI conversations:', error)
       return []
     }
   })
@@ -159,13 +159,13 @@ export function registerAIHandlers({ win }: IpcContext): void {
 
       const logDir = path.join(getLogsDir(), 'ai')
       if (!fs.existsSync(logDir)) {
-        return { success: false, error: '暂无 AI 日志文件' }
+        return { success: false, error: 'No AI log files found' }
       }
 
       const logFiles = fs.readdirSync(logDir).filter((name) => name.startsWith('ai_') && name.endsWith('.log'))
 
       if (logFiles.length === 0) {
-        return { success: false, error: '暂无 AI 日志文件' }
+        return { success: false, error: 'No AI log files found' }
       }
 
       // 选择最近修改的日志文件
@@ -180,7 +180,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
       shell.showItemInFolder(latestLog.path)
       return { success: true, path: latestLog.path }
     } catch (error) {
-      console.error('打开 AI 日志文件失败：', error)
+      console.error('Failed to open AI log file:', error)
       return { success: false, error: String(error) }
     }
   })
@@ -192,7 +192,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
     try {
       return aiConversations.getConversation(conversationId)
     } catch (error) {
-      console.error('获取 AI 对话详情失败：', error)
+      console.error('Failed to get AI conversation details:', error)
       return null
     }
   })
@@ -204,7 +204,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
     try {
       return aiConversations.updateConversationTitle(conversationId, title)
     } catch (error) {
-      console.error('更新 AI 对话标题失败：', error)
+      console.error('Failed to update AI conversation title:', error)
       return false
     }
   })
@@ -216,7 +216,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
     try {
       return aiConversations.deleteConversation(conversationId)
     } catch (error) {
-      console.error('删除 AI 对话失败：', error)
+      console.error('Failed to delete AI conversation:', error)
       return false
     }
   })
@@ -238,7 +238,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
       try {
         return aiConversations.addMessage(conversationId, role, content, dataKeywords, dataMessageCount, contentBlocks)
       } catch (error) {
-        console.error('添加 AI 消息失败：', error)
+        console.error('Failed to add AI message:', error)
         throw error
       }
     }
@@ -251,7 +251,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
     try {
       return aiConversations.getMessages(conversationId)
     } catch (error) {
-      console.error('获取 AI 消息失败：', error)
+      console.error('Failed to get AI messages:', error)
       return []
     }
   })
@@ -263,7 +263,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
     try {
       return aiConversations.deleteMessage(messageId)
     } catch (error) {
-      console.error('删除 AI 消息失败：', error)
+      console.error('Failed to delete AI message:', error)
       return false
     }
   })
@@ -326,7 +326,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
         }
         return result
       } catch (error) {
-        console.error('添加 LLM 配置失败：', error)
+        console.error('Failed to add LLM config:', error)
         return { success: false, error: String(error) }
       }
     }
@@ -358,7 +358,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
 
         return llm.updateConfig(id, cleanUpdates)
       } catch (error) {
-        console.error('更新 LLM 配置失败：', error)
+        console.error('Failed to update LLM config:', error)
         return { success: false, error: String(error) }
       }
     }
@@ -379,7 +379,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
       }
       return llm.deleteConfig(id)
     } catch (error) {
-      console.error('删除 LLM 配置失败：', error)
+      console.error('Failed to delete LLM config:', error)
       return { success: false, error: String(error) }
     }
   })
@@ -391,7 +391,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
     try {
       return llm.setActiveConfig(id)
     } catch (error) {
-      console.error('设置激活配置失败：', error)
+      console.error('Failed to set active config:', error)
       return { success: false, error: String(error) }
     }
   })
@@ -403,14 +403,14 @@ export function registerAIHandlers({ win }: IpcContext): void {
   ipcMain.handle(
     'llm:validateApiKey',
     async (_, provider: llm.LLMProvider, apiKey: string, baseUrl?: string, model?: string) => {
-      console.log('[LLM:validateApiKey] 开始验证:', { provider, baseUrl, model, apiKeyLength: apiKey?.length })
+      console.log('[LLM:validateApiKey] Validating:', { provider, baseUrl, model, apiKeyLength: apiKey?.length })
       try {
         const service = llm.createLLMService({ provider, apiKey, baseUrl, model })
         const result = await service.validateApiKey()
-        console.log('[LLM:validateApiKey] 验证结果:', result)
+        console.log('[LLM:validateApiKey] Result:', result)
         return { success: result.success, error: result.error }
       } catch (error) {
-        console.error('[LLM:validateApiKey] 验证失败：', error)
+        console.error('[LLM:validateApiKey] Validation failed:', error)
         // 提取有意义的错误信息
         const errorMessage = error instanceof Error ? error.message : String(error)
         return { success: false, error: errorMessage }
@@ -429,7 +429,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
    * 发送 LLM 聊天请求（非流式）
    */
   ipcMain.handle('llm:chat', async (_, messages: llm.ChatMessage[], options?: llm.ChatOptions) => {
-    aiLogger.info('IPC', '收到非流式 LLM 请求', {
+    aiLogger.info('IPC', 'Non-streaming LLM request received', {
       messagesCount: messages.length,
       firstMsgRole: messages[0]?.role,
       firstMsgContentLen: messages[0]?.content?.length,
@@ -437,11 +437,11 @@ export function registerAIHandlers({ win }: IpcContext): void {
     })
     try {
       const response = await llm.chat(messages, options)
-      aiLogger.info('IPC', '非流式 LLM 请求成功', { responseLength: response.length })
+      aiLogger.info('IPC', 'Non-streaming LLM request succeeded', { responseLength: response.length })
       return { success: true, content: response }
     } catch (error) {
-      aiLogger.error('IPC', '非流式 LLM 请求失败', { error: String(error) })
-      console.error('LLM 聊天失败：', error)
+      aiLogger.error('IPC', 'Non-streaming LLM request failed', { error: String(error) })
+      console.error('LLM chat failed:', error)
       return { success: false, error: String(error) }
     }
   })
@@ -453,32 +453,32 @@ export function registerAIHandlers({ win }: IpcContext): void {
   ipcMain.handle(
     'llm:chatStream',
     async (_, requestId: string, messages: llm.ChatMessage[], options?: llm.ChatOptions) => {
-      aiLogger.info('IPC', `收到流式聊天请求: ${requestId}`, {
+      aiLogger.info('IPC', `Streaming chat request received: ${requestId}`, {
         messagesCount: messages.length,
         options,
       })
 
       try {
         const generator = llm.chatStream(messages, options)
-        aiLogger.info('IPC', `创建流式生成器: ${requestId}`)
+        aiLogger.info('IPC', `Stream generator created: ${requestId}`)
 
         // 异步处理流式响应
         ;(async () => {
           let chunkIndex = 0
           try {
-            aiLogger.info('IPC', `开始迭代流式响应: ${requestId}`)
+            aiLogger.info('IPC', `Iterating stream response: ${requestId}`)
             for await (const chunk of generator) {
               chunkIndex++
-              aiLogger.debug('IPC', `发送 chunk #${chunkIndex}: ${requestId}`, {
+              aiLogger.debug('IPC', `Sending chunk #${chunkIndex}: ${requestId}`, {
                 contentLength: chunk.content?.length,
                 isFinished: chunk.isFinished,
                 finishReason: chunk.finishReason,
               })
               win.webContents.send('llm:streamChunk', { requestId, chunk })
             }
-            aiLogger.info('IPC', `流式响应完成: ${requestId}`, { totalChunks: chunkIndex })
+            aiLogger.info('IPC', `Stream response completed: ${requestId}`, { totalChunks: chunkIndex })
           } catch (error) {
-            aiLogger.error('IPC', `流式响应出错: ${requestId}`, {
+            aiLogger.error('IPC', `Stream response error: ${requestId}`, {
               error: String(error),
               chunkIndex,
             })
@@ -492,8 +492,8 @@ export function registerAIHandlers({ win }: IpcContext): void {
 
         return { success: true }
       } catch (error) {
-        aiLogger.error('IPC', `创建流式请求失败: ${requestId}`, { error: String(error) })
-        console.error('LLM 流式聊天失败：', error)
+        aiLogger.error('IPC', `Failed to create stream request: ${requestId}`, { error: String(error) })
+        console.error('LLM streaming chat failed:', error)
         return { success: false, error: String(error) }
       }
     }
@@ -521,7 +521,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
       promptConfig?: PromptConfig,
       locale?: string
     ) => {
-      aiLogger.info('IPC', `收到 Agent 流式请求: ${requestId}`, {
+      aiLogger.info('IPC', `Agent stream request received: ${requestId}`, {
         userMessage: userMessage.slice(0, 100),
         sessionId: context.sessionId,
         historyLength: historyMessages?.length ?? 0,
@@ -570,7 +570,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
 
             // 如果已中止，不发送完成信息
             if (abortController.signal.aborted) {
-              aiLogger.info('IPC', `Agent 已中止，跳过完成信息: ${requestId}`)
+              aiLogger.info('IPC', `Agent aborted, skipping completion: ${requestId}`)
               return
             }
 
@@ -585,7 +585,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
               },
             })
 
-            aiLogger.info('IPC', `Agent 执行完成: ${requestId}`, {
+            aiLogger.info('IPC', `Agent execution completed: ${requestId}`, {
               toolsUsed: result.toolsUsed,
               toolRounds: result.toolRounds,
               contentLength: result.content.length,
@@ -594,11 +594,11 @@ export function registerAIHandlers({ win }: IpcContext): void {
           } catch (error) {
             // 如果是中止错误，不报告为错误
             if (error instanceof Error && error.name === 'AbortError') {
-              aiLogger.info('IPC', `Agent 请求已中止: ${requestId}`)
+              aiLogger.info('IPC', `Agent request aborted: ${requestId}`)
               return
             }
             const friendlyError = formatAIError(error)
-            aiLogger.error('IPC', `Agent 执行出错: ${requestId}`, {
+            aiLogger.error('IPC', `Agent execution error: ${requestId}`, {
               error: String(error),
               friendlyError,
             })
@@ -626,7 +626,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
 
         return { success: true }
       } catch (error) {
-        aiLogger.error('IPC', `创建 Agent 请求失败: ${requestId}`, { error: String(error) })
+        aiLogger.error('IPC', `Failed to create Agent request: ${requestId}`, { error: String(error) })
         return { success: false, error: String(error) }
       }
     }
@@ -636,17 +636,17 @@ export function registerAIHandlers({ win }: IpcContext): void {
    * 中止 Agent 请求
    */
   ipcMain.handle('agent:abort', async (_, requestId: string) => {
-    aiLogger.info('IPC', `收到中止请求: ${requestId}`)
+    aiLogger.info('IPC', `Abort request received: ${requestId}`)
 
     const abortController = activeAgentRequests.get(requestId)
     if (abortController) {
       abortController.abort()
       activeAgentRequests.delete(requestId)
-      aiLogger.info('IPC', `已中止 Agent 请求: ${requestId}`)
+      aiLogger.info('IPC', `Agent request aborted: ${requestId}`)
       return { success: true }
     } else {
-      aiLogger.warn('IPC', `未找到 Agent 请求: ${requestId}`)
-      return { success: false, error: '未找到该请求' }
+      aiLogger.warn('IPC', `Agent request not found: ${requestId}`)
+      return { success: false, error: 'Request not found' }
     }
   })
 
@@ -665,7 +665,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
         apiKeySet: !!c.apiKey,
       }))
     } catch (error) {
-      aiLogger.error('IPC', '获取 Embedding 配置失败', error)
+      aiLogger.error('IPC', 'Failed to get Embedding configs', error)
       return []
     }
   })
@@ -677,7 +677,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
     try {
       return rag.getEmbeddingConfigById(id)
     } catch (error) {
-      aiLogger.error('IPC', '获取 Embedding 配置失败', error)
+      aiLogger.error('IPC', 'Failed to get Embedding config', error)
       return null
     }
   })
@@ -711,14 +711,14 @@ export function registerAIHandlers({ win }: IpcContext): void {
     'embedding:addConfig',
     async (_, config: Omit<rag.EmbeddingServiceConfig, 'id' | 'createdAt' | 'updatedAt'>) => {
       try {
-        aiLogger.info('IPC', '添加 Embedding 配置', { name: config.name, model: config.model })
+        aiLogger.info('IPC', 'Adding Embedding config', { name: config.name, model: config.model })
         const result = rag.addEmbeddingConfig(config)
         if (result.success) {
           await rag.resetEmbeddingService()
         }
         return result
       } catch (error) {
-        aiLogger.error('IPC', '添加 Embedding 配置失败', error)
+        aiLogger.error('IPC', 'Failed to add Embedding config', error)
         return { success: false, error: String(error) }
       }
     }
@@ -731,14 +731,14 @@ export function registerAIHandlers({ win }: IpcContext): void {
     'embedding:updateConfig',
     async (_, id: string, updates: Partial<Omit<rag.EmbeddingServiceConfig, 'id' | 'createdAt' | 'updatedAt'>>) => {
       try {
-        aiLogger.info('IPC', '更新 Embedding 配置', { id })
+        aiLogger.info('IPC', 'Updating Embedding config', { id })
         const result = rag.updateEmbeddingConfig(id, updates)
         if (result.success) {
           await rag.resetEmbeddingService()
         }
         return result
       } catch (error) {
-        aiLogger.error('IPC', '更新 Embedding 配置失败', error)
+        aiLogger.error('IPC', 'Failed to update Embedding config', error)
         return { success: false, error: String(error) }
       }
     }
@@ -749,14 +749,14 @@ export function registerAIHandlers({ win }: IpcContext): void {
    */
   ipcMain.handle('embedding:deleteConfig', async (_, id: string) => {
     try {
-      aiLogger.info('IPC', '删除 Embedding 配置', { id })
+      aiLogger.info('IPC', 'Deleting Embedding config', { id })
       const result = rag.deleteEmbeddingConfig(id)
       if (result.success) {
         await rag.resetEmbeddingService()
       }
       return result
     } catch (error) {
-      aiLogger.error('IPC', '删除 Embedding 配置失败', error)
+      aiLogger.error('IPC', 'Failed to delete Embedding config', error)
       return { success: false, error: String(error) }
     }
   })
@@ -766,14 +766,14 @@ export function registerAIHandlers({ win }: IpcContext): void {
    */
   ipcMain.handle('embedding:setActiveConfig', async (_, id: string) => {
     try {
-      aiLogger.info('IPC', '设置激活 Embedding 配置', { id })
+      aiLogger.info('IPC', 'Setting active Embedding config', { id })
       const result = rag.setActiveEmbeddingConfig(id)
       if (result.success) {
         await rag.resetEmbeddingService()
       }
       return result
     } catch (error) {
-      aiLogger.error('IPC', '设置激活 Embedding 配置失败', error)
+      aiLogger.error('IPC', 'Failed to set active Embedding config', error)
       return { success: false, error: String(error) }
     }
   })
@@ -798,7 +798,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
     try {
       return await rag.getVectorStoreStats()
     } catch (error) {
-      console.error('获取向量存储统计失败：', error)
+      console.error('Failed to get vector store stats:', error)
       return { enabled: false, error: String(error) }
     }
   })
@@ -813,9 +813,9 @@ export function registerAIHandlers({ win }: IpcContext): void {
         await store.clear()
         return { success: true }
       }
-      return { success: false, error: '向量存储未启用' }
+      return { success: false, error: 'Vector store not enabled' }
     } catch (error) {
-      console.error('清空向量存储失败：', error)
+      console.error('Failed to clear vector store:', error)
       return { success: false, error: String(error) }
     }
   })

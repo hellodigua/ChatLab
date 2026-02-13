@@ -94,7 +94,7 @@ export class OpenAICompatibleEmbeddingService implements IEmbeddingService {
 
       return vectors
     } catch (error) {
-      logger.error('RAG', `Embedding API 调用失败: ${url}`, error)
+      logger.error('RAG', `Embedding API call failed: ${url}`, error)
       throw error
     }
   }

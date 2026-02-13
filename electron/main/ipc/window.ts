@@ -127,7 +127,7 @@ export function registerWindowHandlers(ctx: IpcContext): void {
       clipboard.writeText(data)
       return true
     } catch (error) {
-      console.error('复制操作出错：', error)
+      console.error('Copy operation error:', error)
       return false
     }
   })
@@ -144,7 +144,7 @@ export function registerWindowHandlers(ctx: IpcContext): void {
       clipboard.writeImage(image)
       return { success: true }
     } catch (error) {
-      console.error('复制图片操作出错：', error)
+      console.error('Image copy error:', error)
       return { success: false, error: String(error) }
     }
   })
@@ -186,7 +186,7 @@ export function registerWindowHandlers(ctx: IpcContext): void {
       await shell.showItemInFolder(path)
       return true
     } catch (error) {
-      console.error('打开目录时出错：', error)
+      console.error('Error opening directory:', error)
       return false
     }
   })
@@ -196,7 +196,7 @@ export function registerWindowHandlers(ctx: IpcContext): void {
     try {
       return await dialog.showOpenDialog(options)
     } catch (error) {
-      console.error('显示对话框失败：', error)
+      console.error('Failed to show dialog:', error)
       throw error
     }
   })

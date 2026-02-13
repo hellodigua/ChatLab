@@ -190,7 +190,7 @@ export function loadConfigStore(): AIConfigStore {
 
     // 检查是否需要迁移旧格式
     if (isLegacyConfig(data)) {
-      aiLogger.info('LLM', '检测到旧配置格式，执行迁移')
+      aiLogger.info('LLM', 'Old config format detected, migrating')
       const migrated = migrateLegacyConfig(data)
       saveConfigStore(migrated)
       return loadConfigStore() // 重新加载以触发加密迁移
@@ -204,7 +204,7 @@ export function loadConfigStore(): AIConfigStore {
       if (config.apiKey && !isEncrypted(config.apiKey)) {
         // 发现明文 API Key，需要加密迁移
         needsEncryptionMigration = true
-        aiLogger.info('LLM', `配置 "${config.name}" 的 API Key 需要加密迁移`)
+        aiLogger.info('LLM', `Config "${config.name}" API Key needs encryption migration`)
       }
       return {
         ...config,
@@ -214,7 +214,7 @@ export function loadConfigStore(): AIConfigStore {
 
     // 如果有明文 API Key，执行加密迁移
     if (needsEncryptionMigration) {
-      aiLogger.info('LLM', '执行 API Key 加密迁移')
+      aiLogger.info('LLM', 'Executing API Key encryption migration')
       saveConfigStoreRaw({
         ...store,
         configs: store.configs.map((config) => ({
@@ -229,7 +229,7 @@ export function loadConfigStore(): AIConfigStore {
       configs: decryptedConfigs,
     }
   } catch (error) {
-    aiLogger.error('LLM', '加载配置失败', error)
+    aiLogger.error('LLM', 'Failed to load configs', error)
     return { configs: [], activeConfigId: null }
   }
 }
@@ -525,7 +525,7 @@ export async function chat(
 ): Promise<{ content: string; finishReason: string; tool_calls?: import('./types').ToolCall[] }> {
   const activeConfig = getActiveConfig()
 
-  aiLogger.info('LLM', '开始非流式聊天请求', {
+  aiLogger.info('LLM', 'Starting non-streaming chat request', {
     messagesCount: messages.length,
     firstMessageRole: messages[0]?.role,
     firstMessageLength: messages[0]?.content?.length,
@@ -542,13 +542,13 @@ export async function chat(
 
   const service = getCurrentLLMService()
   if (!service) {
-    aiLogger.error('LLM', '服务未配置')
+    aiLogger.error('LLM', 'Service not configured')
     throw new Error(t('llm.notConfigured'))
   }
 
   try {
     const response = await service.chat(messages, options)
-    aiLogger.info('LLM', '非流式请求成功', {
+    aiLogger.info('LLM', 'Non-streaming request succeeded', {
       contentLength: response.content?.length,
       finishReason: response.finishReason,
       usage: response.usage,
@@ -563,13 +563,13 @@ export async function chat(
     const errorInfo = extractErrorInfo(error)
     const errorStr = `${errorInfo.name || 'Error'}: ${errorInfo.message}`
 
-    aiLogger.error('LLM', `非流式请求失败 | 配置: ${configStr}`)
-    aiLogger.error('LLM', `错误: ${errorStr}`)
+    aiLogger.error('LLM', `Non-streaming request failed | config: ${configStr}`)
+    aiLogger.error('LLM', `Error: ${errorStr}`)
 
     // 堆栈单独一行
     const stack = extractErrorStack(error)
     if (stack) {
-      aiLogger.error('LLM', `堆栈:\n${stack}`)
+      aiLogger.error('LLM', `Stack:\n${stack}`)
     }
     throw error
   }
@@ -581,7 +581,7 @@ export async function chat(
 export async function* chatStream(messages: ChatMessage[], options?: ChatOptions): AsyncGenerator<ChatStreamChunk> {
   const activeConfig = getActiveConfig()
 
-  aiLogger.info('LLM', '开始流式聊天请求', {
+  aiLogger.info('LLM', 'Starting streaming chat request', {
     messagesCount: messages.length,
     firstMessageRole: messages[0]?.role,
     firstMessageLength: messages[0]?.content?.length,
@@ -597,7 +597,7 @@ export async function* chatStream(messages: ChatMessage[], options?: ChatOptions
 
   const service = getCurrentLLMService()
   if (!service) {
-    aiLogger.error('LLM', '服务未配置（流式）')
+    aiLogger.error('LLM', 'Service not configured (streaming)')
     throw new Error(t('llm.notConfigured'))
   }
 
@@ -621,7 +621,7 @@ export async function* chatStream(messages: ChatMessage[], options?: ChatOptions
 
       if (chunk.isFinished) {
         receivedFinish = true
-        aiLogger.info('LLM', '流式请求完成', {
+        aiLogger.info('LLM', 'Streaming request completed', {
           chunkCount,
           contentChunkCount,
           totalContentLength: totalContent.length,
@@ -632,7 +632,7 @@ export async function* chatStream(messages: ChatMessage[], options?: ChatOptions
 
     // 如果循环正常结束但没有收到 isFinished 的 chunk，记录警告
     if (chunkCount > 0 && !receivedFinish) {
-      aiLogger.warn('LLM', '流式请求循环结束但未收到完成信号', {
+      aiLogger.warn('LLM', 'Stream loop ended without completion signal', {
         chunkCount,
         totalContentLength: totalContent.length,
       })
@@ -646,13 +646,13 @@ export async function* chatStream(messages: ChatMessage[], options?: ChatOptions
     const errorInfo = extractErrorInfo(error)
     const errorStr = `${errorInfo.name || 'Error'}: ${errorInfo.message}`
 
-    aiLogger.error('LLM', `流式请求失败 | 配置: ${configStr} | 已接收: ${chunkCount}块/${totalContent.length}字符`)
-    aiLogger.error('LLM', `错误: ${errorStr}`)
+    aiLogger.error('LLM', `Stream request failed | config: ${configStr} | received: ${chunkCount} chunks/${totalContent.length} chars`)
+    aiLogger.error('LLM', `Error: ${errorStr}`)
 
     // 堆栈单独一行
     const stack = extractErrorStack(error)
     if (stack) {
-      aiLogger.error('LLM', `堆栈:\n${stack}`)
+      aiLogger.error('LLM', `Stack:\n${stack}`)
     }
     throw error
   }

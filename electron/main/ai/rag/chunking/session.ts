@@ -308,7 +308,7 @@ export function getSessionChunks(dbPath: string, options: ChunkingOptions = {}):
 
     return chunks
   } catch (error) {
-    logger.error('[Chunking] 获取会话切片失败:', error)
+    logger.error('[Chunking] Failed to get session chunks:', error)
     return []
   } finally {
     if (db) {
@@ -372,7 +372,7 @@ export function getSessionChunk(dbPath: string, sessionId: number): Chunk | null
       },
     }
   } catch (error) {
-    logger.error('[Chunking] 获取单个会话切片失败:', error)
+    logger.error('[Chunking] Failed to get single session chunk:', error)
     return null
   } finally {
     if (db) {

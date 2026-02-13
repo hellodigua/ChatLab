@@ -42,7 +42,7 @@ function writeLog(level: string, message: string): void {
     fs.appendFileSync(getLogPath(), logLine, 'utf-8')
   } catch (error) {
     // 日志写入失败时静默处理，避免影响主程序
-    console.error('[Logger] 写入日志失败:', error)
+    console.error('[Logger] Failed to write log:', error)
   }
 }
 

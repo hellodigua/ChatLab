@@ -29,7 +29,7 @@ function configureUpdateProxy(): void {
     // 设置环境变量，electron-updater 会自动读取
     process.env.HTTPS_PROXY = proxyUrl
     process.env.HTTP_PROXY = proxyUrl
-    logger.info(`[Update] 使用代理: ${proxyUrl}`)
+    logger.info(`[Update] Using proxy: ${proxyUrl}`)
   } else {
     // 清除代理环境变量
     delete process.env.HTTPS_PROXY
@@ -59,7 +59,7 @@ function switchToGitHub(): void {
     owner: 'hellodigua',
     repo: 'ChatLab',
   })
-  logger.info('[Update] 已切换到 GitHub 备用源')
+  logger.info('[Update] Switched to GitHub fallback source')
 }
 
 /**
@@ -135,8 +135,8 @@ const checkUpdate = (win) => {
 
     // 预发布版本仅在手动检查时显示更新弹窗
     if (isPreRelease && !isManualCheck) {
-      console.log(`[Update] 发现预发布版本 ${info.version}，跳过自动更新提示`)
-      logger.info(`[Update] 发现预发布版本 ${info.version}，跳过自动更新提示（需手动检查更新）`)
+      console.log(`[Update] Pre-release version found: ${info.version}, skipping auto-update prompt`)
+      logger.info(`[Update] Pre-release version found: ${info.version}, skipping auto-update prompt (manual check required)`)
       return
     }
 
@@ -163,7 +163,7 @@ const checkUpdate = (win) => {
             })
             .catch((downloadError) => {
               // 下载失败记录到日志，不显示给用户
-              logger.error(`[Update] 下载更新失败: ${downloadError}`)
+              logger.error(`[Update] Download update failed: ${downloadError}`)
             })
         }
       })
@@ -171,7 +171,7 @@ const checkUpdate = (win) => {
 
   // 监听下载进度事件
   autoUpdater.on('download-progress', (progressObj) => {
-    console.log(`更新下载进度: ${progressObj.percent}%`)
+    console.log(`Update download progress: ${progressObj.percent}%`)
     win.webContents.send('update-download-progress', progressObj.percent)
   })
 
@@ -195,11 +195,11 @@ const checkUpdate = (win) => {
           // Windows 上先关闭 Worker 线程，确保进程能正常退出
           // 否则 NSIS 安装器可能无法关闭旧进程
           if (platform.isWindows) {
-            logger.info('[Update] Windows: 关闭 Worker 后再执行安装...')
+            logger.info('[Update] Windows: Closing worker before installing...')
             try {
               await closeWorkerAsync()
             } catch (error) {
-              logger.error(`[Update] 关闭 Worker 失败: ${error}`)
+              logger.error(`[Update] Failed to close worker: ${error}`)
             }
           }
 
@@ -227,19 +227,19 @@ const checkUpdate = (win) => {
 
   // 错误处理（智能切换备用源）
   autoUpdater.on('error', (err) => {
-    logger.error(`[Update] 更新错误 (${currentSource}): ${err.message || err}`)
+    logger.error(`[Update] Update error (${currentSource}): ${err.message || err}`)
 
     // 如果是 R2 源且为网络错误，尝试切换到 GitHub 备用源
     if (currentSource === 'r2' && !hasTriedFallback && isNetworkError(err)) {
       hasTriedFallback = true
-      logger.info('[Update] R2 镜像源访问失败，尝试切换到 GitHub 备用源...')
+      logger.info('[Update] R2 mirror failed, trying GitHub fallback...')
 
       switchToGitHub()
 
       // 延迟 1 秒后重试检查更新
       setTimeout(() => {
         autoUpdater.checkForUpdates().catch((retryErr) => {
-          logger.error(`[Update] GitHub 备用源检查更新也失败: ${retryErr}`)
+          logger.error(`[Update] GitHub fallback check also failed: ${retryErr}`)
         })
       }, 1000)
     }
@@ -251,7 +251,7 @@ const checkUpdate = (win) => {
     resetToDefaultSource() // 重置为默认更新源（R2 优先）
 
     autoUpdater.checkForUpdates().catch((err) => {
-      console.log('[Update] 检查更新失败:', err)
+      console.log('[Update] Update check failed:', err)
     })
   }, 3000)
 }
@@ -269,8 +269,8 @@ const manualCheckForUpdates = () => {
   resetToDefaultSource() // 重置为默认更新源（R2 优先）
 
   autoUpdater.checkForUpdates().catch((err) => {
-    console.log('[Update] 手动检查更新失败:', err)
-    logger.error(`[Update] 手动检查更新失败: ${err}`)
+    console.log('[Update] Manual update check failed:', err)
+    logger.error(`[Update] Manual update check failed: ${err}`)
   })
 }
 

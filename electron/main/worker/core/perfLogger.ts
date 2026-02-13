@@ -41,7 +41,7 @@ export function initPerfLog(sessionId: string): void {
     const logDir = getLogDir()
     currentLogFile = path.join(logDir, `import_${sessionId}_${Date.now()}.log`)
     // 写入头部
-    fs.writeFileSync(currentLogFile, `=== 导入日志 ===\n开始时间: ${new Date().toISOString()}\n\n`, 'utf-8')
+    fs.writeFileSync(currentLogFile, `=== Import Log ===\nStart time: ${new Date().toISOString()}\n\n`, 'utf-8')
   } catch {
     // 忽略初始化失败
   }
@@ -67,11 +67,11 @@ export function logPerf(event: string, messagesProcessed: number, batchSize?: nu
 
   const logLine =
     `[${new Date().toISOString()}] ${event} | ` +
-    `消息: ${messagesProcessed.toLocaleString()} | ` +
-    `耗时: ${duration}ms | ` +
-    `速度: ${speed.toLocaleString()}/秒 | ` +
-    `内存: ${memory}MB` +
-    (batchSize ? ` | 批次: ${batchSize}` : '') +
+    `messages: ${messagesProcessed.toLocaleString()} | ` +
+    `elapsed: ${duration}ms | ` +
+    `speed: ${speed.toLocaleString()}/s | ` +
+    `memory: ${memory}MB` +
+    (batchSize ? ` | batch: ${batchSize}` : '') +
     '\n'
 
   // 实时写入文件
@@ -166,11 +166,11 @@ export function logSummary(totalMessages: number, totalMembers: number): void {
   if (!currentLogFile) return
 
   const summary = `
-=== 导入摘要 ===
-结束时间: ${new Date().toISOString()}
-总消息数: ${totalMessages.toLocaleString()}
-总成员数: ${totalMembers.toLocaleString()}
-错误数: ${errorCount}
+=== Import Summary ===
+End time: ${new Date().toISOString()}
+Total messages: ${totalMessages.toLocaleString()}
+Total members: ${totalMembers.toLocaleString()}
+Errors: ${errorCount}
 `
   try {
     fs.appendFileSync(currentLogFile, summary, 'utf-8')

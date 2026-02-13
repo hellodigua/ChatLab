@@ -485,7 +485,7 @@ export class Agent {
    * @param userMessage 用户消息
    */
   async execute(userMessage: string): Promise<AgentResult> {
-    aiLogger.info('Agent', '用户问题', userMessage)
+    aiLogger.info('Agent', 'User question', userMessage)
 
     // 检查是否已中止
     if (this.isAborted()) {
@@ -540,7 +540,7 @@ export class Agent {
           } else {
             // 解析失败，返回清理后的内容
             const sanitizedContent = stripToolCallTags(cleanContent)
-            aiLogger.info('Agent', 'AI 回复', sanitizedContent)
+            aiLogger.info('Agent', 'AI response', sanitizedContent)
             return {
               content: sanitizedContent,
               toolsUsed: this.toolsUsed,
@@ -550,7 +550,7 @@ export class Agent {
           }
         } else {
           // 没有 tool_call 标签，正常完成
-          aiLogger.info('Agent', 'AI 回复', cleanContent)
+          aiLogger.info('Agent', 'AI response', cleanContent)
           return {
             content: cleanContent,
             toolsUsed: this.toolsUsed,
@@ -566,7 +566,7 @@ export class Agent {
     }
 
     // 超过最大轮数，强制让 LLM 总结
-    aiLogger.warn('Agent', '达到最大工具调用轮数', { maxRounds: this.config.maxToolRounds })
+    aiLogger.warn('Agent', 'Max tool call rounds reached', { maxRounds: this.config.maxToolRounds })
     this.messages.push({
       role: 'user',
       content: agentT('ai.agent.answerWithoutTools', this.locale),
@@ -589,7 +589,7 @@ export class Agent {
    * @param onChunk 流式回调
    */
   async executeStream(userMessage: string, onChunk: (chunk: AgentStreamChunk) => void): Promise<AgentResult> {
-    aiLogger.info('Agent', '用户问题', userMessage)
+    aiLogger.info('Agent', 'User question', userMessage)
 
     // 检查是否已中止
     if (this.isAborted()) {
@@ -670,7 +670,7 @@ export class Agent {
 
         if (chunk.tool_calls) {
           toolCalls = chunk.tool_calls
-          aiLogger.info('Agent', '收到 tool_calls', {
+          aiLogger.info('Agent', 'tool_calls received', {
             count: chunk.tool_calls.length,
             names: chunk.tool_calls.map((tc) => tc.function.name),
           })
@@ -682,7 +682,7 @@ export class Agent {
         }
 
         if (chunk.isFinished) {
-          aiLogger.info('Agent', '流结束', {
+          aiLogger.info('Agent', 'Stream ended', {
             finishReason: chunk.finishReason,
             hasToolCalls: !!toolCalls,
             toolCallsCount: toolCalls?.length ?? 0,
@@ -712,13 +712,13 @@ export class Agent {
                     onChunk({ type: 'content', content: remainingContent })
                   }
                 } else if (sanitizedContent) {
-                  aiLogger.warn('Agent', '流式内容与清理结果不一致，跳过补发', {
+                  aiLogger.warn('Agent', 'Stream content differs from cleaned result, skipping resend', {
                     roundContentLength: roundContent.length,
                     sanitizedLength: sanitizedContent.length,
                   })
                 }
                 finalContent = sanitizedContent
-                aiLogger.info('Agent', 'AI 回复', finalContent)
+                aiLogger.info('Agent', 'AI response', finalContent)
                 onChunk({ type: 'done', isFinished: true, usage: this.totalUsage })
                 return {
                   content: finalContent,
@@ -736,13 +736,13 @@ export class Agent {
                   onChunk({ type: 'content', content: remainingContent })
                 }
               } else if (sanitizedContent) {
-                aiLogger.warn('Agent', '流式内容与清理结果不一致，跳过补发', {
+                aiLogger.warn('Agent', 'Stream content differs from cleaned result, skipping resend', {
                   roundContentLength: roundContent.length,
                   sanitizedLength: sanitizedContent.length,
                 })
               }
               finalContent = sanitizedContent
-              aiLogger.info('Agent', 'AI 回复', finalContent)
+              aiLogger.info('Agent', 'AI response', finalContent)
               onChunk({ type: 'done', isFinished: true, usage: this.totalUsage })
               return {
                 content: finalContent,
@@ -797,7 +797,7 @@ export class Agent {
     }
 
     // 超过最大轮数
-    aiLogger.warn('Agent', '达到最大工具调用轮数', { maxRounds: this.config.maxToolRounds })
+    aiLogger.warn('Agent', 'Max tool call rounds reached', { maxRounds: this.config.maxToolRounds })
 
     // 检查是否已中止
     if (this.isAborted()) {
@@ -862,7 +862,7 @@ export class Agent {
             onChunk({ type: 'content', content: remainingContent })
           }
         } else if (sanitizedContent) {
-          aiLogger.warn('Agent', '最终内容与清理结果不一致，跳过补发', {
+          aiLogger.warn('Agent', 'Final content differs from cleaned result, skipping resend', {
             finalContentLength: finalContent.length,
             sanitizedLength: sanitizedContent.length,
           })
@@ -889,7 +889,7 @@ export class Agent {
   private async handleToolCalls(toolCalls: ToolCall[], onChunk?: (chunk: AgentStreamChunk) => void): Promise<void> {
     // 记录调用的工具及参数
     for (const tc of toolCalls) {
-      aiLogger.info('Agent', `工具调用: ${tc.function.name}`, tc.function.arguments)
+      aiLogger.info('Agent', `Tool call: ${tc.function.name}`, tc.function.arguments)
     }
 
     // 添加 assistant 消息（包含 tool_calls）
@@ -920,9 +920,9 @@ export class Agent {
 
       // 记录工具执行结果
       if (result.success) {
-        aiLogger.info('Agent', `工具结果: ${tc.function.name}`, result.result)
+        aiLogger.info('Agent', `Tool result: ${tc.function.name}`, result.result)
       } else {
-        aiLogger.warn('Agent', `工具失败: ${tc.function.name}`, result.error)
+        aiLogger.warn('Agent', `Tool failed: ${tc.function.name}`, result.error)
       }
 
       // 添加工具结果消息

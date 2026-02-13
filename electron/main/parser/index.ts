@@ -120,7 +120,7 @@ export async function* parseFile(options: ParseOptions): AsyncGenerator<ParseEve
     return
   }
 
-  console.log(`[Parser V2] 使用解析器: ${parser.feature.name}`)
+  console.log(`[Parser V2] Using parser: ${parser.feature.name}`)
   yield* parser.parse(options)
 }
 

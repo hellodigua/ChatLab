@@ -106,14 +106,14 @@ function detectConflictsInMessages(
     }
     timeGroups.get(ts)!.push(item)
   }
-  console.log(`[Merger] 唯一时间戳数: ${timeGroups.size}`)
+  console.log(`[Merger] Unique timestamps: ${timeGroups.size}`)
 
   // 统计有多条消息的时间戳
   let multiMsgTsCount = 0
   for (const [, items] of timeGroups) {
     if (items.length > 1) multiMsgTsCount++
   }
-  console.log(`[Merger] 有多条消息的时间戳数: ${multiMsgTsCount}`)
+  console.log(`[Merger] Timestamps with multiple messages: ${multiMsgTsCount}`)
 
   // 统计自动去重数量
   let autoDeduplicatedCount = 0
@@ -189,11 +189,11 @@ function detectConflictsInMessages(
 
             // 打印冲突详情
             if (conflicts.length < 5) {
-              console.log(`[Merger] 冲突 #${conflicts.length + 1}:`)
-              console.log(`  时间戳: ${ts} (${new Date(ts * 1000).toLocaleString()})`)
-              console.log(`  发送者: ${sender} (${item1.msg.senderName})`)
-              console.log(`  文件1: ${item1.source}, 长度: ${content1.length}, 内容: "${content1.slice(0, 50)}..."`)
-              console.log(`  文件2: ${item2.source}, 长度: ${content2.length}, 内容: "${content2.slice(0, 50)}..."`)
+              console.log(`[Merger] Conflict #${conflicts.length + 1}:`)
+              console.log(`  Timestamp: ${ts} (${new Date(ts * 1000).toLocaleString()})`)
+              console.log(`  Sender: ${sender} (${item1.msg.senderName})`)
+              console.log(`  File1: ${item1.source}, length: ${content1.length}, content: "${content1.slice(0, 50)}..."`)
+              console.log(`  File2: ${item2.source}, length: ${content2.length}, content: "${content2.slice(0, 50)}..."`)
             }
 
             conflicts.push({
@@ -211,16 +211,16 @@ function detectConflictsInMessages(
     }
   }
 
-  console.log(`[Merger] 自动去重消息数（含图片冲突）: ${autoDeduplicatedCount}`)
+  console.log(`[Merger] Auto-deduplicated messages (incl. image conflicts): ${autoDeduplicatedCount}`)
 
-  console.log(`[Merger] 检测到冲突数: ${conflicts.length}`)
+  console.log(`[Merger] Conflicts detected: ${conflicts.length}`)
 
   // 计算去重后的消息数
   const uniqueKeys = new Set<string>()
   for (const item of allMessages) {
     uniqueKeys.add(getMessageKey(item.msg))
   }
-  console.log(`[Merger] 去重后消息数: ${uniqueKeys.size}`)
+  console.log(`[Merger] Messages after dedup: ${uniqueKeys.size}`)
 
   return {
     conflicts,
@@ -235,7 +235,7 @@ export async function mergeFilesWithCache(params: MergeParams, cache: Map<string
   try {
     const { filePaths, outputName, outputDir, conflictResolutions, andAnalyze } = params
 
-    console.log('[Merger] mergeFilesWithCache: 开始合并')
+    console.log('[Merger] mergeFilesWithCache: Starting merge')
     console.log(
       '[Merger] 缓存状态:',
       filePaths.map((p) => `${path.basename(p)}: ${cache.has(p) ? '已缓存' : '未缓存'}`)
@@ -247,10 +247,10 @@ export async function mergeFilesWithCache(params: MergeParams, cache: Map<string
       let result: ParseResult
       if (cache.has(filePath)) {
         result = cache.get(filePath)!
-        console.log(`[Merger] 使用缓存: ${path.basename(filePath)}`)
+        console.log(`[Merger] Cache hit: ${path.basename(filePath)}`)
       } else {
         // 回退到文件解析（兼容性）
-        console.log(`[Merger] 缓存未命中，重新解析: ${path.basename(filePath)}`)
+        console.log(`[Merger] Cache miss, re-parsing: ${path.basename(filePath)}`)
         result = await parseFileSync(filePath)
       }
       parseResults.push({ result, source: path.basename(filePath) })
@@ -277,7 +277,7 @@ export async function checkConflictsWithTempDb(
   const allMessages: Array<{ msg: ParsedMessage; source: string }> = []
   const conflicts: MergeConflict[] = []
 
-  console.log('[Merger] checkConflictsWithTempDb: 开始检测冲突')
+  console.log('[Merger] checkConflictsWithTempDb: Checking conflicts')
   console.log(
     '[Merger] 文件列表:',
     filePaths.map((p) => path.basename(p))
@@ -302,7 +302,7 @@ export async function checkConflictsWithTempDb(
       const meta = reader.getMeta()
       const sourceName = path.basename(filePath)
 
-      console.log(`[Merger] 从临时数据库读取: ${sourceName}, 平台: ${meta?.platform}`)
+      console.log(`[Merger] Reading from temp DB: ${sourceName}, platform: ${meta?.platform}`)
 
       // 流式读取消息，避免一次性加载到内存
       reader.streamMessages(10000, (messages) => {
@@ -312,7 +312,7 @@ export async function checkConflictsWithTempDb(
       })
     }
 
-    console.log(`[Merger] 总消息数: ${allMessages.length}`)
+    console.log(`[Merger] Total messages: ${allMessages.length}`)
 
     // 检查格式一致性
     const platforms = readers.map((r) => r.getMeta()?.platform || 'unknown')
@@ -322,7 +322,7 @@ export async function checkConflictsWithTempDb(
         `不支持合并不同格式的聊天记录。\n检测到的格式：${uniquePlatforms.join('、')}\n请确保所有文件使用相同的导出工具和格式。`
       )
     }
-    console.log('[Merger] 格式检查通过:', uniquePlatforms[0])
+    console.log('[Merger] Format check passed:', uniquePlatforms[0])
 
     return detectConflictsInMessages(allMessages, conflicts)
   } finally {
@@ -342,7 +342,7 @@ export async function mergeFilesWithTempDb(
 ): Promise<MergeResult> {
   const { filePaths, outputName, outputDir, outputFormat = 'json', conflictResolutions, andAnalyze } = params
 
-  console.log('[Merger] mergeFilesWithTempDb: 开始合并')
+  console.log('[Merger] mergeFilesWithTempDb: Starting merge')
   console.log(
     '[Merger] 临时数据库缓存状态:',
     filePaths.map((p) => `${path.basename(p)}: ${tempDbCache.has(p) ? '已缓存' : '未缓存'}`)
@@ -371,7 +371,7 @@ export async function mergeFilesWithTempDb(
       const members = reader.getMembers()
       const sourceName = path.basename(filePath)
 
-      console.log(`[Merger] 使用临时数据库: ${sourceName}`)
+      console.log(`[Merger] Using temp database: ${sourceName}`)
 
       parseResults.push({ meta, members, source: sourceName, reader })
     }
@@ -441,15 +441,15 @@ export async function mergeFilesWithTempDb(
         totalProcessed += messages.length
       })
 
-      console.log(`[Merger] 处理 ${source}: ${readerCount} 条唯一消息, 耗时: ${Date.now() - readerStartTime}ms`)
+      console.log(`[Merger] Processing ${source}: ${readerCount}  unique messages, elapsed: ${Date.now() - readerStartTime}ms`)
     }
 
     // 排序
     const sortStartTime = Date.now()
     mergedMessages.sort((a, b) => a.timestamp - b.timestamp)
-    console.log(`[Merger] 排序耗时: ${Date.now() - sortStartTime}ms`)
+    console.log(`[Merger] Sort elapsed: ${Date.now() - sortStartTime}ms`)
 
-    console.log(`[Merger] 合并后消息数: ${mergedMessages.length}`)
+    console.log(`[Merger] Messages after merge: ${mergedMessages.length}`)
 
     // 确定平台（使用第一个文件的平台）
     const platform = parseResults[0].meta.platform
@@ -537,7 +537,7 @@ export async function mergeFilesWithTempDb(
         writeStream.on('error', reject)
       })
 
-      console.log(`[Merger] 写入 JSONL 文件耗时: ${Date.now() - writeStartTime}ms`)
+      console.log(`[Merger] Write JSONL elapsed: ${Date.now() - writeStartTime}ms`)
     } else {
       // JSON 格式：格式化输出
       const chatLabData: ChatLabFormat = {
@@ -547,9 +547,9 @@ export async function mergeFilesWithTempDb(
         messages: mergedMessages,
       }
       fs.writeFileSync(outputPath, JSON.stringify(chatLabData, null, 2), 'utf-8')
-      console.log(`[Merger] 写入 JSON 文件耗时: ${Date.now() - writeStartTime}ms`)
+      console.log(`[Merger] Write JSON elapsed: ${Date.now() - writeStartTime}ms`)
     }
-    console.log(`[Merger] 总合并耗时: ${Date.now() - startTime}ms`)
+    console.log(`[Merger] Total merge elapsed: ${Date.now() - startTime}ms`)
 
     // 如果需要分析，导入数据库
     let sessionId: string | undefined
@@ -579,7 +579,7 @@ export async function mergeFilesWithTempDb(
         })),
       }
       sessionId = importData(parseResult)
-      console.log(`[Merger] 导入数据库耗时: ${Date.now() - importStartTime}ms`)
+      console.log(`[Merger] Database import elapsed: ${Date.now() - importStartTime}ms`)
     }
 
     return {
@@ -699,7 +699,7 @@ export async function exportSessionToTempFile(sessionId: string): Promise<string
     const tempFilePath = path.join(tempDir, `export_${sessionId}_${Date.now()}.json`)
     fs.writeFileSync(tempFilePath, JSON.stringify(chatLabData, null, 2), 'utf-8')
 
-    console.log(`[Merger] 导出会话到临时文件: ${tempFilePath}, 消息数: ${messages.length}`)
+    console.log(`[Merger] Exporting session to temp file: ${tempFilePath}, message count: ${messages.length}`)
 
     return tempFilePath
   } finally {
@@ -715,10 +715,10 @@ export function cleanupTempExportFiles(filePaths: string[]): void {
     try {
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath)
-        console.log(`[Merger] 清理临时文件: ${filePath}`)
+        console.log(`[Merger] Cleaning up temp file: ${filePath}`)
       }
     } catch (err) {
-      console.error(`[Merger] 清理临时文件失败: ${filePath}`, err)
+      console.error(`[Merger] Failed to clean up temp file: ${filePath}`, err)
     }
   }
 }

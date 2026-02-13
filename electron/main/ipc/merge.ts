@@ -34,7 +34,7 @@ export function cleanupTempDbs(): void {
     deleteTempDatabase(tempDbPath)
   }
   tempDbCache.clear()
-  console.log('[IpcMain] 已清理所有临时数据库缓存')
+  console.log('[IpcMain] Cleaned up all temp databases')
 }
 
 /**
@@ -69,7 +69,7 @@ export function registerMergeHandlers(ctx: IpcContext): void {
       // 这样即使用户删除本地文件，也能继续合并（数据已在临时数据库中）
       if (result.tempDbPath) {
         tempDbCache.set(filePath, result.tempDbPath)
-        console.log(`[IpcMain] 已缓存临时数据库: ${filePath} -> ${result.tempDbPath}`)
+        console.log(`[IpcMain] Cached temp database: ${filePath} -> ${result.tempDbPath}`)
       }
 
       // 返回基本信息
@@ -82,7 +82,7 @@ export function registerMergeHandlers(ctx: IpcContext): void {
         fileSize: result.fileSize,
       }
     } catch (error) {
-      console.error('解析文件信息失败：', error)
+      console.error('Failed to parse file info:', error)
       throw error
     }
   })
@@ -94,7 +94,7 @@ export function registerMergeHandlers(ctx: IpcContext): void {
     try {
       return merger.checkConflictsWithTempDb(filePaths, tempDbCache)
     } catch (error) {
-      console.error('检测冲突失败：', error)
+      console.error('Failed to detect conflicts:', error)
       throw error
     }
   })
@@ -113,7 +113,7 @@ export function registerMergeHandlers(ctx: IpcContext): void {
       }
       return result
     } catch (error) {
-      console.error('合并失败：', error)
+      console.error('Failed to merge:', error)
       return { success: false, error: String(error) }
     }
   })

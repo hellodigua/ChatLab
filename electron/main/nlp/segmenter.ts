@@ -26,9 +26,9 @@ function getJieba(): JiebaInstance {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { dict } = require('@node-rs/jieba/dict')
       jiebaInstance = Jieba.withDict(dict)
-      console.log('[NLP] jieba 模块加载成功')
+      console.log('[NLP] jieba module loaded')
     } catch (error) {
-      console.error('[NLP] jieba 模块加载失败:', error)
+      console.error('[NLP] Failed to load jieba module:', error)
       throw new Error('jieba 模块加载失败')
     }
   }
@@ -174,7 +174,7 @@ export function collectPosTagStats(
       }
     }
   } catch (error) {
-    console.error('[NLP] 收集词性统计失败:', error)
+    console.error('[NLP] Failed to collect POS stats:', error)
   }
 
   return posStats
@@ -212,7 +212,7 @@ function segmentChinese(text: string, options: ChineseSegmentOptions = {}): stri
 
     return tagged.filter((item) => allowedTags.has(item.tag)).map((item) => item.word)
   } catch (error) {
-    console.error('[NLP] 中文分词失败:', error)
+    console.error('[NLP] Chinese segmentation failed:', error)
     // 降级：使用简单分词
     try {
       const jieba = getJieba()

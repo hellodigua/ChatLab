@@ -224,7 +224,7 @@ export class MemoryVectorStore implements IVectorStore {
     this.cache.clear()
     this.head = null
     this.tail = null
-    logger.info('[Memory Store] 已清空所有向量')
+    logger.info('[Memory Store] All vectors cleared')
   }
 
   /**
@@ -258,6 +258,6 @@ export class MemoryVectorStore implements IVectorStore {
    */
   async close(): Promise<void> {
     // 内存存储无需关闭操作
-    logger.info('[Memory Store] 已关闭')
+    logger.info('[Memory Store] Closed')
   }
 }

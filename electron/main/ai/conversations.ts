@@ -82,10 +82,10 @@ function migrateAiDatabase(db: Database.Database): void {
     // 检查并添加 content_blocks 列
     if (!columnNames.includes('content_blocks')) {
       db.exec('ALTER TABLE ai_message ADD COLUMN content_blocks TEXT')
-      console.log('[AI DB Migration] 添加 content_blocks 列')
+      console.log('[AI DB Migration] Adding content_blocks column')
     }
   } catch (error) {
-    console.error('[AI DB Migration] 迁移失败：', error)
+    console.error('[AI DB Migration] Migration failed:', error)
   }
 }
 

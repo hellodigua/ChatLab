@@ -78,7 +78,7 @@ export function cleanupTempDatabase(dbPath: string): void {
       fs.unlinkSync(dbPath)
     }
   } catch (err) {
-    console.error('清理临时数据库失败:', err)
+    console.error('Failed to clean up temp databases:', err)
   }
 }
 
