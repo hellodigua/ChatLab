@@ -2,37 +2,34 @@
 
 <img src="./public/images/chatlab.svg" alt="ChatLab" title="ChatLab" width="300" />
 
-Local-first chat analysis tool: Relive your social memories powered by SQL and AI Agents.
+Turn messy chat exports into clear, local-first insights.
 
 English | [简体中文](./README.zh-CN.md)
 
-[Project Website](https://chatlab.fun/) · [Documentation](https://chatlab.fun/usage/) · [Roadmap](https://chatlabfun.featurebase.app/roadmap) · [Issue Submission](https://github.com/hellodigua/ChatLab/issues)
+[Official Website](https://chatlab.fun/) · [Download](https://chatlab.fun/?type=download) · [Documentation](https://chatlab.fun/usage/) · [Roadmap](https://chatlabfun.featurebase.app/roadmap) · [Issue Submission](https://github.com/hellodigua/ChatLab/issues)
 
 </div>
 
-ChatLab is a free, open-source, and local-first application dedicated to analyzing chat records. Through an AI Agent and a flexible SQL engine, you can freely dissect, query, and even reconstruct your social data.
+ChatLab is an open-source desktop app for understanding your social conversations. It combines a flexible SQL engine with AI agents so you can explore patterns, ask better questions, and extract insights from chat data, all on your own machine.
 
-We refuse to upload your privacy to the cloud; instead, we bring powerful analytics directly to your computer.
-
-Currently supported: Chat record analysis for **LINE, WeChat, QQ, WhatsApp, Instagram and Discord**. Upcoming support: **Messenger, iMessage**.
-
-The project is still in early iteration, so there are many bugs and unfinished features. If you encounter any issues, feel free to provide feedback.
+Currently supported: **WhatsApp, LINE, WeChat, QQ, Discord, Instagram, and Telegram**. Coming next: **iMessage, Messenger, and KakaoTalk**.
 
 ## Core Features
 
-- 🚀 **Ultimate Performance**: Utilizing stream computing and multi-threaded parallel architecture, it maintains fluid interaction and response even with millions of chat records.
-- 🔒 **Privacy Protection**: Chat records and configurations are stored in your local database, and all analysis is performed locally (with the exception of AI features).
-- 🤖 **Intelligent AI Agent**: Integrated with 10+ Function Calling tools and supporting dynamic scheduling to deeply excavate interesting insights from chat records.
-- 📊 **Multi-dimensional Data Visualization**: Provides intuitive analysis charts for activity trends, time distribution patterns, member rankings, and more.
-- 🧩 **Format Standardization**: Through a powerful data abstraction layer, it bridges the format differences between various chat applications, allowing any chat records to be analyzed.
+- 🚀 **Built for large histories**: Stream parsing and multi-worker processing keep imports and analysis responsive, even at million-message scale.
+- 🔒 **Private by default**: Your chat data and settings stay local. No mandatory cloud upload of raw conversations.
+- 🤖 **AI that can actually operate on data**: Agent + Function Calling workflows can search, summarize, and analyze chat records with context.
+- 📊 **Insight-rich visual views**: See trends, time patterns, interaction frequency, rankings, and more in one place.
+- 🧩 **Cross-platform normalization**: Different export formats are mapped into a unified model so you can analyze them consistently.
 
 ## Usage Guides
 
+- [Download Guide](https://chatlab.fun/?type=download)
 - [Chat Record Export Guide](https://chatlab.fun/usage/how-to-export.html)
 - [Standardized Format Specification](https://chatlab.fun/usage/chatlab-format.html)
 - [Troubleshooting Guide](https://chatlab.fun/usage/troubleshooting.html)
 
-## Preview Interface
+## Preview
 
 For more previews, please visit the official website: [chatlab.fun](https://chatlab.fun/)
 
@@ -40,42 +37,67 @@ For more previews, please visit the official website: [chatlab.fun](https://chat
 
 ## System Architecture
 
-### Electron Main Process
+### Architecture Principles
 
-- `electron/main/index.ts` handles the application lifecycle, window management, and custom protocol registration.
-- `electron/main/ipc/` splits IPC modules by function (Window, Chat, Merge, AI, Cache) to ensure secure and controllable data exchange.
-- `electron/main/ai/` integrates multiple LLMs, featuring built-in Agent pipelines, prompt assembly, and Function Calling tool registration.
+- **Local-first by default**: Raw chat data, indexes, and settings remain on-device unless you explicitly choose otherwise.
+- **Streaming over buffering**: Stream-first parsing and incremental processing keep large imports stable and memory-efficient.
+- **Composable intelligence**: AI features are assembled through Agent + Tool Calling, not hard-coded into one model path.
+- **Schema-first evolution**: Import, query, analysis, and visualization share a consistent data model that scales with new features.
 
-### Worker and Data Pipeline
+### Runtime Architecture
 
-- The `workerManager` in `electron/main/worker/` coordinates Worker threads, while `dbWorker` handles message routing.
-- `worker/query/*` handles activity, AI search, advanced analysis, and SQL Lab queries.
-- `worker/import/streamImport.ts` provides stream importing.
-- The `parser/` directory adopts a three-layer "sniff + parse" architecture capable of processing GB-level log files with constant memory usage.
+- **Main Process (control plane)**: `electron/main/index.ts` handles lifecycle and windows. `electron/main/ipc/` defines domain-scoped IPC, while `electron/main/ai/` and `electron/main/i18n/` provide shared AI and localization services.
+- **Worker Layer (compute plane)**: `electron/main/worker/` runs import, indexing, and query tasks via `workerManager`, keeping CPU-heavy work off the UI thread.
+- **Renderer Layer (interaction plane)**: Vue 3 + Nuxt UI + Tailwind CSS drive management, private chat, group chat, and analysis interfaces. `electron/preload/index.ts` exposes tightly scoped APIs for secure process boundaries.
 
-### Rendering Process
+### Data Pipeline
 
-- Vue 3 + Nuxt UI + Tailwind CSS manages the visualization pages.
-- `src/pages` contains business pages, while `src/components/analysis` and `src/components/charts` provide reusable components.
-- `src/stores` manages states like sessions, layout, and AI prompts via Pinia.
-- `src/composables/useAIChat.ts` encapsulates the AI conversation workflow.
-- The preload script `electron/preload/index.ts` exposes `window.chatApi/mergeApi/aiApi/llmApi`, ensuring secure isolation between the renderer and main processes.
+1. **Ingestion**: `parser/` detects file format and dispatches to the matching parser module.
+2. **Persistence**: Stream-based writes populate core local entities: sessions, members, and messages.
+3. **Indexing**: Session- and time-oriented indexes are built for timeline navigation and retrieval.
+4. **Query & Analysis**: `worker/query/*` powers activity metrics, interaction analysis, SQL Lab, and AI-assisted exploration.
+5. **Presentation**: The renderer turns query output into charts, rankings, timelines, and conversational analysis flows.
+
+### Extensibility & Reliability
+
+- **Pluggable parser architecture**: Adding a new import source is mostly an extension in `parser/formats/*`, without reworking downstream query logic.
+- **Full + incremental import paths**: `streamImport.ts` and `incrementalImport.ts` support both first-time onboarding and ongoing updates.
+- **Modular IPC boundaries**: Domain-based IPC segmentation reduces cross-layer coupling and limits permission spread.
+- **Unified i18n evolution**: Main and renderer processes share an i18n system that can evolve with product scope.
 
 ---
 
 ## Local Development
 
-### Setup Steps
+### Requirements
 
-Node.js environment requirement: v20+
+- Node.js >= 20
+- pnpm
+
+### Setup
 
 ```bash
-# Install dependencies
+# install dependencies
 pnpm install
 
-# Start development server
-pnpm run dev
+# run electron app in dev mode
+pnpm dev
+```
 
+### Common Scripts
+
+```bash
+# type checks (web + node)
+pnpm type-check:all
+
+# lint and auto-fix
+pnpm lint
+
+# format files
+pnpm format
+
+# build app
+pnpm build
 ```
 
 If Electron encounters exceptions during startup, you can try using `electron-fix`:
@@ -86,7 +108,7 @@ electron-fix start
 
 ```
 
-## Contribution Guide
+## Contributing
 
 Please follow these principles before submitting a Pull Request:
 
