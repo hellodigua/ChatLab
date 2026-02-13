@@ -76,37 +76,8 @@ export interface TokenUsage {
   totalTokens: number
 }
 
-// 工具名称多语言映射
-const TOOL_DISPLAY_NAMES_I18N: Record<string, Record<string, string>> = {
-  'zh-CN': {
-    search_messages: '搜索聊天记录',
-    get_recent_messages: '获取最近消息',
-    get_member_stats: '获取成员统计',
-    get_time_stats: '获取时间分布',
-    get_group_members: '获取成员列表',
-    get_member_name_history: '获取昵称历史',
-    get_conversation_between: '获取对话记录',
-    get_message_context: '获取上下文',
-    semantic_search_messages: '🔍 语义搜索',
-  },
-  'en-US': {
-    search_messages: 'Search Messages',
-    get_recent_messages: 'Get Recent Messages',
-    get_member_stats: 'Get Member Stats',
-    get_time_stats: 'Get Time Stats',
-    get_group_members: 'Get Members',
-    get_member_name_history: 'Get Nickname History',
-    get_conversation_between: 'Get Conversation',
-    get_message_context: 'Get Message Context',
-    semantic_search_messages: '🔍 Semantic Search',
-  },
-}
-
-// 获取工具显示名称
-function getToolDisplayName(toolName: string, locale: string): string {
-  const names = TOOL_DISPLAY_NAMES_I18N[locale] || TOOL_DISPLAY_NAMES_I18N['zh-CN']
-  return names[toolName] || toolName
-}
+// 工具显示名称通过 vue-i18n 管理: ai.chat.message.tools.*
+// 渲染层 (ChatMessage.vue, AIThinkingIndicator.vue) 使用 t() 动态获取
 
 /** Owner 信息类型 */
 interface OwnerInfo {
@@ -335,7 +306,7 @@ export function useAIChat(
         type: 'tool',
         tool: {
           name: toolName,
-          displayName: getToolDisplayName(toolName, locale),
+          displayName: toolName,
           status: 'running',
           params,
         },
@@ -443,7 +414,7 @@ export function useAIChat(
                 const toolParams = chunk.toolParams as Record<string, unknown> | undefined
                 currentToolStatus.value = {
                   name: chunk.toolName,
-                  displayName: getToolDisplayName(chunk.toolName, locale),
+                  displayName: chunk.toolName,
                   status: 'running',
                 }
                 toolsUsedInCurrentRound.value.push(chunk.toolName)

@@ -22,6 +22,17 @@
     "message": {
       "userAvatar": "用户头像",
       "calling": "调用",
+      "tools": {
+        "search_messages": "搜索聊天记录",
+        "get_recent_messages": "获取最近消息",
+        "get_member_stats": "获取成员统计",
+        "get_time_stats": "获取时间分布",
+        "get_group_members": "获取成员列表",
+        "get_member_name_history": "获取昵称历史",
+        "get_conversation_between": "获取对话记录",
+        "get_message_context": "获取上下文",
+        "semantic_search_messages": "🔍 语义搜索"
+      },
       "generating": "正在生成回复...",
       "think": {
         "labels": {

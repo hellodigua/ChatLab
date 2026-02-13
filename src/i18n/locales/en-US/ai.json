@@ -22,6 +22,17 @@
     "message": {
       "userAvatar": "User Avatar",
       "calling": "Calling",
+      "tools": {
+        "search_messages": "Search Messages",
+        "get_recent_messages": "Get Recent Messages",
+        "get_member_stats": "Get Member Stats",
+        "get_time_stats": "Get Time Stats",
+        "get_group_members": "Get Members",
+        "get_member_name_history": "Get Nickname History",
+        "get_conversation_between": "Get Conversation",
+        "get_message_context": "Get Message Context",
+        "semantic_search_messages": "🔍 Semantic Search"
+      },
       "generating": "Generating response...",
       "think": {
         "labels": {

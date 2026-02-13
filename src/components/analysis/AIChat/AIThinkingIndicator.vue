@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+const { t, te } = useI18n()
+
+// 获取工具的本地化显示名称
+function localizedToolName(name: string, fallback?: string): string {
+  const key = `ai.chat.message.tools.${name}`
+  return te(key) ? t(key) : (fallback || name)
+}
 
 // Props
 defineProps<{
@@ -51,7 +57,7 @@ defineProps<{
               class="h-3 w-3"
               :class="{ 'animate-spin': currentToolStatus.status === 'running' }"
             />
-            {{ currentToolStatus.displayName }}
+            {{ localizedToolName(currentToolStatus.name, currentToolStatus.displayName) }}
           </span>
 
           <!-- 运行中的动画 -->
@@ -84,7 +90,7 @@ defineProps<{
             class="inline-flex items-center gap-1 rounded-full bg-gray-200 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-400"
           >
             <UIcon name="i-heroicons-check" class="h-3 w-3 text-green-500" />
-            {{ tool }}
+            {{ localizedToolName(tool) }}
           </span>
         </div>
       </div>
