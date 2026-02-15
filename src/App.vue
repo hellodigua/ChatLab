@@ -30,6 +30,14 @@ const tooltip = {
 
 // 应用启动时初始化
 onMounted(async () => {
+  // 平台检测 - 设置 CSS 类名以驱动平台差异化样式（如标题栏安全区域高度）
+  const platform = navigator.platform.toLowerCase()
+  if (platform.includes('win')) {
+    document.documentElement.classList.add('platform-windows')
+  } else if (platform.includes('linux')) {
+    document.documentElement.classList.add('platform-linux')
+  }
+
   // 初始化语言设置（同步 i18n 和 dayjs）
   settingsStore.initLocale()
   // 初始化 LLM 配置（预加载，避免首次使用时延迟）

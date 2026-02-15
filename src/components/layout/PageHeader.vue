@@ -15,9 +15,9 @@ defineProps<{
 
 <template>
   <div class="relative border-b border-gray-200/50 px-6 pb-2 dark:border-gray-800/50">
-    <!-- 拖拽区域 - 仅覆盖顶部区域 (包含上方 padding 的 16px + 头部内部 16px) -->
-    <!-- 这样既保证了顶部可以拖拽，又不会遮挡 Header 内部的按钮和交互元素 -->
-    <div class="absolute -top-4 left-0 right-0 h-8 z-50" style="-webkit-app-region: drag" />
+    <!-- 拖拽区域 - 覆盖顶部安全区域（平台自适应）
+         macOS: 16px padding + 16px = 32px | Windows/Linux: 32px padding + 16px = 48px -->
+    <div class="titlebar-drag-cover" />
 
     <!-- 标题区域 -->
     <div class="flex items-center justify-between">
@@ -51,3 +51,16 @@ defineProps<{
     <slot />
   </div>
 </template>
+
+<style scoped>
+/* 标题栏拖拽覆盖区域 - 使用 CSS 变量实现平台自适应高度 */
+.titlebar-drag-cover {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  top: calc(-1 * var(--titlebar-area-height));
+  height: calc(var(--titlebar-area-height) + 1rem);
+  -webkit-app-region: drag;
+}
+</style>

@@ -186,7 +186,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex h-full flex-col bg-white pt-4 dark:bg-gray-900">
+  <div class="flex h-full flex-col bg-white dark:bg-gray-900" style="padding-top: var(--titlebar-area-height)">
     <!-- Loading State -->
     <LoadingState v-if="isInitialLoad" variant="page" :text="t('analysis.groupChat.loading')" />
 
