@@ -1,5 +1,27 @@
 [
   {
+    "version": "0.11.2",
+    "date": "2026-02-15",
+    "summary": "Improve chat import workflows and management tools, while enhancing cross-platform parser compatibility.",
+    "changes": [
+      {
+        "type": "feat",
+        "items": [
+          "Improve parser compatibility for LINE and WhatsApp formats.",
+          "Improve the chat sniffing layer with polling detection and a fallback strategy.",
+          "Support Shift multi-select in the Manage page.",
+          "Show chat summary count and AI conversation count in the Manage page.",
+          "Optimize the main-page layout to provide more usable space.",
+          "Improve top-right window controls styling on Windows."
+        ]
+      },
+      {
+        "type": "docs",
+        "items": ["Update project documentation."]
+      }
+    ]
+  },
+  {
     "version": "0.11.0",
     "date": "2026-02-13",
     "summary": "Add Telegram import, improve incremental import UX, strengthen i18n coverage, and fix indexing and page flicker issues.",
