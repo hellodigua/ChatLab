@@ -487,7 +487,9 @@ export function useAIChat(
 
             case 'status':
               if (chunk.status) {
-                agentStatus.value = chunk.status
+                if (!agentStatus.value || chunk.status.updatedAt >= agentStatus.value.updatedAt) {
+                  agentStatus.value = chunk.status
+                }
               }
               break
 
@@ -726,9 +728,7 @@ export function useAIChat(
     isAIThinking.value = false
     isLoadingSource.value = false
     currentToolStatus.value = null
-    if (agentStatus.value) {
-      setAgentPhase('aborted')
-    }
+    setAgentPhase('aborted')
 
     // 调用主进程中止 Agent 请求
     if (currentAgentRequestId) {
