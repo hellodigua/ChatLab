@@ -26,7 +26,7 @@ ChatLab 是一个专注于社交记录分析的本地化应用。通过 AI 智�
 
 - [下载 ChatLab 指南](https://chatlab.fun/cn/?type=download)
 - [导出聊天记录指南](https://chatlab.fun/cn/usage/how-to-export.html)
-- [标准化格式规范](https://chatlab.fun/cn/usage/chatlab-format.html)
+- [标准化格式规范](https://chatlab.fun/cn/standard/chatlab-format.html)
 - [故障排查指南](https://chatlab.fun/cn/usage/troubleshooting.html)
 
 ## 预览界面

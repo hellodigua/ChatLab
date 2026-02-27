@@ -26,7 +26,7 @@ Currently supported: **WhatsApp, LINE, WeChat, QQ, Discord, Instagram, and Teleg
 
 - [Download Guide](https://chatlab.fun/?type=download)
 - [Chat Record Export Guide](https://chatlab.fun/usage/how-to-export.html)
-- [Standardized Format Specification](https://chatlab.fun/usage/chatlab-format.html)
+- [Standardized Format Specification](https://chatlab.fun/standard/chatlab-format.html)
 - [Troubleshooting Guide](https://chatlab.fun/usage/troubleshooting.html)
 
 ## Preview
