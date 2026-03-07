@@ -10,10 +10,9 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "outDir": "dist/server",
-    "rootDir": "server",
     "declaration": true,
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["server/**/*"]
+  "include": ["server/**/*", "src/types/**/*"]
 }
