@@ -3,6 +3,7 @@ import cors from 'cors'
 import chatRoutes from './routes/chat'
 import importRoutes, { incrementalRouter } from './routes/import'
 import analysisRoutes from './routes/analysis'
+import memberRoutes from './routes/members'
 
 export function createApp() {
   const app = express()
@@ -20,6 +21,8 @@ export function createApp() {
   app.use('/api/sessions/:id', incrementalRouter)
   // Analysis routes: /api/sessions/:id/<analysis-endpoint>
   app.use('/api/sessions', analysisRoutes)
+  // Member management routes: /api/sessions/:id/members/*
+  app.use('/api/sessions', memberRoutes)
 
   return app
 }
