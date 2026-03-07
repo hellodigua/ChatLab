@@ -1,6 +1,4 @@
 {
-  "extends": "@electron-toolkit/tsconfig/tsconfig.web.json",
-  "include": ["src/env.d.ts", "src/**/*", "electron/preload/**/*.d.ts", "packages/**/*"],
   "compilerOptions": {
     "baseUrl": ".",
     "target": "ESNext",
@@ -21,8 +19,9 @@
     "forceConsistentCasingInFileNames": true,
     "paths": {
       "@/*": ["src/*"],
-      "@electron/*": ["electron/*"],
+      "~/*": ["src/*"],
       "@openchatlab/*": ["packages/*"]
     }
-  }
+  },
+  "include": ["src/env.d.ts", "src/**/*", "packages/**/*"]
 }

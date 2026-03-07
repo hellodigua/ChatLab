@@ -7,32 +7,28 @@
     "url": "git+https://github.com/hellodigua/ChatLab.git"
   },
   "author": "",
-  "main": "./out/main/index.js",
+  "type": "module",
   "pnpm": {
     "onlyBuiltDependencies": [
-      "better-sqlite3",
-      "electron"
+      "better-sqlite3"
     ]
   },
   "scripts": {
-    "dev": "electron-vite dev",
-    "preview": "electron-vite preview",
+    "dev": "concurrently --names server,client \"tsx watch server/index.ts\" \"vite --config vite.config.ts\"",
+    "build": "tsc -p tsconfig.server.json --noEmit && vite build --config vite.config.ts",
+    "build:server": "tsc -p tsconfig.server.json --noEmit",
+    "build:client": "vite build --config vite.config.ts",
+    "preview": "vite preview --config vite.config.ts",
     "format": "prettier --write .",
     "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
-    "build": "electron-vite build",
-    "build:mac": "npm run build && electron-builder --mac --config electron-builder.yml -p never",
-    "build:win": "npm run build && electron-builder --win --config electron-builder.yml -p never",
     "type-check:web": "vue-tsc --noEmit -p tsconfig.web.json",
-    "type-check:node": "tsc --noEmit -p tsconfig.node.json",
-    "type-check:all": "npm run type-check:web && npm run type-check:node",
+    "type-check:server": "tsc --noEmit -p tsconfig.server.json",
+    "type-check:all": "npm run type-check:web && npm run type-check:server",
     "type-check": "vue-tsc --noEmit -p tsconfig.web.json",
-    "test:agent-context": "node --experimental-strip-types --test electron/main/ai/context/sessionLog.test.mjs",
-    "postinstall": "electron-rebuild"
+    "test": "tsx --test server/**/*.test.ts",
+    "start": "tsx server/index.ts"
   },
   "dependencies": {
-    "@aptabase/electron": "^0.3.1",
-    "@electron-toolkit/preload": "^3.0.1",
-    "@electron-toolkit/utils": "^4.0.0",
     "@mariozechner/pi-agent-core": "0.54.2",
     "@mariozechner/pi-ai": "0.54.2",
     "@node-rs/jieba": "^2.0.1",
@@ -40,11 +36,13 @@
     "@types/markdown-it": "^14.1.2",
     "@zumer/snapdom": "^2.0.1",
     "better-sqlite3": "^12.4.6",
+    "cors": "^2.8.5",
     "echarts": "^6.0.0",
     "echarts-wordcloud": "^2.1.0",
-    "electron-updater": "^6.6.2",
+    "express": "^5.1.0",
     "i18next": "^25.8.5",
     "markdown-it": "^14.1.0",
+    "multer": "^1.4.5-lts.2",
     "node-machine-id": "^1.1.12",
     "stream-json": "^1.9.1",
     "vue-echarts": "^8.0.1",
@@ -52,22 +50,21 @@
     "zod": "^4.3.5"
   },
   "devDependencies": {
-    "@electron-toolkit/tsconfig": "^1.0.1",
-    "@electron/rebuild": "^4.0.1",
     "@nuxt/ui": "^4.2.1",
     "@tailwindcss/vite": "^4.0.0",
     "@types/better-sqlite3": "^7.6.13",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/multer": "^1.4.12",
     "@types/stream-json": "^1.7.8",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.6.0",
     "@vueuse/core": "^13.9.0",
     "axios": "^1.13.2",
+    "concurrently": "^9.1.2",
     "cross-env": "^7.0.3",
     "dayjs": "^1.11.19",
-    "electron": "^35.0.0",
-    "electron-builder": "^26.0.12",
-    "electron-vite": "^3.0.0",
     "eslint": "^9.39.1",
     "eslint-plugin-vue": "^9.33.0",
     "mitt": "^3.0.1",
@@ -75,8 +72,10 @@
     "pinia-plugin-persistedstate": "^4.7.1",
     "prettier": "^3.5.3",
     "tailwindcss": "^4.0.0",
+    "tsx": "^4.19.4",
     "vite": "^6.3.5",
     "vue": "^3.5.25",
-    "vue-router": "^4.6.3"
+    "vue-router": "^4.6.3",
+    "vue-tsc": "^2.2.10"
   }
 }

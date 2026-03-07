@@ -3,13 +3,17 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "composite": true,
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "outDir": "dist/server",
+    "rootDir": "server",
+    "declaration": true,
+    "noEmit": true,
+    "types": ["node"]
   },
-  "include": ["vite.config.*"]
+  "include": ["server/**/*"]
 }
