@@ -10,6 +10,9 @@ import llmRoutes from './routes/llm'
 import agentRoutes from './routes/agent'
 import aiConversationRoutes from './routes/ai-conversations'
 import embeddingRoutes from './routes/embedding'
+import cacheRoutes from './routes/cache'
+import networkRoutes from './routes/network'
+import sessionIndexRoutes from './routes/session-index'
 
 export function createApp() {
   const app = express()
@@ -42,6 +45,12 @@ export function createApp() {
   app.use('/api/ai-conversations', aiConversationRoutes)
   // Embedding config routes: /api/embedding/*
   app.use('/api/embedding', embeddingRoutes)
+  // Cache management routes: /api/cache/*
+  app.use('/api/cache', cacheRoutes)
+  // Network/proxy routes: /api/network/*
+  app.use('/api/network', networkRoutes)
+  // Session index routes: /api/sessions/:id/session-index/*
+  app.use('/api/sessions', sessionIndexRoutes)
 
   return app
 }
