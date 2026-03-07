@@ -5,6 +5,7 @@ import importRoutes, { incrementalRouter } from './routes/import'
 import analysisRoutes from './routes/analysis'
 import memberRoutes from './routes/members'
 import messageRoutes from './routes/messages'
+import { sessionNlpRouter, globalNlpRouter } from './routes/nlp'
 
 export function createApp() {
   const app = express()
@@ -26,6 +27,9 @@ export function createApp() {
   app.use('/api/sessions', memberRoutes)
   // Message query routes: /api/sessions/:id/messages/*
   app.use('/api/sessions', messageRoutes)
+  // NLP routes: /api/sessions/:id/nlp/* and /api/nlp/*
+  app.use('/api/sessions', sessionNlpRouter)
+  app.use('/api/nlp', globalNlpRouter)
 
   return app
 }
