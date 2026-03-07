@@ -9,6 +9,7 @@ import { sessionNlpRouter, globalNlpRouter } from './routes/nlp'
 import llmRoutes from './routes/llm'
 import agentRoutes from './routes/agent'
 import aiConversationRoutes from './routes/ai-conversations'
+import embeddingRoutes from './routes/embedding'
 
 export function createApp() {
   const app = express()
@@ -39,6 +40,8 @@ export function createApp() {
   app.use('/api/agent', agentRoutes)
   // AI conversation routes: /api/ai-conversations/*
   app.use('/api/ai-conversations', aiConversationRoutes)
+  // Embedding config routes: /api/embedding/*
+  app.use('/api/embedding', embeddingRoutes)
 
   return app
 }
