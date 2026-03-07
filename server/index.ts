@@ -13,6 +13,8 @@ import embeddingRoutes from './routes/embedding'
 import cacheRoutes from './routes/cache'
 import networkRoutes from './routes/network'
 import sessionIndexRoutes from './routes/session-index'
+import mergeRoutes from './routes/merge'
+import migrationRoutes from './routes/migration'
 
 export function createApp() {
   const app = express()
@@ -51,6 +53,10 @@ export function createApp() {
   app.use('/api/network', networkRoutes)
   // Session index routes: /api/sessions/:id/session-index/*
   app.use('/api/sessions', sessionIndexRoutes)
+  // Merge routes: /api/merge/*
+  app.use('/api/merge', mergeRoutes)
+  // Migration routes: /api/migration/*
+  app.use('/api/migration', migrationRoutes)
 
   return app
 }
