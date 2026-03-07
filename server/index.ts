@@ -4,6 +4,7 @@ import chatRoutes from './routes/chat'
 import importRoutes, { incrementalRouter } from './routes/import'
 import analysisRoutes from './routes/analysis'
 import memberRoutes from './routes/members'
+import messageRoutes from './routes/messages'
 
 export function createApp() {
   const app = express()
@@ -23,6 +24,8 @@ export function createApp() {
   app.use('/api/sessions', analysisRoutes)
   // Member management routes: /api/sessions/:id/members/*
   app.use('/api/sessions', memberRoutes)
+  // Message query routes: /api/sessions/:id/messages/*
+  app.use('/api/sessions', messageRoutes)
 
   return app
 }
