@@ -7,6 +7,8 @@ import memberRoutes from './routes/members'
 import messageRoutes from './routes/messages'
 import { sessionNlpRouter, globalNlpRouter } from './routes/nlp'
 import llmRoutes from './routes/llm'
+import agentRoutes from './routes/agent'
+import aiConversationRoutes from './routes/ai-conversations'
 
 export function createApp() {
   const app = express()
@@ -33,6 +35,10 @@ export function createApp() {
   app.use('/api/nlp', globalNlpRouter)
   // LLM config routes: /api/llm/*
   app.use('/api/llm', llmRoutes)
+  // Agent routes: /api/agent/*
+  app.use('/api/agent', agentRoutes)
+  // AI conversation routes: /api/ai-conversations/*
+  app.use('/api/ai-conversations', aiConversationRoutes)
 
   return app
 }

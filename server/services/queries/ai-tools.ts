@@ -53,6 +53,69 @@ export function searchSessions(
   }
 }
 
+// Session summary item returned by getSessionSummaries
+export interface SessionSummaryItem {
+  id: number
+  startTs: number
+  endTs: number
+  messageCount: number
+  participants: string[]
+  summary: string | null
+}
+
+export function getSessionSummaries(
+  sessionId: string,
+  options: { limit?: number; timeFilter?: { startTs: number; endTs: number } } = {},
+): SessionSummaryItem[] {
+  const db = openReadonlyDatabase(sessionId)
+  if (!db) return []
+  try {
+    const { limit = 50, timeFilter } = options
+
+    let sql = `
+      SELECT cs.id, cs.start_ts as startTs, cs.end_ts as endTs,
+             cs.message_count as messageCount, cs.summary
+      FROM chat_session cs
+      WHERE cs.summary IS NOT NULL AND cs.summary != ''
+    `
+    const params: unknown[] = []
+
+    if (timeFilter) {
+      sql += ' AND cs.start_ts >= ? AND cs.start_ts <= ?'
+      params.push(timeFilter.startTs, timeFilter.endTs)
+    }
+
+    sql += ' ORDER BY cs.start_ts DESC LIMIT ?'
+    params.push(limit)
+
+    const sessions = db.prepare(sql).all(...params) as Array<{
+      id: number; startTs: number; endTs: number; messageCount: number; summary: string | null
+    }>
+
+    const participantsSql = `
+      SELECT DISTINCT COALESCE(mb.group_nickname, mb.account_name, mb.platform_id) as name
+      FROM message_context mc JOIN message m ON m.id = mc.message_id
+      JOIN member mb ON mb.id = m.sender_id WHERE mc.session_id = ? LIMIT 10`
+
+    return sessions.map((session) => {
+      const participants = db.prepare(participantsSql).all(session.id) as Array<{ name: string }>
+      return {
+        id: session.id,
+        startTs: session.startTs,
+        endTs: session.endTs,
+        messageCount: session.messageCount,
+        participants: participants.map((p) => p.name),
+        summary: session.summary,
+      }
+    })
+  } catch (error) {
+    console.error('getSessionSummaries error:', error)
+    return []
+  } finally {
+    db.close()
+  }
+}
+
 export function getSessionMessages(sessionId: string, chatSessionId: number, limit = 500): SessionMessagesResult | null {
   const db = openReadonlyDatabase(sessionId)
   if (!db) return null
