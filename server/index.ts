@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import chatRoutes from './routes/chat'
+import importRoutes, { incrementalRouter } from './routes/import'
 
 export function createApp() {
   const app = express()
@@ -12,7 +13,10 @@ export function createApp() {
     res.json({ status: 'ok' })
   })
 
+  app.use('/api/import', importRoutes)
   app.use('/api/sessions', chatRoutes)
+  // Incremental import routes nested under /api/sessions/:id
+  app.use('/api/sessions/:id', incrementalRouter)
 
   return app
 }

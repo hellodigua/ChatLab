@@ -47,3 +47,6 @@ yarn.lock
 !.vscode/snippets.code-snippets
 .docs
 
+
+# Workflow progress files
+progress-*.txt
