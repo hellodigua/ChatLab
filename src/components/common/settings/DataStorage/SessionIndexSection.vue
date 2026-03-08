@@ -3,6 +3,7 @@
  * 会话索引管理区块
  * 配置会话索引阈值和批量生成功能
  */
+import { chatApi, sessionApi } from '@/services'
 import { ref, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -61,13 +62,13 @@ async function loadSessionIndexStatus() {
   isLoadingSessionStatus.value = true
   try {
     // 获取所有会话
-    const sessions = await window.chatApi.getSessions()
+    const sessions = await chatApi.getSessions()
 
     // 获取每个会话的索引状态
     const statusList: SessionIndexStatus[] = []
     for (const session of sessions) {
       try {
-        const stats = await window.sessionApi.getStats(session.id)
+        const stats = await sessionApi.getStats(session.id)
         statusList.push({
           id: session.id,
           name: session.name,
@@ -112,7 +113,7 @@ async function batchGenerateIndex() {
     }
 
     try {
-      const count = await window.sessionApi.generate(session.id, gapThreshold)
+      const count = await sessionApi.generate(session.id, gapThreshold)
       // 更新状态
       const statusItem = allSessionsStatus.value.find((s) => s.id === session.id)
       if (statusItem) {
@@ -151,7 +152,7 @@ async function batchRegenerateAll() {
     }
 
     try {
-      const count = await window.sessionApi.generate(session.id, gapThreshold)
+      const count = await sessionApi.generate(session.id, gapThreshold)
       // 更新状态
       session.hasIndex = true
       session.sessionCount = count

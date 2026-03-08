@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { aiApi, cacheApi } from '@/services'
 import { ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
@@ -45,7 +46,7 @@ const isCollapsed = ref(false)
 async function loadConversations() {
   isLoading.value = true
   try {
-    conversations.value = await window.aiApi.getConversations(props.sessionId)
+    conversations.value = await aiApi.getConversations(props.sessionId)
   } catch (error) {
     console.error('加载对话列表失败：', error)
   } finally {
@@ -82,7 +83,7 @@ function startEditing(conv: Conversation) {
 async function saveTitle(convId: string) {
   if (editingTitle.value.trim()) {
     try {
-      await window.aiApi.updateConversationTitle(convId, editingTitle.value.trim())
+      await aiApi.updateConversationTitle(convId, editingTitle.value.trim())
       const conv = conversations.value.find((c) => c.id === convId)
       if (conv) {
         conv.title = editingTitle.value.trim()
@@ -97,7 +98,7 @@ async function saveTitle(convId: string) {
 // 删除对话
 async function handleDelete(convId: string) {
   try {
-    await window.aiApi.deleteConversation(convId)
+    await aiApi.deleteConversation(convId)
     conversations.value = conversations.value.filter((c) => c.id !== convId)
     emit('delete', convId)
   } catch (error) {
@@ -112,7 +113,7 @@ async function handleExport(conv: Conversation) {
   isExporting.value = conv.id
   try {
     // 获取对话消息
-    const messages = await window.aiApi.getMessages(conv.id)
+    const messages = await aiApi.getMessages(conv.id)
 
     if (messages.length === 0) {
       toast.add({
@@ -159,7 +160,7 @@ async function handleExport(conv: Conversation) {
           {
             label: t('common.openFolder'),
             onClick: () => {
-              window.cacheApi.showInFolder(exportedFilePath)
+              cacheApi.showInFolder(exportedFilePath)
             },
           },
         ],

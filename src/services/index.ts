@@ -2,7 +2,7 @@
  * Frontend API client — re-exports all domain-specific API modules.
  *
  * Usage:
- *   import { chatApi, aiApi, llmApi, agentApi } from '@/api'
+ *   import { chatApi, aiApi, llmApi, agentApi } from '@/services'
  *
  * These modules replace the Electron preload `window.*Api` globals
  * with HTTP/SSE calls to the Express backend.
@@ -18,6 +18,7 @@ export { networkApi } from './network'
 export { cacheApi } from './cache'
 export { sessionApi } from './session-index'
 export { mergeApi, migrationApi } from './merge'
+export { appApi, dialogApi, clipboardApi } from './app'
 
 // Re-export the base client utilities for advanced use
 export { setBaseUrl, getBaseUrl, ApiError } from './client'

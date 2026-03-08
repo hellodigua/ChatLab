@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { llmApi } from '@/services'
 
 /**
  * LLM 服务配置（展示用，不含敏感信息）
@@ -77,9 +78,9 @@ export const useLLMStore = defineStore('llm', () => {
     isLoading.value = true
     try {
       const [providersData, configsData, activeId] = await Promise.all([
-        window.llmApi.getProviders(),
-        window.llmApi.getAllConfigs(),
-        window.llmApi.getActiveConfigId(),
+        llmApi.getProviders(),
+        llmApi.getAllConfigs(),
+        llmApi.getActiveConfigId(),
       ])
       providers.value = providersData
       configs.value = configsData
@@ -98,7 +99,7 @@ export const useLLMStore = defineStore('llm', () => {
    */
   async function setActiveConfig(id: string): Promise<boolean> {
     try {
-      const result = await window.llmApi.setActiveConfig(id)
+      const result = await llmApi.setActiveConfig(id)
       if (result.success) {
         activeConfigId.value = id
         return true

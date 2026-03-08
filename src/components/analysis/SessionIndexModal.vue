@@ -4,6 +4,7 @@
  * 自动检测索引状态，未生成时通过 v-model 自动弹出
  * 使用 v-model 控制显示状态
  */
+import { sessionApi } from '@/services'
 import { ref, watch, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -48,7 +49,7 @@ async function checkAndAutoOpen() {
 
   isLoading.value = true
   try {
-    const stats = await window.sessionApi.getStats(props.sessionId)
+    const stats = await sessionApi.getStats(props.sessionId)
     hasIndex.value = stats.hasIndex
     sessionCount.value = stats.sessionCount
 
@@ -70,7 +71,7 @@ async function refreshStatus() {
 
   isLoading.value = true
   try {
-    const stats = await window.sessionApi.getStats(props.sessionId)
+    const stats = await sessionApi.getStats(props.sessionId)
     hasIndex.value = stats.hasIndex
     sessionCount.value = stats.sessionCount
   } catch (error) {
@@ -90,7 +91,7 @@ async function generateSessionIndex() {
     const savedThreshold = localStorage.getItem('sessionGapThreshold')
     const gapThreshold = savedThreshold ? parseInt(savedThreshold, 10) : 1800 // 默认30分钟
 
-    const count = await window.sessionApi.generate(props.sessionId, gapThreshold)
+    const count = await sessionApi.generate(props.sessionId, gapThreshold)
     hasIndex.value = true
     sessionCount.value = count
     emit('generated', count)

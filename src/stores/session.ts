@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { AnalysisSession, ImportProgress } from '@/types/base'
+import { chatApi, mergeApi, sessionApi } from '@/services'
 
 /** 迁移信息 */
 export interface MigrationInfo {
@@ -24,7 +25,7 @@ export type BatchFileStatus = 'pending' | 'importing' | 'success' | 'failed' | '
 
 /** 批量导入单个文件信息 */
 export interface BatchFileInfo {
-  path: string
+  file: File
   name: string
   status: BatchFileStatus
   progress?: ImportProgress
@@ -47,9 +48,10 @@ export type MergeFileStatus = 'pending' | 'parsing' | 'done'
 
 /** 合并导入单个文件信息 */
 export interface MergeFileInfo {
-  path: string
+  file: File
   name: string
   status: MergeFileStatus
+  fileKey?: string
   info?: {
     name: string
     format: string
@@ -116,7 +118,7 @@ export const useSessionStore = defineStore(
      */
     async function checkMigration(): Promise<MigrationCheckResult> {
       try {
-        const result = await window.chatApi.checkMigration()
+        const result = await chatApi.checkMigration()
         migrationNeeded.value = result.needsMigration
         migrationCount.value = result.count
         pendingMigrations.value = result.pendingMigrations || []
@@ -133,7 +135,7 @@ export const useSessionStore = defineStore(
     async function runMigration(): Promise<{ success: boolean; error?: string }> {
       isMigrating.value = true
       try {
-        const result = await window.chatApi.runMigration()
+        const result = await chatApi.runMigration()
         if (result.success) {
           migrationNeeded.value = false
           migrationCount.value = 0
@@ -152,7 +154,7 @@ export const useSessionStore = defineStore(
      */
     async function loadSessions() {
       try {
-        const list = await window.chatApi.getSessions()
+        const list = await chatApi.getSessions()
         sessions.value = list
         // 如果当前选中的会话不存在了，清除选中状态
         if (currentSessionId.value && !list.find((s) => s.id === currentSessionId.value)) {
@@ -166,7 +168,7 @@ export const useSessionStore = defineStore(
     }
 
     /**
-     * 选择文件并导入
+     * 打开浏览器文件选择对话框并导入
      */
     async function importFile(): Promise<{
       success: boolean
@@ -174,24 +176,49 @@ export const useSessionStore = defineStore(
       diagnosisSuggestion?: string
     }> {
       try {
-        const result = await window.chatApi.selectFile()
-        // 用户取消选择
-        if (!result) {
+        // Use browser file picker instead of Electron dialog
+        const file = await pickFile()
+        if (!file) {
           return { success: false, error: 'error.no_file_selected' }
         }
-        // 有错误（如格式不识别）- 优先检查错误，因为此时可能没有 filePath
-        if (result.error) {
-          const diagnosisSuggestion = result.diagnosis?.suggestion
-          return { success: false, error: result.error, diagnosisSuggestion }
+
+        // Detect format first
+        const formatResult = await chatApi.detectFormat(file)
+        if (!formatResult) {
+          return { success: false, error: 'error.unsupported_format' }
         }
-        // 没有文件路径（用户取消）
-        if (!result.filePath) {
-          return { success: false, error: 'error.no_file_selected' }
-        }
-        return await importFileFromPath(result.filePath)
+
+        return await importFileFromFile(file)
       } catch (error) {
         return { success: false, error: String(error) }
       }
+    }
+
+    /**
+     * Open a browser file picker and return the selected File (or null if cancelled).
+     */
+    function pickFile(accept?: string): Promise<File | null> {
+      return new Promise((resolve) => {
+        const input = document.createElement('input')
+        input.type = 'file'
+        if (accept) input.accept = accept
+        input.onchange = () => {
+          resolve(input.files?.[0] ?? null)
+        }
+        // Handle cancel — the input never fires change if user cancels
+        // Use a focus listener to detect dialog close without selection
+        const onFocus = () => {
+          window.removeEventListener('focus', onFocus)
+          // Small delay to let change fire first if file was selected
+          setTimeout(() => {
+            if (!input.files || input.files.length === 0) {
+              resolve(null)
+            }
+          }, 300)
+        }
+        window.addEventListener('focus', onFocus)
+        input.click()
+      })
     }
 
     /** 导入诊断信息类型 */
@@ -210,9 +237,9 @@ export const useSessionStore = defineStore(
     }
 
     /**
-     * 从指定路径执行导入（支持拖拽）
+     * 从 File 对象执行导入（支持拖拽和文件选择）
      */
-    async function importFileFromPath(filePath: string): Promise<{
+    async function importFileFromFile(file: File): Promise<{
       success: boolean
       error?: string
       diagnosisSuggestion?: string
@@ -223,57 +250,28 @@ export const useSessionStore = defineStore(
         importProgress.value = {
           stage: 'detecting',
           progress: 0,
-          message: '', // Progress text is handled by frontend i18n
+          message: '',
         }
 
-        // 进度队列控制
-        const queue: ImportProgress[] = []
-        let isProcessing = false
-        let currentStage = 'reading'
-        let lastStageTime = Date.now()
-        const MIN_STAGE_TIME = 1000
-
-        /**
-         * 处理导入进度队列，确保阶段展示足够时间
-         */
-        const processQueue = async () => {
-          if (isProcessing) return
-          isProcessing = true
-
-          while (queue.length > 0) {
-            const next = queue[0]
-
-            if (next.stage !== currentStage) {
-              const elapsed = Date.now() - lastStageTime
-              if (elapsed < MIN_STAGE_TIME) {
-                await new Promise((resolve) => setTimeout(resolve, MIN_STAGE_TIME - elapsed))
+        // Stage progression for web: we simulate stages since we don't get IPC progress events
+        const stages = ['detecting', 'reading', 'parsing', 'writing'] as const
+        let stageIndex = 0
+        const stageInterval = setInterval(() => {
+          if (stageIndex < stages.length - 1) {
+            stageIndex++
+            if (importProgress.value) {
+              importProgress.value = {
+                stage: stages[stageIndex],
+                progress: Math.min(90, (stageIndex / stages.length) * 100),
+                message: '',
               }
-              currentStage = next.stage
-              lastStageTime = Date.now()
             }
-
-            importProgress.value = queue.shift()!
           }
-          isProcessing = false
-        }
+        }, 800)
 
-        const unsubscribe = window.chatApi.onImportProgress((progress) => {
-          if (progress.stage === 'done') return
-          queue.push(progress)
-          processQueue()
-        })
+        const importResult = await chatApi.import(file)
 
-        const importResult = await window.chatApi.import(filePath)
-        unsubscribe()
-
-        while (queue.length > 0 || isProcessing) {
-          await new Promise((resolve) => setTimeout(resolve, 100))
-        }
-
-        const elapsed = Date.now() - lastStageTime
-        if (elapsed < MIN_STAGE_TIME) {
-          await new Promise((resolve) => setTimeout(resolve, MIN_STAGE_TIME - elapsed))
-        }
+        clearInterval(stageInterval)
 
         if (importProgress.value) {
           importProgress.value.progress = 100
@@ -287,16 +285,14 @@ export const useSessionStore = defineStore(
           // 自动生成会话索引
           try {
             const savedThreshold = localStorage.getItem('sessionGapThreshold')
-            const gapThreshold = savedThreshold ? parseInt(savedThreshold, 10) : 1800 // 默认30分钟
-            await window.sessionApi.generate(importResult.sessionId, gapThreshold)
+            const gapThreshold = savedThreshold ? parseInt(savedThreshold, 10) : 1800
+            await sessionApi.generate(importResult.sessionId, gapThreshold)
           } catch (error) {
             console.error('自动生成会话索引失败:', error)
-            // 不阻断导入流程，用户可以手动生成
           }
 
           return { success: true, diagnostics: importResult.diagnostics }
         } else {
-          // 传递诊断信息（如果有）
           const diagnosisSuggestion = importResult.diagnosis?.suggestion
           return {
             success: false,
@@ -316,10 +312,25 @@ export const useSessionStore = defineStore(
     }
 
     /**
+     * Legacy path-based import — redirects to file-based import.
+     * Kept for backward compatibility with components that may still call it.
+     */
+    async function importFileFromPath(_filePath: string): Promise<{
+      success: boolean
+      error?: string
+      diagnosisSuggestion?: string
+      diagnostics?: ImportDiagnosticsInfo
+    }> {
+      // In the web app, we can't import from file paths.
+      // Components should be updated to pass File objects instead.
+      return { success: false, error: 'File path imports are not supported in the web app. Use File objects.' }
+    }
+
+    /**
      * 批量导入多个文件（串行执行）
      */
-    async function importFilesFromPaths(filePaths: string[]): Promise<BatchImportResult> {
-      if (filePaths.length === 0) {
+    async function importFilesFromFiles(files: File[]): Promise<BatchImportResult> {
+      if (files.length === 0) {
         return { total: 0, success: 0, failed: 0, cancelled: 0, files: [] }
       }
 
@@ -329,9 +340,9 @@ export const useSessionStore = defineStore(
       batchImportResult.value = null
 
       // 初始化文件列表
-      batchFiles.value = filePaths.map((path) => ({
-        path,
-        name: path.split('/').pop() || path.split('\\').pop() || path,
+      batchFiles.value = files.map((file) => ({
+        file,
+        name: file.name,
         status: 'pending' as BatchFileStatus,
       }))
 
@@ -339,7 +350,6 @@ export const useSessionStore = defineStore(
       let failedCount = 0
       let cancelledCount = 0
 
-      // 辅助函数：标记剩余文件为已取消
       const markRemainingAsCancelled = (startIndex: number) => {
         for (let j = startIndex; j < batchFiles.value.length; j++) {
           if (batchFiles.value[j].status === 'pending') {
@@ -349,133 +359,74 @@ export const useSessionStore = defineStore(
         }
       }
 
-      // 串行导入每个文件
       for (let i = 0; i < batchFiles.value.length; i++) {
-        // 检查是否已取消
         if (batchImportCancelled.value) {
           markRemainingAsCancelled(i)
           break
         }
 
-        const file = batchFiles.value[i]
-        file.status = 'importing'
-        file.progress = {
+        const fileInfo = batchFiles.value[i]
+        fileInfo.status = 'importing'
+        fileInfo.progress = {
           stage: 'detecting',
           progress: 0,
           message: '',
         }
 
         try {
-          // 进度队列控制（复用单文件导入的逻辑）
-          const queue: ImportProgress[] = []
-          let isProcessing = false
-          let currentStage = 'reading'
-          let lastStageTime = Date.now()
-          const MIN_STAGE_TIME = 300 // 批量导入时缩短阶段显示时间
+          const importResult = await chatApi.import(fileInfo.file)
 
-          const processQueue = async () => {
-            if (isProcessing) return
-            isProcessing = true
-
-            while (queue.length > 0) {
-              // 在进度处理中也检查取消状态，加快响应
-              if (batchImportCancelled.value) {
-                queue.length = 0
-                break
-              }
-
-              const next = queue[0]
-
-              if (next.stage !== currentStage) {
-                const elapsed = Date.now() - lastStageTime
-                if (elapsed < MIN_STAGE_TIME) {
-                  await new Promise((resolve) => setTimeout(resolve, MIN_STAGE_TIME - elapsed))
-                }
-                currentStage = next.stage
-                lastStageTime = Date.now()
-              }
-
-              file.progress = queue.shift()!
-            }
-            isProcessing = false
-          }
-
-          const unsubscribe = window.chatApi.onImportProgress((progress) => {
-            if (progress.stage === 'done') return
-            queue.push(progress)
-            processQueue()
-          })
-
-          const importResult = await window.chatApi.import(file.path)
-          unsubscribe()
-
-          // 等待进度队列处理完成（但如果已取消则快速跳过）
-          let waitCount = 0
-          while ((queue.length > 0 || isProcessing) && !batchImportCancelled.value && waitCount < 100) {
-            await new Promise((resolve) => setTimeout(resolve, 30))
-            waitCount++
-          }
-
-          // 当前文件导入完成后立即检查取消状态
           if (batchImportCancelled.value) {
-            // 当前文件已经导入完成，记录其结果
             if (importResult.success && importResult.sessionId) {
-              file.status = 'success'
-              file.sessionId = importResult.sessionId
+              fileInfo.status = 'success'
+              fileInfo.sessionId = importResult.sessionId
               successCount++
-
-              // 即使取消了也要为已导入成功的文件生成会话索引
               try {
                 const savedThreshold = localStorage.getItem('sessionGapThreshold')
                 const gapThreshold = savedThreshold ? parseInt(savedThreshold, 10) : 1800
-                await window.sessionApi.generate(importResult.sessionId, gapThreshold)
+                await sessionApi.generate(importResult.sessionId, gapThreshold)
               } catch (error) {
                 console.error('自动生成会话索引失败:', error)
               }
             } else {
-              file.status = 'failed'
-              file.error = importResult.error || 'error.import_failed'
+              fileInfo.status = 'failed'
+              fileInfo.error = importResult.error || 'error.import_failed'
               failedCount++
             }
-            // 标记剩余文件为取消
             markRemainingAsCancelled(i + 1)
             break
           }
 
           if (importResult.success && importResult.sessionId) {
-            file.status = 'success'
-            file.sessionId = importResult.sessionId
+            fileInfo.status = 'success'
+            fileInfo.sessionId = importResult.sessionId
             successCount++
-
-            // 自动生成会话索引（跳过如果已取消）
             if (!batchImportCancelled.value) {
               try {
                 const savedThreshold = localStorage.getItem('sessionGapThreshold')
                 const gapThreshold = savedThreshold ? parseInt(savedThreshold, 10) : 1800
-                await window.sessionApi.generate(importResult.sessionId, gapThreshold)
+                await sessionApi.generate(importResult.sessionId, gapThreshold)
               } catch (error) {
                 console.error('自动生成会话索引失败:', error)
               }
             }
           } else {
-            file.status = 'failed'
-            file.error = importResult.error || 'error.import_failed'
-            file.diagnosisSuggestion = importResult.diagnosis?.suggestion
+            fileInfo.status = 'failed'
+            fileInfo.error = importResult.error || 'error.import_failed'
+            fileInfo.diagnosisSuggestion = importResult.diagnosis?.suggestion
             failedCount++
           }
         } catch (error) {
-          file.status = 'failed'
-          file.error = String(error)
+          fileInfo.status = 'failed'
+          fileInfo.error = String(error)
           failedCount++
         }
       }
 
-      // 刷新会话列表
       await loadSessions()
 
-      // 生成结果
       const result: BatchImportResult = {
-        total: filePaths.length,
+        total: files.length,
         success: successCount,
         failed: failedCount,
         cancelled: cancelledCount,
@@ -489,6 +440,13 @@ export const useSessionStore = defineStore(
     }
 
     /**
+     * Legacy path-based batch import — kept for API compat.
+     */
+    async function importFilesFromPaths(_filePaths: string[]): Promise<BatchImportResult> {
+      return { total: 0, success: 0, failed: 0, cancelled: 0, files: [] }
+    }
+
+    /**
      * 取消批量导入（跳过剩余文件）
      */
     function cancelBatchImport() {
@@ -496,7 +454,7 @@ export const useSessionStore = defineStore(
     }
 
     /**
-     * 清除批量导入结果（用于关闭摘要后重置状态）
+     * 清除批量导入结果
      */
     function clearBatchImportResult() {
       batchImportResult.value = null
@@ -505,13 +463,13 @@ export const useSessionStore = defineStore(
 
     /**
      * 合并导入多个文件为一个会话
+     * Now accepts File objects instead of file paths.
      */
-    async function mergeImportFiles(filePaths: string[]): Promise<MergeImportResult> {
-      if (filePaths.length < 2) {
+    async function mergeImportFiles(files: File[]): Promise<MergeImportResult> {
+      if (files.length < 2) {
         return { success: false, error: '合并导入至少需要2个文件' }
       }
 
-      // 阶段最小显示时间（和单文件导入保持一致）
       const MIN_STAGE_TIME = 800
 
       isMergeImporting.value = true
@@ -519,40 +477,47 @@ export const useSessionStore = defineStore(
       mergeResult.value = null
       mergeStage.value = 'parsing'
 
-      // 初始化文件列表
-      mergeFiles.value = filePaths.map((path) => ({
-        path,
-        name: path.split('/').pop() || path.split('\\').pop() || path,
+      mergeFiles.value = files.map((file) => ({
+        file,
+        name: file.name,
         status: 'pending' as MergeFileStatus,
       }))
 
       let stageStartTime = Date.now()
 
       try {
-        // 阶段1：串行解析所有文件
+        // 阶段1：串行解析所有文件 (upload each file to get a fileKey)
+        const fileKeys: string[] = []
+
         for (let i = 0; i < mergeFiles.value.length; i++) {
-          const file = mergeFiles.value[i]
+          const fileInfo = mergeFiles.value[i]
           const fileStartTime = Date.now()
-          file.status = 'parsing'
+          fileInfo.status = 'parsing'
 
           try {
-            const info = await window.mergeApi.parseFileInfo(file.path)
-            file.info = info
+            const result = await mergeApi.parseFileInfo(fileInfo.file)
+            fileInfo.info = {
+              name: result.name,
+              format: result.format,
+              platform: result.platform,
+              messageCount: result.messageCount,
+              memberCount: result.memberCount,
+            }
+            fileInfo.fileKey = result.fileKey
+            fileKeys.push(result.fileKey)
 
-            // 确保每个文件的解析状态至少显示一定时间
             const elapsed = Date.now() - fileStartTime
-            const minFileTime = Math.max(300, MIN_STAGE_TIME / filePaths.length)
+            const minFileTime = Math.max(300, MIN_STAGE_TIME / files.length)
             if (elapsed < minFileTime) {
               await new Promise((resolve) => setTimeout(resolve, minFileTime - elapsed))
             }
 
-            file.status = 'done'
+            fileInfo.status = 'done'
           } catch (err) {
-            throw new Error(`解析文件失败: ${file.name} - ${err instanceof Error ? err.message : String(err)}`)
+            throw new Error(`解析文件失败: ${fileInfo.name} - ${err instanceof Error ? err.message : String(err)}`)
           }
         }
 
-        // 确保解析阶段至少显示 MIN_STAGE_TIME
         const parsingElapsed = Date.now() - stageStartTime
         if (parsingElapsed < MIN_STAGE_TIME) {
           await new Promise((resolve) => setTimeout(resolve, MIN_STAGE_TIME - parsingElapsed))
@@ -562,26 +527,24 @@ export const useSessionStore = defineStore(
         stageStartTime = Date.now()
         mergeStage.value = 'merging'
 
-        // 智能命名：如果所有文件群名相同则用该名，否则用第一个文件的群名
         const names = mergeFiles.value.map((f) => f.info?.name).filter(Boolean)
         const uniqueNames = [...new Set(names)]
         const outputName = uniqueNames.length === 1 ? uniqueNames[0]! : names[0] || '合并记录'
 
-        const result = await window.mergeApi.mergeFiles({
-          filePaths,
+        const result = await mergeApi.mergeFiles({
+          filePaths: [], // Not used in web API; fileKeys are used instead
+          fileKeys,
           outputName,
-          conflictResolutions: [], // 默认 keepBoth（保留所有消息）
-          andAnalyze: true, // 合并后创建会话
+          conflictResolutions: [],
+          andAnalyze: true,
         })
 
         if (!result.success) {
           throw new Error(result.error || '合并失败')
         }
 
-        // 清理缓存
-        await window.mergeApi.clearCache()
+        await mergeApi.clearCache()
 
-        // 确保合并阶段至少显示 MIN_STAGE_TIME
         const mergingElapsed = Date.now() - stageStartTime
         if (mergingElapsed < MIN_STAGE_TIME) {
           await new Promise((resolve) => setTimeout(resolve, MIN_STAGE_TIME - mergingElapsed))
@@ -590,15 +553,13 @@ export const useSessionStore = defineStore(
         mergeStage.value = 'done'
         mergeResult.value = { success: true, sessionId: result.sessionId }
 
-        // 刷新会话列表
         await loadSessions()
 
-        // 自动生成会话索引
         if (result.sessionId) {
           try {
             const savedThreshold = localStorage.getItem('sessionGapThreshold')
             const gapThreshold = savedThreshold ? parseInt(savedThreshold, 10) : 1800
-            await window.sessionApi.generate(result.sessionId, gapThreshold)
+            await sessionApi.generate(result.sessionId, gapThreshold)
           } catch (error) {
             console.error('自动生成会话索引失败:', error)
           }
@@ -610,8 +571,7 @@ export const useSessionStore = defineStore(
         const errorMessage = err instanceof Error ? err.message : String(err)
         mergeError.value = errorMessage
         mergeResult.value = { success: false, error: errorMessage }
-        // 清理缓存
-        await window.mergeApi.clearCache()
+        await mergeApi.clearCache()
         return { success: false, error: errorMessage }
       }
     }
@@ -638,7 +598,7 @@ export const useSessionStore = defineStore(
      */
     async function deleteSession(id: string): Promise<boolean> {
       try {
-        const success = await window.chatApi.deleteSession(id)
+        const success = await chatApi.deleteSession(id)
         if (success) {
           const index = sessions.value.findIndex((s) => s.id === id)
           if (index !== -1) {
@@ -661,7 +621,7 @@ export const useSessionStore = defineStore(
      */
     async function renameSession(id: string, newName: string): Promise<boolean> {
       try {
-        const success = await window.chatApi.renameSession(id, newName)
+        const success = await chatApi.renameSession(id, newName)
         if (success) {
           const session = sessions.value.find((s) => s.id === id)
           if (session) {
@@ -687,7 +647,7 @@ export const useSessionStore = defineStore(
      */
     async function updateSessionOwnerId(id: string, ownerId: string | null): Promise<boolean> {
       try {
-        const success = await window.chatApi.updateSessionOwnerId(id, ownerId)
+        const success = await chatApi.updateSessionOwnerId(id, ownerId)
         if (success) {
           const session = sessions.value.find((s) => s.id === id)
           if (session) {
@@ -706,7 +666,6 @@ export const useSessionStore = defineStore(
 
     // 排序后的会话列表
     const sortedSessions = computed(() => {
-      // 建立索引映射，index 越大表示越晚置顶
       const pinIndexMap = new Map(pinnedSessionIds.value.map((id, index) => [id, index]))
 
       return [...sessions.value].sort((a, b) => {
@@ -715,22 +674,16 @@ export const useSessionStore = defineStore(
         const aPinned = aPinIndex !== undefined
         const bPinned = bPinIndex !== undefined
 
-        // 两个都置顶：后置顶的（index 大的）排前面
         if (aPinned && bPinned) {
           return bPinIndex! - aPinIndex!
         }
-        // 只有一个置顶：置顶的排前面
         if (aPinned && !bPinned) return -1
         if (!aPinned && bPinned) return 1
 
-        // 都不置顶：保持原顺序（通常是按时间倒序）
         return 0
       })
     })
 
-    /**
-     * 切换会话置顶状态
-     */
     function togglePinSession(id: string) {
       const index = pinnedSessionIds.value.indexOf(id)
       if (index !== -1) {
@@ -740,9 +693,6 @@ export const useSessionStore = defineStore(
       }
     }
 
-    /**
-     * 检查会话是否已置顶
-     */
     function isPinned(id: string): boolean {
       return pinnedSessionIds.value.includes(id)
     }
@@ -766,6 +716,7 @@ export const useSessionStore = defineStore(
       // 会话操作
       loadSessions,
       importFile,
+      importFileFromFile,
       importFileFromPath,
       selectSession,
       deleteSession,
@@ -779,6 +730,7 @@ export const useSessionStore = defineStore(
       batchFiles,
       batchImportCancelled,
       batchImportResult,
+      importFilesFromFiles,
       importFilesFromPaths,
       cancelBatchImport,
       clearBatchImportResult,

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { llmApi } from '@/services'
 import { ref, computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
@@ -51,7 +52,7 @@ async function handleModalSaved() {
 
 async function deleteConfig(id: string) {
   try {
-    const result = await window.llmApi.deleteConfig(id)
+    const result = await llmApi.deleteConfig(id)
     if (result.success) {
       await llmStore.refreshConfigs()
       emit('config-changed')

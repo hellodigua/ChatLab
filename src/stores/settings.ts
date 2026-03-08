@@ -4,7 +4,8 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import 'dayjs/locale/en'
 import { type LocaleType, setLocale as setI18nLocale, getLocale } from '@/i18n'
-import type { PreprocessConfig } from '@electron/preload/index'
+import { aiApi } from '@/services'
+import type { PreprocessConfig } from '@/services/agent'
 
 const LOCALE_SET_KEY = 'chatlab_locale_set_by_user'
 
@@ -17,7 +18,7 @@ export const useSettingsStore = defineStore(
 
     function setDebugMode(enabled: boolean) {
       debugMode.value = enabled
-      window.electron?.ipcRenderer.send('app:setDebugMode', enabled)
+      // Debug mode is a client-side setting in web app (no IPC needed)
     }
 
     const aiPreprocessConfig = ref<PreprocessConfig>({
@@ -36,7 +37,7 @@ export const useSettingsStore = defineStore(
      */
     async function ensureDesensitizeRules() {
       if (aiPreprocessConfig.value.desensitizeRules.length === 0) {
-        aiPreprocessConfig.value.desensitizeRules = await window.aiApi.getDefaultDesensitizeRules(locale.value)
+        aiPreprocessConfig.value.desensitizeRules = await aiApi.getDefaultDesensitizeRules(locale.value)
       }
     }
 
@@ -52,11 +53,9 @@ export const useSettingsStore = defineStore(
 
       dayjs.locale(newLocale === 'zh-CN' ? 'zh-cn' : 'en')
 
-      window.electron?.ipcRenderer.send('locale:change', newLocale)
-
-      // Vue 响应式 Proxy 无法通过 Electron IPC structured clone，需转为普通对象
+      // Merge desensitize rules for the new locale
       const plainRules = JSON.parse(JSON.stringify(aiPreprocessConfig.value.desensitizeRules))
-      aiPreprocessConfig.value.desensitizeRules = await window.aiApi.mergeDesensitizeRules(
+      aiPreprocessConfig.value.desensitizeRules = await aiApi.mergeDesensitizeRules(
         plainRules,
         newLocale
       )
@@ -81,7 +80,7 @@ export const useSettingsStore = defineStore(
 
       await ensureDesensitizeRules()
 
-      window.electron?.ipcRenderer.send('app:setDebugMode', debugMode.value)
+      // Debug mode is handled client-side in web app
     }
 
     return {

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { chatApi } from '@/services'
 import { ref, computed, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
@@ -379,8 +380,8 @@ async function loadData() {
 
   try {
     const [years, range] = await Promise.all([
-      window.chatApi.getAvailableYears(props.sessionId),
-      window.chatApi.getTimeRange(props.sessionId),
+      chatApi.getAvailableYears(props.sessionId),
+      chatApi.getTimeRange(props.sessionId),
     ])
     availableYears.value = years
     fullTimeRange.value = range

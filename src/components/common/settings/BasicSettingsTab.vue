@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { appApi } from '@/services'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -49,7 +50,7 @@ watch(
   colorMode,
   (val) => {
     const mode = val === 'auto' ? 'system' : (val as 'light' | 'dark')
-    window.api.setThemeSource(mode)
+    appApi.setThemeSource(mode)
   },
   { immediate: true }
 )

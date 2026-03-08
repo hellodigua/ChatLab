@@ -4,6 +4,7 @@
  * 支持向已有会话追加聊天记录（去重后合并）
  */
 
+import { chatApi, dialogApi } from '@/services'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { FileDropZone } from '@/components/UI'
@@ -28,7 +29,7 @@ type Stage = 'select' | 'analyzing' | 'preview' | 'importing' | 'done' | 'error'
 const stage = ref<Stage>('select')
 
 // 文件信息
-const selectedFile = ref<{ path: string; name: string } | null>(null)
+const selectedFile = ref<{ file: File; name: string } | null>(null)
 
 // 分析结果
 const analyzeResult = ref<{
@@ -70,15 +71,15 @@ function resetState() {
 }
 
 // 处理文件拖拽/选择
-async function handleFileDrop({ paths }: { files: File[]; paths: string[] }) {
-  if (paths.length === 0) {
+async function handleFileDrop({ files }: { files: File[]; paths: string[] }) {
+  if (files.length === 0) {
     errorMessage.value = t('home.import.cannotReadPath')
     return
   }
 
   selectedFile.value = {
-    path: paths[0],
-    name: paths[0].split('/').pop() || paths[0].split('\\').pop() || paths[0],
+    file: files[0],
+    name: files[0].name,
   }
 
   await analyzeFile()
@@ -86,8 +87,7 @@ async function handleFileDrop({ paths }: { files: File[]; paths: string[] }) {
 
 // 点击选择文件
 async function handleSelectFile() {
-  const result = await window.api.dialog.showOpenDialog({
-    title: t('analysis.incremental.selectFile'),
+  const result = await dialogApi.showOpenDialog({
     properties: ['openFile'],
     filters: [
       { name: t('home.import.chatRecords'), extensions: ['json', 'jsonl', 'txt'] },
@@ -95,13 +95,13 @@ async function handleSelectFile() {
     ],
   })
 
-  if (result.canceled || result.filePaths.length === 0) {
+  if (result.canceled || !result.files || result.files.length === 0) {
     return
   }
 
   selectedFile.value = {
-    path: result.filePaths[0],
-    name: result.filePaths[0].split('/').pop() || result.filePaths[0].split('\\').pop() || result.filePaths[0],
+    file: result.files[0],
+    name: result.files[0].name,
   }
 
   await analyzeFile()
@@ -115,7 +115,7 @@ async function analyzeFile() {
   errorMessage.value = null
 
   try {
-    const result = await window.chatApi.analyzeIncrementalImport(props.sessionId, selectedFile.value.path)
+    const result = await chatApi.analyzeIncrementalImport(props.sessionId, selectedFile.value.file)
 
     if (result.error) {
       stage.value = 'error'
@@ -148,13 +148,7 @@ async function executeImport() {
   }
 
   try {
-    // 监听进度
-    const unsubscribe = window.chatApi.onImportProgress((progress) => {
-      importProgress.value = progress
-    })
-
-    const result = await window.chatApi.incrementalImport(props.sessionId, selectedFile.value.path)
-    unsubscribe()
+    const result = await chatApi.incrementalImport(props.sessionId, selectedFile.value.file)
 
     if (result.success) {
       importResult.value = { newMessageCount: result.newMessageCount }

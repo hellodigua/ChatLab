@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { embeddingApi } from '@/services'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { EmbeddingServiceConfig, EmbeddingServiceConfigDisplay } from '@electron/preload/index'
+import type { EmbeddingServiceConfig, EmbeddingServiceConfigDisplay } from '@/services/embedding'
 
 const { t } = useI18n()
 
@@ -69,7 +70,7 @@ watch(
 
       if (props.mode === 'edit' && props.config) {
         // 编辑模式：加载完整配置
-        const fullConfig = await window.embeddingApi.getConfig(props.config.id)
+        const fullConfig = await embeddingApi.getConfig(props.config.id)
         if (fullConfig) {
           formData.value = {
             name: fullConfig.name,
@@ -112,7 +113,7 @@ async function validateConfig() {
       updatedAt: Date.now(),
     }
 
-    const result = await window.embeddingApi.validateConfig(testConfig)
+    const result = await embeddingApi.validateConfig(testConfig)
 
     if (result.success) {
       validationResult.value = 'valid'
@@ -146,9 +147,9 @@ async function saveConfig() {
     let result: { success: boolean; error?: string }
 
     if (props.mode === 'edit' && props.config) {
-      result = await window.embeddingApi.updateConfig(props.config.id, configData)
+      result = await embeddingApi.updateConfig(props.config.id, configData)
     } else {
-      result = await window.embeddingApi.addConfig(configData)
+      result = await embeddingApi.addConfig(configData)
     }
 
     if (result.success) {

@@ -10,6 +10,7 @@
  * 支持分页加载，避免大数据量时内存溢出
  */
 
+import { aiApi, dialogApi } from '@/services'
 import { ref, computed, watch, toRaw } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useToast } from '@nuxt/ui/runtime/composables/useToast.js'
@@ -146,7 +147,7 @@ async function executeFilter() {
       const senderIds = rawFilter.senderIds.length > 0 ? [...rawFilter.senderIds] : undefined
       const contextSize = rawFilter.contextSize
 
-      const result = await window.aiApi.filterMessagesWithContext(
+      const result = await aiApi.filterMessagesWithContext(
         sessionId,
         keywords,
         timeFilter,
@@ -160,7 +161,7 @@ async function executeFilter() {
       // 会话筛选模式
       if (selectedSessionIds.value.length === 0) return
       const sessionIds = [...toRaw(selectedSessionIds.value)]
-      const result = await window.aiApi.getMultipleSessionsMessages(sessionId, sessionIds, 1, PAGE_SIZE)
+      const result = await aiApi.getMultipleSessionsMessages(sessionId, sessionIds, 1, PAGE_SIZE)
       filterResult.value = result
     }
   } catch (error) {
@@ -189,7 +190,7 @@ async function loadMoreBlocks() {
       const senderIds = rawFilter.senderIds.length > 0 ? [...rawFilter.senderIds] : undefined
       const contextSize = rawFilter.contextSize
 
-      result = await window.aiApi.filterMessagesWithContext(
+      result = await aiApi.filterMessagesWithContext(
         sessionId,
         keywords,
         timeFilter,
@@ -200,7 +201,7 @@ async function loadMoreBlocks() {
       )
     } else {
       const sessionIds = [...toRaw(selectedSessionIds.value)]
-      result = await window.aiApi.getMultipleSessionsMessages(sessionId, sessionIds, nextPage, PAGE_SIZE)
+      result = await aiApi.getMultipleSessionsMessages(sessionId, sessionIds, nextPage, PAGE_SIZE)
     }
 
     // 合并新加载的块到现有结果
@@ -229,7 +230,7 @@ const exportProgress = ref<{
 let unsubscribeExportProgress: (() => void) | null = null
 
 function startExportProgressListener() {
-  unsubscribeExportProgress = window.aiApi.onExportProgress((progress) => {
+  unsubscribeExportProgress = aiApi.onExportProgress((progress) => {
     exportProgress.value = {
       percentage: progress.percentage,
       message: progress.message,
@@ -259,13 +260,8 @@ async function exportFeedPack() {
   const sessionInfo = sessionStore.currentSession
   const sessionName = sessionInfo?.name || '未知会话'
 
-  // 让用户选择保存目录
-  const dialogResult = await window.api.dialog.showOpenDialog({
-    title: '选择保存目录',
-    properties: ['openDirectory', 'createDirectory'],
-  })
-  if (dialogResult.canceled || !dialogResult.filePaths[0]) return
-  const outputDir = dialogResult.filePaths[0]
+  // In web app, we use a server-side default output directory
+  const outputDir = ''  // Server will use its default downloads directory
 
   isExporting.value = true
   exportProgress.value = { percentage: 0, message: t('analysis.filter.exportPreparing') }
@@ -291,7 +287,7 @@ async function exportFeedPack() {
     }
 
     // 调用后端导出
-    const exportResult = await window.aiApi.exportFilterResultToFile(exportParams)
+    const exportResult = await aiApi.exportFilterResultToFile(exportParams)
 
     if (exportResult.success && exportResult.filePath) {
       // 导出成功

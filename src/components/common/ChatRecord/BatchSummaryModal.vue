@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { sessionApi } from '@/services'
 import { ref, computed, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDateFormat, useDebounceFn } from '@vueuse/core'
@@ -162,7 +163,7 @@ async function fetchSessions() {
   try {
     if (queryMode.value === 'range') {
       // 按范围查询：先获取总数，再按百分比计算数量
-      const allSessions = await window.sessionApi.getSessions(props.sessionId)
+      const allSessions = await sessionApi.getSessions(props.sessionId)
       totalSessionCount.value = allSessions.length
       const count = Math.ceil(allSessions.length * (rangePercent.value / 100))
       // 取最近的 count 个会话（按时间倒序取后面的）
@@ -177,7 +178,7 @@ async function fetchSessions() {
       const startTs = Math.floor(timeRange.value.start / 1000)
       const endTs = Math.floor(timeRange.value.end / 1000)
 
-      sessions.value = await window.sessionApi.getByTimeRange(props.sessionId, startTs, endTs)
+      sessions.value = await sessionApi.getByTimeRange(props.sessionId, startTs, endTs)
     }
 
     // 检查哪些会话可以生成摘要
@@ -199,7 +200,7 @@ async function checkCanGenerate() {
 
   isChecking.value = true
   try {
-    canGenerateMap.value = await window.sessionApi.checkCanGenerateSummary(props.sessionId, noSummaryIds)
+    canGenerateMap.value = await sessionApi.checkCanGenerateSummary(props.sessionId, noSummaryIds)
   } catch (error) {
     console.error('检查会话摘要失败:', error)
   } finally {
@@ -267,7 +268,7 @@ async function startGenerate() {
       if (shouldStop.value) break
 
       try {
-        const result = await window.sessionApi.generateSummary(props.sessionId, session.id, locale.value, false)
+        const result = await sessionApi.generateSummary(props.sessionId, session.id, locale.value, false)
 
         if (result.success) {
           // 成功：显示摘要内容

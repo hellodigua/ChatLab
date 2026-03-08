@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { appApi } from '@/services'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -147,7 +148,7 @@ async function fetchConfig(): Promise<void> {
   }
 
   try {
-    const result = await window.api.app.fetchRemoteConfig(configUrl.value)
+    const result = await appApi.fetchRemoteConfig(configUrl.value)
     if (!result.success || !result.data) return
 
     const config = result.data as Record<string, unknown>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { appApi } from '@/services'
 import { storeToRefs } from 'pinia'
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
@@ -65,7 +66,7 @@ function toggleSearch() {
 onMounted(async () => {
   sessionStore.loadSessions()
   try {
-    version.value = await window.api.app.getVersion()
+    version.value = await appApi.getVersion()
   } catch (e) {
     console.error('Failed to get version', e)
   }

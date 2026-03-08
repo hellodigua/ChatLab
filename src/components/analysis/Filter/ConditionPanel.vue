@@ -4,6 +4,7 @@
  * 支持关键词、时间范围、发送者筛选，以及上下文扩展配置
  */
 
+import { chatApi } from '@/services'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSessionStore } from '@/stores/session'
@@ -66,7 +67,7 @@ async function loadMembers() {
 
   isLoadingMembers.value = true
   try {
-    members.value = await window.chatApi.getMembers(sessionId)
+    members.value = await chatApi.getMembers(sessionId)
   } catch (error) {
     console.error('加载成员失败:', error)
   } finally {
@@ -80,7 +81,7 @@ async function loadTimeRange() {
   if (!sessionId) return
 
   try {
-    const range = await window.chatApi.getTimeRange(sessionId)
+    const range = await chatApi.getTimeRange(sessionId)
     if (range) {
       dbTimeRange.value = range
     }

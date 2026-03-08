@@ -3,6 +3,7 @@
  * 存储管理区块
  * 显示本地缓存目录信息及清理功能
  */
+import { appApi, cacheApi } from '@/services'
 import { ref, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -63,7 +64,7 @@ const totalSizeFormatted = computed(() => {
 async function loadCacheInfo() {
   isLoading.value = true
   try {
-    cacheInfo.value = await window.cacheApi.getInfo()
+    cacheInfo.value = await cacheApi.getInfo()
   } catch (error) {
     console.error('获取缓存信息失败:', error)
   } finally {
@@ -74,7 +75,7 @@ async function loadCacheInfo() {
 // 加载数据目录
 async function loadDataDir() {
   try {
-    const info = await window.cacheApi.getDataDir()
+    const info = await cacheApi.getDataDir()
     dataDir.value = info.path
     isCustomDataDir.value = info.isCustom
   } catch (error) {
@@ -86,7 +87,7 @@ async function loadDataDir() {
 async function clearCache(cacheId: string) {
   clearingId.value = cacheId
   try {
-    const result = await window.cacheApi.clear(cacheId)
+    const result = await cacheApi.clear(cacheId)
     if (result.success) {
       // 刷新缓存信息
       await loadCacheInfo()
@@ -103,7 +104,7 @@ async function clearCache(cacheId: string) {
 // 打开目录
 async function openDirectory(cacheId: string) {
   try {
-    await window.cacheApi.openDir(cacheId)
+    await cacheApi.openDir(cacheId)
   } catch (error) {
     console.error('打开目录失败:', error)
   }
@@ -118,7 +119,7 @@ async function openBaseDir() {
 async function selectDataDir() {
   dataDirError.value = null
   try {
-    const result = await window.cacheApi.selectDataDir()
+    const result = await cacheApi.selectDataDir()
     if (!result.success || !result.path) return
 
     // 显示确认弹窗
@@ -156,7 +157,7 @@ function cancelDataDirChange() {
 async function applyDataDirChange(newDir: string | null, migrate: boolean) {
   isUpdatingDataDir.value = true
   try {
-    const result = await window.cacheApi.setDataDir(newDir, migrate)
+    const result = await cacheApi.setDataDir(newDir, migrate)
     if (!result.success) {
       dataDirError.value = result.error || '设置失败'
       return
@@ -173,7 +174,7 @@ async function applyDataDirChange(newDir: string | null, migrate: boolean) {
 
 // 重启应用
 async function relaunchApp() {
-  await window.api.app.relaunch()
+  await appApi.relaunch()
 }
 
 // 组件挂载时加载数据

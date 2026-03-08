@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { chatApi } from '@/services'
 import { ref, computed, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { MemberWithStats } from '@/types/analysis'
@@ -45,7 +46,7 @@ async function loadMembers() {
   if (!props.sessionId) return
   isLoading.value = true
   try {
-    members.value = await window.chatApi.getMembers(props.sessionId)
+    members.value = await chatApi.getMembers(props.sessionId)
   } catch (error) {
     console.error('加载成员列表失败:', error)
   } finally {
@@ -63,7 +64,7 @@ async function updateAliases(member: MemberWithStats, newAliases: string[]) {
 
   savingAliasesId.value = member.id
   try {
-    const success = await window.chatApi.updateMemberAliases(props.sessionId, member.id, aliasesToSave)
+    const success = await chatApi.updateMemberAliases(props.sessionId, member.id, aliasesToSave)
     if (success) {
       const idx = members.value.findIndex((m) => m.id === member.id)
       if (idx !== -1) {

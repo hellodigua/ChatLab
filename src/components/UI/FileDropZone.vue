@@ -111,21 +111,8 @@ function handleDrop(e: DragEvent) {
 
 // 处理文件并发送事件
 function processFiles(files: File[]) {
-  const paths: string[] = []
-
-  // 尝试获取文件路径（Electron 环境）
-  for (const file of files) {
-    try {
-      // @ts-ignore - Electron webUtils
-      const path = window.electron?.webUtils?.getPathForFile?.(file)
-      if (path) {
-        paths.push(path)
-      }
-    } catch {
-      // 非 Electron 环境或获取失败
-    }
-  }
-
+  // In web app, we pass File objects directly (no file path access)
+  const paths = files.map((f) => f.name)
   emit('files', { files, paths })
 }
 

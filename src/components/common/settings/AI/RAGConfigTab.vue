@@ -3,7 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useEmbeddingStore } from '@/stores/embedding'
 import EmbeddingConfigEditModal from './EmbeddingConfigEditModal.vue'
-import type { EmbeddingServiceConfigDisplay } from '@electron/preload/index'
+import type { EmbeddingServiceConfigDisplay } from '@/services/embedding'
 
 const { t } = useI18n()
 

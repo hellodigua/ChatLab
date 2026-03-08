@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { cacheApi, llmApi } from '@/services'
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
@@ -247,7 +248,7 @@ async function exportResult() {
           {
             label: t('common.openFolder'),
             onClick: () => {
-              window.cacheApi.showInFolder(result.filePath!)
+              cacheApi.showInFolder(result.filePath!)
             },
           },
         ],
@@ -319,7 +320,7 @@ async function openSummaryModal() {
 
 // AI 总结
 async function generateSummary() {
-  const hasConfig = await window.llmApi.hasConfig()
+  const hasConfig = await llmApi.hasConfig()
   if (!hasConfig) {
     summaryError.value = t('common.errorNoAIConfig')
     return
@@ -351,7 +352,7 @@ ${resultSummary}
 2. 关键发现（2-4 个要点）
 3. 如有明显的趋势或异常，请指出`
 
-    const result = await window.llmApi.chatStream(
+    const result = await llmApi.chatStream(
       [
         {
           role: 'system',

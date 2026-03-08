@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { cacheApi, chatApi, dialogApi, sessionApi } from '@/services'
 import { FileDropZone } from '@/components/UI'
 import FileListItem from './FileListItem.vue'
 import ChatSelector, { type ChatInfo } from './ChatSelector.vue'
@@ -26,14 +27,14 @@ const {
 
 // 聊天选择器状态（多聊天格式通用）
 const showChatSelector = ref(false)
-const chatSelectorFilePath = ref('')
+const chatSelectorFile = ref<File | null>(null)
 
 // 自动生成会话索引（与 importFileFromPath 保持一致）
 async function autoGenerateSessionIndex(sessionId: string) {
   try {
     const savedThreshold = localStorage.getItem('sessionGapThreshold')
     const gapThreshold = savedThreshold ? parseInt(savedThreshold, 10) : 1800
-    await window.sessionApi.generate(sessionId, gapThreshold)
+    await sessionApi.generate(sessionId, gapThreshold)
   } catch (error) {
     console.error('自动生成会话索引失败:', error)
   }
@@ -93,7 +94,7 @@ function translateError(error: string): string {
 
 // 根据会话类型导航到对应页面
 async function navigateToSession(sessionId: string) {
-  const session = await window.chatApi.getSession(sessionId)
+  const session = await chatApi.getSession(sessionId)
   if (session) {
     const routeName = session.type === 'private' ? 'private-chat' : 'group-chat'
     router.push({ name: routeName, params: { id: sessionId } })
@@ -102,7 +103,7 @@ async function navigateToSession(sessionId: string) {
 
 // 检查是否有导入日志
 async function checkImportLog() {
-  const result = await window.cacheApi.getLatestImportLog()
+  const result = await cacheApi.getLatestImportLog()
   hasImportLog.value = result.success && !!result.path
 }
 
@@ -113,9 +114,8 @@ async function handleClickImport() {
   hasImportLog.value = false
   importDiagnostics.value = null
 
-  // 使用系统对话框选择多个文件
-  const result = await window.api.dialog.showOpenDialog({
-    title: t('home.import.selectFiles'),
+  // 使用浏览器文件选择器
+  const result = await dialogApi.showOpenDialog({
     properties: ['openFile', 'multiSelections'],
     filters: [
       { name: t('home.import.chatRecords'), extensions: ['json', 'jsonl', 'txt'] },
@@ -123,16 +123,16 @@ async function handleClickImport() {
     ],
   })
 
-  if (result.canceled || result.filePaths.length === 0) {
+  if (result.canceled || !result.files || result.files.length === 0) {
     return
   }
 
-  await processFilePaths(result.filePaths)
+  await processFiles(result.files)
 }
 
 // 处理文件拖拽 - 支持多选
-async function handleFileDrop({ paths }: { files: File[]; paths: string[] }) {
-  if (paths.length === 0) {
+async function handleFileDrop({ files }: { files: File[]; paths: string[] }) {
+  if (files.length === 0) {
     importError.value = t('home.import.cannotReadPath')
     return
   }
@@ -142,24 +142,24 @@ async function handleFileDrop({ paths }: { files: File[]; paths: string[] }) {
   hasImportLog.value = false
   importDiagnostics.value = null
 
-  await processFilePaths(paths)
+  await processFiles(files)
 }
 
-// 统一处理文件路径（单文件或多文件）
-async function processFilePaths(paths: string[]) {
+// 统一处理文件（单文件或多文件）
+async function processFiles(files: File[]) {
   // 单文件 或 未启用合并导入 - 使用原有逻辑
-  if (paths.length === 1 || !mergeImportEnabled.value) {
-    if (paths.length === 1) {
+  if (files.length === 1 || !mergeImportEnabled.value) {
+    if (files.length === 1) {
       // 检测是否为多聊天格式（需要弹出聊天选择器）
-      const format = await window.chatApi.detectFormat(paths[0])
+      const format = await chatApi.detectFormat(files[0])
       if (format?.multiChat) {
-        chatSelectorFilePath.value = paths[0]
+        chatSelectorFile.value = files[0]
         showChatSelector.value = true
         return
       }
 
       // 单文件导入
-      const result = await sessionStore.importFileFromPath(paths[0])
+      const result = await sessionStore.importFileFromFile(files[0])
       if (!result.success && result.error) {
         importError.value = translateError(result.error)
         if (result.diagnosisSuggestion) {
@@ -174,7 +174,6 @@ async function processFilePaths(paths: string[]) {
             messagesWritten: result.diagnostics.messagesWritten,
             messagesSkipped: result.diagnostics.messagesSkipped,
           }
-          // 如果有日志文件，显示查看日志按钮
           hasImportLog.value = !!result.diagnostics.logFile
         } else {
           await checkImportLog()
@@ -184,34 +183,29 @@ async function processFilePaths(paths: string[]) {
       }
     } else {
       // 多文件批量导入（未启用合并）
-      await sessionStore.importFilesFromPaths(paths)
+      await sessionStore.importFilesFromFiles(files)
     }
     return
   }
 
   // 多文件 + 合并导入（调用 store 方法）
-  await sessionStore.mergeImportFiles(paths)
+  await sessionStore.mergeImportFiles(files)
 }
 
 // 聊天选择后的导入处理（通用，适用于 Telegram 等多聊天格式）
 async function handleChatSelect(selectedChats: ChatInfo[]) {
   if (selectedChats.length === 0) return
 
-  const filePath = chatSelectorFilePath.value
+  const file = chatSelectorFile.value
+  if (!file) return
 
   if (selectedChats.length === 1) {
     // 单个聊天：直接导入
     isImporting.value = true
     importProgress.value = { stage: 'detecting', progress: 0, message: '' }
 
-    const unsubscribe = window.chatApi.onImportProgress((progress) => {
-      if (progress.stage === 'done') return
-      importProgress.value = progress
-    })
-
     try {
-      const result = await window.chatApi.importWithOptions(filePath, { chatIndex: selectedChats[0].index })
-      unsubscribe()
+      const result = await chatApi.importWithOptions(file, { chatIndex: selectedChats[0].index })
 
       if (importProgress.value) {
         importProgress.value.progress = 100
@@ -221,7 +215,6 @@ async function handleChatSelect(selectedChats: ChatInfo[]) {
       if (result.success && result.sessionId) {
         await sessionStore.loadSessions()
         sessionStore.selectSession(result.sessionId)
-        // 自动生成会话索引
         await autoGenerateSessionIndex(result.sessionId)
         await navigateToSession(result.sessionId)
       } else {
@@ -239,7 +232,7 @@ async function handleChatSelect(selectedChats: ChatInfo[]) {
     // 多个聊天：逐个导入（类似批量导入）
     isBatchImporting.value = true
     batchFiles.value = selectedChats.map((chat) => ({
-      path: `${filePath}#${chat.index}`,
+      file: file,
       name: chat.name || `Chat ${chat.id}`,
       status: 'pending' as const,
     }))
@@ -251,20 +244,13 @@ async function handleChatSelect(selectedChats: ChatInfo[]) {
       const chat = selectedChats[i]
       batchFiles.value[i].status = 'importing'
 
-      const unsubscribe = window.chatApi.onImportProgress((progress) => {
-        if (progress.stage === 'done') return
-        batchFiles.value[i].progress = progress
-      })
-
       try {
-        const result = await window.chatApi.importWithOptions(filePath, { chatIndex: chat.index })
-        unsubscribe()
+        const result = await chatApi.importWithOptions(file, { chatIndex: chat.index })
 
         if (result.success && result.sessionId) {
           batchFiles.value[i].status = 'success'
           batchFiles.value[i].sessionId = result.sessionId
           successCount++
-          // 自动生成会话索引
           await autoGenerateSessionIndex(result.sessionId)
         } else {
           batchFiles.value[i].status = 'failed'
@@ -272,7 +258,6 @@ async function handleChatSelect(selectedChats: ChatInfo[]) {
           failedCount++
         }
       } catch (error) {
-        unsubscribe()
         batchFiles.value[i].status = 'failed'
         batchFiles.value[i].error = String(error)
         failedCount++
@@ -289,13 +274,7 @@ async function handleChatSelect(selectedChats: ChatInfo[]) {
       success: successCount,
       failed: failedCount,
       cancelled: 0,
-      files: batchFiles.value.map((f) => ({
-        path: f.path,
-        name: f.name,
-        status: f.status,
-        sessionId: f.sessionId,
-        error: f.error,
-      })),
+      files: [...batchFiles.value],
     }
   }
 }
@@ -339,12 +318,12 @@ const tutorialUrl = computed(() => {
 
 // 打开最新的导入日志文件
 async function openLatestImportLog() {
-  const result = await window.cacheApi.getLatestImportLog()
+  const result = await cacheApi.getLatestImportLog()
   if (result.success && result.path) {
-    await window.cacheApi.showInFolder(result.path)
+    await cacheApi.showInFolder(result.path)
   } else {
     // 没有日志文件时，打开日志目录
-    await window.cacheApi.openDir('logs')
+    await cacheApi.openDir('logs')
   }
 }
 
@@ -458,7 +437,7 @@ const getMergeFileProgressText = (file: MergeFileInfo) =>
       <div class="max-h-52 space-y-2 overflow-y-auto">
         <FileListItem
           v-for="(file, index) in batchFiles"
-          :key="file.path"
+          :key="file.name"
           :name="file.name"
           :status-icon="getStatusIcon(file.status)"
           :status-class="getStatusClass(file.status)"
@@ -511,7 +490,7 @@ const getMergeFileProgressText = (file: MergeFileInfo) =>
       <div class="max-h-52 space-y-2 overflow-y-auto">
         <FileListItem
           v-for="(file, index) in mergeFiles"
-          :key="file.path"
+          :key="file.name"
           :name="file.name"
           :status-icon="getStatusIcon(file.status)"
           :status-class="getStatusClass(file.status)"
@@ -597,7 +576,7 @@ const getMergeFileProgressText = (file: MergeFileInfo) =>
       <div class="max-h-52 space-y-2 overflow-y-auto">
         <FileListItem
           v-for="(file, index) in batchImportResult.files"
-          :key="file.path"
+          :key="file.name"
           :name="file.name"
           :status-icon="getStatusIcon(file.status)"
           :status-class="getStatusClass(file.status)"
@@ -749,6 +728,6 @@ const getMergeFileProgressText = (file: MergeFileInfo) =>
     </UButton>
 
     <!-- 聊天选择器（多聊天格式通用） -->
-    <ChatSelector v-model:open="showChatSelector" :file-path="chatSelectorFilePath" @select="handleChatSelect" />
+    <ChatSelector v-model:open="showChatSelector" :file="chatSelectorFile" @select="handleChatSelect" />
   </div>
 </template>

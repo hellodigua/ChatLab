@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { EmbeddingServiceConfigDisplay } from '@electron/preload/index'
+import { embeddingApi } from '@/services'
+import type { EmbeddingServiceConfigDisplay } from '@/services/embedding'
 
 /**
  * Embedding 配置状态管理
@@ -67,10 +68,10 @@ export const useEmbeddingStore = defineStore('embedding', () => {
     isLoading.value = true
     try {
       const [configsData, activeId, isEnabled, stats] = await Promise.all([
-        window.embeddingApi.getAllConfigs(),
-        window.embeddingApi.getActiveConfigId(),
-        window.embeddingApi.isEnabled(),
-        window.embeddingApi.getVectorStoreStats(),
+        embeddingApi.getAllConfigs(),
+        embeddingApi.getActiveConfigId(),
+        embeddingApi.isEnabled(),
+        embeddingApi.getVectorStoreStats(),
       ])
       configs.value = configsData
       activeConfigId.value = activeId
@@ -87,7 +88,7 @@ export const useEmbeddingStore = defineStore('embedding', () => {
    */
   async function setActiveConfig(id: string): Promise<boolean> {
     try {
-      const result = await window.embeddingApi.setActiveConfig(id)
+      const result = await embeddingApi.setActiveConfig(id)
       if (result.success) {
         activeConfigId.value = id
         return true
@@ -105,7 +106,7 @@ export const useEmbeddingStore = defineStore('embedding', () => {
    */
   async function deleteConfig(id: string): Promise<boolean> {
     try {
-      const result = await window.embeddingApi.deleteConfig(id)
+      const result = await embeddingApi.deleteConfig(id)
       if (result.success) {
         await loadConfigs()
         return true
@@ -123,7 +124,7 @@ export const useEmbeddingStore = defineStore('embedding', () => {
    */
   async function clearVectorStore(): Promise<boolean> {
     try {
-      const result = await window.embeddingApi.clearVectorStore()
+      const result = await embeddingApi.clearVectorStore()
       if (result.success) {
         vectorStoreStats.value.count = 0
         vectorStoreStats.value.sizeBytes = 0

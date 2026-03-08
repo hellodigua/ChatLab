@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { chatApi } from '@/services'
 import { ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { MemberWithStats } from '@/types/analysis'
@@ -64,7 +65,7 @@ async function loadMembers() {
   if (!props.sessionId) return
   isLoading.value = true
   try {
-    const result = await window.chatApi.getMembersPaginated(props.sessionId, {
+    const result = await chatApi.getMembersPaginated(props.sessionId, {
       page: currentPage.value,
       pageSize,
       search: searchQuery.value.trim(),
@@ -84,7 +85,7 @@ async function loadMembers() {
 async function loadAllMembers() {
   if (!props.sessionId) return
   try {
-    allMembers.value = await window.chatApi.getMembers(props.sessionId)
+    allMembers.value = await chatApi.getMembers(props.sessionId)
   } catch (error) {
     console.error('加载所有成员失败:', error)
   }
@@ -102,7 +103,7 @@ async function updateAliases(member: MemberWithStats, newAliases: string[]) {
 
   savingAliasesId.value = member.id
   try {
-    const success = await window.chatApi.updateMemberAliases(props.sessionId, member.id, aliasesToSave)
+    const success = await chatApi.updateMemberAliases(props.sessionId, member.id, aliasesToSave)
     if (success) {
       // 更新本地数据 - 找到对应成员并更新
       const idx = members.value.findIndex((m) => m.id === member.id)
@@ -135,7 +136,7 @@ async function confirmDelete() {
   if (!deletingMember.value) return
   isDeleting.value = true
   try {
-    const success = await window.chatApi.deleteMember(props.sessionId, deletingMember.value.id)
+    const success = await chatApi.deleteMember(props.sessionId, deletingMember.value.id)
     if (success) {
       // 重新加载当前页数据
       await loadMembers()

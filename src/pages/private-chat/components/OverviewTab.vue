@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { chatApi } from '@/services'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { AnalysisSession, MessageType } from '@/types/base'
@@ -101,7 +102,7 @@ const comparisonChartData = computed<EChartPieData>(() => {
 async function loadWeekdayActivity() {
   if (!props.session.id) return
   try {
-    weekdayActivity.value = await window.chatApi.getWeekdayActivity(props.session.id, props.timeFilter)
+    weekdayActivity.value = await chatApi.getWeekdayActivity(props.session.id, props.timeFilter)
   } catch (error) {
     console.error('加载星期活跃度失败:', error)
   }

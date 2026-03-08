@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { appApi } from '@/services'
 import { ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
@@ -94,7 +95,7 @@ async function fetchChangelogs() {
   loadError.value = null
 
   try {
-    const result = await window.api.app.fetchRemoteConfig(getChangelogUrl(locale.value))
+    const result = await appApi.fetchRemoteConfig(getChangelogUrl(locale.value))
     if (!result.success || !result.data) {
       throw new Error(result.error || 'Failed to fetch')
     }
@@ -177,7 +178,7 @@ async function checkNewVersion() {
     }
 
     // 1. 获取当前软件版本号
-    const rawVersion = await window.api.app.getVersion()
+    const rawVersion = await appApi.getVersion()
     const currentVersion = normalizeVersion(rawVersion)
     if (!currentVersion) return
 
@@ -197,7 +198,7 @@ async function checkNewVersion() {
     }
 
     // 4. readVersion 为空或不等于 currentVersion，需要请求远程 changelog 数据
-    const result = await window.api.app.fetchRemoteConfig(getChangelogUrl(locale.value))
+    const result = await appApi.fetchRemoteConfig(getChangelogUrl(locale.value))
     if (!result.success || !result.data) return
 
     const data = result.data as ChangelogItem[]
@@ -237,7 +238,7 @@ async function checkNewVersion() {
 async function open() {
   // 手动打开也标记当前版本，避免标签缺失
   try {
-    currentAppVersion.value = normalizeVersion(await window.api.app.getVersion())
+    currentAppVersion.value = normalizeVersion(await appApi.getVersion())
   } catch {
     currentAppVersion.value = null
   }

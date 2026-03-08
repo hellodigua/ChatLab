@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { llmApi } from '@/services'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from '@/stores/settings'
@@ -255,7 +256,7 @@ async function validateKey() {
 
   try {
     const testApiKey = apiKey || 'sk-no-key-required'
-    const result = await window.llmApi.validateApiKey(
+    const result = await llmApi.validateApiKey(
       provider || 'openai-compatible',
       testApiKey,
       baseUrl || undefined,
@@ -319,7 +320,7 @@ async function saveConfig() {
     const finalName = formData.value.name.trim() || getDefaultName()
 
     if (props.mode === 'add') {
-      const result = await window.llmApi.addConfig({
+      const result = await llmApi.addConfig({
         name: finalName,
         provider: finalProvider,
         apiKey: finalApiKey,
@@ -351,7 +352,7 @@ async function saveConfig() {
         updates.apiKey = formData.value.apiKey.trim()
       }
 
-      const result = await window.llmApi.updateConfig(props.config!.id, updates)
+      const result = await llmApi.updateConfig(props.config!.id, updates)
 
       if (result.success) {
         emit('update:open', false)

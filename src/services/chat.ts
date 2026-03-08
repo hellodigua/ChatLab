@@ -95,7 +95,25 @@ export const chatApi = {
   import: (file: File) => {
     const fd = new FormData()
     fd.append('file', file)
-    return upload<{ success: boolean; sessionId?: string; error?: string }>('/import', fd)
+    return upload<{
+      success: boolean
+      sessionId?: string
+      error?: string
+      diagnosis?: { suggestion?: string }
+      diagnostics?: {
+        logFile: string | null
+        detectedFormat: string | null
+        messagesReceived: number
+        messagesWritten: number
+        messagesSkipped: number
+        skipReasons: {
+          noSenderId: number
+          noAccountName: number
+          invalidTimestamp: number
+          noType: number
+        }
+      }
+    }>('/import', fd)
   },
 
   /**

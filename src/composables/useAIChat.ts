@@ -8,7 +8,8 @@ import { storeToRefs } from 'pinia'
 import { usePromptStore } from '@/stores/prompt'
 import { useSessionStore } from '@/stores/session'
 import { useSettingsStore } from '@/stores/settings'
-import type { TokenUsage, AgentRuntimeStatus } from '@electron/shared/types'
+import type { TokenUsage, AgentRuntimeStatus } from '@/services/agent'
+import { agentApi, aiApi, chatApi, llmApi } from '@/services'
 
 // 工具调用记录
 export interface ToolCallRecord {
@@ -136,7 +137,7 @@ export function useAIChat(
 
     try {
       // 获取成员列表，找到 owner 的显示名称
-      const members = await window.chatApi.getMembers(sessionId)
+      const members = await chatApi.getMembers(sessionId)
       const ownerMember = members.find((m) => m.platformId === ownerId)
       if (ownerMember) {
         ownerInfo.value = {
@@ -208,7 +209,7 @@ export function useAIChat(
 
     // 检查是否已配置 LLM
     console.log('[AI] 检查 LLM 配置...')
-    const hasConfig = await window.llmApi.hasConfig()
+    const hasConfig = await llmApi.hasConfig()
     console.log('[AI] LLM 配置状态:', hasConfig)
 
     if (!hasConfig) {
@@ -365,7 +366,7 @@ export function useAIChat(
       // 确保对话 ID 存在（数据流倒置：Agent 从 SQLite 读取历史，需要有效的 conversationId）
       if (!currentConversationId.value) {
         const title = content.slice(0, 50) + (content.length > 50 ? '...' : '')
-        const conversation = await window.aiApi.createConversation(sessionId, title)
+        const conversation = await aiApi.createConversation(sessionId, title)
         currentConversationId.value = conversation.id
         contextConversationId.value = conversation.id
         console.log('[AI] 提前创建对话:', conversation.id)
@@ -416,7 +417,7 @@ export function useAIChat(
       })
 
       // 获取 requestId 和 promise（传递历史消息、聊天类型、提示词配置和语言设置）
-      const { requestId: agentReqId, promise: agentPromise } = window.agentApi.runStream(
+      const { requestId: agentReqId, promise: agentPromise } = agentApi.runStream(
         content,
         context,
         (chunk) => {
@@ -618,7 +619,7 @@ export function useAIChat(
       }
 
       // 保存用户消息（保存后 Agent 下次执行时可从 DB 读到）
-      await window.aiApi.addMessage(currentConversationId.value, 'user', userMsg.content)
+      await aiApi.addMessage(currentConversationId.value, 'user', userMsg.content)
 
       // 保存 AI 消息（包含 contentBlocks）
       // 注意：需要深拷贝 contentBlocks 以确保可序列化（避免 Vue 响应式代理对象）
@@ -630,7 +631,7 @@ export function useAIChat(
         hasContentBlocks: !!serializableContentBlocks,
         contentBlocksLength: serializableContentBlocks?.length,
       })
-      await window.aiApi.addMessage(
+      await aiApi.addMessage(
         currentConversationId.value,
         'assistant',
         aiMsg.content,
@@ -650,7 +651,7 @@ export function useAIChat(
   async function loadConversation(conversationId: string): Promise<void> {
     console.log('[AI] 加载对话历史，conversationId:', conversationId)
     try {
-      const history = await window.aiApi.getMessages(conversationId)
+      const history = await aiApi.getMessages(conversationId)
       currentConversationId.value = conversationId
       // 加载历史对话时，绑定到真实 conversationId，确保同一历史会话复用上下文时间线
       contextConversationId.value = conversationId
@@ -735,7 +736,7 @@ export function useAIChat(
     if (currentAgentRequestId) {
       console.log('[AI] 中止 Agent 请求:', currentAgentRequestId)
       try {
-        await window.agentApi.abort(currentAgentRequestId)
+        await agentApi.abort(currentAgentRequestId)
         console.log('[AI] Agent 请求已中止')
       } catch (error) {
         console.error('[AI] 中止 Agent 请求失败:', error)

@@ -3,6 +3,7 @@
  * 聊天记录查看器 Drawer
  * 主组件，组合筛选面板、消息列表、会话时间线等子组件
  */
+import { sessionApi } from '@/services'
 import { ref, watch, toRaw, nextTick, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import FilterPanel from './FilterPanel.vue'
@@ -139,7 +140,7 @@ async function loadSessionsCache() {
   if (!currentSessionId.value) return
 
   try {
-    const sessions = await window.sessionApi.getSessions(currentSessionId.value)
+    const sessions = await sessionApi.getSessions(currentSessionId.value)
     sessionsCache.value = sessions.map((s) => ({
       id: s.id,
       startTs: s.startTs,

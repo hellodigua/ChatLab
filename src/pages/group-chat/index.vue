@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { chatApi } from '@/services'
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
@@ -105,7 +106,7 @@ async function loadBaseData() {
   if (!currentSessionId.value) return
 
   try {
-    const sessionData = await window.chatApi.getSession(currentSessionId.value)
+    const sessionData = await chatApi.getSession(currentSessionId.value)
     session.value = sessionData
   } catch (error) {
     console.error('加载基础数据失败:', error)
@@ -122,10 +123,10 @@ async function loadAnalysisData() {
     const filter = timeFilter.value
 
     const [members, hourly, daily, types] = await Promise.all([
-      window.chatApi.getMemberActivity(currentSessionId.value, filter),
-      window.chatApi.getHourlyActivity(currentSessionId.value, filter),
-      window.chatApi.getDailyActivity(currentSessionId.value, filter),
-      window.chatApi.getMessageTypeDistribution(currentSessionId.value, filter),
+      chatApi.getMemberActivity(currentSessionId.value, filter),
+      chatApi.getHourlyActivity(currentSessionId.value, filter),
+      chatApi.getDailyActivity(currentSessionId.value, filter),
+      chatApi.getMessageTypeDistribution(currentSessionId.value, filter),
     ])
 
     memberActivity.value = members

@@ -1,4 +1,5 @@
 import dayjs from 'dayjs'
+import { cacheApi } from '@/services'
 
 export type ExportFormat = 'markdown' | 'txt'
 
@@ -121,7 +122,7 @@ export async function exportConversation(
 
   // 转换为 data URL 并保存
   const dataUrl = `data:text/plain;charset=utf-8,${encodeURIComponent(content)}`
-  const result = await window.cacheApi.saveToDownloads(filename, dataUrl)
+  const result = await cacheApi.saveToDownloads(filename, dataUrl)
 
   return result
 }

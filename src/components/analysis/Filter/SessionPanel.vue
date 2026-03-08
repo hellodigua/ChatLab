@@ -5,6 +5,7 @@
  * 使用虚拟滚动和 Set 优化性能
  */
 
+import { sessionApi } from '@/services'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSessionStore } from '@/stores/session'
@@ -100,7 +101,7 @@ async function loadSessions() {
 
   isLoading.value = true
   try {
-    sessions.value = await window.sessionApi.getSessions(sessionId)
+    sessions.value = await sessionApi.getSessions(sessionId)
   } catch (error) {
     console.error('加载会话失败:', error)
   } finally {

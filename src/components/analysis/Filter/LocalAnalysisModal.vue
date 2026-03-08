@@ -4,6 +4,7 @@
  * 支持预设分析和自定义提问
  */
 
+import { agentApi } from '@/services'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSessionStore } from '@/stores/session'
@@ -137,7 +138,7 @@ ${contextContent.value}
       sessionId: sessionStore.currentSessionId || '',
     }
 
-    const { requestId, promise } = window.agentApi.runStream(
+    const { requestId, promise } = agentApi.runStream(
       fullMessage,
       context,
       (chunk) => {
@@ -171,7 +172,7 @@ ${contextContent.value}
 async function abortAnalysis() {
   if (currentRequestId) {
     try {
-      await window.agentApi.abort(currentRequestId)
+      await agentApi.abort(currentRequestId)
     } catch (error) {
       console.error('中止失败:', error)
     }

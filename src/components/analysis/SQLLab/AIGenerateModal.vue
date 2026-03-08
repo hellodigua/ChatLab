@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { llmApi } from '@/services'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { TableSchema } from './types'
@@ -114,7 +115,7 @@ async function generateSQL() {
   }
 
   // 检查是否配置了 LLM
-  const hasConfig = await window.llmApi.hasConfig()
+  const hasConfig = await llmApi.hasConfig()
   if (!hasConfig) {
     aiError.value = t('common.errorNoAIConfig')
     return
@@ -130,7 +131,7 @@ async function generateSQL() {
   try {
     const prompt = buildAIPrompt(aiPrompt.value)
 
-    const result = await window.llmApi.chatStream(
+    const result = await llmApi.chatStream(
       [
         { role: 'system', content: '你是一个 SQLite 专家，请以 JSON 格式输出 sql 和 explanation 字段。' },
         { role: 'user', content: prompt },

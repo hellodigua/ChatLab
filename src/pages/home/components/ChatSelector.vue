@@ -7,6 +7,7 @@
  * 自治组件：传入 filePath 后自动扫描聊天列表，
  * 内部管理 loading / error / retry 状态。
  */
+import { chatApi } from '@/services'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -26,8 +27,8 @@ export interface ChatInfo {
 
 const props = defineProps<{
   open: boolean
-  /** 要扫描的文件路径 */
-  filePath: string
+  /** 要扫描的文件 */
+  file: File | null
 }>()
 
 const emit = defineEmits<{
@@ -83,7 +84,12 @@ async function scan() {
   selectedIndexes.value = new Set()
 
   try {
-    const result = await window.chatApi.scanMultiChatFile(props.filePath)
+    if (!props.file) {
+      error.value = 'No file provided'
+      loading.value = false
+      return
+    }
+    const result = await chatApi.scanMultiChatFile(props.file)
     if (result.success) {
       chats.value = result.chats
     } else {

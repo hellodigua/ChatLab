@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { chatApi, mergeApi } from '@/services'
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
@@ -244,21 +245,23 @@ async function executeMerge() {
 
   try {
     // 1. 导出选中的会话为临时文件
-    const exportResult = await window.chatApi.exportSessionsToTempFiles(selectedSessionIds)
+    const exportResult = await chatApi.exportSessionsToTempFiles(selectedSessionIds)
     if (!exportResult.success) {
       throw new Error(exportResult.error || '导出失败')
     }
     tempFiles = exportResult.tempFiles
 
-    // 2. 解析临时文件获取信息
+    // 2. 解析临时文件获取信息 (server-side files)
     mergeProgress.value = t('tools.batchManage.mergeSteps.parsing')
+    const fileKeys: string[] = []
     for (const filePath of tempFiles) {
-      await window.mergeApi.parseFileInfo(filePath)
+      const parsed = await mergeApi.parseServerFile(filePath)
+      fileKeys.push(parsed.fileKey)
     }
 
     // 3. 检测冲突
     mergeProgress.value = t('tools.batchManage.mergeSteps.checking')
-    const conflictResult = await window.mergeApi.checkConflicts(tempFiles)
+    const conflictResult = await mergeApi.checkConflicts(fileKeys)
 
     if (conflictResult.conflicts.length > 0) {
       // 有冲突，暂时跳过（后续可以添加冲突解决 UI）
@@ -271,15 +274,16 @@ async function executeMerge() {
     const firstSession = sessions.value.find((s) => selectedIds.value.has(s.id))
     const baseName = firstSession?.name || '聊天记录'
     const mergedName = `${baseName}（${t('tools.batchManage.mergedSuffix')}）`
-    const mergeResult = await window.mergeApi.mergeFiles({
+    const mergeResult = await mergeApi.mergeFiles({
       filePaths: tempFiles,
+      fileKeys,
       outputName: mergedName,
       outputFormat: 'json',
       conflictResolutions: conflictResult.conflicts.map((c) => ({
         id: c.id,
         resolution: 'keep1' as const,
       })),
-      andAnalyze: true, // 直接导入分析
+      andAnalyze: true,
     })
 
     if (!mergeResult.success) {
@@ -293,7 +297,7 @@ async function executeMerge() {
     }
 
     // 6. 清理临时文件
-    await window.chatApi.cleanupTempExportFiles(tempFiles)
+    await chatApi.cleanupTempExportFiles(tempFiles)
 
     // 7. 刷新会话列表
     await sessionStore.loadSessions()
@@ -318,7 +322,7 @@ async function executeMerge() {
 
     // 清理临时文件
     if (tempFiles.length > 0) {
-      await window.chatApi.cleanupTempExportFiles(tempFiles)
+      await chatApi.cleanupTempExportFiles(tempFiles)
     }
   } finally {
     isMerging.value = false

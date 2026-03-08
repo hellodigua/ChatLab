@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { nlpApi } from '@/services'
 import { ref, watch, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { EChartWordcloud } from '@/components/charts'
@@ -109,7 +110,7 @@ const posTagOptions = computed(() =>
 // 加载词性标签定义
 async function loadPosTagDefinitions() {
   try {
-    const tags = await window.nlpApi.getPosTags()
+    const tags = await nlpApi.getPosTags()
     posTagDefinitions.value = tags
     // 初始化自定义词性为有意义的词性
     customPosTags.value = tags.filter((t) => t.meaningful).map((t) => t.tag)
@@ -124,7 +125,7 @@ async function loadWordFrequency() {
 
   isLoading.value = true
   try {
-    const result = await window.nlpApi.getWordFrequency({
+    const result = await nlpApi.getWordFrequency({
       sessionId: props.sessionId,
       locale: locale.value,
       timeFilter: props.timeFilter ? { startTs: props.timeFilter.startTs, endTs: props.timeFilter.endTs } : undefined,

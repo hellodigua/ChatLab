@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { llmApi } from '@/services'
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ConversationList from './ConversationList.vue'
@@ -98,7 +99,7 @@ const qaPairs = computed(() => {
 async function checkLLMConfig() {
   isCheckingConfig.value = true
   try {
-    hasLLMConfig.value = await window.llmApi.hasConfig()
+    hasLLMConfig.value = await llmApi.hasConfig()
   } catch (error) {
     console.error('检查 LLM 配置失败：', error)
     hasLLMConfig.value = false

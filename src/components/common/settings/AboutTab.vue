@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { appApi } from '@/services'
 import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
@@ -18,7 +19,7 @@ const analyticsEnabled = ref(true)
 // 获取应用版本
 async function loadAppVersion() {
   try {
-    appVersion.value = await window.api.app.getVersion()
+    appVersion.value = await appApi.getVersion()
   } catch (error) {
     console.error('获取版本号失败:', error)
     appVersion.value = t('settings.about.unknown')
@@ -28,7 +29,7 @@ async function loadAppVersion() {
 // 加载统计开关状态
 async function loadAnalyticsEnabled() {
   try {
-    analyticsEnabled.value = await window.api.app.getAnalyticsEnabled()
+    analyticsEnabled.value = await appApi.getAnalyticsEnabled()
   } catch (error) {
     console.error('获取统计开关状态失败:', error)
   }
@@ -37,7 +38,7 @@ async function loadAnalyticsEnabled() {
 // 切换统计开关
 async function toggleAnalytics(enabled: boolean) {
   try {
-    await window.api.app.setAnalyticsEnabled(enabled)
+    await appApi.setAnalyticsEnabled(enabled)
     analyticsEnabled.value = enabled
   } catch (error) {
     console.error('设置统计开关失败:', error)
@@ -47,7 +48,7 @@ async function toggleAnalytics(enabled: boolean) {
 // 检查更新
 function checkUpdate() {
   isCheckingUpdate.value = true
-  window.api.app.checkUpdate()
+  appApi.checkUpdate()
   // 3 秒后恢复按钮状态（实际检查结果由主进程 dialog 显示）
   setTimeout(() => {
     isCheckingUpdate.value = false

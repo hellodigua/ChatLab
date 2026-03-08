@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { chatApi } from '@/services'
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { CatchphraseAnalysis } from '@/types/analysis'
@@ -25,7 +26,7 @@ async function loadCatchphraseAnalysis() {
   if (!props.sessionId) return
   isLoading.value = true
   try {
-    catchphraseAnalysis.value = await window.chatApi.getCatchphraseAnalysis(props.sessionId, props.timeFilter)
+    catchphraseAnalysis.value = await chatApi.getCatchphraseAnalysis(props.sessionId, props.timeFilter)
   } catch (error) {
     console.error('Failed to load catchphrase analysis:', error)
   } finally {

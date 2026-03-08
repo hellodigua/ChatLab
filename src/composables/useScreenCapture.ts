@@ -6,6 +6,7 @@ import { ref } from 'vue'
 import { captureAsImageData } from '@/utils/snapCapture'
 import { useToast } from '@nuxt/ui/runtime/composables/useToast.js'
 import { useLayoutStore } from '@/stores/layout'
+import { cacheApi, clipboardApi } from '@/services'
 
 /** 默认移动端最大宽度 */
 const DEFAULT_MOBILE_MAX_WIDTH = 525
@@ -48,7 +49,7 @@ export function useScreenCapture() {
     const filename = `chatlab-screenshot-${timestamp}.png`
 
     try {
-      const result = await window.cacheApi.saveToDownloads(filename, imageData)
+      const result = await cacheApi.saveToDownloads(filename, imageData)
       if (result.success) {
         toast.add({
           title: '截图已保存',
@@ -60,7 +61,7 @@ export function useScreenCapture() {
             {
               label: '打开目录',
               onClick: () => {
-                window.cacheApi.openDir('downloads')
+                cacheApi.openDir('downloads')
               },
             },
           ],
@@ -423,7 +424,7 @@ export function useScreenCapture() {
       })
 
       // 自动复制到剪贴板
-      const copyResult = await window.api.clipboard.copyImage(imageData)
+      const copyResult = await clipboardApi.copyImage(imageData)
 
       if (copyResult.success) {
         // 显示成功 Toast（包含预览和下载按钮）

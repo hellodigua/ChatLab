@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { chatApi } from '@/services'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { LaughAnalysis, KeywordTemplate as BaseKeywordTemplate } from '@/types/analysis'
@@ -308,7 +309,7 @@ async function loadAnalysis() {
 
   isLoading.value = true
   try {
-    analysis.value = await window.chatApi.getLaughAnalysis(props.sessionId, props.timeFilter, [
+    analysis.value = await chatApi.getLaughAnalysis(props.sessionId, props.timeFilter, [
       ...currentKeywords.value,
     ])
   } catch (error) {

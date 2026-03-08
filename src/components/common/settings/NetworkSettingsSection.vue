@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { networkApi } from '@/services'
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -25,7 +26,7 @@ const proxyModeOptions = computed(() => [
 // 加载代理配置
 async function loadProxyConfig() {
   try {
-    const config = await window.networkApi.getProxyConfig()
+    const config = await networkApi.getProxyConfig()
     proxyMode.value = config.mode || 'system'
     proxyUrl.value = config.url || ''
   } catch (error) {
@@ -72,7 +73,7 @@ async function saveProxyConfig() {
 
   isSavingProxy.value = true
   try {
-    const result = await window.networkApi.saveProxyConfig({
+    const result = await networkApi.saveProxyConfig({
       mode: proxyMode.value,
       url: proxyUrl.value.trim(),
     })
@@ -133,7 +134,7 @@ async function testProxyConnection() {
   proxyTestResult.value = null
 
   try {
-    const result = await window.networkApi.testProxyConnection(proxyUrl.value.trim())
+    const result = await networkApi.testProxyConnection(proxyUrl.value.trim())
     proxyTestResult.value = {
       success: result.success,
       message: result.success

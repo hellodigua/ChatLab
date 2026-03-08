@@ -22,6 +22,13 @@ export const mergeApi = {
   },
 
   /**
+   * Parse a server-side file (e.g. temp export) for merge preview.
+   * Used when merging existing sessions exported via exportSessionsToTempFiles.
+   */
+  parseServerFile: (filePath: string) =>
+    post<FileParseInfo & { fileKey: string }>('/merge/parse-server', { filePath }),
+
+  /**
    * Check conflicts between previously-parsed files (identified by fileKeys).
    */
   checkConflicts: (fileKeys: string[]) =>
@@ -31,7 +38,7 @@ export const mergeApi = {
    * Execute the merge.
    * In the web API, filePaths from MergeParams are replaced by fileKeys.
    */
-  mergeFiles: (params: MergeParams & { fileKeys: string[] }) =>
+  mergeFiles: (params: MergeParams & { fileKeys?: string[] }) =>
     post<MergeResult>('/merge/execute', params),
 
   /**

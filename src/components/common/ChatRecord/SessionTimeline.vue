@@ -3,6 +3,7 @@
  * 会话时间线组件
  * 使用 @tanstack/vue-virtual 实现虚拟滚动
  */
+import { sessionApi } from '@/services'
 import { ref, computed, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useVirtualizer } from '@tanstack/vue-virtual'
@@ -187,7 +188,7 @@ async function loadSessions() {
 
   isLoading.value = true
   try {
-    const data = await window.sessionApi.getSessions(props.sessionId)
+    const data = await sessionApi.getSessions(props.sessionId)
     allSessions.value = data
     // 滚动到底部（最新会话在下面）
     await nextTick()
@@ -236,7 +237,7 @@ async function generateSummary(session: ChatSessionItem, event: Event) {
 
   try {
     console.log('[SessionTimeline] 调用 IPC...')
-    const result = await window.sessionApi.generateSummary(props.sessionId, session.id, locale.value)
+    const result = await sessionApi.generateSummary(props.sessionId, session.id, locale.value)
     console.log('[SessionTimeline] IPC 返回:', result)
 
     if (result.success && result.summary) {

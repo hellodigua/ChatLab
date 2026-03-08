@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { chatApi } from '@/services'
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { TableSchema } from './types'
@@ -25,7 +26,7 @@ const expandedTables = ref<Set<string>>(new Set())
 // 加载 Schema
 async function loadSchema() {
   try {
-    schema.value = await window.chatApi.getSchema(props.sessionId)
+    schema.value = await chatApi.getSchema(props.sessionId)
     // 默认展开所有表
     schema.value.forEach((table) => expandedTables.value.add(table.name))
   } catch (err) {

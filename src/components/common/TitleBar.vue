@@ -11,25 +11,13 @@ const isWindows = ref(false)
 onMounted(() => {
   isMac.value = navigator.platform.toLowerCase().includes('mac')
   isWindows.value = navigator.platform.toLowerCase().includes('win')
-
-  // 监听窗口状态变化
-  window.electron?.ipcRenderer?.on('windowState', (_: unknown, maximized: boolean) => {
-    isMaximized.value = maximized
-  })
+  // In web app, window controls are handled by the browser — no IPC needed
 })
 
-// 窗口控制
-function minimize() {
-  window.electron?.ipcRenderer?.send('window-min')
-}
-
-function maximize() {
-  window.electron?.ipcRenderer?.send('window-maxOrRestore')
-}
-
-function close() {
-  window.electron?.ipcRenderer?.send('window-close')
-}
+// Web app: window controls are no-ops (browser manages the window)
+function minimize() { /* no-op in web */ }
+function maximize() { /* no-op in web */ }
+function close() { /* no-op in web */ }
 </script>
 
 <template>

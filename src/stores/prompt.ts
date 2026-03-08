@@ -4,6 +4,7 @@ import type { PromptPreset, AIPromptSettings } from '@/types/ai'
 import type { KeywordTemplate } from '@/types/analysis'
 import { DEFAULT_PRESET_ID, getBuiltinPresets, getOriginalBuiltinPreset, type LocaleType } from '@/config/prompts'
 import { useSettingsStore } from './settings'
+import { appApi } from '@/services'
 
 // 远程预设配置 URL 基础地址
 const REMOTE_PRESET_BASE_URL = 'https://chatlab.fun'
@@ -314,7 +315,7 @@ export const usePromptStore = defineStore(
       const indexUrl = `${REMOTE_PRESET_BASE_URL}/${langPath}/system-prompt.json`
 
       try {
-        const result = await window.api.app.fetchRemoteConfig(indexUrl)
+        const result = await appApi.fetchRemoteConfig(indexUrl)
         if (!result.success || !result.data) {
           return []
         }
@@ -346,7 +347,7 @@ export const usePromptStore = defineStore(
 
       const mdUrl = `${REMOTE_PRESET_BASE_URL}${preset.path}`
       try {
-        const mdResult = await window.api.app.fetchRemoteConfig(mdUrl)
+        const mdResult = await appApi.fetchRemoteConfig(mdUrl)
         if (!mdResult.success || typeof mdResult.data !== 'string') {
           return null
         }

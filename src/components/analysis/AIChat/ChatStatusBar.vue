@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { aiApi } from '@/services'
 import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
@@ -6,7 +7,7 @@ import { useToast } from '@nuxt/ui/runtime/composables/useToast.js'
 import { usePromptStore } from '@/stores/prompt'
 import { useLayoutStore } from '@/stores/layout'
 import { useLLMStore } from '@/stores/llm'
-import type { AgentRuntimeStatus } from '@electron/shared/types'
+import type { AgentRuntimeStatus } from '@/services/agent'
 
 const { t, locale } = useI18n()
 const toast = useToast()
@@ -147,7 +148,7 @@ async function openAiLogFile() {
   if (isOpeningLog.value) return
   isOpeningLog.value = true
   try {
-    const result = await window.aiApi.showAiLogFile()
+    const result = await aiApi.showAiLogFile()
     if (!result?.success) {
       toast.add({
         title: t('ai.chat.statusBar.log.openFailed'),

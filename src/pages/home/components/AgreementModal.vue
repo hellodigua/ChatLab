@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { appApi } from '@/services'
 import { ref, computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
@@ -84,7 +85,7 @@ function handleAgree() {
 function handleDisagree() {
   // 不同意时清除已存的协议版本
   localStorage.removeItem(AGREEMENT_KEY)
-  window.api.send('window-close')
+  appApi.send('window-close')
 }
 
 // 手动打开弹窗（供外部调用）
