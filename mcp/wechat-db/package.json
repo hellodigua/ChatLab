@@ -10,7 +10,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "node --experimental-strip-types src/index.ts",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "test": "node --experimental-strip-types --test src/utils.test.mts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",

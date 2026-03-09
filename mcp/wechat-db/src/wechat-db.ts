@@ -15,6 +15,20 @@ import Database from 'better-sqlite3-multiple-ciphers'
 import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { existsSync, readdirSync, statSync } from 'node:fs'
+import {
+  MESSAGE_TYPE_MAP,
+  parseGroupSender,
+  buildMemberNameMap,
+  enrichMessagesWithNames,
+  resolveDisplayName,
+} from './utils.js'
+
+export {
+  MESSAGE_TYPE_MAP,
+  parseGroupSender,
+  buildMemberNameMap,
+  enrichMessagesWithNames,
+} from './utils.js'
 
 // ============================
 // 常量
@@ -28,18 +42,6 @@ const WECHAT_BASE_PATH = join(
 
 /** 消息数据库分片数量 */
 const MESSAGE_DB_SHARDS = 10
-
-/** WeChat 消息类型映射 */
-export const MESSAGE_TYPE_MAP: Record<number, string> = {
-  1: '文本',
-  3: '图片',
-  34: '语音',
-  43: '视频',
-  47: '表情',
-  49: '链接/文件/引用',
-  10000: '系统消息',
-  10002: '撤回消息',
-}
 
 // ============================
 // 类型定义
@@ -337,60 +339,6 @@ export function queryContacts(
 // ============================
 // 查询：消息
 // ============================
-
-// ============================
-// 群消息发言人解析
-// ============================
-
-/**
- * 从群消息中解析发言人 wxid 和实际内容。
- *
- * 微信群消息 content 格式（旧版/部分 4.x）：
- *   "wxid_xxx:\n<实际内容>"
- *
- * 微信 4.x WCDB 也可能有独立的 senderUserName 列，优先使用。
- */
-export function parseGroupSender(
-  row: Record<string, unknown>,
-  isSender: number,
-  talker: string
-): { senderWxid: string; actualContent: string | null } {
-  // 自己发送的消息：senderWxid 为账户本身（用特殊标记）
-  if (isSender === 1) {
-    return { senderWxid: '__self__', actualContent: row.content != null ? String(row.content) : null }
-  }
-
-  // 优先读取独立的发言人字段（WCDB 4.x 部分版本）
-  const senderField =
-    row.senderUserName ?? row.fromUser ?? row.FromUser ?? row.sender ?? null
-  if (senderField != null && String(senderField).trim() !== '') {
-    return {
-      senderWxid: String(senderField).trim(),
-      actualContent: row.content != null ? String(row.content) : null,
-    }
-  }
-
-  // 非群消息（私聊）：发言人就是 talker
-  if (!talker.endsWith('@chatroom')) {
-    return { senderWxid: talker, actualContent: row.content != null ? String(row.content) : null }
-  }
-
-  // 群消息：从 content 前缀解析 "wxid_xxx:\n实际内容"
-  const content = row.content != null ? String(row.content) : null
-  if (content) {
-    const newlineIdx = content.indexOf('\n')
-    if (newlineIdx > 0) {
-      const prefix = content.slice(0, newlineIdx)
-      // wxid 前缀：不含空格、不含 XML 标签特征、长度合理（3~64）
-      if (prefix.length >= 3 && prefix.length <= 64 && !prefix.includes(' ') && !prefix.includes('<')) {
-        const senderWxid = prefix.endsWith(':') ? prefix.slice(0, -1) : prefix
-        return { senderWxid, actualContent: content.slice(newlineIdx + 1) }
-      }
-    }
-  }
-
-  return { senderWxid: '', actualContent: content }
-}
 
 function formatMessage(row: Record<string, unknown>, dbFile: string): WeChatMessage {
   const createTime = Number(row.createTime ?? row.CreateTime ?? 0)
@@ -741,7 +689,7 @@ export function queryGroupMembers(
     const remarkName = contact?.remarkName || null
     const nickName = contact?.nickName || null
     const displayName = m.displayName || null
-    const resolvedName = remarkName || displayName || nickName || m.memberWxid
+    const resolvedName = resolveDisplayName(remarkName, displayName, nickName, m.memberWxid)
     return {
       chatRoomName: chatRoomId,
       memberWxid: m.memberWxid,
@@ -750,32 +698,6 @@ export function queryGroupMembers(
       remarkName,
       resolvedName,
     }
-  })
-}
-
-/**
- * 将群成员列表转换为 wxid → resolvedName 的快查 Map
- */
-export function buildMemberNameMap(members: WeChatGroupMember[]): Map<string, string> {
-  return new Map(members.map((m) => [m.memberWxid, m.resolvedName]))
-}
-
-/**
- * 给消息列表批量填充发言人显示名
- */
-export function enrichMessagesWithNames(
-  messages: WeChatMessage[],
-  nameMap: Map<string, string>,
-  selfName: string = '我'
-): WeChatMessage[] {
-  return messages.map((msg) => {
-    if (msg.senderWxid === '__self__') {
-      return { ...msg, senderDisplayName: selfName }
-    }
-    if (msg.senderWxid) {
-      return { ...msg, senderDisplayName: nameMap.get(msg.senderWxid) ?? msg.senderWxid }
-    }
-    return msg
   })
 }
 
