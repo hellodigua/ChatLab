@@ -30,7 +30,7 @@ const currentLocale = computed({
 })
 
 // 协议版本号（更新协议时修改此版本号）
-const AGREEMENT_VERSION = '1.1'
+const AGREEMENT_VERSION = '2.0'
 const AGREEMENT_KEY = 'chatlab_agreement_version'
 
 // 弹窗显示状态（内部管理）
