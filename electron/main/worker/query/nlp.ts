@@ -79,7 +79,8 @@ export function getWordFrequency(params: WordFrequencyParams): WordFrequencyResu
 
   // 收集词性统计（用于显示每个词性有多少词，仅中文有效）
   let posTagStats: PosTagStat[] | undefined
-  if ((locale as string).startsWith('zh')) {
+  // 词性统计只对中文生效，这里先做类型兜底，避免异常 locale 直接触发 startsWith 报错。
+  if (typeof locale === 'string' && locale.startsWith('zh')) {
     const posStatsMap = collectPosTagStats(texts, minWordLength ?? 2, enableStopwords)
     posTagStats = [...posStatsMap.entries()].map(([tag, count]) => ({ tag, count }))
   }

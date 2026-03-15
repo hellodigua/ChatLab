@@ -166,8 +166,9 @@ export function collectPosTagStats(
       const tagged = jieba.tag(cleaned)
 
       for (const item of tagged) {
-        // 检查词是否有效（长度和停用词过滤）
-        if (!isValidWord(item.word, minWordLength, 'zh-CN', enableStopwords)) {
+        // 这里固定按中文停用词规则校验，但参数顺序必须与 isValidWord 保持一致，
+        // 否则会把最小词长误传成 locale，最终触发 locale.startsWith 的运行时错误。
+        if (!isValidWord(item.word, 'zh-CN', minWordLength, enableStopwords)) {
           continue
         }
         posStats.set(item.tag, (posStats.get(item.tag) || 0) + 1)
