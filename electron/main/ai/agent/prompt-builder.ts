@@ -5,6 +5,7 @@
 import { t as i18nT } from '../../i18n'
 import type { OwnerInfo } from '../tools/types'
 import type { PromptConfig, SkillContext } from './types'
+import type { ToolContext } from '../tools/types'
 
 function agentT(key: string, locale: string, options?: Record<string, unknown>): string {
   return i18nT(key, { lng: locale, ...options })
@@ -19,7 +20,8 @@ function agentT(key: string, locale: string, options?: Record<string, unknown>):
 function getLockedPromptSection(
   chatType: 'group' | 'private',
   ownerInfo?: OwnerInfo,
-  locale: string = 'zh-CN'
+  locale: string = 'zh-CN',
+  mentionedMembers?: ToolContext['mentionedMembers']
 ): string {
   const now = new Date()
   const dateLocale = locale.startsWith('zh') ? 'zh-CN' : 'en-US'
@@ -45,11 +47,22 @@ function getLockedPromptSection(
     ? agentT('ai.agent.memberNotePrivate', locale)
     : agentT('ai.agent.memberNoteGroup', locale)
 
+  const mentionedMembersNote =
+    mentionedMembers && mentionedMembers.length > 0
+      ? `${agentT('ai.agent.mentionedMembersNote', locale)}\n${mentionedMembers
+          .map((member) => {
+            const aliasPart = member.aliases.length > 0 ? ` | aliases=${member.aliases.join(',')}` : ''
+            return `- member_id=${member.memberId} | mention=${member.mentionText} | display_name=${member.displayName} | platform_id=${member.platformId}${aliasPart}`
+          })
+          .join('\n')}\n`
+      : ''
+
   const year = now.getFullYear()
   const prevYear = year - 1
 
   return `${agentT('ai.agent.currentDateIs', locale)} ${currentDate}。
 ${ownerNote}
+${mentionedMembersNote}
 ${memberNote}
 ${agentT('ai.agent.timeParamsIntro', locale)}
 - ${agentT('ai.agent.timeParamExample1', locale, { year })}
@@ -77,10 +90,11 @@ export function buildSystemPrompt(
   promptConfig?: PromptConfig,
   ownerInfo?: OwnerInfo,
   locale: string = 'zh-CN',
-  skillCtx?: SkillContext
+  skillCtx?: SkillContext,
+  mentionedMembers?: ToolContext['mentionedMembers']
 ): string {
   const systemPrompt = promptConfig?.systemPrompt || getFallbackRoleDefinition(chatType, locale)
-  const lockedSection = getLockedPromptSection(chatType, ownerInfo, locale)
+  const lockedSection = getLockedPromptSection(chatType, ownerInfo, locale, mentionedMembers)
 
   let skillSection = ''
   if (skillCtx?.skillDef) {

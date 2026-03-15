@@ -29,6 +29,14 @@ export interface ToolBlockContent {
   params?: Record<string, unknown>
 }
 
+export interface MentionedMemberContext {
+  memberId: number
+  platformId: string
+  displayName: string
+  aliases: string[]
+  mentionText: string
+}
+
 // 内容块类型（用于 AI 消息的流式混合渲染）
 export type ContentBlock =
   | { type: 'text'; text: string }
@@ -198,7 +206,10 @@ export function useAIChat(
   /**
    * 发送消息（使用 Agent + Function Calling）
    */
-  async function sendMessage(content: string): Promise<void> {
+  async function sendMessage(
+    content: string,
+    options?: { mentionedMembers?: MentionedMemberContext[] }
+  ): Promise<void> {
     console.log('[AI] ====== 开始处理用户消息 ======')
     console.log('[AI] 用户输入:', content)
 
@@ -211,6 +222,13 @@ export function useAIChat(
     const currentSkillId = skillStore.activeSkillId
     const currentSkillName = skillStore.activeSkill?.name
     const autoSkillEnabled = aiGlobalSettings.value.enableAutoSkill ?? true
+    const currentMentionedMembers = (options?.mentionedMembers ?? []).map((member) => ({
+      memberId: member.memberId,
+      platformId: member.platformId,
+      displayName: member.displayName,
+      aliases: [...member.aliases],
+      mentionText: member.mentionText,
+    }))
 
     // 检查是否已配置 LLM
     console.log('[AI] 检查 LLM 配置...')
@@ -421,6 +439,7 @@ export function useAIChat(
         ownerInfo: ownerInfo.value
           ? { platformId: ownerInfo.value.platformId, displayName: ownerInfo.value.displayName }
           : undefined,
+        mentionedMembers: currentMentionedMembers.length > 0 ? currentMentionedMembers : undefined,
         preprocessConfig: serializablePreprocessConfig,
       }
 

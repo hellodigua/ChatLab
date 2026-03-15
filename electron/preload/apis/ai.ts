@@ -131,6 +131,13 @@ export interface ToolContext {
   timeFilter?: { startTs: number; endTs: number }
   maxMessagesLimit?: number
   ownerInfo?: { platformId: string; displayName: string }
+  mentionedMembers?: Array<{
+    memberId: number
+    platformId: string
+    displayName: string
+    aliases: string[]
+    mentionText: string
+  }>
   locale?: string
   preprocessConfig?: PreprocessConfig
 }
@@ -865,6 +872,15 @@ export const agentApi = {
             platformId: context.ownerInfo.platformId,
             displayName: context.ownerInfo.displayName,
           }
+        : undefined,
+      mentionedMembers: context.mentionedMembers
+        ? context.mentionedMembers.map((member) => ({
+            memberId: member.memberId,
+            platformId: member.platformId,
+            displayName: member.displayName,
+            aliases: [...member.aliases],
+            mentionText: member.mentionText,
+          }))
         : undefined,
       locale: context.locale,
       preprocessConfig: context.preprocessConfig,

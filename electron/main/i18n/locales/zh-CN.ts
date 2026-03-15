@@ -295,6 +295,7 @@ export default {
 - 通过 get_members 的 search 参数可以模糊搜索这三种名称
 - 找到成员后，使用其 id 字段作为 search_messages 的 sender_id 参数来获取该成员的发言
 `,
+      mentionedMembersNote: '本轮用户显式 @ 的成员（可直接使用 member_id，无需再次搜索）：',
       timeParamsIntro: '时间参数：按用户提到的精度组合 year/month/day/hour',
       timeParamExample1: '"10月" → year: {{year}}, month: 10',
       timeParamExample2: '"10月1号" → year: {{year}}, month: 10, day: 1',

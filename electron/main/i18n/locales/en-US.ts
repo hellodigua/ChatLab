@@ -304,6 +304,8 @@ Returned summaries are brief descriptions of each session, helping quickly locat
 - The search parameter of get_members can be used for fuzzy searching these three names
 - Once a member is found, use their id field as the sender_id parameter for search_messages to retrieve their messages
 `,
+      mentionedMembersNote:
+        'Members explicitly @-selected by the user in this round (member_id can be used directly without another search):',
       timeParamsIntro: 'Time parameters: combine year/month/day/hour based on user mention',
       timeParamExample1: '"October" → year: {{year}}, month: 10',
       timeParamExample2: '"October 1st" → year: {{year}}, month: 10, day: 1',
@@ -311,7 +313,8 @@ Returned summaries are brief descriptions of each session, helping quickly locat
       defaultYearNote:
         'If year is not specified, defaults to {{year}}. If the month has not yet occurred, {{prevYear}} is used.',
       currentTask: 'Current Task',
-      skillPriorityNote: 'Note: When executing this task, prioritize the output format requirements below. This can override your usual response style.',
+      skillPriorityNote:
+        'Note: When executing this task, prioritize the output format requirements below. This can override your usual response style.',
       responseInstruction:
         "Based on the user's question, select appropriate tools to retrieve data, then provide an answer based on the data.",
       fallbackRoleDefinition: {

@@ -87,7 +87,14 @@ export class Agent {
       ? { systemPrompt: this.assistantConfig.systemPrompt }
       : this.promptConfig
 
-    const systemPrompt = buildSystemPrompt(this.chatType, effectivePromptConfig, this.context.ownerInfo, this.locale, this.skillCtx)
+    const systemPrompt = buildSystemPrompt(
+      this.chatType,
+      effectivePromptConfig,
+      this.context.ownerInfo,
+      this.locale,
+      this.skillCtx,
+      this.context.mentionedMembers
+    )
     const answerWithoutToolsPrompt = i18nT('ai.agent.answerWithoutTools', { lng: this.locale })
 
     const handler = new AgentEventHandler({

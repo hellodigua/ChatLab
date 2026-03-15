@@ -19,6 +19,7 @@ import { usePromptStore } from '@/stores/prompt'
 import { useSettingsStore } from '@/stores/settings'
 import { useAssistantStore } from '@/stores/assistant'
 import { useSkillStore } from '@/stores/skill'
+import type { MentionedMemberContext } from '@/composables/useAIChat'
 
 const { t } = useI18n()
 const settingsStore = useSettingsStore()
@@ -263,8 +264,8 @@ function handleSkillActivated() {
 }
 
 // 发送消息
-async function handleSend(content: string) {
-  await sendMessage(content)
+async function handleSend(payload: { content: string; mentionedMembers: MentionedMemberContext[] }) {
+  await sendMessage(payload.content, { mentionedMembers: payload.mentionedMembers })
   // 强制滚动到底部（用户发送消息后应该看到响应）
   scrollToBottom(true)
   // 刷新对话列表
@@ -545,6 +546,7 @@ watch(
               <div class="mx-auto max-w-3xl">
                 <AIChatInput
                   ref="chatInputRef"
+                  :session-id="sessionId"
                   :disabled="isAIThinking"
                   :status="isAIThinking ? 'streaming' : 'ready'"
                   :chat-type="currentChatType"

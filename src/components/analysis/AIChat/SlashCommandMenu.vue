@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import MarkdownIt from 'markdown-it'
 import { useSkillStore, type SkillSummary } from '@/stores/skill'
@@ -24,6 +24,7 @@ const emit = defineEmits<{
 const previewPromptCache = ref<Record<string, string>>({})
 const previewPrompt = ref('')
 const previewLoading = ref(false)
+const listRef = ref<HTMLElement | null>(null)
 
 // 与消息渲染保持一致，使用 markdown-it 展示技能 prompt 的结构化内容。
 const md = new MarkdownIt({
@@ -88,6 +89,19 @@ watch(
   },
   { immediate: true }
 )
+
+watch(
+  () => [props.visible, props.highlightIndex, props.skills.length] as const,
+  async ([visible, highlightIndex]) => {
+    if (!visible || !listRef.value) return
+
+    await nextTick()
+    const items = listRef.value.querySelectorAll<HTMLElement>('[data-slash-item]')
+    const target = items[highlightIndex]
+    // 键盘切换高亮时，自动滚动到当前项，避免选区跑出可视区域。
+    target?.scrollIntoView({ block: 'nearest' })
+  }
+)
 </script>
 
 <template>
@@ -110,11 +124,12 @@ watch(
           </button>
         </div>
 
-        <div v-if="props.skills.length > 0" class="max-h-72 overflow-y-auto p-1.5">
+        <div v-if="props.skills.length > 0" ref="listRef" class="max-h-72 overflow-y-auto p-1.5">
           <button
             v-for="(skill, index) in props.skills"
             :key="skill.id"
             type="button"
+            data-slash-item
             class="flex w-full items-start justify-between gap-1.5 rounded-lg px-2.5 py-1.5 text-left transition-colors"
             :class="
               index === props.highlightIndex

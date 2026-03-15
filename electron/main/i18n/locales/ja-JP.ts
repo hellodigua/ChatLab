@@ -39,9 +39,11 @@ export default {
     migrationV1Message: '「Owner」機能に対応。メンバー一覧で自分の立場を設定できます',
     migrationV2Desc: 'roles、reply_to_message_id、platform_message_id フィールドを追加',
     migrationV2Message: 'メンバーロール、メッセージ返信関係、返信内容プレビューをサポート',
-    migrationV3Desc: 'セッションインデックス関連テーブル（chat_session、message_context）と session_gap_threshold フィールドを追加',
+    migrationV3Desc:
+      'セッションインデックス関連テーブル（chat_session、message_context）と session_gap_threshold フィールドを追加',
     migrationV3Message: 'セッションのタイムライン表示と AI 拡張分析に対応',
-    integrityError: 'データベース構造が不完全です：meta テーブルがありません。このデータベースファイルを削除して再インポートすることをお勧めします。',
+    integrityError:
+      'データベース構造が不完全です：meta テーブルがありません。このデータベースファイルを削除して再インポートすることをお勧めします。',
     checkFailed: 'データベースチェックに失敗しました: {{error}}',
   },
 
@@ -56,15 +58,19 @@ export default {
       search_messages: {
         desc: 'キーワードでグループチャット履歴を検索する。ユーザーが特定のトピックやキーワードに関連するチャット内容を探したい場合に使用する。時間範囲や送信者でメッセージをフィルタリングできる。分単位の精度で時間クエリをサポートする。',
         params: {
-          keywords: '検索キーワードリスト。OR ロジックでいずれかのキーワードを含むメッセージにマッチする。送信者のみでフィルタリングする場合は空配列 [] を渡す',
-          sender_id: '送信者のメンバー ID。特定メンバーの送信メッセージをフィルタリングする。get_members ツールでメンバー ID を取得できる',
+          keywords:
+            '検索キーワードリスト。OR ロジックでいずれかのキーワードを含むメッセージにマッチする。送信者のみでフィルタリングする場合は空配列 [] を渡す',
+          sender_id:
+            '送信者のメンバー ID。特定メンバーの送信メッセージをフィルタリングする。get_members ツールでメンバー ID を取得できる',
           limit: '返却メッセージ数の上限。デフォルト 1000、最大 50000',
           year: '指定年のメッセージをフィルタリング（例：2024）',
           month: '指定月のメッセージをフィルタリング（1-12）。year と併用する必要がある',
           day: '指定日のメッセージをフィルタリング（1-31）。year と month と併用する必要がある',
           hour: '指定時間のメッセージをフィルタリング（0-23）。year、month、day と併用する必要がある',
-          start_time: '開始時刻。形式 "YYYY-MM-DD HH:mm"（例："2024-03-15 14:00"）。指定すると year/month/day/hour パラメータを上書きする',
-          end_time: '終了時刻。形式 "YYYY-MM-DD HH:mm"（例："2024-03-15 18:30"）。指定すると year/month/day/hour パラメータを上書きする',
+          start_time:
+            '開始時刻。形式 "YYYY-MM-DD HH:mm"（例："2024-03-15 14:00"）。指定すると year/month/day/hour パラメータを上書きする',
+          end_time:
+            '終了時刻。形式 "YYYY-MM-DD HH:mm"（例："2024-03-15 18:30"）。指定すると year/month/day/hour パラメータを上書きする',
         },
       },
       get_recent_messages: {
@@ -75,8 +81,10 @@ export default {
           month: '指定月のメッセージをフィルタリング（1-12）。year と併用する必要がある',
           day: '指定日のメッセージをフィルタリング（1-31）。year と month と併用する必要がある',
           hour: '指定時間のメッセージをフィルタリング（0-23）。year、month、day と併用する必要がある',
-          start_time: '開始時刻。形式 "YYYY-MM-DD HH:mm"（例："2024-03-15 14:00"）。指定すると year/month/day/hour パラメータを上書きする',
-          end_time: '終了時刻。形式 "YYYY-MM-DD HH:mm"（例："2024-03-15 18:30"）。指定すると year/month/day/hour パラメータを上書きする',
+          start_time:
+            '開始時刻。形式 "YYYY-MM-DD HH:mm"（例："2024-03-15 14:00"）。指定すると year/month/day/hour パラメータを上書きする',
+          end_time:
+            '終了時刻。形式 "YYYY-MM-DD HH:mm"（例："2024-03-15 18:30"）。指定すると year/month/day/hour パラメータを上書きする',
         },
       },
       get_member_stats: {
@@ -114,8 +122,10 @@ export default {
           month: '指定月のメッセージをフィルタリング（1-12）。year と併用する必要がある',
           day: '指定日のメッセージをフィルタリング（1-31）。year と month と併用する必要がある',
           hour: '指定時間のメッセージをフィルタリング（0-23）。year、month、day と併用する必要がある',
-          start_time: '開始時刻。形式 "YYYY-MM-DD HH:mm"（例："2024-03-15 14:00"）。指定すると year/month/day/hour パラメータを上書きする',
-          end_time: '終了時刻。形式 "YYYY-MM-DD HH:mm"（例："2024-03-15 18:30"）。指定すると year/month/day/hour パラメータを上書きする',
+          start_time:
+            '開始時刻。形式 "YYYY-MM-DD HH:mm"（例："2024-03-15 14:00"）。指定すると year/month/day/hour パラメータを上書きする',
+          end_time:
+            '終了時刻。形式 "YYYY-MM-DD HH:mm"（例："2024-03-15 18:30"）。指定すると year/month/day/hour パラメータを上書きする',
         },
       },
       get_message_context: {
@@ -295,11 +305,14 @@ export default {
 - get_members の search パラメータでこれら3種類の名前をあいまい検索できる
 - メンバーを見つけたら、その id フィールドを search_messages の sender_id パラメータとして使用して発言を取得する
 `,
+      mentionedMembersNote:
+        'このラウンドでユーザーが明示的に @ 選択したメンバー（member_id を再検索なしで直接使えます）：',
       timeParamsIntro: '時間パラメータ：ユーザーが言及した精度に応じて year/month/day/hour を組み合わせる',
       timeParamExample1: '"10月" → year: {{year}}, month: 10',
       timeParamExample2: '"10月1日" → year: {{year}}, month: 10, day: 1',
       timeParamExample3: '"10月1日午後3時" → year: {{year}}, month: 10, day: 1, hour: 15',
-      defaultYearNote: '年が指定されていない場合はデフォルトで{{year}}年。該当月がまだ来ていない場合は{{prevYear}}年を使用する',
+      defaultYearNote:
+        '年が指定されていない場合はデフォルトで{{year}}年。該当月がまだ来ていない場合は{{prevYear}}年を使用する',
       responseInstruction: 'ユーザーの質問に応じて適切なツールを選択してデータを取得し、データに基づいて回答する。',
       fallbackRoleDefinition: {
         group: `あなたはプロフェッショナルだがカジュアルなスタイルのグループチャット履歴分析アシスタントです。

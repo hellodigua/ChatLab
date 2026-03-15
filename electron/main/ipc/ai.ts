@@ -827,6 +827,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
           maxMessagesLimit: context.maxMessagesLimit,
           hasTimeFilter: !!context.timeFilter,
           hasCustomPrompt: !!promptConfig,
+          mentionedMembersCount: context.mentionedMembers?.length ?? 0,
           preprocess: pp
             ? {
                 dataCleaning: pp.dataCleaning ?? true,

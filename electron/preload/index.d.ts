@@ -652,6 +652,14 @@ interface ToolContext {
   maxMessagesLimit?: number
   /** Owner 信息（当前用户在对话中的身份） */
   ownerInfo?: OwnerInfo
+  /** 本轮显式 @ 的成员 */
+  mentionedMembers?: Array<{
+    memberId: number
+    platformId: string
+    displayName: string
+    aliases: string[]
+    mentionText: string
+  }>
   /** 语言环境 */
   locale?: string
   /** 聊天记录预处理配置 */
