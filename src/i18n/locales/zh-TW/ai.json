@@ -36,6 +36,13 @@
       "needMoreThanSkill": "只選擇技能還不能送出，請繼續輸入具體問題",
       "needQuestion": "請輸入問題後再送出"
     },
+    "backgroundTask": {
+      "runningShort": "進行中",
+      "runningTitle": "AI 正在背景推理",
+      "runningDescription": "上一個問題仍在推理中，請等待完成或先停止。",
+      "blockedAction": "目前回答仍在生成中，請先等待完成或手動停止。",
+      "return": "返回查看"
+    },
     "message": {
       "userAvatar": "使用者頭像",
       "calling": "執行",

@@ -2,10 +2,8 @@
 import { ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
-import { useToast } from '@nuxt/ui/runtime/composables/useToast.js'
 
 const { t } = useI18n()
-const toast = useToast()
 
 interface Conversation {
   id: string
@@ -19,6 +17,8 @@ interface Conversation {
 const props = defineProps<{
   sessionId: string
   activeId: string | null
+  /** 仅禁用新建、重命名、删除等会改写状态的操作，仍允许只读切换查看其他对话。 */
+  disabled?: boolean
 }>()
 
 // Emits
@@ -68,12 +68,14 @@ function getTitle(conv: Conversation): string {
 
 // 开始编辑标题
 function startEditing(conv: Conversation) {
+  if (props.disabled) return
   editingId.value = conv.id
   editingTitle.value = conv.title || ''
 }
 
 // 保存标题
 async function saveTitle(convId: string) {
+  if (props.disabled) return
   if (editingTitle.value.trim()) {
     try {
       await window.aiApi.updateConversationTitle(convId, editingTitle.value.trim())
@@ -90,6 +92,7 @@ async function saveTitle(convId: string) {
 
 // 删除对话
 async function handleDelete(convId: string) {
+  if (props.disabled) return
   try {
     await window.aiApi.deleteConversation(convId)
     conversations.value = conversations.value.filter((c) => c.id !== convId)
@@ -133,7 +136,9 @@ defineExpose({
         <div class="flex items-center gap-1">
           <button
             class="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
-            @click="emit('create')"
+            :disabled="disabled"
+            :class="{ 'cursor-not-allowed opacity-50': disabled }"
+            @click="!disabled && emit('create')"
           >
             <UIcon name="i-heroicons-plus" class="h-4 w-4" />
           </button>
@@ -168,7 +173,14 @@ defineExpose({
           <UIcon name="i-heroicons-chat-bubble-left" class="h-6 w-6 text-gray-300 dark:text-gray-600" />
         </div>
         <p class="mt-3 text-xs text-gray-400">{{ t('ai.chat.conversation.empty') }}</p>
-        <UButton class="mt-2" size="xs" variant="link" color="primary" @click="emit('create')">
+        <UButton
+          class="mt-2"
+          size="xs"
+          variant="link"
+          color="primary"
+          :disabled="disabled"
+          @click="!disabled && emit('create')"
+        >
           {{ t('ai.chat.conversation.startNew') }}
         </UButton>
       </div>
@@ -178,8 +190,9 @@ defineExpose({
         <div
           v-for="conv in conversations"
           :key="conv.id"
-          class="group relative rounded-lg px-3 py-2.5 transition-all cursor-pointer"
+          class="group relative rounded-lg px-3 py-2.5 transition-all"
           :class="[
+            'cursor-pointer',
             activeId === conv.id
               ? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white'
               : 'text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800/50',
@@ -266,7 +279,9 @@ defineExpose({
       <button
         class="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-pink-500 dark:hover:bg-gray-800"
         :title="t('ai.chat.conversation.startNew')"
-        @click="emit('create')"
+        :disabled="disabled"
+        :class="{ 'cursor-not-allowed opacity-50': disabled }"
+        @click="!disabled && emit('create')"
       >
         <UIcon name="i-heroicons-plus" class="h-4 w-4" />
       </button>

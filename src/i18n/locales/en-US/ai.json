@@ -36,6 +36,13 @@
       "needMoreThanSkill": "Selecting a skill alone is not enough. Enter a specific question.",
       "needQuestion": "Enter a question before sending"
     },
+    "backgroundTask": {
+      "runningShort": "Running",
+      "runningTitle": "AI is still thinking",
+      "runningDescription": "The previous question is still running. Please wait for it to finish or stop it first.",
+      "blockedAction": "The current answer is still being generated. Wait for it to finish or stop it first.",
+      "return": "Return"
+    },
     "message": {
       "userAvatar": "User Avatar",
       "calling": "Calling",

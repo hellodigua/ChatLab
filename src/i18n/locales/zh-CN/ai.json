@@ -36,6 +36,13 @@
       "needMoreThanSkill": "仅选择技能还不能发送，请继续输入具体问题",
       "needQuestion": "请输入问题后再发送"
     },
+    "backgroundTask": {
+      "runningShort": "进行中",
+      "runningTitle": "AI 正在后台推理",
+      "runningDescription": "上一条问题仍在推理，请等待完成或先停止。",
+      "blockedAction": "当前回答仍在生成中，请先等待完成或手动停止。",
+      "return": "返回查看"
+    },
     "message": {
       "userAvatar": "用户头像",
       "calling": "调用",

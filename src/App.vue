@@ -7,6 +7,7 @@ import TitleBar from '@/components/common/TitleBar.vue'
 import Sidebar from '@/components/common/Sidebar.vue'
 import ScreenCaptureModal from '@/components/common/ScreenCaptureModal.vue'
 import { ChatRecordDrawer } from '@/components/common/ChatRecord'
+import GlobalTaskBar from '@/components/AIChat/GlobalTaskBar.vue'
 import { useSessionStore } from '@/stores/session'
 import { useLayoutStore } from '@/stores/layout'
 import { useSettingsStore } from '@/stores/settings'
@@ -76,6 +77,8 @@ onMounted(async () => {
     />
     <!-- 全局聊天记录查看器 -->
     <ChatRecordDrawer />
+    <!-- 全局 AI 后台任务条：允许用户离开当前页面后仍然快速返回进行中的对话。 -->
+    <GlobalTaskBar />
   </UApp>
 </template>
 

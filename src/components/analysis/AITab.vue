@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import { SubTabs } from '@/components/UI'
 import { ChatExplorer } from '../AIChat'
 import SQLLabTab from './SQLLabTab.vue'
 
 const { t } = useI18n()
+const route = useRoute()
 
 // Props
 const props = defineProps<{
@@ -20,7 +22,17 @@ const subTabs = computed(() => [
   { id: 'sql-lab', label: t('ai.tab.sqlLab'), icon: 'i-heroicons-command-line' },
 ])
 
-const activeSubTab = ref('chat-explorer')
+const activeSubTab = ref((route.query.aiSubTab as string) || 'chat-explorer')
+
+// 悬浮任务条返回时会通过 query 指定目标子页，这里同步一次，确保能直接回到对话流。
+watch(
+  () => route.query.aiSubTab,
+  (nextTab) => {
+    if (nextTab === 'chat-explorer' || nextTab === 'sql-lab') {
+      activeSubTab.value = nextTab
+    }
+  }
+)
 
 // ChatExplorer 组件引用
 const chatExplorerRef = ref<InstanceType<typeof ChatExplorer> | null>(null)

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useToast } from '@nuxt/ui/runtime/composables/useToast.js'
 import ConversationList from './chat/ConversationList.vue'
 import DataSourcePanel from './chat/DataSourcePanel.vue'
 import ChatMessage from './chat/ChatMessage.vue'
@@ -22,6 +23,7 @@ import { useSkillStore } from '@/stores/skill'
 import type { MentionedMemberContext } from '@/composables/useAIChat'
 
 const { t } = useI18n()
+const toast = useToast()
 const settingsStore = useSettingsStore()
 const assistantStore = useAssistantStore()
 const skillStore = useSkillStore()
@@ -41,24 +43,26 @@ const {
   currentKeywords,
   isLoadingSource,
   isAIThinking,
+  showAssistantSelector,
   currentConversationId,
   currentToolStatus,
   toolsUsedInCurrentRound,
   sessionTokenUsage,
   agentStatus,
+  selectedAssistantId,
   sendMessage,
   loadConversation,
   startNewConversation,
   loadMoreSourceMessages,
   updateMaxMessages,
   stopGeneration,
-} = useAIChat(props.sessionId, props.timeFilter, props.chatType ?? 'group', settingsStore.locale)
+  selectAssistantForSession,
+  clearAssistantForSession,
+} = useAIChat(props.sessionId, props.sessionName, props.timeFilter, props.chatType ?? 'group', settingsStore.locale)
 
 // Store
 const promptStore = usePromptStore()
 
-// 助手选择状态
-const showAssistantSelector = ref(true)
 const configModalVisible = ref(false)
 const configModalAssistantId = ref<string | null>(null)
 const configModalReadonly = ref(false)
@@ -165,13 +169,32 @@ const welcomeInfo = computed(() => {
 })
 
 const showWelcomeCard = computed(() => {
-  return messages.value.length === 0 && !isAIThinking.value
+  return !!selectedAssistantId.value && messages.value.length === 0 && !isAIThinking.value
 })
+
+function showRunningTaskToast() {
+  toast.add({
+    title: t('ai.chat.backgroundTask.runningTitle'),
+    description: t('ai.chat.backgroundTask.runningDescription'),
+    color: 'warning',
+    icon: 'i-heroicons-sparkles',
+  })
+}
+
+function showLockedActionToast() {
+  toast.add({
+    title: t('ai.chat.backgroundTask.blockedAction'),
+    color: 'warning',
+    icon: 'i-heroicons-lock-closed',
+  })
+}
 
 // 选择助手
 function handleSelectAssistant(id: string) {
-  assistantStore.selectAssistant(id)
-  showAssistantSelector.value = false
+  if (!selectAssistantForSession(id)) {
+    showLockedActionToast()
+    return
+  }
   startNewConversation()
 }
 
@@ -216,9 +239,11 @@ async function handleAssistantCreated(_id: string) {
 
 // 返回助手选择
 function handleBackToSelector() {
-  assistantStore.clearSelection()
+  if (!clearAssistantForSession()) {
+    showLockedActionToast()
+    return
+  }
   skillStore.activateSkill(null)
-  showAssistantSelector.value = true
 }
 
 function handleOpenSkillMarket() {
@@ -265,7 +290,13 @@ function handleSkillActivated() {
 
 // 发送消息
 async function handleSend(payload: { content: string; mentionedMembers: MentionedMemberContext[] }) {
-  await sendMessage(payload.content, { mentionedMembers: payload.mentionedMembers })
+  const result = await sendMessage(payload.content, { mentionedMembers: payload.mentionedMembers })
+  if (!result.success) {
+    if (result.reason === 'busy') {
+      showRunningTaskToast()
+    }
+    return
+  }
   // 强制滚动到底部（用户发送消息后应该看到响应）
   scrollToBottom(true)
   // 刷新对话列表
@@ -328,12 +359,16 @@ async function handleLoadMore() {
 // 选择对话（切换到已有对话时恢复其绑定的助手）
 async function handleSelectConversation(convId: string) {
   await loadConversation(convId)
-  showAssistantSelector.value = false
   scrollToBottom(true)
 }
 
 // 创建新对话
 function handleCreateConversation() {
+  if (isAIThinking.value) {
+    showLockedActionToast()
+    return
+  }
+  if (!selectedAssistantId.value) return
   startNewConversation()
 }
 
@@ -341,7 +376,11 @@ function handleCreateConversation() {
 function handleDeleteConversation(convId: string) {
   // 如果删除的是当前对话，创建新对话
   if (currentConversationId.value === convId) {
-    startNewConversation()
+    if (selectedAssistantId.value) {
+      startNewConversation()
+    } else {
+      clearAssistantForSession()
+    }
   }
 }
 
@@ -350,18 +389,19 @@ onMounted(async () => {
   await checkLLMConfig()
   await updateMaxMessages()
 
-  startNewConversation()
-
   // 添加事件监听
   if (messagesContainer.value) {
     messagesContainer.value.addEventListener('scroll', checkScrollPosition)
     messagesContainer.value.addEventListener('wheel', handleWheel, { passive: true })
   }
+
+  if (messages.value.length > 0) {
+    scrollToBottom(true)
+  }
 })
 
 // 组件卸载时清理
 onBeforeUnmount(() => {
-  stopGeneration()
   if (messagesContainer.value) {
     messagesContainer.value.removeEventListener('scroll', checkScrollPosition)
     messagesContainer.value.removeEventListener('wheel', handleWheel)
@@ -413,6 +453,7 @@ watch(
       ref="conversationListRef"
       :session-id="sessionId"
       :active-id="currentConversationId"
+      :disabled="isAIThinking"
       class="h-full shrink-0"
       @select="handleSelectConversation"
       @create="handleCreateConversation"
@@ -441,6 +482,8 @@ watch(
             <div class="flex items-center gap-1.5 px-3 py-1.5">
               <button
                 class="flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                :disabled="isAIThinking"
+                :class="{ 'cursor-not-allowed opacity-50': isAIThinking }"
                 @click="handleBackToSelector"
               >
                 <UIcon name="i-heroicons-chevron-left" class="h-3.5 w-3.5" />
