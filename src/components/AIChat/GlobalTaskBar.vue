@@ -19,8 +19,7 @@ const shouldShowFloatingBar = computed(() => {
   const isOnSameSessionAIPage =
     route.name === expectedRouteName &&
     String(route.params.id ?? '') === activeTask.value.sessionId &&
-    route.query.tab === 'ai' &&
-    ((route.query.aiSubTab as string | undefined) ?? 'chat-explorer') === 'chat-explorer'
+    route.query.tab === 'ai-chat'
 
   if (!isOnSameSessionAIPage) {
     return true
@@ -41,7 +40,7 @@ async function handleOpenTask() {
   await router.push({
     name: activeTask.value.chatType === 'group' ? 'group-chat' : 'private-chat',
     params: { id: activeTask.value.sessionId },
-    query: { tab: 'ai', aiSubTab: 'chat-explorer' },
+    query: { tab: 'ai-chat' },
   })
 }
 </script>

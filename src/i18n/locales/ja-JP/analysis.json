@@ -19,7 +19,10 @@
     "quotes": "名言集",
     "members": "メンバー",
     "member": "メンバー",
-    "ai": "AIラボ"
+    "ai": "AIラボ",
+    "aiChat": "AIチャット",
+    "lab": "ラボ",
+    "sqlLab": "SQLラボ"
   },
   "yearFilter": {
     "allTime": "全期間",

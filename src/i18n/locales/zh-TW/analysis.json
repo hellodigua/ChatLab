@@ -19,7 +19,10 @@
     "quotes": "金句",
     "members": "成員",
     "member": "成員",
-    "ai": "AI 實驗室"
+    "ai": "AI 實驗室",
+    "aiChat": "AI 對話",
+    "lab": "實驗室",
+    "sqlLab": "SQL 實驗室"
   },
   "yearFilter": {
     "allTime": "全部時間",

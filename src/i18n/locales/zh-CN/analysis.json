@@ -19,7 +19,10 @@
     "quotes": "语录",
     "members": "成员",
     "member": "成员",
-    "ai": "AI实验室"
+    "ai": "AI实验室",
+    "aiChat": "AI对话",
+    "lab": "实验室",
+    "sqlLab": "SQL实验室"
   },
   "yearFilter": {
     "allTime": "全部时间",
