@@ -8,6 +8,7 @@ import type { MemberActivity, HourlyActivity, DailyActivity } from '@/types/anal
 import CaptureButton from '@/components/common/CaptureButton.vue'
 import TimeSelect from '@/components/common/TimeSelect.vue'
 import AITab from '@/components/analysis/AITab.vue'
+import { ChatExplorer } from '@/components/AIChat'
 import OverviewTab from './components/OverviewTab.vue'
 import ViewTab from './components/ViewTab.vue'
 import QuotesTab from './components/QuotesTab.vue'
@@ -52,16 +53,22 @@ const dailyActivity = ref<DailyActivity[]>([])
 const messageTypes = ref<Array<{ type: MessageType; count: number }>>([])
 const isInitialLoad = ref(true)
 
-// Tab 配置 - 私聊有总览、视图、语录、成员、AI实验室
+// Tab 配置 - 私聊包含总览、视图、语录、成员、AI 对话和实验室
 const tabs = [
   { id: 'overview', labelKey: 'analysis.tabs.overview', icon: 'i-heroicons-chart-pie' },
   { id: 'view', labelKey: 'analysis.tabs.view', icon: 'i-heroicons-presentation-chart-bar' },
   { id: 'quotes', labelKey: 'analysis.tabs.quotes', icon: 'i-heroicons-chat-bubble-left-right' },
   { id: 'member', labelKey: 'analysis.tabs.member', icon: 'i-heroicons-user-group' },
-  { id: 'ai', labelKey: 'analysis.tabs.ai', icon: 'i-heroicons-sparkles' },
+  { id: 'ai-chat', labelKey: 'analysis.tabs.aiChat', icon: 'i-heroicons-chat-bubble-left-ellipsis' },
+  { id: 'lab', labelKey: 'analysis.tabs.lab', icon: 'i-heroicons-beaker' },
 ]
 
-const activeTab = ref((route.query.tab as string) || 'overview')
+function resolveActiveTabFromRoute(): string {
+  const routeTab = route.query.tab as string | undefined
+  return tabs.some((tab) => tab.id === routeTab) ? routeTab! : 'overview'
+}
+
+const activeTab = ref(resolveActiveTabFromRoute())
 
 // 时间范围筛选（composable 统一管理状态、派生计算、URL 同步）
 const { timeRangeValue, fullTimeRange, timeFilter, selectedYearForOverview, initialTimeState } = useTimeSelect(
@@ -149,12 +156,15 @@ async function loadData() {
 watch(
   () => route.params.id,
   () => {
-    if (!route.query.tab) {
-      activeTab.value = 'overview'
-    } else {
-      activeTab.value = route.query.tab as string
-    }
+    activeTab.value = resolveActiveTabFromRoute()
     syncSession()
+  }
+)
+
+watch(
+  () => route.query.tab,
+  () => {
+    activeTab.value = resolveActiveTabFromRoute()
   }
 )
 
@@ -229,12 +239,12 @@ onMounted(() => {
           <CaptureButton />
         </template>
         <!-- Tabs -->
-        <div class="mt-4 flex items-center justify-between gap-4">
-          <div class="flex shrink-0 items-center gap-1 overflow-x-auto scrollbar-hide">
+        <div class="mt-4 flex items-center justify-between gap-3">
+          <div class="flex shrink-0 items-center gap-0.5 overflow-x-auto scrollbar-hide">
             <button
               v-for="tab in tabs"
               :key="tab.id"
-              class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all"
+              class="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-all"
               :class="[
                 activeTab === tab.id
                   ? 'bg-pink-500 text-white dark:bg-pink-900/30 dark:text-pink-300'
@@ -246,11 +256,11 @@ onMounted(() => {
               <span class="whitespace-nowrap">{{ t(tab.labelKey) }}</span>
             </button>
           </div>
-          <!-- 时间范围选择器靠右（AI实验室时隐藏） -->
+          <!-- AI 对话、实验室和成员页都不使用这里的时间范围筛选，因此在这些一级 Tab 下隐藏。 -->
           <TimeSelect
             v-model="timeRangeValue"
             :session-id="currentSessionId ?? undefined"
-            :visible="activeTab !== 'ai'"
+            :visible="activeTab !== 'ai-chat' && activeTab !== 'lab' && activeTab !== 'member'"
             :initial-state="initialTimeState"
             @update:full-range="fullTimeRange = $event"
           />
@@ -298,12 +308,20 @@ onMounted(() => {
               :key="'member-' + currentSessionId"
               :session-id="currentSessionId!"
             />
-            <AITab
-              v-else-if="activeTab === 'ai'"
-              :key="'ai-' + currentSessionId"
+            <ChatExplorer
+              v-else-if="activeTab === 'ai-chat'"
+              :key="'ai-chat-' + currentSessionId"
               :session-id="currentSessionId!"
               :session-name="session.name"
               chat-type="private"
+            />
+            <AITab
+              v-else-if="activeTab === 'lab'"
+              :key="'lab-' + currentSessionId"
+              :session-id="currentSessionId!"
+              :session-name="session.name"
+              chat-type="private"
+              mode="sql-only"
             />
           </Transition>
         </div>

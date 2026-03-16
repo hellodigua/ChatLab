@@ -15,19 +15,32 @@ const props = defineProps<{
   sessionName: string
   timeFilter?: { startTs: number; endTs: number }
   chatType?: 'group' | 'private'
+  mode?: 'full' | 'sql-only'
 }>()
 
-const subTabs = computed(() => [
-  { id: 'chat-explorer', label: t('ai.tab.chatExplorer'), icon: 'i-heroicons-chat-bubble-left-ellipsis' },
-  { id: 'sql-lab', label: t('ai.tab.sqlLab'), icon: 'i-heroicons-command-line' },
-])
+const subTabs = computed(() => {
+  // 实验室模式下只保留 SQL 实验室子 Tab，一级导航由外层页面承载。
+  if (props.mode === 'sql-only') {
+    return [{ id: 'sql-lab', label: t('ai.tab.sqlLab'), icon: 'i-heroicons-command-line' }]
+  }
 
-const activeSubTab = ref((route.query.aiSubTab as string) || 'chat-explorer')
+  return [
+    { id: 'chat-explorer', label: t('ai.tab.chatExplorer'), icon: 'i-heroicons-chat-bubble-left-ellipsis' },
+    { id: 'sql-lab', label: t('ai.tab.sqlLab'), icon: 'i-heroicons-command-line' },
+  ]
+})
+
+const activeSubTab = ref(props.mode === 'sql-only' ? 'sql-lab' : (route.query.aiSubTab as string) || 'chat-explorer')
 
 // 悬浮任务条返回时会通过 query 指定目标子页，这里同步一次，确保能直接回到对话流。
 watch(
   () => route.query.aiSubTab,
   (nextTab) => {
+    if (props.mode === 'sql-only') {
+      activeSubTab.value = 'sql-lab'
+      return
+    }
+
     if (nextTab === 'chat-explorer' || nextTab === 'sql-lab') {
       activeSubTab.value = nextTab
     }

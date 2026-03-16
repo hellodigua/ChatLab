@@ -454,7 +454,7 @@ watch(
 </script>
 
 <template>
-  <div v-if="visible && isLoaded" class="flex items-center gap-2">
+  <div v-if="isLoaded" class="flex items-center gap-2" :class="{ invisible: !visible }">
     <!-- 模式选择器 -->
     <USelect v-model="modeModel" :items="modeOptions" size="md" class="w-28 shrink-0" />
 

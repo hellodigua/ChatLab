@@ -19,7 +19,10 @@
     "quotes": "Quotes",
     "members": "Members",
     "member": "Members",
-    "ai": "AI Lab"
+    "ai": "AI Lab",
+    "aiChat": "AI Chat",
+    "lab": "Lab",
+    "sqlLab": "SQL Lab"
   },
   "yearFilter": {
     "allTime": "All Time",
