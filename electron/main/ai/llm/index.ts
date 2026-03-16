@@ -104,10 +104,12 @@ const GEMINI_INFO: ProviderInfo = {
   id: 'gemini',
   name: 'Gemini',
   description: 'Google Gemini 大语言模型',
-  defaultBaseUrl: 'https://generativelanguage.googleapis.com',
+  defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
   models: [
-    { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash Preview', description: '高速预览版' },
-    { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro Preview', description: '专业预览版' },
+    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', description: '高性价比，低延迟，适合大多数场景' },
+    { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', description: '深度推理与复杂任务' },
+    { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash Preview', description: '前沿性能，预览版' },
+    { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro Preview', description: '最先进推理模型，预览版' },
   ],
 }
 
