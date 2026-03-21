@@ -28,8 +28,10 @@
     "name": "MiniMax",
     "description": "MiniMax LLM with multimodal and long context support",
     "models": {
-      "MiniMax-M2": "Flagship model",
-      "MiniMax-M2-Stable": "Stable version"
+      "MiniMax-M2.7": "Latest flagship model, 1M context",
+      "MiniMax-M2.7-highspeed": "High-speed flagship model",
+      "MiniMax-M2.5": "High-performance model",
+      "MiniMax-M2.5-highspeed": "High-speed model, 204K context"
     }
   },
   "glm": {

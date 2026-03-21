@@ -28,8 +28,10 @@
     "name": "MiniMax",
     "description": "MiniMax 大型語言模型，支援多模態與長上下文",
     "models": {
-      "MiniMax-M2": "旗艦模型",
-      "MiniMax-M2-Stable": "穩定版本"
+      "MiniMax-M2.7": "最新旗艦模型，1M 上下文",
+      "MiniMax-M2.7-highspeed": "高速版旗艦模型",
+      "MiniMax-M2.5": "高效能模型",
+      "MiniMax-M2.5-highspeed": "高速版模型，204K 上下文"
     }
   },
   "glm": {

@@ -28,8 +28,10 @@
     "name": "MiniMax",
     "description": "MiniMax 大規模言語モデル。マルチモーダルと長文脈に対応",
     "models": {
-      "MiniMax-M2": "フラッグシップモデル",
-      "MiniMax-M2-Stable": "安定版"
+      "MiniMax-M2.7": "最新フラッグシップモデル、1M コンテキスト",
+      "MiniMax-M2.7-highspeed": "高速版フラッグシップモデル",
+      "MiniMax-M2.5": "高性能モデル",
+      "MiniMax-M2.5-highspeed": "高速版モデル、204K コンテキスト"
     }
   },
   "glm": {

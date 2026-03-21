@@ -49,10 +49,12 @@ const MINIMAX_INFO: ProviderInfo = {
   id: 'minimax',
   name: 'MiniMax',
   description: 'MiniMax 大语言模型，支持多模态和长上下文',
-  defaultBaseUrl: 'https://api.minimaxi.com/v1',
+  defaultBaseUrl: 'https://api.minimax.io/v1',
   models: [
-    { id: 'MiniMax-M2', name: 'MiniMax-M2', description: '旗舰模型' },
-    { id: 'MiniMax-M2-Stable', name: 'MiniMax-M2-Stable', description: '稳定版本' },
+    { id: 'MiniMax-M2.7', name: 'MiniMax-M2.7', description: '最新旗舰模型，1M 上下文' },
+    { id: 'MiniMax-M2.7-highspeed', name: 'MiniMax-M2.7-highspeed', description: '高速版旗舰模型' },
+    { id: 'MiniMax-M2.5', name: 'MiniMax-M2.5', description: '高性能模型' },
+    { id: 'MiniMax-M2.5-highspeed', name: 'MiniMax-M2.5-highspeed', description: '高速版模型，204K 上下文' },
   ],
 }
 
@@ -436,6 +438,12 @@ function validateProviderBaseUrl(provider: LLMProvider, baseUrl?: string): void 
       throw new Error('通义千问 Base URL 需要包含 /compatible-mode/v1')
     }
   }
+
+  if (provider === 'minimax') {
+    if (normalized.includes('minimaxi.com')) {
+      throw new Error('MiniMax API 已迁移，请使用 https://api.minimax.io/v1')
+    }
+  }
 }
 
 /**
@@ -472,6 +480,16 @@ export function buildPiModel(config: AIServiceConfig): PiModel<'openai-completio
     }
   }
 
+  // MiniMax M2.7 supports 1M context; M2.5-highspeed supports 204K
+  let contextWindow = 128000
+  if (config.provider === 'minimax') {
+    if (modelId.includes('M2.7')) {
+      contextWindow = 1000000
+    } else if (modelId === 'MiniMax-M2.5-highspeed') {
+      contextWindow = 204000
+    }
+  }
+
   return {
     id: modelId,
     name: modelId,
@@ -481,7 +499,7 @@ export function buildPiModel(config: AIServiceConfig): PiModel<'openai-completio
     reasoning: config.isReasoningModel ?? false,
     input: ['text'],
     cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-    contextWindow: 128000,
+    contextWindow,
     maxTokens: config.maxTokens ?? 4096,
     compat: config.disableThinking ? { thinkingFormat: 'qwen' } : undefined,
   }
