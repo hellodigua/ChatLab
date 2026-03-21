@@ -26,9 +26,19 @@
   },
   "minimax": {
     "name": "MiniMax",
-    "description": "MiniMax 大语言模型，支持多模态和长上下文",
+    "description": "MiniMax 大语言模型（国际版）",
     "models": {
-      "MiniMax-M2.7": "最新旗舰模型，1M 上下文",
+      "MiniMax-M2.7": "最新旗舰模型，204K 上下文",
+      "MiniMax-M2.7-highspeed": "高速版旗舰模型",
+      "MiniMax-M2.5": "高性能模型",
+      "MiniMax-M2.5-highspeed": "高速版模型，204K 上下文"
+    }
+  },
+  "minimax-cn": {
+    "name": "MiniMax（国内）",
+    "description": "MiniMax 大语言模型（国内版）",
+    "models": {
+      "MiniMax-M2.7": "最新旗舰模型，204K 上下文",
       "MiniMax-M2.7-highspeed": "高速版旗舰模型",
       "MiniMax-M2.5": "高性能模型",
       "MiniMax-M2.5-highspeed": "高速版模型，204K 上下文"

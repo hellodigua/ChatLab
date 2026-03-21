@@ -26,9 +26,19 @@
   },
   "minimax": {
     "name": "MiniMax",
-    "description": "MiniMax 大規模言語モデル。マルチモーダルと長文脈に対応",
+    "description": "MiniMax 大規模言語モデル（国際版）",
     "models": {
-      "MiniMax-M2.7": "最新フラッグシップモデル、1M コンテキスト",
+      "MiniMax-M2.7": "最新フラッグシップモデル、204K コンテキスト",
+      "MiniMax-M2.7-highspeed": "高速版フラッグシップモデル",
+      "MiniMax-M2.5": "高性能モデル",
+      "MiniMax-M2.5-highspeed": "高速版モデル、204K コンテキスト"
+    }
+  },
+  "minimax-cn": {
+    "name": "MiniMax（中国国内）",
+    "description": "MiniMax 大規模言語モデル（中国国内版）",
+    "models": {
+      "MiniMax-M2.7": "最新フラッグシップモデル、204K コンテキスト",
       "MiniMax-M2.7-highspeed": "高速版フラッグシップモデル",
       "MiniMax-M2.5": "高性能モデル",
       "MiniMax-M2.5-highspeed": "高速版モデル、204K コンテキスト"

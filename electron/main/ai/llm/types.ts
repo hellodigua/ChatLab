@@ -5,7 +5,7 @@
 /**
  * 支持的 LLM 提供商
  */
-export type LLMProvider = 'deepseek' | 'qwen' | 'minimax' | 'glm' | 'kimi' | 'gemini' | 'doubao' | 'openai-compatible'
+export type LLMProvider = 'deepseek' | 'qwen' | 'minimax' | 'minimax-cn' | 'glm' | 'kimi' | 'gemini' | 'doubao' | 'openai-compatible'
 
 /**
  * 提供商信息

@@ -44,14 +44,28 @@ const QWEN_INFO: ProviderInfo = {
   ],
 }
 
-/** MiniMax 提供商信息 */
+/** MiniMax 提供商信息（国际版，api.minimax.io） */
 const MINIMAX_INFO: ProviderInfo = {
   id: 'minimax',
   name: 'MiniMax',
-  description: 'MiniMax 大语言模型，支持多模态和长上下文',
+  description: 'MiniMax 大语言模型（国际版）',
   defaultBaseUrl: 'https://api.minimax.io/v1',
   models: [
-    { id: 'MiniMax-M2.7', name: 'MiniMax-M2.7', description: '最新旗舰模型，1M 上下文' },
+    { id: 'MiniMax-M2.7', name: 'MiniMax-M2.7', description: '最新旗舰模型，204K 上下文' },
+    { id: 'MiniMax-M2.7-highspeed', name: 'MiniMax-M2.7-highspeed', description: '高速版旗舰模型' },
+    { id: 'MiniMax-M2.5', name: 'MiniMax-M2.5', description: '高性能模型' },
+    { id: 'MiniMax-M2.5-highspeed', name: 'MiniMax-M2.5-highspeed', description: '高速版模型，204K 上下文' },
+  ],
+}
+
+/** MiniMax 提供商信息（国内版，api.minimax.chat） */
+const MINIMAX_CN_INFO: ProviderInfo = {
+  id: 'minimax-cn',
+  name: 'MiniMax（国内）',
+  description: 'MiniMax 大语言模型（国内版）',
+  defaultBaseUrl: 'https://api.minimax.chat/v1',
+  models: [
+    { id: 'MiniMax-M2.7', name: 'MiniMax-M2.7', description: '最新旗舰模型，204K 上下文' },
     { id: 'MiniMax-M2.7-highspeed', name: 'MiniMax-M2.7-highspeed', description: '高速版旗舰模型' },
     { id: 'MiniMax-M2.5', name: 'MiniMax-M2.5', description: '高性能模型' },
     { id: 'MiniMax-M2.5-highspeed', name: 'MiniMax-M2.5-highspeed', description: '高速版模型，204K 上下文' },
@@ -134,6 +148,7 @@ export const PROVIDERS: ProviderInfo[] = [
   QWEN_INFO,
   GEMINI_INFO,
   MINIMAX_INFO,
+  MINIMAX_CN_INFO,
   GLM_INFO,
   KIMI_INFO,
   DOUBAO_INFO,
@@ -439,9 +454,9 @@ function validateProviderBaseUrl(provider: LLMProvider, baseUrl?: string): void 
     }
   }
 
-  if (provider === 'minimax') {
+  if (provider === 'minimax' || provider === 'minimax-cn') {
     if (normalized.includes('minimaxi.com')) {
-      throw new Error('MiniMax API 已迁移，请使用 https://api.minimax.io/v1')
+      throw new Error('MiniMax API 已迁移，请使用 https://api.minimax.io/v1（国际）或 https://api.minimax.chat/v1（国内）')
     }
   }
 }
@@ -480,13 +495,11 @@ export function buildPiModel(config: AIServiceConfig): PiModel<'openai-completio
     }
   }
 
-  // MiniMax M2.7 supports 1M context; M2.5-highspeed supports 204K
+  // MiniMax M2.7 and M2.5-highspeed support 204K context
   let contextWindow = 128000
-  if (config.provider === 'minimax') {
-    if (modelId.includes('M2.7')) {
-      contextWindow = 1000000
-    } else if (modelId === 'MiniMax-M2.5-highspeed') {
-      contextWindow = 204000
+  if (config.provider === 'minimax' || config.provider === 'minimax-cn') {
+    if (modelId.includes('M2.7') || modelId === 'MiniMax-M2.5-highspeed') {
+      contextWindow = 204800
     }
   }
 

@@ -2,7 +2,7 @@
  * MiniMax provider configuration tests
  *
  * Tests the MiniMax LLM provider configuration including:
- * - API endpoint URL correctness
+ * - API endpoint URLs (international + China domestic)
  * - Model definitions
  * - Context window sizes
  * - Base URL validation
@@ -30,22 +30,18 @@ describe('MiniMax provider type definition', () => {
   it('should include minimax in LLMProvider union type', () => {
     assert.match(typesSource, /['"]minimax['"]/, 'minimax should be in LLMProvider type')
   })
+
+  it('should include minimax-cn in LLMProvider union type', () => {
+    assert.match(typesSource, /['"]minimax-cn['"]/, 'minimax-cn should be in LLMProvider type')
+  })
 })
 
-describe('MiniMax provider info', () => {
-  it('should use correct API base URL (api.minimax.io)', () => {
+describe('MiniMax provider info (international)', () => {
+  it('should use api.minimax.io for international endpoint', () => {
     assert.match(
       indexSource,
-      /defaultBaseUrl:\s*['"]https:\/\/api\.minimax\.io\/v1['"]/,
-      'Base URL should be https://api.minimax.io/v1'
-    )
-  })
-
-  it('should NOT use old api.minimaxi.com URL', () => {
-    assert.doesNotMatch(
-      indexSource,
-      /defaultBaseUrl:\s*['"]https:\/\/api\.minimaxi\.com/,
-      'Should not use deprecated api.minimaxi.com endpoint'
+      /MINIMAX_INFO[\s\S]*?defaultBaseUrl:\s*['"]https:\/\/api\.minimax\.io\/v1['"]/,
+      'International base URL should be https://api.minimax.io/v1'
     )
   })
 
@@ -66,27 +62,56 @@ describe('MiniMax provider info', () => {
   })
 
   it('should NOT include deprecated M2/M2-Stable models', () => {
-    // Check that old models are not in the MINIMAX_INFO provider block
     const minimaxBlock = indexSource.match(/const MINIMAX_INFO[\s\S]*?\n\}/)?.[0] || ''
     assert.doesNotMatch(minimaxBlock, /['"]MiniMax-M2['"](?![\.\-])/, 'Should not include deprecated MiniMax-M2')
     assert.doesNotMatch(minimaxBlock, /MiniMax-M2-Stable/, 'Should not include deprecated MiniMax-M2-Stable')
   })
 })
 
-describe('MiniMax context window handling', () => {
-  it('should set 1M context window for M2.7 models', () => {
+describe('MiniMax provider info (China domestic)', () => {
+  it('should use api.minimax.chat for China domestic endpoint', () => {
     assert.match(
       indexSource,
-      /M2\.7.*\n\s*contextWindow\s*=\s*1000000|contextWindow\s*=\s*1000000[\s\S]*?M2\.7/,
-      'M2.7 models should have 1M context window'
+      /MINIMAX_CN_INFO[\s\S]*?defaultBaseUrl:\s*['"]https:\/\/api\.minimax\.chat\/v1['"]/,
+      'China domestic base URL should be https://api.minimax.chat/v1'
     )
   })
 
-  it('should set 204K context window for M2.5-highspeed', () => {
+  it('should have minimax-cn as provider id', () => {
     assert.match(
       indexSource,
-      /M2\.5-highspeed.*\n\s*contextWindow\s*=\s*204000|contextWindow\s*=\s*204000[\s\S]*?M2\.5-highspeed/,
-      'M2.5-highspeed should have 204K context window'
+      /MINIMAX_CN_INFO[\s\S]*?id:\s*['"]minimax-cn['"]/,
+      'China domestic provider should have id minimax-cn'
+    )
+  })
+
+  it('should include MINIMAX_CN_INFO in PROVIDERS export', () => {
+    assert.match(indexSource, /MINIMAX_CN_INFO/, 'MINIMAX_CN_INFO should be in PROVIDERS array')
+  })
+})
+
+describe('MiniMax context window handling', () => {
+  it('should set 204800 context window for M2.7 models', () => {
+    assert.match(
+      indexSource,
+      /204800/,
+      'M2.7 models should have 204800 context window'
+    )
+  })
+
+  it('should NOT use 1M (1000000) context window', () => {
+    assert.doesNotMatch(
+      indexSource,
+      /contextWindow\s*=\s*1000000/,
+      'Should not use 1M context window for any MiniMax model'
+    )
+  })
+
+  it('should handle minimax-cn provider for context window', () => {
+    assert.match(
+      indexSource,
+      /minimax-cn/,
+      'Context window logic should handle minimax-cn provider'
     )
   })
 })
@@ -104,7 +129,20 @@ describe('MiniMax base URL validation', () => {
     assert.match(
       indexSource,
       /api\.minimax\.io/,
-      'Error message should point to correct api.minimax.io URL'
+      'Error message should mention api.minimax.io URL'
+    )
+    assert.match(
+      indexSource,
+      /api\.minimax\.chat/,
+      'Error message should mention api.minimax.chat URL'
+    )
+  })
+
+  it('should validate minimax-cn provider too', () => {
+    assert.match(
+      indexSource,
+      /minimax-cn/,
+      'Validation should also cover minimax-cn provider'
     )
   })
 })
@@ -113,12 +151,17 @@ describe('MiniMax in PROVIDERS array', () => {
   it('should include MINIMAX_INFO in PROVIDERS export', () => {
     assert.match(indexSource, /MINIMAX_INFO/, 'MINIMAX_INFO should be in PROVIDERS array')
   })
+
+  it('should include MINIMAX_CN_INFO in PROVIDERS export', () => {
+    assert.match(indexSource, /MINIMAX_CN_INFO/, 'MINIMAX_CN_INFO should be in PROVIDERS array')
+  })
 })
 
 // ==================== i18n Locale Tests ====================
 
 const locales = ['en-US', 'zh-CN', 'ja-JP', 'zh-TW']
 const expectedModels = ['MiniMax-M2.7', 'MiniMax-M2.7-highspeed', 'MiniMax-M2.5', 'MiniMax-M2.5-highspeed']
+const minimaxProviders = ['minimax', 'minimax-cn']
 
 for (const locale of locales) {
   describe(`MiniMax i18n (${locale})`, () => {
@@ -130,21 +173,23 @@ for (const locale of locales) {
       localeData = JSON.parse(fs.readFileSync(localePath, 'utf-8'))
     })
 
-    it('should have minimax provider entry', () => {
-      if (!localeData) localeData = JSON.parse(fs.readFileSync(localePath, 'utf-8'))
-      assert.ok(localeData.minimax, 'Should have minimax key')
-      assert.ok(localeData.minimax.name, 'Should have minimax name')
-      assert.ok(localeData.minimax.description, 'Should have minimax description')
-    })
-
-    for (const model of expectedModels) {
-      it(`should have translation for ${model}`, () => {
+    for (const provider of minimaxProviders) {
+      it(`should have ${provider} provider entry`, () => {
         if (!localeData) localeData = JSON.parse(fs.readFileSync(localePath, 'utf-8'))
-        assert.ok(
-          localeData.minimax?.models?.[model],
-          `Should have translation for ${model} in ${locale}`
-        )
+        assert.ok(localeData[provider], `Should have ${provider} key`)
+        assert.ok(localeData[provider].name, `Should have ${provider} name`)
+        assert.ok(localeData[provider].description, `Should have ${provider} description`)
       })
+
+      for (const model of expectedModels) {
+        it(`should have translation for ${model} in ${provider}`, () => {
+          if (!localeData) localeData = JSON.parse(fs.readFileSync(localePath, 'utf-8'))
+          assert.ok(
+            localeData[provider]?.models?.[model],
+            `Should have translation for ${model} in ${provider} (${locale})`
+          )
+        })
+      }
     }
 
     it('should NOT have deprecated M2/M2-Stable translations', () => {
