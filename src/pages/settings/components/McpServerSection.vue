@@ -9,6 +9,7 @@ const enabled = ref(false)
 const transport = ref<'stdio' | 'http'>('http')
 const port = ref(3000)
 const autoStart = ref(false)
+const apiKey = ref('')
 
 // 状态
 const isRunning = ref(false)
@@ -46,6 +47,7 @@ async function loadConfig() {
     transport.value = config.transport
     port.value = config.port
     autoStart.value = config.autoStart
+    apiKey.value = config.apiKey || ''
   } catch (error) {
     console.error('Failed to load MCP config:', error)
   }
@@ -59,6 +61,7 @@ async function saveConfig() {
       transport: transport.value,
       port: port.value,
       autoStart: autoStart.value,
+      apiKey: apiKey.value,
     })
   } catch (error) {
     console.error('Failed to save MCP config:', error)
@@ -143,6 +146,11 @@ async function handlePortBlur() {
   if (!portError.value) {
     await saveConfig()
   }
+}
+
+// API Key 失焦保存
+async function handleApiKeyBlur() {
+  await saveConfig()
 }
 
 // 加载服务路径信息
@@ -291,6 +299,58 @@ onUnmounted(() => {
             </div>
           </div>
           <p v-if="portError" class="mt-1 text-right text-xs text-red-500">{{ portError }}</p>
+        </div>
+
+        <!-- API Key -->
+        <div v-if="transport === 'http'" class="mt-4">
+          <div class="flex items-center justify-between">
+            <div class="flex-1 pr-4">
+              <p class="text-sm font-medium text-gray-900 dark:text-white">
+                {{ t('settings.basic.mcp.apiKey') }}
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                {{ t('settings.basic.mcp.apiKeyDesc') }}
+              </p>
+            </div>
+            <div class="w-64">
+              <UInput
+                v-model="apiKey"
+                type="password"
+                :placeholder="t('settings.basic.mcp.apiKeyPlaceholder')"
+                size="sm"
+                @blur="handleApiKeyBlur"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- 安全警告 -->
+        <div v-if="transport === 'http' && isRunning && !apiKey" class="mt-3">
+          <div class="rounded-md bg-amber-50 p-3 dark:bg-amber-900/20">
+            <div class="flex items-center gap-2">
+              <UIcon name="i-heroicons-exclamation-triangle" class="h-4 w-4 flex-shrink-0 text-amber-500" />
+              <p class="text-xs text-amber-700 dark:text-amber-300">
+                {{ t('settings.basic.mcp.noAuthWarning') }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- REST API URL -->
+        <div v-if="transport === 'http' && isRunning" class="mt-3">
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-500 dark:text-gray-400">REST API:</span>
+            <code class="rounded bg-gray-200 px-2 py-0.5 text-xs dark:bg-gray-700">
+              http://127.0.0.1:{{ port }}/api/v1/
+            </code>
+            <UButton
+              variant="ghost"
+              size="xs"
+              @click="copyToClipboard(`http://127.0.0.1:${port}/api/v1/`)"
+            >
+              <UIcon name="i-heroicons-clipboard" class="h-3 w-3" />
+            </UButton>
+          </div>
         </div>
 
         <!-- 自启动 -->

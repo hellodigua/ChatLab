@@ -649,6 +649,137 @@ export function executeRawSQL(db: Database.Database, sql: string): SQLResult {
   }
 }
 
+// ==================== Session Overview ====================
+
+const MESSAGE_TYPE_NAMES: Record<number, string> = {
+  0: 'text', 1: 'image', 2: 'voice', 3: 'video',
+  4: 'file', 5: 'emoji', 6: 'link', 7: 'system',
+}
+
+export interface SessionOverview {
+  totalMessages: number
+  totalMembers: number
+  timeRange: { start: number; end: number } | null
+  messageTypes: Array<{ type: number; typeName: string; count: number }>
+  topMembers: Array<{ name: string; messageCount: number; percentage: number }>
+}
+
+/**
+ * Get comprehensive session overview
+ */
+export function getSessionOverview(db: Database.Database): SessionOverview {
+  const msgCount = db.prepare('SELECT COUNT(*) as count FROM message').get() as { count: number }
+  const memberCount = db.prepare(
+    "SELECT COUNT(*) as count FROM member WHERE COALESCE(group_nickname, account_name, platform_id) != '系统消息'"
+  ).get() as { count: number }
+  const timeRange = db.prepare('SELECT MIN(ts) as start, MAX(ts) as end FROM message').get() as {
+    start: number | null; end: number | null
+  }
+
+  // Message type distribution
+  const typeRows = db.prepare(
+    'SELECT type, COUNT(*) as count FROM message GROUP BY type ORDER BY count DESC'
+  ).all() as Array<{ type: number; count: number }>
+
+  const messageTypes = typeRows.map((r) => ({
+    type: r.type,
+    typeName: MESSAGE_TYPE_NAMES[r.type] || `type_${r.type}`,
+    count: r.count,
+  }))
+
+  // Top 5 members
+  const activity = getMemberActivity(db)
+  const topMembers = activity.slice(0, 5).map((m) => ({
+    name: m.name,
+    messageCount: m.messageCount,
+    percentage: m.percentage,
+  }))
+
+  return {
+    totalMessages: msgCount.count,
+    totalMembers: memberCount.count,
+    timeRange: timeRange.start !== null && timeRange.end !== null
+      ? { start: timeRange.start, end: timeRange.end }
+      : null,
+    messageTypes,
+    topMembers,
+  }
+}
+
+// ==================== Word Frequency ====================
+
+export interface WordFrequencyResult {
+  words: Array<{ word: string; count: number }>
+  totalWords: number
+  uniqueWords: number
+}
+
+// CJK Unicode range detection
+const CJK_REGEX = /[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]/
+
+/**
+ * Get word frequency analysis (lightweight, no native NLP dependency)
+ */
+export function getWordFrequency(
+  db: Database.Database,
+  options?: { topN?: number; minCount?: number }
+): WordFrequencyResult {
+  const topN = options?.topN ?? 50
+  const minCount = options?.minCount ?? 3
+
+  // Fetch text messages
+  const rows = db.prepare(
+    "SELECT content FROM message WHERE type = 0 AND content IS NOT NULL AND content != '' LIMIT 50000"
+  ).all() as Array<{ content: string }>
+
+  const wordCounts = new Map<string, number>()
+  let totalWords = 0
+
+  for (const row of rows) {
+    const text = row.content.trim()
+    if (!text) continue
+
+    // Check if text is primarily CJK
+    const hasCJK = CJK_REGEX.test(text)
+
+    if (hasCJK) {
+      // CJK: extract 2-char and 3-char n-grams (skip punctuation/whitespace)
+      const clean = text.replace(/[\s\p{P}\p{S}\p{N}]/gu, '')
+      for (let len = 2; len <= 3; len++) {
+        for (let i = 0; i <= clean.length - len; i++) {
+          const gram = clean.slice(i, i + len)
+          // Only include n-grams where all chars are CJK
+          if ([...gram].every((ch) => CJK_REGEX.test(ch))) {
+            wordCounts.set(gram, (wordCounts.get(gram) || 0) + 1)
+            totalWords++
+          }
+        }
+      }
+    } else {
+      // Non-CJK: split by whitespace/punctuation
+      const words = text.toLowerCase().split(/[\s\p{P}]+/u).filter((w) => w.length >= 2)
+      for (const word of words) {
+        wordCounts.set(word, (wordCounts.get(word) || 0) + 1)
+        totalWords++
+      }
+    }
+  }
+
+  // Filter and sort
+  const sorted = [...wordCounts.entries()]
+    .filter(([, count]) => count >= minCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, topN)
+
+  return {
+    words: sorted.map(([word, count]) => ({ word, count })),
+    totalWords,
+    uniqueWords: wordCounts.size,
+  }
+}
+
+// ==================== Schema ====================
+
 /**
  * Get database schema (tables and columns)
  */

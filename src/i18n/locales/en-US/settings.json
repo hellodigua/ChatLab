@@ -68,7 +68,11 @@
       "externalConfigDesc": "Use the following info to configure MCP Server in Claude Code, Cursor, etc. (Stdio mode)",
       "serverEntry": "Server Entry",
       "dbDirectory": "Database Directory",
-      "stdioCommand": "Stdio Command"
+      "stdioCommand": "Stdio Command",
+      "apiKey": "API Key Authentication",
+      "apiKeyDesc": "When set, HTTP endpoints require a Bearer token in the Authorization header",
+      "apiKeyPlaceholder": "Leave empty to disable auth",
+      "noAuthWarning": "HTTP server has no API key set. Any local program can access your data."
     }
   },
   "aiConfig": {

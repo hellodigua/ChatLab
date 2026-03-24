@@ -68,7 +68,11 @@
       "externalConfigDesc": "使用以下資訊在 Claude Code、Cursor 等工具中設定 MCP Server（Stdio 模式）",
       "serverEntry": "服務入口",
       "dbDirectory": "資料庫目錄",
-      "stdioCommand": "Stdio 啟動指令"
+      "stdioCommand": "Stdio 啟動指令",
+      "apiKey": "API Key 認證",
+      "apiKeyDesc": "設定後，HTTP 介面需要在請求標頭中攜帶 Bearer Token 才能存取",
+      "apiKeyPlaceholder": "留空則不啟用認證",
+      "noAuthWarning": "HTTP 服務未設定 API Key 認證，任何本機程式均可存取資料"
     }
   },
   "aiConfig": {

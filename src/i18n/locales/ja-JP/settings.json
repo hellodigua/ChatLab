@@ -68,7 +68,11 @@
       "externalConfigDesc": "以下の情報を使って Claude Code や Cursor などで MCP Server を設定してください（Stdio モード）",
       "serverEntry": "サーバーエントリ",
       "dbDirectory": "データベースディレクトリ",
-      "stdioCommand": "Stdio 起動コマンド"
+      "stdioCommand": "Stdio 起動コマンド",
+      "apiKey": "API Key 認証",
+      "apiKeyDesc": "設定すると、HTTP エンドポイントへのアクセスに Bearer トークンが必要になります",
+      "apiKeyPlaceholder": "空欄の場合、認証は無効",
+      "noAuthWarning": "HTTP サーバーに API Key が設定されていません。ローカルのすべてのプログラムがデータにアクセスできます。"
     }
   },
   "aiConfig": {

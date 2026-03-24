@@ -20,6 +20,8 @@ interface McpServerConfig {
   port: number
   /** 是否随应用启动 */
   autoStart: boolean
+  /** API Key 认证（仅 HTTP 模式） */
+  apiKey: string
 }
 
 /** MCP Server 运行状态 */
@@ -37,6 +39,7 @@ const DEFAULT_CONFIG: McpServerConfig = {
   transport: 'http',
   port: 3000,
   autoStart: false,
+  apiKey: '',
 }
 
 const CONFIG_FILE = 'mcp-server.json'
@@ -118,6 +121,9 @@ function startServer(config: McpServerConfig): { success: boolean; error?: strin
     const args = ['--db-dir', dbDir]
     if (config.transport === 'http') {
       args.push('--http', '--port', String(config.port))
+      if (config.apiKey) {
+        args.push('--api-key', config.apiKey)
+      }
     }
 
     mcpProcess = fork(entryPath, args, {

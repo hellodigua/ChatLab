@@ -955,6 +955,7 @@ interface McpServerConfig {
   transport: 'stdio' | 'http'
   port: number
   autoStart: boolean
+  apiKey: string
 }
 
 interface McpServerStatus {

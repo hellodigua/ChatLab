@@ -221,6 +221,7 @@ export interface McpServerConfig {
   transport: 'stdio' | 'http'
   port: number
   autoStart: boolean
+  apiKey: string
 }
 
 export interface McpServerStatus {
