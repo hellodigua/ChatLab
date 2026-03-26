@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useApiServerStore, type DataSource } from '@/stores/apiServer'
 import { storeToRefs } from 'pinia'
+import DataSourceAddModal from './API/DataSourceAddModal.vue'
 
 const { t } = useI18n()
 const store = useApiServerStore()
@@ -12,16 +13,7 @@ const tokenVisible = ref(false)
 const editingPort = ref(false)
 const portInput = ref(5200)
 const copied = ref(false)
-const showAddForm = ref(false)
-
-const newSource = reactive({
-  name: '',
-  url: '',
-  token: '',
-  intervalMinutes: 60,
-  enabled: true,
-  targetSessionId: '',
-})
+const showAddModal = ref(false)
 
 let unlistenStartupError: (() => void) | null = null
 let unlistenPullResult: (() => void) | null = null
@@ -74,6 +66,11 @@ async function savePort() {
   editingPort.value = false
 }
 
+function startPortEdit() {
+  editingPort.value = true
+  portInput.value = config.value.port
+}
+
 function cancelPortEdit() {
   portInput.value = config.value.port
   editingPort.value = false
@@ -83,8 +80,12 @@ async function copyToken() {
   try {
     await navigator.clipboard.writeText(config.value.token)
     copied.value = true
-    setTimeout(() => { copied.value = false }, 2000)
-  } catch { /* fallback */ }
+    setTimeout(() => {
+      copied.value = false
+    }, 2000)
+  } catch {
+    /* fallback */
+  }
 }
 
 async function handleRegenerateToken() {
@@ -93,20 +94,15 @@ async function handleRegenerateToken() {
 
 // ==================== 数据源管理 ====================
 
-function resetNewSource() {
-  newSource.name = ''
-  newSource.url = ''
-  newSource.token = ''
-  newSource.intervalMinutes = 60
-  newSource.enabled = true
-  newSource.targetSessionId = ''
-  showAddForm.value = false
-}
-
-async function addSource() {
-  if (!newSource.name || !newSource.url) return
-  await store.addDataSource({ ...newSource })
-  resetNewSource()
+async function handleSourceAdded(data: {
+  name: string
+  url: string
+  token: string
+  intervalMinutes: number
+  enabled: boolean
+  targetSessionId: string
+}) {
+  await store.addDataSource(data)
 }
 
 async function toggleSourceEnabled(ds: DataSource) {
@@ -147,14 +143,23 @@ function formatTime(ts: number): string {
           </div>
           <USwitch :model-value="config.enabled" :loading="loading" @update:model-value="toggleEnabled" />
         </div>
-        <div v-if="config.enabled" class="mt-3 flex items-center gap-2 border-t border-gray-200 pt-3 dark:border-gray-700">
-          <span class="inline-block h-2 w-2 rounded-full" :class="isRunning ? 'bg-green-500' : hasError ? 'bg-red-500' : 'bg-gray-400'"></span>
+        <div
+          v-if="config.enabled"
+          class="mt-3 flex items-center gap-2 border-t border-gray-200 pt-3 dark:border-gray-700"
+        >
+          <span
+            class="inline-block h-2 w-2 rounded-full"
+            :class="isRunning ? 'bg-green-500' : hasError ? 'bg-red-500' : 'bg-gray-400'"
+          ></span>
           <span class="text-xs" :class="statusColor">{{ statusText }}</span>
           <span v-if="isRunning && status.port" class="ml-auto text-xs text-gray-500 dark:text-gray-400">
             {{ apiBaseUrl }}
           </span>
         </div>
-        <div v-if="isPortInUse" class="mt-2 rounded-md bg-red-50 p-2 text-xs text-red-600 dark:bg-red-900/20 dark:text-red-400">
+        <div
+          v-if="isPortInUse"
+          class="mt-2 rounded-md bg-red-50 p-2 text-xs text-red-600 dark:bg-red-900/20 dark:text-red-400"
+        >
           {{ t('settings.api.service.portInUseHint') }}
         </div>
       </div>
@@ -174,12 +179,14 @@ function formatTime(ts: number): string {
           </div>
           <div v-if="editingPort" class="flex items-center gap-2">
             <UInput v-model.number="portInput" type="number" :min="1024" :max="65535" size="sm" class="w-24" />
-            <UButton size="xs" color="primary" :loading="loading" @click="savePort">{{ t('settings.api.port.save') }}</UButton>
+            <UButton size="xs" color="primary" :loading="loading" @click="savePort">
+              {{ t('settings.api.port.save') }}
+            </UButton>
             <UButton size="xs" variant="ghost" @click="cancelPortEdit">{{ t('settings.api.port.cancel') }}</UButton>
           </div>
           <div v-else class="flex items-center gap-2">
             <span class="text-sm font-mono text-gray-700 dark:text-gray-300">{{ config.port }}</span>
-            <UButton size="xs" variant="ghost" @click="editingPort = true; portInput = config.port">{{ t('settings.api.port.edit') }}</UButton>
+            <UButton size="xs" variant="ghost" @click="startPortEdit">{{ t('settings.api.port.edit') }}</UButton>
           </div>
         </div>
       </div>
@@ -195,7 +202,9 @@ function formatTime(ts: number): string {
         <p class="mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ t('settings.api.token.label') }}</p>
         <p class="mb-3 text-xs text-gray-500 dark:text-gray-400">{{ t('settings.api.token.desc') }}</p>
         <div v-if="config.token" class="flex items-center gap-2">
-          <code class="flex-1 rounded bg-gray-100 px-3 py-2 font-mono text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+          <code
+            class="flex-1 rounded bg-gray-100 px-3 py-2 font-mono text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+          >
             {{ tokenVisible ? config.token : maskedToken }}
           </code>
           <UButton size="xs" variant="ghost" @click="tokenVisible = !tokenVisible">
@@ -207,10 +216,16 @@ function formatTime(ts: number): string {
         </div>
         <div v-else class="text-xs text-gray-400">{{ t('settings.api.token.noToken') }}</div>
         <div class="mt-3">
-          <UButton size="xs" variant="soft" color="warning" @click="handleRegenerateToken">
-            <UIcon name="i-heroicons-arrow-path" class="mr-1 h-3 w-3" />
+          <UButton variant="soft" color="warning" @click="handleRegenerateToken">
+            <UIcon name="i-heroicons-arrow-path" class="mr-1 h-4 w-4" />
             {{ t('settings.api.token.regenerate') }}
           </UButton>
+        </div>
+        <div class="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
+          <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('settings.api.usage.authHint') }}</p>
+          <div class="mt-1 rounded bg-gray-100 p-2 font-mono text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+            Authorization: Bearer {{ config.token ? maskedToken : 'clb_...' }}
+          </div>
         </div>
       </div>
     </div>
@@ -237,18 +252,21 @@ function formatTime(ts: number): string {
               <div class="flex items-center gap-2">
                 <span
                   class="inline-block h-2 w-2 rounded-full"
-                  :class="ds.lastStatus === 'success' ? 'bg-green-500' : ds.lastStatus === 'error' ? 'bg-red-500' : 'bg-gray-400'"
+                  :class="
+                    ds.lastStatus === 'success'
+                      ? 'bg-green-500'
+                      : ds.lastStatus === 'error'
+                        ? 'bg-red-500'
+                        : 'bg-gray-400'
+                  "
                 ></span>
                 <span class="text-sm font-medium text-gray-900 dark:text-white">{{ ds.name }}</span>
-                <span v-if="!ds.enabled" class="text-xs text-gray-400">({{ t('settings.api.dataSources.disabled') }})</span>
+                <span v-if="!ds.enabled" class="text-xs text-gray-400">
+                  ({{ t('settings.api.dataSources.disabled') }})
+                </span>
               </div>
               <div class="flex items-center gap-1">
-                <UButton
-                  size="xs"
-                  variant="ghost"
-                  :loading="pullingId === ds.id"
-                  @click="pullNow(ds)"
-                >
+                <UButton size="xs" variant="ghost" :loading="pullingId === ds.id" @click="pullNow(ds)">
                   <UIcon name="i-heroicons-arrow-path" class="h-3.5 w-3.5" />
                 </UButton>
                 <UButton size="xs" variant="ghost" @click="toggleSourceEnabled(ds)">
@@ -262,13 +280,14 @@ function formatTime(ts: number): string {
             <div class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
               <span class="font-mono">{{ ds.url }}</span>
               <span class="mx-2">·</span>
-              <span>{{ t('settings.api.dataSources.every') }} {{ ds.intervalMinutes }} {{ t('settings.api.dataSources.minutes') }}</span>
+              <span>
+                {{ t('settings.api.dataSources.every') }} {{ ds.intervalMinutes }}
+                {{ t('settings.api.dataSources.minutes') }}
+              </span>
             </div>
             <div v-if="ds.lastPullAt" class="mt-1 text-xs text-gray-400">
               {{ t('settings.api.dataSources.lastSync') }}: {{ formatTime(ds.lastPullAt) }}
-              <span v-if="ds.lastStatus === 'success'" class="text-green-500">
-                (+{{ ds.lastNewMessages }})
-              </span>
+              <span v-if="ds.lastStatus === 'success'" class="text-green-500">(+{{ ds.lastNewMessages }})</span>
               <span v-if="ds.lastStatus === 'error'" class="text-red-500">
                 {{ ds.lastError }}
               </span>
@@ -280,42 +299,8 @@ function formatTime(ts: number): string {
           {{ t('settings.api.dataSources.empty') }}
         </div>
 
-        <!-- 添加表单 -->
-        <div v-if="showAddForm" class="rounded-lg border border-blue-200 bg-blue-50/50 p-3 dark:border-blue-800 dark:bg-blue-900/20">
-          <div class="space-y-3">
-            <div>
-              <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">{{ t('settings.api.dataSources.form.name') }}</label>
-              <UInput v-model="newSource.name" size="sm" :placeholder="t('settings.api.dataSources.form.namePlaceholder')" />
-            </div>
-            <div>
-              <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">{{ t('settings.api.dataSources.form.url') }}</label>
-              <UInput v-model="newSource.url" size="sm" placeholder="https://example.com/api/export" />
-            </div>
-            <div>
-              <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">{{ t('settings.api.dataSources.form.token') }}</label>
-              <UInput v-model="newSource.token" size="sm" :placeholder="t('settings.api.dataSources.form.tokenPlaceholder')" />
-            </div>
-            <div>
-              <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">{{ t('settings.api.dataSources.form.interval') }}</label>
-              <UInput v-model.number="newSource.intervalMinutes" type="number" :min="1" size="sm" class="w-32" />
-            </div>
-            <div>
-              <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">{{ t('settings.api.dataSources.form.targetSession') }}</label>
-              <UInput v-model="newSource.targetSessionId" size="sm" :placeholder="t('settings.api.dataSources.form.targetSessionPlaceholder')" />
-            </div>
-            <div class="flex items-center gap-2 pt-1">
-              <UButton size="xs" color="primary" :disabled="!newSource.name || !newSource.url" @click="addSource">
-                {{ t('settings.api.dataSources.form.add') }}
-              </UButton>
-              <UButton size="xs" variant="ghost" @click="resetNewSource">
-                {{ t('settings.api.port.cancel') }}
-              </UButton>
-            </div>
-          </div>
-        </div>
-
-        <UButton v-if="!showAddForm" size="xs" variant="soft" @click="showAddForm = true">
-          <UIcon name="i-heroicons-plus" class="mr-1 h-3 w-3" />
+        <UButton variant="soft" @click="showAddModal = true">
+          <UIcon name="i-heroicons-plus" class="mr-2 h-4 w-4" />
           {{ t('settings.api.dataSources.addBtn') }}
         </UButton>
       </div>
@@ -331,23 +316,26 @@ function formatTime(ts: number): string {
         <p class="mb-3 text-xs text-gray-600 dark:text-gray-400">{{ t('settings.api.usage.desc') }}</p>
         <div class="space-y-2">
           <div class="rounded bg-gray-100 p-2 font-mono text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-            <span class="text-green-600 dark:text-green-400">GET</span> {{ apiBaseUrl }}/status
+            <span class="text-green-600 dark:text-green-400">GET</span>
+            {{ apiBaseUrl }}/status
           </div>
           <div class="rounded bg-gray-100 p-2 font-mono text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-            <span class="text-green-600 dark:text-green-400">GET</span> {{ apiBaseUrl }}/sessions
+            <span class="text-green-600 dark:text-green-400">GET</span>
+            {{ apiBaseUrl }}/sessions
           </div>
           <div class="rounded bg-gray-100 p-2 font-mono text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-            <span class="text-green-600 dark:text-green-400">GET</span> {{ apiBaseUrl }}/sessions/:id/messages?page=1&amp;limit=100
+            <span class="text-green-600 dark:text-green-400">GET</span>
+            {{ apiBaseUrl }}/sessions/:id/messages?page=1&amp;limit=100
           </div>
           <div class="rounded bg-gray-100 p-2 font-mono text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-            <span class="text-blue-600 dark:text-blue-400">POST</span> {{ apiBaseUrl }}/sessions/:id/sql
+            <span class="text-blue-600 dark:text-blue-400">POST</span>
+            {{ apiBaseUrl }}/sessions/:id/sql
           </div>
-        </div>
-        <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">{{ t('settings.api.usage.authHint') }}</p>
-        <div class="mt-1 rounded bg-gray-100 p-2 font-mono text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-          Authorization: Bearer {{ config.token ? maskedToken : 'clb_...' }}
         </div>
       </div>
     </div>
+
+    <!-- 添加数据源弹窗 -->
+    <DataSourceAddModal v-model:open="showAddModal" @added="handleSourceAdded" />
   </div>
 </template>

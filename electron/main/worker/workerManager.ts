@@ -8,6 +8,7 @@ import { app } from 'electron'
 import * as path from 'path'
 import type { ParseProgress } from '../parser'
 import type { StreamImportResult } from './import'
+import { openDatabase } from '../database/core'
 import { getDatabaseDir, ensureDir } from '../paths'
 
 // Worker 实例
@@ -713,7 +714,6 @@ export async function getSessionSummaries(
     timeFilter?: { startTs: number; endTs: number }
   }
 ): Promise<SessionSummaryItem[]> {
-  const { openDatabase } = await import('../database/core')
   const db = openDatabase(sessionId, true)
   if (!db) {
     return []

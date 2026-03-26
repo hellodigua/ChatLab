@@ -57,4 +57,4 @@ export interface AIConfigStore {
 /**
  * 最大配置数量限制
  */
-export const MAX_CONFIG_COUNT = 10
+export const MAX_CONFIG_COUNT = 99

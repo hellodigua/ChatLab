@@ -13,7 +13,7 @@
     "storageManage": "儲存管理",
     "sessionManage": "會話管理",
     "about": "關於 ChatLab",
-    "api": "ChatLab API"
+    "api": "API 服務"
   },
   "basic": {
     "language": {
@@ -407,8 +407,8 @@
   "api": {
     "service": {
       "title": "API 服務",
-      "enable": "啟用 ChatLab API",
-      "enableDesc": "開啟後，外部工具可透過 HTTP API 查詢聊天數據。僅本機可存取 (127.0.0.1)",
+      "enable": "啟用 API 服務",
+      "enableDesc": "開啟後，外部工具可透過 HTTP API 查詢、匯出和匯入聊天數據。僅本機可存取 (127.0.0.1)",
       "portInUseHint": "連接埠被佔用，請在下方修改連接埠或關閉佔用該連接埠的程式後重試"
     },
     "status": {
@@ -443,6 +443,7 @@
       "lastSync": "上次同步",
       "addBtn": "新增資料來源",
       "form": {
+        "modalTitle": "新增資料來源",
         "name": "名稱",
         "namePlaceholder": "例如：我的聊天伺服器",
         "url": "資料來源 URL",

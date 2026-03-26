@@ -3,6 +3,7 @@
  */
 
 import { ipcMain, app, dialog } from 'electron'
+import { getConversationCountsBySession } from '../ai/conversations'
 import * as databaseCore from '../database/core'
 import * as worker from '../worker/workerManager'
 import * as parser from '../parser'
@@ -262,7 +263,6 @@ export function registerChatHandlers(ctx: IpcContext): void {
 
       // 填充 AI 对话计数（AI 数据库在主进程管理）
       try {
-        const { getConversationCountsBySession } = await import('../ai/conversations')
         const aiCounts = getConversationCountsBySession()
         for (const session of sessions) {
           session.aiConversationCount = aiCounts.get(session.id) || 0
@@ -878,8 +878,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
     })
 
     try {
-      const { openDatabase } = await import('../database/core')
-      const db = openDatabase(dbSessionId, true)
+      const db = databaseCore.openDatabase(dbSessionId, true)
       if (!db) {
         console.log('[session:getByTimeRange] Failed to open database')
         return []
@@ -931,8 +930,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
   ipcMain.handle('session:getRecent', async (_, dbSessionId: string, limit: number) => {
     console.log('[session:getRecent] Query params:', { dbSessionId, limit })
     try {
-      const { openDatabase } = await import('../database/core')
-      const db = openDatabase(dbSessionId, true)
+      const db = databaseCore.openDatabase(dbSessionId, true)
       if (!db) {
         console.log('[session:getRecent] Failed to open database')
         return []

@@ -13,7 +13,7 @@
     "storageManage": "存储管理",
     "sessionManage": "会话管理",
     "about": "关于",
-    "api": "ChatLab API"
+    "api": "API 服务"
   },
   "basic": {
     "language": {
@@ -407,8 +407,8 @@
   "api": {
     "service": {
       "title": "API 服务",
-      "enable": "启用 ChatLab API",
-      "enableDesc": "开启后，外部工具可通过 HTTP API 查询聊天数据。仅本机可访问 (127.0.0.1)",
+      "enable": "启用 API 服务",
+      "enableDesc": "开启后，外部工具可通过 HTTP API 查询、导出和导入聊天数据。仅本机可访问 (127.0.0.1)",
       "portInUseHint": "端口被占用，请在下方修改端口或关闭占用该端口的程序后重试"
     },
     "status": {
@@ -443,6 +443,7 @@
       "lastSync": "上次同步",
       "addBtn": "添加数据源",
       "form": {
+        "modalTitle": "添加数据源",
         "name": "名称",
         "namePlaceholder": "例如：我的聊天服务器",
         "url": "数据源 URL",

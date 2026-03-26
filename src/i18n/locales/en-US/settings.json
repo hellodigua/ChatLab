@@ -13,7 +13,7 @@
     "storageManage": "Storage",
     "sessionManage": "Sessions",
     "about": "About",
-    "api": "ChatLab API"
+    "api": "API Service"
   },
   "basic": {
     "language": {
@@ -407,8 +407,8 @@
   "api": {
     "service": {
       "title": "API Service",
-      "enable": "Enable ChatLab API",
-      "enableDesc": "When enabled, external tools can query chat data via HTTP API. Localhost only (127.0.0.1)",
+      "enable": "Enable API Service",
+      "enableDesc": "When enabled, external tools can query, export, and import chat data via HTTP API. Localhost only (127.0.0.1)",
       "portInUseHint": "Port is in use. Please change the port below or close the program using this port"
     },
     "status": {
@@ -443,6 +443,7 @@
       "lastSync": "Last sync",
       "addBtn": "Add Data Source",
       "form": {
+        "modalTitle": "Add Data Source",
         "name": "Name",
         "namePlaceholder": "e.g., My Chat Server",
         "url": "Data Source URL",

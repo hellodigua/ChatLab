@@ -57,7 +57,7 @@ export const useLLMStore = defineStore('llm', () => {
   const hasConfig = computed(() => !!activeConfigId.value)
 
   /** 是否达到最大配置数量 */
-  const isMaxConfigs = computed(() => configs.value.length >= 10)
+  const isMaxConfigs = computed(() => configs.value.length >= 99)
 
   // ============ 方法 ============
 
