@@ -73,16 +73,16 @@ function initChart() {
 
   // 创建新实例
   chartInstance = echarts.init(chartRef.value, isDark.value ? 'dark' : undefined)
-  chartInstance.setOption(props.option)
+  chartInstance.setOption({ backgroundColor: 'transparent', ...props.option })
 }
 
-// 更新图表
+  // 更新图表
 function updateChart() {
   if (!chartInstance) {
     initChart()
     return
   }
-  chartInstance.setOption(props.option, { notMerge: true })
+  chartInstance.setOption({ backgroundColor: 'transparent', ...props.option }, { notMerge: true })
 }
 
 // 调整大小

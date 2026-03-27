@@ -29,17 +29,17 @@ const valueColorMap: Record<string, string> = {
 }
 
 const iconBgMap: Record<string, string> = {
-  pink: 'bg-pink-100 dark:bg-pink-900/30',
-  amber: 'bg-amber-100 dark:bg-amber-900/30',
-  blue: 'bg-blue-100 dark:bg-blue-900/30',
-  green: 'bg-green-100 dark:bg-green-900/30',
-  red: 'bg-red-100 dark:bg-red-900/30',
-  gray: 'bg-gray-100 dark:bg-gray-800',
+  pink: 'bg-pink-100 dark:bg-pink-500/10',
+  amber: 'bg-amber-100 dark:bg-amber-500/10',
+  blue: 'bg-blue-100 dark:bg-blue-500/10',
+  green: 'bg-green-100 dark:bg-green-500/10',
+  red: 'bg-red-100 dark:bg-red-500/10',
+  gray: 'bg-gray-100 dark:bg-white/5',
 }
 </script>
 
 <template>
-  <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+  <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/5 dark:bg-card-dark">
     <!-- 带图标的布局 -->
     <template v-if="icon">
       <div class="flex items-center gap-3">

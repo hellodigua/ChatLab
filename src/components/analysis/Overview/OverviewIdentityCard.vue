@@ -78,7 +78,7 @@ const themeColors = {
 }
 
 // GitHub 风格：标准的空白格底色
-const emptyColor = computed(() => (isDark.value ? '#161b22' : '#ebedf0'))
+const emptyColor = computed(() => (isDark.value ? 'rgba(255, 255, 255, 0.03)' : '#ebedf0'))
 
 const chartOption = computed<EChartsOption>(() => ({
   tooltip: {
@@ -162,7 +162,7 @@ const chartOption = computed<EChartsOption>(() => ({
       itemStyle: {
         borderRadius: 3,
         borderWidth: 2,
-        borderColor: isDark.value ? '#0f0f0f' : '#ffffff',
+        borderColor: isDark.value ? 'transparent' : '#ffffff',
       },
     },
   ],
@@ -171,12 +171,12 @@ const chartOption = computed<EChartsOption>(() => ({
 function initChart() {
   if (!chartRef.value) return
   chartInstance = echarts.init(chartRef.value, undefined, { renderer: 'canvas' })
-  chartInstance.setOption(chartOption.value)
+  chartInstance.setOption({ backgroundColor: 'transparent', ...chartOption.value })
 }
 
 function updateChart() {
   if (!chartInstance) return
-  chartInstance.setOption(chartOption.value, { notMerge: true })
+  chartInstance.setOption({ backgroundColor: 'transparent', ...chartOption.value }, { notMerge: true })
 }
 
 function handleResize() {
@@ -203,7 +203,7 @@ onUnmounted(() => {
 
 <template>
   <div
-    class="relative overflow-hidden rounded-[24px] border border-gray-200/60 bg-white p-8 shadow-sm dark:border-white/5 dark:bg-[#0f0f0f]"
+    class="relative overflow-hidden rounded-[24px] border border-gray-200/60 bg-white p-8 shadow-sm dark:border-white/5 dark:bg-card-dark"
   >
     <div class="relative flex gap-8">
       <!-- 左侧：身份信息 + 日历 -->
@@ -227,7 +227,7 @@ onUnmounted(() => {
             <div class="mt-4 flex flex-col gap-2 text-sm font-medium text-gray-500 dark:text-gray-400">
               <div class="flex items-center gap-2">
                 <div
-                  class="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                  class="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400"
                 >
                   <UIcon v-if="session.type === 'group'" name="i-heroicons-user-group" class="h-3.5 w-3.5" />
                   <UIcon v-else name="i-heroicons-user" class="h-3.5 w-3.5" />

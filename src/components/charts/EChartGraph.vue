@@ -225,13 +225,13 @@ function initChart() {
   chartInstance = echarts.init(chartRef.value, isDark.value ? 'dark' : undefined, {
     renderer: 'canvas',
   })
-  chartInstance.setOption(option.value)
+  chartInstance.setOption({ backgroundColor: 'transparent', ...option.value })
 }
 
 // 更新图表
 function updateChart() {
   if (!chartInstance) return
-  chartInstance.setOption(option.value, { notMerge: true })
+  chartInstance.setOption({ backgroundColor: 'transparent', ...option.value }, { notMerge: true })
 }
 
 // 响应窗口大小变化

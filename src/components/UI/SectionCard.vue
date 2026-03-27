@@ -36,9 +36,9 @@ const contentStyle = computed(() => {
 </script>
 
 <template>
-  <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+  <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/5 dark:bg-card-dark">
     <!-- 标题区域 -->
-    <div class="px-5 py-3" :class="{ 'border-b border-gray-200 dark:border-gray-800': showDivider && $slots.default }">
+    <div class="px-5 py-3" :class="{ 'border-b border-gray-200 dark:border-white/5': showDivider && $slots.default }">
       <div class="flex items-center justify-between">
         <div>
           <p class="font-semibold text-gray-900 dark:text-white whitespace-nowrap">{{ title }}</p>

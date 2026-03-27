@@ -16,7 +16,7 @@ const emit = defineEmits<{
       {{ t('analysis.overview.tools') }}
     </span>
     <button
-      class="group flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700 shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 dark:border-white/10 dark:bg-[#161616] dark:text-gray-300 dark:hover:border-white/20 dark:hover:bg-[#1f1f1f] dark:hover:text-white"
+      class="group flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700 shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 dark:border-white/5 dark:bg-white/5 dark:text-gray-300 dark:hover:border-white/10 dark:hover:bg-white/10 dark:hover:text-white"
       @click="emit('openIncrementalImport')"
     >
       <div class="flex items-center gap-2.5">
@@ -33,7 +33,7 @@ const emit = defineEmits<{
     </button>
 
     <button
-      class="group flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700 shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 dark:border-white/10 dark:bg-[#161616] dark:text-gray-300 dark:hover:border-white/20 dark:hover:bg-[#1f1f1f] dark:hover:text-white"
+      class="group flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700 shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 dark:border-white/5 dark:bg-white/5 dark:text-gray-300 dark:hover:border-white/10 dark:hover:bg-white/10 dark:hover:text-white"
       @click="emit('openSessionIndex')"
     >
       <div class="flex items-center gap-2.5">
@@ -50,7 +50,7 @@ const emit = defineEmits<{
     </button>
 
     <button
-      class="group flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700 shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 dark:border-white/10 dark:bg-[#161616] dark:text-gray-300 dark:hover:border-white/20 dark:hover:bg-[#1f1f1f] dark:hover:text-white"
+      class="group flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-medium text-gray-700 shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 dark:border-white/5 dark:bg-white/5 dark:text-gray-300 dark:hover:border-white/10 dark:hover:bg-white/10 dark:hover:text-white"
       @click="emit('openMessageExport')"
     >
       <div class="flex items-center gap-2.5">

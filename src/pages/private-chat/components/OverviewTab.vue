@@ -157,7 +157,7 @@ watch(
             />
             <div
               v-else
-              class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-pink-100 dark:bg-pink-900/30"
+              class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-pink-100 dark:bg-pink-500/10"
             >
               <span class="text-2xl font-bold text-pink-600 dark:text-pink-400">
                 {{ memberComparisonData.member1.name.charAt(0) }}
@@ -176,7 +176,7 @@ watch(
 
           <!-- 中间对比条 -->
           <div class="flex-1">
-            <div class="relative h-8 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+            <div class="relative h-8 overflow-hidden rounded-full bg-gray-100 dark:bg-white/5">
               <div
                 class="absolute left-0 top-0 h-full rounded-l-full bg-pink-500 transition-all"
                 :style="{ width: `${memberComparisonData.member1.percentage}%` }"
@@ -202,7 +202,7 @@ watch(
             />
             <div
               v-else
-              class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30"
+              class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-500/10"
             >
               <span class="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {{ memberComparisonData.member2.name.charAt(0) }}
