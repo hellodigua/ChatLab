@@ -4,6 +4,7 @@
  */
 
 import Database from 'better-sqlite3'
+import { createHash } from 'crypto'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -84,9 +85,21 @@ export function cleanupTempDatabase(dbPath: string): void {
 
 /**
  * 生成消息去重键
- * 使用 timestamp + senderPlatformId + contentLength 作为去重标识
+ * 使用固定长度哈希作为去重标识。
+ * 直接用 content.length 会误判等长不同内容，直接用原文又会让 Set 长期持有大文本。
  */
 export function generateMessageKey(timestamp: number, senderPlatformId: string, content: string | null): string {
-  const contentLength = content ? content.length : 0
-  return `${timestamp}_${senderPlatformId}_${contentLength}`
+  // 去重 key 需要和当前写库语义一致，空字符串在存储层会被折叠成 null。
+  const normalizedContent = content || null
+  const hash = createHash('sha256')
+  hash.update(String(timestamp))
+  hash.update('\0')
+  hash.update(senderPlatformId)
+  hash.update('\0')
+  hash.update(normalizedContent === null ? 'null' : 'text')
+  hash.update('\0')
+  if (normalizedContent !== null) {
+    hash.update(normalizedContent)
+  }
+  return hash.digest('base64url')
 }

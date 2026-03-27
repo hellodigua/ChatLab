@@ -5,6 +5,7 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
+import { createHash } from 'crypto'
 import { parseFileSync, detectFormat } from '../parser'
 import { importData } from '../database/core'
 import { TempDbReader } from './tempCache'
@@ -73,7 +74,19 @@ export async function parseFileInfo(filePath: string): Promise<FileParseInfo> {
  * 生成消息的唯一标识（用于去重和冲突检测）
  */
 function getMessageKey(msg: ParsedMessage): string {
-  return `${msg.timestamp}_${msg.senderPlatformId}_${(msg.content || '').length}`
+  // 合并链路的去重语义需要和增量导入保持一致，否则两条链路会对重复消息得出不同结论。
+  const normalizedContent = msg.content || null
+  const hash = createHash('sha256')
+  hash.update(String(msg.timestamp))
+  hash.update('\0')
+  hash.update(msg.senderPlatformId)
+  hash.update('\0')
+  hash.update(normalizedContent === null ? 'null' : 'text')
+  hash.update('\0')
+  if (normalizedContent !== null) {
+    hash.update(normalizedContent)
+  }
+  return hash.digest('base64url')
 }
 
 function getParsedMessageDisplayName(msg: ParsedMessage): string {
