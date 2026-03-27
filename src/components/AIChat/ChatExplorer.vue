@@ -274,9 +274,11 @@ async function handleAssistantConfigSaved() {
   await assistantStore.loadAssistants()
 }
 
-// 预设问题只回填到输入框，方便用户继续编辑后再发送。
-function handlePresetQuestion(question: string) {
-  chatInputRef.value?.fillInput(question)
+async function handlePresetQuestion(question: string) {
+  const result = await sendMessage(question)
+  if (!result.success && result.reason === 'busy') {
+    showRunningTaskToast()
+  }
 }
 
 function handleUseSkillEntry() {
