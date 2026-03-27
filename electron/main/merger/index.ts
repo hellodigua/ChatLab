@@ -5,6 +5,7 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
+import { createHash } from 'crypto'
 import { parseFileSync, detectFormat } from '../parser'
 import { importData } from '../database/core'
 import { TempDbReader } from './tempCache'
@@ -73,7 +74,18 @@ export async function parseFileInfo(filePath: string): Promise<FileParseInfo> {
  * 生成消息的唯一标识（用于去重和冲突检测）
  */
 function getMessageKey(msg: ParsedMessage): string {
-  return `${msg.timestamp}_${msg.senderPlatformId}_${(msg.content || '').length}`
+  const hash = createHash('sha256')
+  hash.update(String(msg.timestamp))
+  hash.update('\0')
+  hash.update(msg.senderPlatformId)
+  hash.update('\0')
+  // 这里和增量导入保持同一语义，避免两条链路对“重复消息”的定义不一致。
+  hash.update(msg.content === null ? 'null' : 'text')
+  hash.update('\0')
+  if (msg.content !== null) {
+    hash.update(msg.content)
+  }
+  return hash.digest('base64url')
 }
 
 function getParsedMessageDisplayName(msg: ParsedMessage): string {
