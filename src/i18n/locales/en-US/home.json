@@ -117,6 +117,8 @@
     "types": {
       "feat": "Features",
       "fix": "Bug Fixes",
+      "refactor": "Refactors",
+      "docs": "Docs",
       "chore": "Other",
       "style": "Style"
     }

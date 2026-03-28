@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useSettingsStore } from '@/stores/settings'
 import { sanitizeSummary } from '@/utils/sanitizeSummary'
+import { getChangeTypeConfig } from './changelogTypeConfig'
 
 const { t } = useI18n()
 const settingsStore = useSettingsStore()
@@ -74,7 +75,7 @@ interface ChangelogItem {
   date: string
   summary: string
   changes: {
-    type: 'feat' | 'fix' | 'chore' | 'style'
+    type: 'feat' | 'fix' | 'refactor' | 'docs' | 'chore' | 'style'
     items: string[]
   }[]
 }
@@ -119,35 +120,13 @@ watch(locale, () => {
   }
 })
 
-// 变更类型图标和颜色映射
-const changeTypeConfig = {
-  feat: {
-    icon: 'i-heroicons-sparkles',
-    color: 'text-green-500',
-    bgColor: 'bg-green-100 dark:bg-green-900/30',
-  },
-  fix: {
-    icon: 'i-heroicons-wrench-screwdriver',
-    color: 'text-amber-500',
-    bgColor: 'bg-amber-100 dark:bg-amber-900/30',
-  },
-  chore: {
-    icon: 'i-heroicons-cog-6-tooth',
-    color: 'text-gray-500',
-    bgColor: 'bg-gray-100 dark:bg-gray-700/30',
-  },
-  style: {
-    icon: 'i-heroicons-paint-brush',
-    color: 'text-blue-500',
-    bgColor: 'bg-blue-100 dark:bg-blue-900/30',
-  },
-}
-
 // 获取变更类型显示名称
 function getChangeTypeLabel(type: string) {
   const labels: Record<string, string> = {
     feat: t('home.changelog.types.feat'),
     fix: t('home.changelog.types.fix'),
+    refactor: t('home.changelog.types.refactor'),
+    docs: t('home.changelog.types.docs'),
     chore: t('home.changelog.types.chore'),
     style: t('home.changelog.types.style'),
   }
@@ -388,12 +367,12 @@ defineExpose({ open, openWithData, close, fetchChangelogs, getLatestVersion })
                       <div class="mb-2 flex items-center gap-2">
                         <div
                           class="flex h-5 w-5 items-center justify-center rounded"
-                          :class="changeTypeConfig[change.type]?.bgColor"
+                          :class="getChangeTypeConfig(change.type)?.bgColor"
                         >
                           <UIcon
-                            :name="changeTypeConfig[change.type]?.icon"
+                            :name="getChangeTypeConfig(change.type)?.icon"
                             class="h-3 w-3"
-                            :class="changeTypeConfig[change.type]?.color"
+                            :class="getChangeTypeConfig(change.type)?.color"
                           />
                         </div>
                         <span class="text-xs font-medium text-gray-600 dark:text-gray-400">
