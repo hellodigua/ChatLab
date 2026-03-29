@@ -47,6 +47,7 @@
       "userAvatar": "User Avatar",
       "calling": "Calling",
       "tools": {
+        "get_chat_overview": "Get Chat Overview",
         "search_messages": "Search Messages",
         "get_recent_messages": "Get Recent Messages",
         "get_member_stats": "Get Member Stats",
@@ -297,6 +298,7 @@
       "unknownError": "Unknown error"
     },
     "builtinToolDesc": {
+      "get_chat_overview": "Get chat overview information",
       "search_messages": "Search chat messages",
       "get_recent_messages": "Get recent messages",
       "get_message_context": "Get message context",

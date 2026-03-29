@@ -24,7 +24,7 @@ export {
 } from './basic'
 
 // 会话管理（会话列表与基础信息）
-export { getAllSessions, getSession } from './sessions'
+export { getAllSessions, getSession, getChatOverview } from './sessions'
 
 // 成员分页类型
 export type { MembersPaginationParams, MembersPaginatedResult } from './basic'

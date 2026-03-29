@@ -79,6 +79,12 @@ export default {
           end_time: '结束时间，格式 "YYYY-MM-DD HH:mm"，如 "2024-03-15 18:30"。指定后会覆盖 year/month/day/hour 参数',
         },
       },
+      get_chat_overview: {
+        desc: '获取聊天记录的基本概览信息，包括群名/平台/类型/总消息数/总成员数/时间跨度/最活跃成员排名。适合在分析前先了解数据全貌。',
+        params: {
+          top_n: '返回前 N 名活跃成员，默认 10',
+        },
+      },
       get_member_stats: {
         desc: '获取群成员的活跃度统计数据。适用于回答"谁最活跃"、"发言最多的是谁"等问题。',
         params: {

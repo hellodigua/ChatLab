@@ -14,9 +14,11 @@ export { createTool as createGetMessageContext } from './get-message-context'
 export { createTool as createSearchSessions } from './search-sessions'
 export { createTool as createGetSessionMessages } from './get-session-messages'
 export { createTool as createGetSessionSummaries } from './get-session-summaries'
+export { createTool as createGetChatOverview } from './get-chat-overview'
 export { sqlToolFactories, getSqlToolCatalog, SQL_TOOL_NAMES } from './sql-analysis'
 
 export const TS_TOOL_NAMES = [
+  'get_chat_overview',
   'search_messages',
   'get_recent_messages',
   'get_member_stats',

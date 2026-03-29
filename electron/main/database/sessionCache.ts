@@ -97,7 +97,7 @@ export function deleteSessionCache(sessionId: string, cacheDir: string): void {
   }
 }
 
-// ==================== Overview 缓存（业务层） ====================
+// ==================== Overview 缓存（聚合统计） ====================
 
 export const CACHE_KEY_OVERVIEW = 'overview'
 
@@ -106,8 +106,6 @@ export interface OverviewCache {
   totalMembers: number
   firstMessageTs: number | null
   lastMessageTs: number | null
-  /** member.id -> message count */
-  memberMessageCounts: Record<number, number>
 }
 
 /**
@@ -139,23 +137,59 @@ export function computeAndSetOverviewCache(
     }
   ).count
 
-  const memberCounts = db
-    .prepare('SELECT sender_id, COUNT(*) as count FROM message GROUP BY sender_id')
-    .all() as Array<{ sender_id: number; count: number }>
-
-  const memberMessageCounts: Record<number, number> = {}
-  for (const row of memberCounts) {
-    memberMessageCounts[row.sender_id] = row.count
-  }
-
   const data: OverviewCache = {
     totalMessages,
     totalMembers,
     firstMessageTs: msgStats.first_ts,
     lastMessageTs: msgStats.last_ts,
-    memberMessageCounts,
   }
 
   setCache(sessionId, CACHE_KEY_OVERVIEW, data, cacheDir)
+
+  // 同步生成成员缓存
+  computeAndSetMembersCache(db, sessionId, cacheDir)
+
+  return data
+}
+
+// ==================== Members 缓存（成员维度） ====================
+
+export const CACHE_KEY_MEMBERS = 'members'
+
+export interface MemberStat {
+  name: string
+  count: number
+}
+
+export interface MembersCache {
+  /** member.id -> { name, count } */
+  members: Record<number, MemberStat>
+}
+
+/**
+ * 从数据库计算成员统计并写入缓存
+ */
+export function computeAndSetMembersCache(
+  db: Database.Database,
+  sessionId: string,
+  cacheDir: string
+): MembersCache {
+  const rows = db
+    .prepare(
+      `SELECT msg.sender_id, COUNT(*) as count,
+              COALESCE(m.group_nickname, m.account_name, m.platform_id) as name
+       FROM message msg
+       JOIN member m ON msg.sender_id = m.id
+       GROUP BY msg.sender_id`
+    )
+    .all() as Array<{ sender_id: number; count: number; name: string }>
+
+  const members: Record<number, MemberStat> = {}
+  for (const row of rows) {
+    members[row.sender_id] = { name: row.name, count: row.count }
+  }
+
+  const data: MembersCache = { members }
+  setCache(sessionId, CACHE_KEY_MEMBERS, data, cacheDir)
   return data
 }

@@ -79,6 +79,12 @@ export default {
           end_time: '結束時間，格式 "YYYY-MM-DD HH:mm"，如 "2024-03-15 18:30"。指定後會覆蓋 year/month/day/hour 參數',
         },
       },
+      get_chat_overview: {
+        desc: '取得聊天記錄的基本概覽資訊，包括群名/平台/類型/總訊息數/總成員數/時間跨度/最活躍成員排名。適合在分析前先了解資料全貌。',
+        params: {
+          top_n: '回傳前 N 名活躍成員，預設 10',
+        },
+      },
       get_member_stats: {
         desc: '取得群成員的活躍度統計資料。適用於回答「誰最活躍」、「發言最多的是誰」等問題。',
         params: {

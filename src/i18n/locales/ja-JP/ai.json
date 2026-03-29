@@ -47,6 +47,7 @@
       "userAvatar": "ユーザーアバター",
       "calling": "実行中",
       "tools": {
+        "get_chat_overview": "チャット概要を取得",
         "search_messages": "チャット履歴を検索",
         "get_recent_messages": "最近のメッセージを取得",
         "get_member_stats": "メンバー統計を取得",
@@ -297,6 +298,7 @@
       "unknownError": "不明なエラー"
     },
     "builtinToolDesc": {
+      "get_chat_overview": "チャット概要情報を取得",
       "search_messages": "チャットメッセージを検索",
       "get_recent_messages": "最近のメッセージを取得",
       "get_message_context": "メッセージのコンテキストを取得",

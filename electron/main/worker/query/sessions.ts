@@ -7,7 +7,15 @@ import Database from 'better-sqlite3'
 import * as fs from 'fs'
 import * as path from 'path'
 import { openDatabase, getDbDir, getDbPath, getCacheDir } from '../core'
-import { getCache, computeAndSetOverviewCache, CACHE_KEY_OVERVIEW, type OverviewCache } from '../../database/sessionCache'
+import {
+  getCache,
+  computeAndSetOverviewCache,
+  computeAndSetMembersCache,
+  CACHE_KEY_OVERVIEW,
+  CACHE_KEY_MEMBERS,
+  type OverviewCache,
+  type MembersCache,
+} from '../../database/sessionCache'
 
 interface DbMeta {
   name: string
@@ -229,5 +237,80 @@ export function getSession(sessionId: string): any | null {
     groupId: meta.group_id || null,
     groupAvatar: meta.group_avatar || null,
     ownerId: meta.owner_id || null,
+  }
+}
+
+/**
+ * 获取聊天概览（AI 工具使用）
+ * 优先从缓存读取，miss 则计算回填
+ */
+export function getChatOverview(sessionId: string, topN: number = 10) {
+  const db = openDatabase(sessionId)
+  if (!db) return null
+
+  const meta = db.prepare('SELECT * FROM meta LIMIT 1').get() as DbMeta | undefined
+  if (!meta) return null
+
+  const cacheDir = getCacheDir()
+
+  // 读取 overview 缓存
+  let overview = getCache<OverviewCache>(sessionId, CACHE_KEY_OVERVIEW, cacheDir)
+  if (!overview) {
+    try {
+      overview = computeAndSetOverviewCache(db, sessionId, cacheDir)
+    } catch {
+      // fallback: 实时查询
+    }
+  }
+
+  // 读取 members 缓存
+  let membersCache = getCache<MembersCache>(sessionId, CACHE_KEY_MEMBERS, cacheDir)
+  if (!membersCache) {
+    try {
+      membersCache = computeAndSetMembersCache(db, sessionId, cacheDir)
+    } catch {
+      // fallback: 无成员数据
+    }
+  }
+
+  // 从缓存计算 Top N 活跃成员
+  let topMembers: Array<{ id: number; name: string; count: number }> = []
+  if (membersCache?.members) {
+    topMembers = Object.entries(membersCache.members)
+      .map(([id, stat]) => ({ id: Number(id), name: stat.name, count: stat.count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, topN)
+  }
+
+  // fallback 统计值
+  const totalMessages =
+    overview?.totalMessages ??
+    (
+      db
+        .prepare(
+          `SELECT COUNT(*) as count FROM message msg
+           JOIN member m ON msg.sender_id = m.id
+           WHERE COALESCE(m.account_name, '') != '系统消息'`
+        )
+        .get() as { count: number }
+    ).count
+
+  const totalMembers =
+    overview?.totalMembers ??
+    (
+      db.prepare(`SELECT COUNT(*) as count FROM member WHERE COALESCE(account_name, '') != '系统消息'`).get() as {
+        count: number
+      }
+    ).count
+
+  return {
+    name: meta.name,
+    platform: meta.platform,
+    type: meta.type,
+    totalMessages,
+    totalMembers,
+    firstMessageTs: overview?.firstMessageTs ?? null,
+    lastMessageTs: overview?.lastMessageTs ?? null,
+    topMembers,
   }
 }

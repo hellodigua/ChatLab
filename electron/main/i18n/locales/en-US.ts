@@ -86,6 +86,12 @@ export default {
             'End time, format "YYYY-MM-DD HH:mm", e.g. "2024-03-15 18:30". Overrides year/month/day/hour when specified',
         },
       },
+      get_chat_overview: {
+        desc: 'Get basic overview of the chat: name, platform, type, total messages, total members, time range, and top active members. Use this first to understand the data before deeper analysis.',
+        params: {
+          top_n: 'Return top N active members, default 10',
+        },
+      },
       get_member_stats: {
         desc: 'Get member activity statistics. Suitable for questions like "who is the most active" or "who sends the most messages".',
         params: {

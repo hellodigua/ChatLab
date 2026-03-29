@@ -25,6 +25,7 @@ import {
   getMemberNameHistory,
   getAllSessions,
   getSession,
+  getChatOverview,
   getCatchphraseAnalysis,
   getMentionAnalysis,
   getMentionGraph,
@@ -96,6 +97,7 @@ const syncHandlers: Record<string, (payload: any) => any> = {
   // 会话管理
   getAllSessions: () => getAllSessions(),
   getSession: (p) => getSession(p.sessionId),
+  getChatOverview: (p) => getChatOverview(p.sessionId, p.topN),
   closeDatabase: (p) => {
     closeDatabase(p.sessionId)
     return true

@@ -19,6 +19,7 @@ import {
   createSearchSessions,
   createGetSessionMessages,
   createGetSessionSummaries,
+  createGetChatOverview,
   sqlToolFactories,
 } from './definitions'
 import { t as i18nT } from '../../i18n'
@@ -33,6 +34,7 @@ export * from './types'
 type ToolFactory = (context: ToolContext) => AgentTool<any>
 
 const coreFactories: ToolFactory[] = [
+  createGetChatOverview,
   createSearchMessages,
   createGetRecentMessages,
   createGetMemberStats,

@@ -47,6 +47,7 @@
       "userAvatar": "使用者頭像",
       "calling": "執行",
       "tools": {
+        "get_chat_overview": "取得聊天概覽",
         "search_messages": "搜尋聊天紀錄",
         "get_recent_messages": "取得最近訊息",
         "get_member_stats": "取得成員統計",
@@ -297,6 +298,7 @@
       "unknownError": "未知錯誤"
     },
     "builtinToolDesc": {
+      "get_chat_overview": "取得聊天概覽資訊",
       "search_messages": "搜尋聊天訊息",
       "get_recent_messages": "取得最近訊息",
       "get_message_context": "取得訊息上下文",

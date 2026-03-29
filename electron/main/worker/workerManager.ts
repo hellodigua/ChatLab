@@ -327,6 +327,22 @@ export async function getSession(sessionId: string): Promise<any | null> {
   return sendToWorker('getSession', { sessionId })
 }
 
+export async function getChatOverview(
+  sessionId: string,
+  topN?: number
+): Promise<{
+  name: string
+  platform: string
+  type: string
+  totalMessages: number
+  totalMembers: number
+  firstMessageTs: number | null
+  lastMessageTs: number | null
+  topMembers: Array<{ id: number; name: string; count: number }>
+} | null> {
+  return sendToWorker('getChatOverview', { sessionId, topN })
+}
+
 export async function closeDatabase(sessionId: string): Promise<void> {
   return sendToWorker('closeDatabase', { sessionId })
 }
