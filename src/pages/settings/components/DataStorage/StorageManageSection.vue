@@ -231,6 +231,7 @@ defineExpose({
               :class="{
                 'bg-green-100 dark:bg-green-900/30': dir.id === 'databases',
                 'bg-violet-100 dark:bg-violet-900/30': dir.id === 'ai',
+                'bg-cyan-100 dark:bg-cyan-900/30': dir.id === 'cache',
                 'bg-amber-100 dark:bg-amber-900/30': dir.id === 'downloads',
                 'bg-blue-100 dark:bg-blue-900/30': dir.id === 'logs',
               }"
@@ -241,6 +242,7 @@ defineExpose({
                 :class="{
                   'text-green-600 dark:text-green-400': dir.id === 'databases',
                   'text-violet-600 dark:text-violet-400': dir.id === 'ai',
+                  'text-cyan-600 dark:text-cyan-400': dir.id === 'cache',
                   'text-amber-600 dark:text-amber-400': dir.id === 'downloads',
                   'text-blue-600 dark:text-blue-400': dir.id === 'logs',
                 }"

@@ -10,6 +10,7 @@ export {
   closeDatabase,
   closeAllDatabases,
   getDbDir,
+  getCacheDir,
   buildTimeFilter,
   buildSystemMessageFilter,
   type TimeFilter,

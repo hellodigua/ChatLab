@@ -369,6 +369,13 @@ export function getSettingsDir(): string {
 }
 
 /**
+ * 获取缓存目录（存放可再生的派生数据，如统计缓存）
+ */
+export function getCacheDir(): string {
+  return path.join(getAppDataDir(), 'cache')
+}
+
+/**
  * 获取临时文件目录
  */
 export function getTempDir(): string {
@@ -398,6 +405,7 @@ export function ensureAppDirs(): void {
   ensureDir(getDatabaseDir())
   ensureDir(getAiDataDir())
   ensureDir(getSettingsDir())
+  ensureDir(getCacheDir())
   ensureDir(getTempDir())
   ensureDir(getLogsDir())
   // 写入数据目录标记文件

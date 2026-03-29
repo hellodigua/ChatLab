@@ -243,6 +243,15 @@ export async function incrementalImport(
     // 更新 imported_at 时间
     db.prepare('UPDATE meta SET imported_at = ?').run(Math.floor(Date.now() / 1000))
 
+    // 写入概览统计缓存文件
+    try {
+      const { computeAndSetOverviewCache } = await import('../../database/sessionCache')
+      const { getCacheDir } = await import('../core')
+      computeAndSetOverviewCache(db, sessionId, getCacheDir())
+    } catch {
+      // 缓存写入失败不影响导入流程
+    }
+
     db.close()
 
     sendProgress(requestId, {

@@ -157,6 +157,10 @@
         "name": "Downloads",
         "description": "Screenshots, analysis results, etc."
       },
+      "statsCache": {
+        "name": "Cache Data",
+        "description": "Statistics cache for chat records, auto-rebuilt after clearing"
+      },
       "logs": {
         "name": "Log Files",
         "description": "App logs including import, AI, error logs"

@@ -7,6 +7,7 @@ import type { IpcContext } from './types'
 import {
   getAppDataDir,
   getDatabaseDir,
+  getCacheDir,
   getAiDataDir,
   getLogsDir,
   getDownloadsDir,
@@ -91,6 +92,14 @@ export function registerCacheHandlers(_context: IpcContext): void {
         path: getAiDataDir(),
         icon: 'i-heroicons-sparkles',
         canClear: false, // 不允许一键清理
+      },
+      {
+        id: 'cache',
+        name: 'settings.storage.cache.statsCache.name',
+        description: 'settings.storage.cache.statsCache.description',
+        path: getCacheDir(),
+        icon: 'i-heroicons-bolt',
+        canClear: true,
       },
       // 临时文件已有自动清理机制（应用启动时、合并完成后），无需暴露给用户
       {
@@ -185,8 +194,8 @@ export function registerCacheHandlers(_context: IpcContext): void {
    * 清理指定缓存目录
    */
   ipcMain.handle('cache:clear', async (_, cacheId: string) => {
-    // 只允许清理 logs（temp 由系统自动清理，downloads 已改为系统下载目录）
     const allowedDirs: Record<string, string> = {
+      cache: getCacheDir(),
       logs: getLogsDir(),
     }
 
@@ -271,6 +280,7 @@ export function registerCacheHandlers(_context: IpcContext): void {
     const dirPaths: Record<string, string> = {
       base: getAppDataDir(),
       databases: getDatabaseDir(),
+      cache: getCacheDir(),
       ai: getAiDataDir(),
       logs: getLogsDir(),
       downloads: getDownloadsDir(), // 系统下载目录

@@ -9,6 +9,8 @@ import * as path from 'path'
 
 // 数据库目录（由 Worker 初始化时设置）
 let DB_DIR: string = ''
+// 缓存目录（由 Worker 初始化时设置）
+let CACHE_DIR: string = ''
 
 // 数据库连接缓存
 const dbCache = new Map<string, Database.Database>()
@@ -16,8 +18,9 @@ const dbCache = new Map<string, Database.Database>()
 /**
  * 初始化数据库目录
  */
-export function initDbDir(dir: string): void {
+export function initDbDir(dir: string, cacheDir?: string): void {
   DB_DIR = dir
+  if (cacheDir) CACHE_DIR = cacheDir
 }
 
 /**
@@ -75,6 +78,10 @@ export function closeAllDatabases(): void {
  */
 export function getDbDir(): string {
   return DB_DIR
+}
+
+export function getCacheDir(): string {
+  return CACHE_DIR
 }
 
 // ==================== 时间过滤工具 ====================

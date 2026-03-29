@@ -157,6 +157,10 @@
         "name": "下載目錄",
         "description": "包含截圖檔案、分析結果等"
       },
+      "statsCache": {
+        "name": "快取資料",
+        "description": "聊天記錄的統計快取，清理後會自動重建"
+      },
       "logs": {
         "name": "日誌檔案",
         "description": "軟體的執行日誌，包含匯入、AI、錯誤等日誌"

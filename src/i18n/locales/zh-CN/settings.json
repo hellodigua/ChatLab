@@ -157,6 +157,10 @@
         "name": "下载目录",
         "description": "包含截屏文件、分析结果等"
       },
+      "statsCache": {
+        "name": "缓存数据",
+        "description": "聊天记录的统计缓存，清理后会自动重建"
+      },
       "logs": {
         "name": "日志文件",
         "description": "软件的运行日志，包含导入、AI、错误等日志"

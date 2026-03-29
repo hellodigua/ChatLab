@@ -9,10 +9,12 @@ import {
   openDatabase,
   closeDatabase,
   getDbPath,
+  getCacheDir,
   buildTimeFilter,
   buildSystemMessageFilter,
   type TimeFilter,
 } from '../core'
+import { getCache, CACHE_KEY_OVERVIEW, type OverviewCache } from '../../database/sessionCache'
 
 // ==================== 基础查询 ====================
 
@@ -383,15 +385,17 @@ export function getMessageLengthDistribution(
  * 获取时间范围
  */
 export function getTimeRange(sessionId: string): { start: number; end: number } | null {
+  // 优先从缓存读取
+  const overview = getCache<OverviewCache>(sessionId, CACHE_KEY_OVERVIEW, getCacheDir())
+  if (overview?.firstMessageTs != null && overview?.lastMessageTs != null) {
+    return { start: overview.firstMessageTs, end: overview.lastMessageTs }
+  }
+
   const db = openDatabase(sessionId)
   if (!db) return null
 
   const row = db
-    .prepare(
-      `
-      SELECT MIN(ts) as start, MAX(ts) as end FROM message
-    `
-    )
+    .prepare('SELECT MIN(ts) as start, MAX(ts) as end FROM message')
     .get() as { start: number | null; end: number | null }
 
   if (row.start === null || row.end === null) return null

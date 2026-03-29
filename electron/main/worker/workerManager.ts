@@ -9,7 +9,7 @@ import * as path from 'path'
 import type { ParseProgress } from '../parser'
 import type { StreamImportResult } from './import'
 import { openDatabase } from '../database/core'
-import { getDatabaseDir, ensureDir } from '../paths'
+import { getDatabaseDir, getCacheDir, ensureDir } from '../paths'
 
 // Worker 实例
 let worker: Worker | null = null
@@ -69,6 +69,7 @@ export function initWorker(): void {
     worker = new Worker(workerPath, {
       workerData: {
         dbDir: getDbDir(),
+        cacheDir: getCacheDir(),
       },
     })
 

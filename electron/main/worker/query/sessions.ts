@@ -6,7 +6,8 @@
 import Database from 'better-sqlite3'
 import * as fs from 'fs'
 import * as path from 'path'
-import { openDatabase, getDbDir, getDbPath } from '../core'
+import { openDatabase, getDbDir, getDbPath, getCacheDir } from '../core'
+import { getCache, computeAndSetOverviewCache, CACHE_KEY_OVERVIEW, type OverviewCache } from '../../database/sessionCache'
 
 interface DbMeta {
   name: string
@@ -94,25 +95,40 @@ export function getAllSessions(): any[] {
       const meta = db.prepare('SELECT * FROM meta LIMIT 1').get() as DbMeta | undefined
 
       if (meta) {
-        const messageCount = (
-          db
-            .prepare(
-              `SELECT COUNT(*) as count
-             FROM message msg
-             JOIN member m ON msg.sender_id = m.id
-             WHERE COALESCE(m.account_name, '') != '系统消息'`
-            )
-            .get() as { count: number }
-        ).count
-        const memberCount = (
-          db
-            .prepare(
-              `SELECT COUNT(*) as count
-             FROM member
-             WHERE COALESCE(account_name, '') != '系统消息'`
-            )
-            .get() as { count: number }
-        ).count
+        // 优先从缓存读取，未命中则实时查询并生成缓存
+        const cacheDir = getCacheDir()
+        let overview = getCache<OverviewCache>(sessionId, CACHE_KEY_OVERVIEW, cacheDir)
+        if (!overview && cacheDir) {
+          try {
+            overview = computeAndSetOverviewCache(db, sessionId, cacheDir)
+          } catch {
+            // 缓存计算失败不影响正常流程
+          }
+        }
+
+        const messageCount =
+          overview?.totalMessages ??
+          (
+            db
+              .prepare(
+                `SELECT COUNT(*) as count
+               FROM message msg
+               JOIN member m ON msg.sender_id = m.id
+               WHERE COALESCE(m.account_name, '') != '系统消息'`
+              )
+              .get() as { count: number }
+          ).count
+        const memberCount =
+          overview?.totalMembers ??
+          (
+            db
+              .prepare(
+                `SELECT COUNT(*) as count
+               FROM member
+               WHERE COALESCE(account_name, '') != '系统消息'`
+              )
+              .get() as { count: number }
+          ).count
 
         // 私聊：获取对方成员头像
         let memberAvatar: string | null = null
@@ -174,26 +190,32 @@ export function getSession(sessionId: string): any | null {
   const meta = db.prepare('SELECT * FROM meta LIMIT 1').get() as DbMeta | undefined
   if (!meta) return null
 
-  const messageCount = (
-    db
-      .prepare(
-        `SELECT COUNT(*) as count
+  const overview = getCache<OverviewCache>(sessionId, CACHE_KEY_OVERVIEW, getCacheDir())
+
+  const messageCount =
+    overview?.totalMessages ??
+    (
+      db
+        .prepare(
+          `SELECT COUNT(*) as count
          FROM message msg
          JOIN member m ON msg.sender_id = m.id
          WHERE COALESCE(m.account_name, '') != '系统消息'`
-      )
-      .get() as { count: number }
-  ).count
+        )
+        .get() as { count: number }
+    ).count
 
-  const memberCount = (
-    db
-      .prepare(
-        `SELECT COUNT(*) as count
+  const memberCount =
+    overview?.totalMembers ??
+    (
+      db
+        .prepare(
+          `SELECT COUNT(*) as count
          FROM member
          WHERE COALESCE(account_name, '') != '系统消息'`
-      )
-      .get() as { count: number }
-  ).count
+        )
+        .get() as { count: number }
+    ).count
 
   return {
     id: sessionId,

@@ -8,7 +8,8 @@ import * as fs from 'fs'
 import * as path from 'path'
 import type { ParseResult } from '../../../src/types/base'
 import { migrateDatabase, needsMigration, CURRENT_SCHEMA_VERSION } from './migrations'
-import { getDatabaseDir, ensureDir } from '../paths'
+import { getDatabaseDir, getCacheDir, ensureDir } from '../paths'
+import { deleteSessionCache } from './sessionCache'
 
 /**
  * 获取数据库目录
@@ -341,6 +342,7 @@ export function deleteSession(sessionId: string): boolean {
     if (fs.existsSync(shmPath)) {
       fs.unlinkSync(shmPath)
     }
+    deleteSessionCache(sessionId, getCacheDir())
     return true
   } catch (error) {
     console.error('[Database] Failed to delete session:', error)

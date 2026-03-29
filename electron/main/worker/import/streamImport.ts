@@ -18,7 +18,7 @@ import {
   type FormatFeature,
 } from '../../parser'
 import { ChatType } from '../../../../src/types/base'
-import { getDbDir } from '../core'
+import { getDbDir, getCacheDir } from '../core'
 import {
   initPerfLog,
   logPerf,
@@ -714,6 +714,16 @@ async function streamImportSingle(
     })
     doCheckpoint()
     logPerf('WAL checkpoint done', totalMessageCount)
+
+    // 写入概览统计缓存文件
+    try {
+      const { computeAndSetOverviewCache } = await import('../../database/sessionCache')
+      computeAndSetOverviewCache(db, sessionId, getCacheDir())
+      logPerf('Stats cache written', totalMessageCount)
+    } catch {
+      // 缓存写入失败不影响导入流程
+    }
+
     logPerf('Import completed', totalMessageCount)
 
     // 记录解析器回调统计（诊断信息）

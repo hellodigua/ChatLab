@@ -68,7 +68,7 @@ import {
 import { streamImport, streamParseFileInfo, analyzeIncrementalImport, incrementalImport } from './import'
 
 // 初始化数据库目录
-initDbDir(workerData.dbDir)
+initDbDir(workerData.dbDir, workerData.cacheDir)
 
 // ==================== 消息处理 ====================
 
