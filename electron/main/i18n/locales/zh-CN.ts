@@ -164,35 +164,12 @@ export default {
           end_time: '结束时间，格式 "YYYY-MM-DD HH:mm"',
         },
       },
-      semantic_search_messages: {
-        desc: `使用 Embedding 向量相似度搜索历史对话，理解语义而非关键词匹配。
-
-⚠️ 使用场景（优先使用 search_messages 关键词搜索，以下场景再考虑本工具）：
-1. 找"类似的话"或"类似的表达"：如"有没有说过类似'我想你了'这样的话"
-2. 关键词搜索结果不足：当 search_messages 返回结果太少或不相关时，可用本工具补充
-3. 模糊的情感/关系分析：如"对方对我的态度是怎样的"、"我们之间的氛围"
-
-❌ 不适合的场景（请用 search_messages）：
-- 有明确关键词的搜索（如"旅游"、"生日"、"加班"）
-- 查找特定人物的发言
-- 查找特定时间段的消息`,
-        params: {
-          query: '语义检索查询，用自然语言描述你想要找的内容类型',
-          top_k: '返回结果数量，默认 10（建议 5-20）',
-          candidate_limit: '候选会话数量，默认 50（越大越慢但可能更准确）',
-          year: '筛选指定年份的会话',
-          month: '筛选指定月份的会话（1-12）',
-          day: '筛选指定日期的会话（1-31）',
-          start_time: '开始时间，格式 "YYYY-MM-DD HH:mm"',
-          end_time: '结束时间，格式 "YYYY-MM-DD HH:mm"',
-        },
-      },
       // ===== SQL 分析工具 =====
-      daily_message_type_breakdown: {
-        desc: '按消息类型统计近 N 天的消息分布（文本、图片、语音、表情等各有多少条）。适用于了解群聊的沟通方式偏好。',
+      message_type_breakdown: {
+        desc: '按消息类型统计近 N 天的消息分布（文本、图片、语音、表情等各有多少条）。适用于了解沟通方式偏好。',
         params: { days: '统计最近多少天的数据' },
         rowTemplate: '{type_name}：{msg_count} 条（占 {percentage}%）',
-        summaryTemplate: '近 {rowCount} 种消息类型的分布：',
+        summaryTemplate: '消息类型分布（共 {rowCount} 种类型）：',
         fallback: '该时间范围内没有消息记录',
       },
       peak_chat_hours_by_member: {
@@ -261,13 +238,6 @@ export default {
         rowTemplate: '[{send_time}] {sender_name}：{content_preview}',
         summaryTemplate: '共发现 {rowCount} 条可能未被回复的消息：',
         fallback: '该时间范围内所有消息都已得到回复，服务质量很好！',
-      },
-      message_type_distribution: {
-        desc: '统计近 N 天内各种消息类型的数量分布（文本、图片、语音、文件等），帮助了解客服沟通的方式偏好和优化方向。',
-        params: { days: '统计最近多少天的数据' },
-        rowTemplate: '{type_name}：{msg_count} 条（{percentage}%）',
-        summaryTemplate: '消息类型分布（共 {rowCount} 种类型）：',
-        fallback: '该时间范围内没有消息记录',
       },
     },
 

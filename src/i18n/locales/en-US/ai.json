@@ -54,8 +54,7 @@
         "get_members": "Get Members",
         "get_member_name_history": "Get Nickname History",
         "get_conversation_between": "Get Conversation",
-        "get_message_context": "Get Message Context",
-        "semantic_search_messages": "🔍 Semantic Search"
+        "get_message_context": "Get Message Context"
       },
       "generating": "Generating response...",
       "think": {
@@ -308,8 +307,7 @@
       "get_time_stats": "Get time statistics",
       "search_sessions": "Search sessions",
       "get_session_messages": "Get session messages",
-      "get_session_summaries": "Get session summaries",
-      "semantic_search_messages": "Semantic search messages"
+      "get_session_summaries": "Get session summaries"
     }
   },
   "skill": {

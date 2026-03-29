@@ -14,7 +14,6 @@ export { createTool as createGetMessageContext } from './get-message-context'
 export { createTool as createSearchSessions } from './search-sessions'
 export { createTool as createGetSessionMessages } from './get-session-messages'
 export { createTool as createGetSessionSummaries } from './get-session-summaries'
-export { createTool as createSemanticSearchMessages } from './semantic-search-messages'
 export { sqlToolFactories, getSqlToolCatalog, SQL_TOOL_NAMES } from './sql-analysis'
 
 export const TS_TOOL_NAMES = [
@@ -29,5 +28,4 @@ export const TS_TOOL_NAMES = [
   'search_sessions',
   'get_session_messages',
   'get_session_summaries',
-  'semantic_search_messages',
 ]

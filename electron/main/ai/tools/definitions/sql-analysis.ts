@@ -14,9 +14,9 @@ import { t as i18nT } from '../../../i18n'
 const SQL_TOOL_DEFS: CustomSqlToolDef[] = [
   // ==================== 通用分析 ====================
   {
-    name: 'daily_message_type_breakdown',
+    name: 'message_type_breakdown',
     description:
-      '按消息类型统计近 N 天的消息分布（文本、图片、语音、表情等各有多少条）。适用于了解群聊的沟通方式偏好。',
+      '按消息类型统计近 N 天的消息分布（文本、图片、语音、表情等各有多少条）。适用于了解沟通方式偏好。',
     parameters: {
       type: 'object',
       properties: {
@@ -29,7 +29,7 @@ const SQL_TOOL_DEFS: CustomSqlToolDef[] = [
       query:
         "SELECT CASE type WHEN 0 THEN '文本' WHEN 1 THEN '图片' WHEN 2 THEN '语音' WHEN 3 THEN '视频' WHEN 4 THEN '文件' WHEN 5 THEN '表情' WHEN 7 THEN '链接' WHEN 20 THEN '红包' WHEN 22 THEN '拍一拍' WHEN 80 THEN '系统消息' WHEN 81 THEN '撤回' ELSE '其他' END AS type_name, COUNT(*) AS msg_count, ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 1) AS percentage FROM message WHERE ts > unixepoch('now', '-' || @days || ' days') GROUP BY type ORDER BY msg_count DESC",
       rowTemplate: '{type_name}：{msg_count} 条（占 {percentage}%）',
-      summaryTemplate: '近 {rowCount} 种消息类型的分布：',
+      summaryTemplate: '消息类型分布（共 {rowCount} 种类型）：',
       fallback: '该时间范围内没有消息记录',
     },
   },
@@ -180,26 +180,6 @@ const SQL_TOOL_DEFS: CustomSqlToolDef[] = [
       rowTemplate: '[{send_time}] {sender_name}：{content_preview}',
       summaryTemplate: '共发现 {rowCount} 条可能未被回复的消息：',
       fallback: '该时间范围内所有消息都已得到回复，服务质量很好！',
-    },
-  },
-  {
-    name: 'message_type_distribution',
-    description:
-      '统计近 N 天内各种消息类型的数量分布（文本、图片、语音、文件等），帮助了解客服沟通的方式偏好和优化方向。',
-    parameters: {
-      type: 'object',
-      properties: {
-        days: { type: 'number', description: '统计最近多少天的数据' },
-      },
-      required: ['days'],
-    },
-    execution: {
-      type: 'sqlite',
-      query:
-        "SELECT CASE type WHEN 0 THEN '文本' WHEN 1 THEN '图片' WHEN 2 THEN '语音' WHEN 3 THEN '视频' WHEN 4 THEN '文件' WHEN 5 THEN '表情' WHEN 7 THEN '链接' WHEN 80 THEN '系统消息' ELSE '其他' END AS type_name, COUNT(*) AS msg_count, ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 1) AS percentage FROM message WHERE ts > unixepoch('now', '-' || @days || ' days') GROUP BY type ORDER BY msg_count DESC",
-      rowTemplate: '{type_name}：{msg_count} 条（{percentage}%）',
-      summaryTemplate: '消息类型分布（共 {rowCount} 种类型）：',
-      fallback: '该时间范围内没有消息记录',
     },
   },
 ]

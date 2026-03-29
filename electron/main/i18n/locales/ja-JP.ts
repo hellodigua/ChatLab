@@ -174,35 +174,12 @@ export default {
           end_time: '終了時刻。形式 "YYYY-MM-DD HH:mm"',
         },
       },
-      semantic_search_messages: {
-        desc: `Embedding ベクトル類似度を使用して過去の会話をセマンティック検索する。キーワードマッチではなく意味を理解する。
-
-⚠️ 使用シーン（search_messages のキーワード検索を優先し、以下のシーンで本ツールを検討する）：
-1. 「似た表現」を探す：例えば「"会いたい" のような表現をしたことがある？」
-2. キーワード検索の結果が不十分：search_messages の結果が少なすぎたり関連性が低い場合、本ツールで補完する
-3. あいまいな感情/関係分析：例えば「相手の私への態度は？」「私たちの間の雰囲気は？」
-
-❌ 適さないシーン（search_messages を使用）：
-- 明確なキーワードがある検索（例：「旅行」「誕生日」「残業」）
-- 特定の人物の発言を探す
-- 特定の時間帯のメッセージを探す`,
-        params: {
-          query: 'セマンティック検索クエリ。自然言語で探したい内容の種類を記述する',
-          top_k: '返却結果数。デフォルト 10（推奨 5-20）',
-          candidate_limit: '候補セッション数。デフォルト 50（大きいほど遅くなるがより正確な場合がある）',
-          year: '指定年のセッションをフィルタリング',
-          month: '指定月のセッションをフィルタリング（1-12）',
-          day: '指定日のセッションをフィルタリング（1-31）',
-          start_time: '開始時刻。形式 "YYYY-MM-DD HH:mm"',
-          end_time: '終了時刻。形式 "YYYY-MM-DD HH:mm"',
-        },
-      },
       // ===== SQL 分析ツール =====
-      daily_message_type_breakdown: {
-        desc: 'メッセージタイプ別に直近 N 日間のメッセージ分布を集計する（テキスト、画像、音声、スタンプなどの件数）。グループチャットのコミュニケーション方法の傾向を把握するのに適している。',
+      message_type_breakdown: {
+        desc: 'メッセージタイプ別に直近 N 日間のメッセージ分布を集計する（テキスト、画像、音声、スタンプなどの件数）。コミュニケーション方法の傾向を把握するのに適している。',
         params: { days: '直近何日間のデータを集計するか' },
         rowTemplate: '{type_name}：{msg_count} 件（{percentage}%）',
-        summaryTemplate: '直近 {rowCount} 種類のメッセージタイプ分布：',
+        summaryTemplate: 'メッセージタイプ分布（全 {rowCount} 種類）：',
         fallback: 'この期間にメッセージ記録がありません',
       },
       peak_chat_hours_by_member: {
@@ -271,13 +248,6 @@ export default {
         rowTemplate: '[{send_time}] {sender_name}：{content_preview}',
         summaryTemplate: '全 {rowCount} 件の返信されていない可能性のあるメッセージ：',
         fallback: 'この期間のすべてのメッセージに返信がありました。対応品質は良好です！',
-      },
-      message_type_distribution: {
-        desc: '直近 N 日間の各メッセージタイプの件数分布（テキスト、画像、音声、ファイルなど）を集計する。コミュニケーション方法の傾向と最適化の方向性を把握するのに役立つ。',
-        params: { days: '直近何日間のデータを集計するか' },
-        rowTemplate: '{type_name}：{msg_count} 件（{percentage}%）',
-        summaryTemplate: 'メッセージタイプ分布（全 {rowCount} 種類）：',
-        fallback: 'この期間にメッセージ記録がありません',
       },
     },
 

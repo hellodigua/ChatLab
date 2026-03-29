@@ -54,8 +54,7 @@
         "get_members": "取得成員列表",
         "get_member_name_history": "取得暱稱歷史",
         "get_conversation_between": "取得對話紀錄",
-        "get_message_context": "取得上下文",
-        "semantic_search_messages": "🔍 語意搜尋"
+        "get_message_context": "取得上下文"
       },
       "generating": "正在產生回覆...",
       "think": {
@@ -308,8 +307,7 @@
       "get_time_stats": "取得時間統計",
       "search_sessions": "搜尋會話",
       "get_session_messages": "取得會話訊息",
-      "get_session_summaries": "取得會話摘要",
-      "semantic_search_messages": "語意搜尋訊息"
+      "get_session_summaries": "取得會話摘要"
     }
   },
   "skill": {

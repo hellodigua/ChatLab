@@ -173,31 +173,8 @@ Returned summaries are brief descriptions of each session, helping quickly locat
           end_time: 'End time, format "YYYY-MM-DD HH:mm"',
         },
       },
-      semantic_search_messages: {
-        desc: `Search historical conversations using Embedding vector similarity, understanding semantics rather than keyword matching.
-
-⚠️ Use cases (prefer search_messages for keyword search, consider this tool for the following):
-1. Finding "similar expressions": e.g. "has anyone said something like 'I miss you'"
-2. Insufficient keyword results: when search_messages returns too few or irrelevant results
-3. Vague sentiment/relationship analysis: e.g. "how does the other person feel about me"
-
-❌ Not suitable for (use search_messages):
-- Searches with specific keywords (e.g. "travel", "birthday")
-- Finding specific person's messages
-- Finding messages in specific time periods`,
-        params: {
-          query: 'Semantic search query, describe in natural language what type of content you are looking for',
-          top_k: 'Number of results to return, default 10 (recommended 5-20)',
-          candidate_limit: 'Number of candidate sessions, default 50 (larger is slower but potentially more accurate)',
-          year: 'Filter sessions by year',
-          month: 'Filter sessions by month (1-12)',
-          day: 'Filter sessions by day (1-31)',
-          start_time: 'Start time, format "YYYY-MM-DD HH:mm"',
-          end_time: 'End time, format "YYYY-MM-DD HH:mm"',
-        },
-      },
       // ===== SQL Analysis Tools =====
-      daily_message_type_breakdown: {
+      message_type_breakdown: {
         desc: 'Break down message types over the last N days (text, image, voice, emoji, etc.). Useful for understanding communication preferences.',
         params: { days: 'Number of recent days to analyze' },
         rowTemplate: '{type_name}: {msg_count} messages ({percentage}%)',
@@ -270,13 +247,6 @@ Returned summaries are brief descriptions of each session, helping quickly locat
         rowTemplate: '[{send_time}] {sender_name}: {content_preview}',
         summaryTemplate: 'Found {rowCount} potentially unanswered messages:',
         fallback: 'All messages have been replied to in this time range. Great service quality!',
-      },
-      message_type_distribution: {
-        desc: 'Analyze message type distribution over the last N days (text, image, voice, file, etc.). Helps understand communication preferences and optimization opportunities.',
-        params: { days: 'Number of recent days to analyze' },
-        rowTemplate: '{type_name}: {msg_count} messages ({percentage}%)',
-        summaryTemplate: 'Message type distribution ({rowCount} types):',
-        fallback: 'No messages found in this time range',
       },
     },
 

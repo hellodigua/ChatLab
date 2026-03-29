@@ -54,8 +54,7 @@
         "get_members": "メンバー一覧を取得",
         "get_member_name_history": "ニックネーム履歴を取得",
         "get_conversation_between": "やり取り履歴を取得",
-        "get_message_context": "コンテキストを取得",
-        "semantic_search_messages": "🔍 セマンティック検索"
+        "get_message_context": "コンテキストを取得"
       },
       "generating": "回答を作成中...",
       "think": {
@@ -308,8 +307,7 @@
       "get_time_stats": "時間統計を取得",
       "search_sessions": "セッションを検索",
       "get_session_messages": "セッションメッセージを取得",
-      "get_session_summaries": "セッション要約を取得",
-      "semantic_search_messages": "セマンティック検索"
+      "get_session_summaries": "セッション要約を取得"
     }
   },
   "skill": {

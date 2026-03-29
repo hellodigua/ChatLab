@@ -19,10 +19,8 @@ import {
   createSearchSessions,
   createGetSessionMessages,
   createGetSessionSummaries,
-  createSemanticSearchMessages,
   sqlToolFactories,
 } from './definitions'
-import { isEmbeddingEnabled } from '../rag'
 import { t as i18nT } from '../../i18n'
 import { preprocessMessages, type PreprocessableMessage } from '../preprocessor'
 import { formatMessageCompact } from './utils/format'
@@ -217,10 +215,6 @@ function anonymizeMessageNames(messages: PreprocessableMessage[], ownerPlatformI
  */
 export function getAllTools(context: ToolContext, allowedTools?: string[]): AgentTool<any>[] {
   let tools: AgentTool<any>[] = coreFactories.map((f) => f(context))
-
-  if (isEmbeddingEnabled()) {
-    tools.push(createSemanticSearchMessages(context))
-  }
 
   if (allowedTools && allowedTools.length > 0) {
     tools = tools.filter((t) => allowedTools.includes(t.name))

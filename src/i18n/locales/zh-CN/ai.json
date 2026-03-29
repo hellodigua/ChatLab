@@ -54,8 +54,7 @@
         "get_members": "获取成员列表",
         "get_member_name_history": "获取昵称历史",
         "get_conversation_between": "获取对话记录",
-        "get_message_context": "获取上下文",
-        "semantic_search_messages": "🔍 语义搜索"
+        "get_message_context": "获取上下文"
       },
       "generating": "正在生成回复...",
       "think": {
@@ -308,8 +307,7 @@
       "get_time_stats": "获取时间统计",
       "search_sessions": "搜索会话",
       "get_session_messages": "获取会话消息",
-      "get_session_summaries": "获取会话摘要",
-      "semantic_search_messages": "语义搜索消息"
+      "get_session_summaries": "获取会话摘要"
     }
   },
   "skill": {
