@@ -1,14 +1,14 @@
 /**
- * 自定义 TXT 格式解析器单元测试
+ * 华为 Welink TXT 格式解析器单元测试
  * 测试覆盖：消息头解析、时间解析、消息类型检测、多行消息、边界条件
  */
 
 import assert from 'node:assert/strict'
-import test, { describe, it, beforeEach, afterEach } from 'node:test'
+import { describe, it } from 'node:test'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as os from 'os'
-import { feature, parser_ } from './custom-txt'
+import { feature, parser_ } from './welink-txt'
 import { MessageType } from '../../../../src/types/base'
 
 // ==================== 辅助函数 ====================
@@ -17,7 +17,7 @@ import { MessageType } from '../../../../src/types/base'
  * 创建临时测试文件
  */
 function createTempFile(content: string, filename: string = 'test-chat.txt'): string {
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'custom-txt-test-'))
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'welink-txt-test-'))
   const filePath = path.join(tempDir, filename)
   fs.writeFileSync(filePath, content, 'utf-8')
   return filePath
@@ -57,15 +57,15 @@ async function collectParseResult(filePath: string) {
 
 // ==================== 测试套件 ====================
 
-describe('自定义 TXT 格式解析器 - 特征定义', () => {
+describe('华为 Welink TXT 格式解析器 - 特征定义', () => {
   it('应该有正确的格式 ID', () => {
     console.log('[Test] 检查格式 ID')
-    assert.equal(feature.id, 'custom-txt')
+    assert.equal(feature.id, 'welink-txt')
   })
 
   it('应该有正确的格式名称', () => {
     console.log('[Test] 检查格式名称')
-    assert.equal(feature.name, '自定义 TXT 格式')
+    assert.equal(feature.name, '华为 Welink TXT 格式')
   })
 
   it('应该支持 .txt 扩展名', () => {
@@ -85,7 +85,7 @@ describe('自定义 TXT 格式解析器 - 特征定义', () => {
   })
 })
 
-describe('自定义 TXT 格式解析器 - 消息头正则匹配', () => {
+describe('华为 Welink TXT 格式解析器 - 消息头正则匹配', () => {
   const headerRegex = /^([^\t]+)\(([a-zA-Z]\d{8})\)\t(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})$/
 
   it('应该匹配标准格式消息头', () => {
@@ -167,7 +167,7 @@ describe('自定义 TXT 格式解析器 - 消息头正则匹配', () => {
   })
 })
 
-describe('自定义 TXT 格式解析器 - 时间解析', () => {
+describe('华为 Welink TXT 格式解析器 - 时间解析', () => {
   it('应该正确解析标准时间格式', () => {
     const timeStr = '2026-03-31 09:15:32'
     console.log('[Test] 测试时间解析:', timeStr)
@@ -185,7 +185,7 @@ describe('自定义 TXT 格式解析器 - 时间解析', () => {
   })
 })
 
-describe('自定义 TXT 格式解析器 - 消息类型检测', () => {
+describe('华为 Welink TXT 格式解析器 - 消息类型检测', () => {
   // 导入 detectMessageType 函数（需要从解析器中导出或重新实现测试逻辑）
   // 这里通过解析结果验证
 
@@ -247,7 +247,7 @@ describe('自定义 TXT 格式解析器 - 消息类型检测', () => {
   })
 })
 
-describe('自定义 TXT 格式解析器 - 多行消息', () => {
+describe('华为 Welink TXT 格式解析器 - 多行消息', () => {
   it('应该正确解析多行消息', async () => {
     const content = `张三(z00123456)\t2026-03-31 16:45:28
 会议总结：
@@ -344,7 +344,7 @@ describe('自定义 TXT 格式解析器 - 多行消息', () => {
   })
 })
 
-describe('自定义 TXT 格式解析器 - 成员解析', () => {
+describe('华为 Welink TXT 格式解析器 - 成员解析', () => {
   it('应该正确解析成员信息', async () => {
     const content = `张三(z00123456)\t2026-03-31 09:15:32
 消息1
@@ -383,7 +383,7 @@ describe('自定义 TXT 格式解析器 - 成员解析', () => {
   })
 })
 
-describe('自定义 TXT 格式解析器 - 群名提取', () => {
+describe('华为 Welink TXT 格式解析器 - 群名提取', () => {
   it('应该从文件名提取群名', async () => {
     const content = '张三(z00123456)\t2026-03-31 09:15:32\n消息'
     const filePath = createTempFile(content, '项目组聊天.txt')
@@ -411,7 +411,7 @@ describe('自定义 TXT 格式解析器 - 群名提取', () => {
   })
 })
 
-describe('自定义 TXT 格式解析器 - 边界条件', () => {
+describe('华为 Welink TXT 格式解析器 - 边界条件', () => {
   it('应该处理空文件', async () => {
     const content = ''
     const filePath = createTempFile(content)
@@ -492,7 +492,7 @@ describe('自定义 TXT 格式解析器 - 边界条件', () => {
   })
 })
 
-describe('自定义 TXT 格式解析器 - 完整流程', () => {
+describe('华为 Welink TXT 格式解析器 - 完整流程', () => {
   it('应该正确解析完整示例文件', async () => {
     // 使用项目根目录的测试文件
     const samplePath = path.resolve(__dirname, '../../../../test-chat-sample.txt')
@@ -523,7 +523,7 @@ describe('自定义 TXT 格式解析器 - 完整流程', () => {
 
 // ==================== 异常处理测试 ====================
 
-describe('自定义 TXT 格式解析器 - 异常处理', () => {
+describe('华为 Welink TXT 格式解析器 - 异常处理', () => {
   it('应该处理无效时间格式并使用当前时间', async () => {
     const content = '张三(z00123456)\t2099-13-45 25:61:99\n无效时间消息'
     const filePath = createTempFile(content)

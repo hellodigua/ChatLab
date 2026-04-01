@@ -1,15 +1,14 @@
 /**
- * 自定义 TXT 格式解析器集成测试
+ * 华为 Welink TXT 格式解析器集成测试
  * 测试解析器与嗅探器、导入流程的集成
  */
 
 import assert from 'node:assert/strict'
-import test, { describe, it, beforeEach, afterEach } from 'node:test'
+import { describe, it } from 'node:test'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as os from 'os'
 import { detectFormat, diagnoseFormat, parseFileSync, getSupportedFormats } from '../index'
-import customTxt from './custom-txt'
 
 // ==================== 辅助函数 ====================
 
@@ -17,7 +16,7 @@ import customTxt from './custom-txt'
  * 创建临时测试文件
  */
 function createTempFile(content: string, filename: string = 'test-chat.txt'): string {
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'custom-txt-integration-'))
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'welink-txt-integration-'))
   const filePath = path.join(tempDir, filename)
   fs.writeFileSync(filePath, content, 'utf-8')
   return filePath
@@ -35,7 +34,7 @@ function cleanupTempFile(filePath: string): void {
 
 // ==================== 测试套件 ====================
 
-describe('自定义 TXT 格式解析器 - 嗅探器集成', () => {
+describe('华为 Welink TXT 格式解析器 - 嗅探器集成', () => {
   it('应该被嗅探器识别', async () => {
     const content = `张三(z00123456)\t2026-03-31 09:15:32
 测试消息`
@@ -47,7 +46,7 @@ describe('自定义 TXT 格式解析器 - 嗅探器集成', () => {
       console.log('[Test] 嗅探结果:', feature)
 
       assert.ok(feature, '应该识别到格式')
-      assert.equal(feature?.id, 'custom-txt', '应该是 custom-txt 格式')
+      assert.equal(feature?.id, 'welink-txt', '应该是 welink-txt 格式')
     } finally {
       cleanupTempFile(filePath)
     }
@@ -68,7 +67,7 @@ describe('自定义 TXT 格式解析器 - 嗅探器集成', () => {
       })
 
       assert.ok(diagnosis.recognized, '应该识别成功')
-      assert.equal(diagnosis.matchedFormat?.id, 'custom-txt')
+      assert.equal(diagnosis.matchedFormat?.id, 'welink-txt')
     } finally {
       cleanupTempFile(filePath)
     }
@@ -77,28 +76,24 @@ describe('自定义 TXT 格式解析器 - 嗅探器集成', () => {
   it('应该在支持格式列表中', () => {
     console.log('[Test] 检查格式列表')
     const formats = getSupportedFormats()
-    const customTxtFormat = formats.find((f) => f.id === 'custom-txt')
-
-    assert.ok(customTxtFormat, 'custom-txt 应该在支持格式列表中')
-    console.log('[Test] 找到格式:', customTxtFormat?.name)
+    const welinkTxtFormat = formats.find((f) => f.id === 'welink-txt')
+    assert.ok(welinkTxtFormat, 'welink-txt 应该在支持格式列表中')
+    console.log('[Test] 找到格式:', welinkTxtFormat?.name)
   })
 
   it('应该优先级低于 LINE 格式（相同扩展名）', () => {
     console.log('[Test] 检查优先级')
     const formats = getSupportedFormats()
-    const customTxtFormat = formats.find((f) => f.id === 'custom-txt')
     const lineFormat = formats.find((f) => f.id === 'line-native-txt')
-
-    if (lineFormat && customTxtFormat) {
-      // 优先级数字越小越优先
-      assert.ok(lineFormat.priority < customTxtFormat.priority, 'LINE 格式应该优先于自定义 TXT')
-      console.log('[Test] LINE 优先级:', lineFormat.priority)
-      console.log('[Test] 自定义 TXT 优先级:', customTxtFormat.priority)
+    const welinkTxtFormat = formats.find((f) => f.id === 'welink-txt')
+    if (lineFormat && welinkTxtFormat) {
+      assert.ok(lineFormat.priority < welinkTxtFormat.priority, 'LINE 格式应该优先于 Welink TXT')
+      console.log('[Test] Welink TXT 优先级:', welinkTxtFormat.priority)
     }
   })
 })
 
-describe('自定义 TXT 格式解析器 - 解析流程集成', () => {
+describe('华为 Welink TXT 格式解析器 - 解析流程集成', () => {
   it('应该通过 parseFileSync 完整解析', async () => {
     const content = `张三(z00123456)\t2026-03-31 09:15:32
 消息1
@@ -154,15 +149,15 @@ describe('自定义 TXT 格式解析器 - 解析流程集成', () => {
   })
 })
 
-describe('自定义 TXT 格式解析器 - 格式边界测试', () => {
+describe('华为 Welink TXT 格式解析器 - 格式边界测试', () => {
   it('应该不识别不符合格式的 TXT 文件', async () => {
-    // 这是 QQ 格式的内容，不应该被识别为 custom-txt
+    // 这是 QQ 格式的内容，不应该被识别为 welink-txt
     const content = `消息记录（此消息记录为文本格式，不支持重新导入）
 消息对象:测试群
 2019-07-16 18:15:05 地瓜(23333233)
 测试消息`
     const filePath = createTempFile(content)
-    console.log('[Test] 测试非 custom-txt 格式')
+    console.log('[Test] 测试非 welink-txt 格式')
 
     try {
       const feature = detectFormat(filePath)
@@ -230,7 +225,7 @@ English
   })
 })
 
-describe('自定义 TXT 格式解析器 - 完整示例文件测试', () => {
+describe('华为 Welink TXT 格式解析器 - 完整示例文件测试', () => {
   it('应该正确解析项目示例文件', async () => {
     const samplePath = path.resolve(__dirname, '../../../../test-chat-sample.txt')
 
@@ -244,7 +239,7 @@ describe('自定义 TXT 格式解析器 - 完整示例文件测试', () => {
     // 1. 嗅探测试
     const feature = detectFormat(samplePath)
     console.log('[Test] 嗅探结果:', feature?.id, feature?.name)
-    assert.equal(feature?.id, 'custom-txt')
+    assert.equal(feature?.id, 'welink-txt')
 
     // 2. 解析测试
     const result = await parseFileSync(samplePath, (progress) => {

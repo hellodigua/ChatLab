@@ -1,5 +1,5 @@
 /**
- * 自定义 TXT 格式解析器
+ * 华为 Welink TXT 格式解析器
  * 支持格式：昵称(ID)\tYYYY-MM-DD HH:mm:ss\n消息内容
  *
  * 格式特征：
@@ -43,8 +43,8 @@ function extractNameFromFilePath(filePath: string): string {
 // ==================== 特征定义 ====================
 
 export const feature: FormatFeature = {
-  id: 'custom-txt',
-  name: '自定义 TXT 格式',
+  id: 'welink-txt',
+  name: '华为 Welink TXT 格式',
   platform: KNOWN_PLATFORMS.UNKNOWN,
   priority: 40,
   extensions: ['.txt'],
@@ -114,13 +114,13 @@ function parseLocalTime(
 
     // 检查是否为有效日期
     if (isNaN(timestamp)) {
-      onLog?.('warn', `[CustomTxt] 时间解析失败，无效日期格式: "${timeStr}"，使用当前时间`)
+      onLog?.('warn', `[WelinkTxt] 时间解析失败，无效日期格式: "${timeStr}"，使用当前时间`)
       return Math.floor(Date.now() / 1000)
     }
 
     return Math.floor(timestamp / 1000)
   } catch (error) {
-    onLog?.('error', `[CustomTxt] 时间解析异常: "${timeStr}", 错误: ${error}`)
+    onLog?.('error', `[WelinkTxt] 时间解析异常: "${timeStr}", 错误: ${error}`)
     return Math.floor(Date.now() / 1000)
   }
 }
@@ -134,7 +134,7 @@ interface MemberInfo {
 
 // ==================== 解析器实现 ====================
 
-async function* parseCustomTxt(options: ParseOptions): AsyncGenerator<ParseEvent, void, unknown> {
+async function* parseWelinkTxt(options: ParseOptions): AsyncGenerator<ParseEvent, void, unknown> {
   const { filePath, batchSize = 5000, onProgress, onLog } = options
 
   // 性能监控：记录开始时间
@@ -151,12 +151,12 @@ async function* parseCustomTxt(options: ParseOptions): AsyncGenerator<ParseEvent
   onProgress?.(initialProgress)
 
   // 记录解析开始
-  onLog?.('info', `[CustomTxt] 开始解析文件，大小: ${(totalBytes / 1024 / 1024).toFixed(2)} MB`)
-  onLog?.('info', `[CustomTxt] 文件路径: ${filePath}`)
+  onLog?.('info', `[WelinkTxt] 开始解析文件，大小: ${(totalBytes / 1024 / 1024).toFixed(2)} MB`)
+  onLog?.('info', `[WelinkTxt] 文件路径: ${filePath}`)
 
   // 收集数据
   const groupName = extractNameFromFilePath(filePath)
-  onLog?.('info', `[CustomTxt] 从文件名提取群名: ${groupName}`)
+  onLog?.('info', `[WelinkTxt] 从文件名提取群名: ${groupName}`)
 
   const memberMap = new Map<string, MemberInfo>()
   const messages: ParsedMessage[] = []
@@ -210,11 +210,11 @@ async function* parseCustomTxt(options: ParseOptions): AsyncGenerator<ParseEvent
   for await (const rawLine of rl) {
     lineNum++
 
-    // 去除行尾空白字符（处理尾随空格/制表符）
-    const line = rawLine.trimEnd()
+    // 仅用于消息头检查的修剪版本（保留原始行用于内容）
+    const lineForHeaderCheck = rawLine.trimEnd()
 
     // 检查消息头
-    const headerMatch = line.match(MESSAGE_HEADER_REGEX)
+    const headerMatch = lineForHeaderCheck.match(MESSAGE_HEADER_REGEX)
     if (headerMatch) {
       // 保存前一条消息
       saveCurrentMessage()
@@ -226,7 +226,7 @@ async function* parseCustomTxt(options: ParseOptions): AsyncGenerator<ParseEvent
 
       onLog?.(
         'debug',
-        `[CustomTxt] 行 ${lineNum}: 解析到消息头 - 昵称="${nickname}", ID="${platformId}", 时间=${timeStr}, 时间戳=${timestamp}`
+        `[WelinkTxt] 行 ${lineNum}: 解析到消息头 - 昵称="${nickname}", ID="${platformId}", 时间=${timeStr}, 时间戳=${timestamp}`
       )
 
       currentMessage = {
@@ -253,12 +253,13 @@ async function* parseCustomTxt(options: ParseOptions): AsyncGenerator<ParseEvent
 
     // 内容行（追加到当前消息）
     if (currentMessage) {
-      currentMessage.contentLines.push(line)
+      // 保留原始行，包括尾随空白字符（如 Markdown 硬换行、格式化日志等）
+      currentMessage.contentLines.push(rawLine)
     } else {
       // 没有当前消息时，这是无效行
-      const trimmed = line.trim()
+      const trimmed = rawLine.trim()
       if (trimmed) {
-        onLog?.('warn', `[CustomTxt] 行 ${lineNum}: 跳过无效行 - "${line.substring(0, 50)}..."`)
+        onLog?.('warn', `[WelinkTxt] 行 ${lineNum}: 跳过无效行 - "${rawLine.substring(0, 50)}..."`)
         skippedLines++
       }
     }
@@ -274,7 +275,7 @@ async function* parseCustomTxt(options: ParseOptions): AsyncGenerator<ParseEvent
     type: ChatType.GROUP,
   }
   yield { type: 'meta', data: meta }
-  onLog?.('info', `[CustomTxt] 发送元信息: 群名="${groupName}", 平台="${KNOWN_PLATFORMS.UNKNOWN}", 类型=群聊`)
+  onLog?.('info', `[WelinkTxt] 发送元信息: 群名="${groupName}", 平台="${KNOWN_PLATFORMS.UNKNOWN}", 类型=群聊`)
 
   // 发送成员
   const members: ParsedMember[] = Array.from(memberMap.values()).map((m) => ({
@@ -282,7 +283,7 @@ async function* parseCustomTxt(options: ParseOptions): AsyncGenerator<ParseEvent
     accountName: m.nickname,
   }))
   yield { type: 'members', data: members }
-  onLog?.('info', `[CustomTxt] 发送成员列表: ${members.length} 个成员`)
+  onLog?.('info', `[WelinkTxt] 发送成员列表: ${members.length} 个成员`)
 
   // 分批发送消息
   for (let i = 0; i < messages.length; i += batchSize) {
@@ -297,12 +298,12 @@ async function* parseCustomTxt(options: ParseOptions): AsyncGenerator<ParseEvent
 
   // 记录解析摘要
   const elapsed = Date.now() - startTime
-  onLog?.('info', `[CustomTxt] 解析完成: ${messagesProcessed} 条消息, ${memberMap.size} 个成员, 耗时 ${elapsed}ms`)
+  onLog?.('info', `[WelinkTxt] 解析完成: ${messagesProcessed} 条消息, ${memberMap.size} 个成员, 耗时 ${elapsed}ms`)
   if (skippedLines > 0) {
-    onLog?.('warn', `[CustomTxt] 跳过 ${skippedLines} 行无法解析的内容`)
+    onLog?.('warn', `[WelinkTxt] 跳过 ${skippedLines} 行无法解析的内容`)
   }
   if (messagesProcessed > 0) {
-    onLog?.('debug', `[CustomTxt] 平均处理速度: ${(elapsed / messagesProcessed).toFixed(2)}ms/条`)
+    onLog?.('debug', `[WelinkTxt] 平均处理速度: ${(elapsed / messagesProcessed).toFixed(2)}ms/条`)
   }
 
   yield {
@@ -315,7 +316,7 @@ async function* parseCustomTxt(options: ParseOptions): AsyncGenerator<ParseEvent
 
 export const parser_: Parser = {
   feature,
-  parse: parseCustomTxt,
+  parse: parseWelinkTxt,
 }
 
 // ==================== 导出格式模块 ====================
