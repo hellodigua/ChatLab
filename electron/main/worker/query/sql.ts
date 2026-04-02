@@ -105,7 +105,7 @@ export function executePluginQuery<T = Record<string, any>>(
 
 /**
  * 执行用户 SQL 查询
- * - 只支持 SELECT 语句
+ * - 仅允许只读查询（如 SELECT / WITH ... SELECT）
  * - 不强制 LIMIT，由用户自行控制
  * - 带超时控制（由 Worker 管理器控制）
  */
@@ -117,17 +117,15 @@ export function executeRawSQL(sessionId: string, sql: string): SQLResult {
 
   const trimmedSQL = sql.trim()
 
-  // 只允许 SELECT 语句
-  if (!trimmedSQL.toUpperCase().startsWith('SELECT')) {
-    throw new Error('只支持 SELECT 查询语句')
-  }
-
   // 执行查询
   const startTime = Date.now()
 
   try {
     // better-sqlite3 是同步的，超时由 Worker 管理器控制
     const stmt = db.prepare(trimmedSQL)
+    if (!stmt.readonly) {
+      throw new Error('只支持只读查询语句（SELECT / WITH）')
+    }
     const rows = stmt.all()
     const duration = Date.now() - startTime
 

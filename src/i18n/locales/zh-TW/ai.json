@@ -175,9 +175,13 @@
     "editor": {
       "errorEmptySQL": "請輸入 SQL 語句",
       "placeholder": "輸入 SQL 查詢語句...",
+      "promptTip": "用自然語言描述你的查詢需求，系統會自動生成並執行 SQL",
       "tip": "提示：雙擊左側欄位名可插入到 SQL",
       "history": "歷史",
       "aiGenerate": "AI 產生",
+      "generateAndRun": "生成並執行",
+      "switchToSQLMode": "切換為 SQL 輸入模式",
+      "switchToPromptMode": "切換為 Prompt 輸入模式",
       "shortcut": "Ctrl/⌘ + Enter 執行",
       "run": "執行"
     },
@@ -196,7 +200,7 @@
       "pageInfo": "第 {current} / {total} 頁",
       "emptyResult": "查詢結果為空",
       "initialState": "輸入 SQL 語句後執行，即可查看結果",
-      "initialHint": "僅支援 SELECT 查詢，建議添加 LIMIT 以提升效能",
+      "initialHint": "僅支援唯讀查詢（SELECT / WITH），建議添加 LIMIT 以提升效能",
       "summaryTitle": "AI 分析摘要",
       "analyzing": "AI 正在分析結果...",
       "errorSummary": "總結失敗"
@@ -213,7 +217,9 @@
       "explanation": "說明",
       "generateSQL": "產生 SQL",
       "useSQL": "使用 SQL",
-      "run": "執行"
+      "run": "執行",
+      "defaultPromptPrivate": "請統計最近1年私聊中雙方各自的：訊息總數、訊息占比、活躍天數、日均訊息數（按活躍天計算）、首次發言時間、最近發言時間；依訊息總數降序顯示。",
+      "defaultPromptGroup": "請統計最近1年群聊中各成員的：訊息總數、訊息占比、活躍天數、日均訊息數（按活躍天計算）、文字訊息占比；顯示成員名稱並依訊息總數降序，返回前20名。"
     },
     "history": {
       "title": "AI 產生紀錄",

@@ -175,9 +175,13 @@
     "editor": {
       "errorEmptySQL": "Please enter an SQL statement",
       "placeholder": "Enter SQL query...",
+      "promptTip": "Describe your query in natural language. SQL will be generated and executed automatically",
       "tip": "Tip: Double-click column names to insert into SQL",
       "history": "History",
       "aiGenerate": "AI Generate",
+      "generateAndRun": "Generate and Run",
+      "switchToSQLMode": "Switch to SQL Mode",
+      "switchToPromptMode": "Switch to Prompt Mode",
       "shortcut": "Ctrl/⌘ + Enter to run",
       "run": "Run"
     },
@@ -196,7 +200,7 @@
       "pageInfo": "Page {current} / {total}",
       "emptyResult": "Query returned no results",
       "initialState": "Enter SQL and run to see results",
-      "initialHint": "Only SELECT queries supported, add LIMIT for better performance",
+      "initialHint": "Only read-only queries are supported (SELECT / WITH). Add LIMIT for better performance",
       "summaryTitle": "AI Result Summary",
       "analyzing": "AI is analyzing results...",
       "errorSummary": "Summary failed"
@@ -213,7 +217,9 @@
       "explanation": "Explanation",
       "generateSQL": "Generate SQL",
       "useSQL": "Use SQL",
-      "run": "Run"
+      "run": "Run",
+      "defaultPromptPrivate": "For the last 1 year of this private chat, compare both participants by total messages, message share, active days, average messages per active day, first message time, and latest message time; sort by total messages desc.",
+      "defaultPromptGroup": "For the last 1 year of this group chat, rank members by total messages, message share, active days, average messages per active day, and text-message ratio; include display names and return top 20 by total messages desc."
     },
     "history": {
       "title": "AI Generation History",

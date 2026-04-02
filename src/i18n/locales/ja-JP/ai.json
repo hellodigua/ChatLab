@@ -175,9 +175,13 @@
     "editor": {
       "errorEmptySQL": "SQL 文を入力してください",
       "placeholder": "SQL クエリを入力...",
+      "promptTip": "自然言語で要件を書くと、SQL を自動生成して実行します",
       "tip": "ヒント：左側の列名をダブルクリックすると SQL に挿入できます",
       "history": "履歴",
       "aiGenerate": "AI 生成",
+      "generateAndRun": "生成して実行",
+      "switchToSQLMode": "SQL 入力モードに切り替え",
+      "switchToPromptMode": "Prompt 入力モードに切り替え",
       "shortcut": "Ctrl/⌘ + Enter で実行",
       "run": "実行"
     },
@@ -196,7 +200,7 @@
       "pageInfo": "{current} / {total} ページ",
       "emptyResult": "クエリ結果が空です",
       "initialState": "SQL 文を入力して実行すると結果が表示されます",
-      "initialHint": "SELECT のみ対応しています。速度向上のため LIMIT の指定をおすすめします",
+      "initialHint": "読み取り専用クエリ（SELECT / WITH）のみ対応しています。速度向上のため LIMIT の指定をおすすめします",
       "summaryTitle": "AI 結果サマリー",
       "analyzing": "AI が結果を分析中...",
       "errorSummary": "要約に失敗しました"
@@ -213,7 +217,9 @@
       "explanation": "説明",
       "generateSQL": "SQL を生成",
       "useSQL": "SQL を使用",
-      "run": "実行"
+      "run": "実行",
+      "defaultPromptPrivate": "この個人チャットの直近1年間について、2人それぞれのメッセージ総数・割合・アクティブ日数・アクティブ日あたり平均件数・初回発言時刻・最終発言時刻を集計し、メッセージ総数の降順で表示してください。",
+      "defaultPromptGroup": "このグループチャットの直近1年間について、各メンバーのメッセージ総数・割合・アクティブ日数・アクティブ日あたり平均件数・テキスト比率を集計し、表示名付きでメッセージ総数の降順上位20名を返してください。"
     },
     "history": {
       "title": "AI 生成履歴",

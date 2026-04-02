@@ -80,7 +80,7 @@ defineExpose({
           :chat-type="chatType"
         />
         <!-- SQL 实验室 -->
-        <SQLLabTab v-else class="h-full" :session-id="props.sessionId" />
+        <SQLLabTab v-else class="h-full" :session-id="props.sessionId" :chat-type="props.chatType" />
       </Transition>
     </div>
   </div>

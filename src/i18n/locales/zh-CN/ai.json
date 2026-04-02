@@ -175,9 +175,13 @@
     "editor": {
       "errorEmptySQL": "请输入 SQL 语句",
       "placeholder": "输入 SQL 查询语句...",
+      "promptTip": "用自然语言描述你的查询需求，系统会自动生成并执行 SQL",
       "tip": "提示：双击左侧列名可插入到 SQL",
       "history": "历史",
       "aiGenerate": "AI 生成",
+      "generateAndRun": "生成并执行",
+      "switchToSQLMode": "切换为 SQL 输入模式",
+      "switchToPromptMode": "切换为 Prompt 输入模式",
       "shortcut": "Ctrl/⌘ + Enter 执行",
       "run": "运行"
     },
@@ -196,7 +200,7 @@
       "pageInfo": "第 {current} / {total} 页",
       "emptyResult": "查询结果为空",
       "initialState": "输入 SQL 语句并运行查看结果",
-      "initialHint": "仅支持 SELECT 查询，建议添加 LIMIT 以提升性能",
+      "initialHint": "仅支持只读查询（SELECT / WITH），建议添加 LIMIT 以提升性能",
       "summaryTitle": "AI 结果总结",
       "analyzing": "AI 正在分析结果...",
       "errorSummary": "总结失败"
@@ -213,7 +217,9 @@
       "explanation": "说明",
       "generateSQL": "生成 SQL",
       "useSQL": "使用 SQL",
-      "run": "运行"
+      "run": "运行",
+      "defaultPromptPrivate": "请统计最近1年私聊中双方各自的：消息总数、消息占比、活跃天数、日均消息数（按活跃天计算）、首次发言时间、最近发言时间；按消息总数降序展示。",
+      "defaultPromptGroup": "请统计最近1年群聊中各成员的：消息总数、消息占比、活跃天数、日均消息数（按活跃天计算）、文本消息占比；显示成员名称并按消息总数降序，返回前20名。"
     },
     "history": {
       "title": "AI 生成历史",

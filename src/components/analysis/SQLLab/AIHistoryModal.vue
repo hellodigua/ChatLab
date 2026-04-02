@@ -33,7 +33,7 @@ function formatHistoryTime(timestamp: number): string {
 </script>
 
 <template>
-  <UModal :open="open" @update:open="emit('update:open', $event)">
+  <UModal :open="open" :ui="{ content: 'max-w-5xl' }" @update:open="emit('update:open', $event)">
     <template #content>
       <div class="max-h-[70vh] overflow-hidden p-6">
         <div class="mb-4 flex items-center gap-2">
