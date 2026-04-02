@@ -1,5 +1,35 @@
 [
   {
+    "version": "0.14.1",
+    "date": "2026-04-02",
+    "summary": "This update refines the Home information architecture and UI, while improving SQL conversation UX, stats read performance, and AI tool quality.",
+    "changes": [
+      {
+        "type": "feat",
+        "items": [
+          "Improve the Overview page styling.",
+          "Improve interaction flows in the SQL conversation module.",
+          "Move member management to Home and adjust related tab layouts.",
+          "Add new AI tools, including a tool for chat overview retrieval.",
+          "Add a conversation data cache manager to speed up stats loading.",
+          "Improve changelog modal type presentation."
+        ]
+      },
+      {
+        "type": "fix",
+        "items": ["Fix silently swallowed AI errors in SQL Lab and summary generation."]
+      },
+      {
+        "type": "refactor",
+        "items": ["Refactor AI tool categorization to improve maintainability."]
+      },
+      {
+        "type": "chore",
+        "items": ["Deprecate low-value AI tools to keep the toolset focused."]
+      }
+    ]
+  },
+  {
     "version": "0.14.0",
     "date": "2026-03-28",
     "summary": "Add API import/export and preset prompts, improve Overview and settings flows, and fix message deduplication, AI conversation flow, and daily trend display.",
