@@ -3,13 +3,13 @@
     "title": "群聊分析",
     "loading": "載入分析資料...",
     "loadError": "無法載入聊天資料",
-    "description": "{dateRange}，{memberCount} 位成員共聊了 {messageCount} 條訊息"
+    "description": "從 {startDate} 到 {endDate}，你們一共聊了 {messageCount} 則訊息"
   },
   "privateChat": {
     "title": "私聊分析",
     "loading": "載入分析資料...",
     "loadError": "無法載入聊天資料",
-    "description": "{dateRange}，共 {messageCount} 條訊息"
+    "description": "從 {startDate} 到 {endDate}，你們一共聊了 {messageCount} 則訊息"
   },
   "tabs": {
     "overview": "總覽",

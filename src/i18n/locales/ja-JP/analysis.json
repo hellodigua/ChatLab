@@ -3,13 +3,13 @@
     "title": "グループ分析",
     "loading": "分析データを読み込み中...",
     "loadError": "セッションデータを読み込めません",
-    "description": "{dateRange}、{memberCount} 人のメンバーが合計 {messageCount} 件のメッセージをやり取りしました"
+    "description": "{startDate} から {endDate} までの間に、{messageCount} 件のメッセージをやり取りしています"
   },
   "privateChat": {
     "title": "個人チャット分析",
     "loading": "分析データを読み込み中...",
     "loadError": "セッションデータを読み込めません",
-    "description": "{dateRange}、合計 {messageCount} 件のメッセージ"
+    "description": "{startDate} から {endDate} までの間に、{messageCount} 件のメッセージをやり取りしています"
   },
   "tabs": {
     "overview": "概要",

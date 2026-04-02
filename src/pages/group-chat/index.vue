@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, computed, defineAsyncComponent } from 'vue'
+import { ref, computed, defineAsyncComponent } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
-import type { AnalysisSession, MessageType } from '@/types/base'
-import type { MemberActivity, HourlyActivity, DailyActivity } from '@/types/analysis'
 import CaptureButton from '@/components/common/CaptureButton.vue'
 import TimeSelect from '@/components/common/TimeSelect.vue'
 import AITab from '@/components/analysis/AITab.vue'
@@ -22,7 +20,7 @@ import LoadingState from '@/components/UI/LoadingState.vue'
 import { useSessionStore } from '@/stores/session'
 import { useLayoutStore } from '@/stores/layout'
 import { useSettingsStore } from '@/stores/settings'
-import { useTimeSelect } from '@/composables'
+import { useSessionAnalysisPageBase, useSessionHeaderDescription } from '@/composables'
 
 const { t } = useI18n()
 
@@ -50,15 +48,6 @@ function openChatRecordViewer() {
   layoutStore.openChatRecordDrawer({})
 }
 
-// 数据状态
-const isLoading = ref(true)
-const session = ref<AnalysisSession | null>(null)
-const memberActivity = ref<MemberActivity[]>([])
-const hourlyActivity = ref<HourlyActivity[]>([])
-const dailyActivity = ref<DailyActivity[]>([])
-const messageTypes = ref<Array<{ type: MessageType; count: number }>>([])
-const isInitialLoad = ref(true)
-
 // Tab 配置
 const allTabs = [
   { id: 'overview', labelKey: 'analysis.tabs.overview', icon: 'i-heroicons-chart-pie' },
@@ -71,22 +60,30 @@ const allTabs = [
 // Tab 列表
 const tabs = computed(() => allTabs)
 
-function resolveActiveTabFromRoute(): string {
-  const routeTab = route.query.tab as string | undefined
-  if (routeTab && allTabs.some((tab) => tab.id === routeTab)) return routeTab
-  return settingsStore.defaultSessionTab
-}
-
-const activeTab = ref(resolveActiveTabFromRoute())
-
-// 时间范围筛选（composable 统一管理状态、派生计算、URL 同步）
-const { timeRangeValue, fullTimeRange, availableYears, timeFilter, selectedYearForOverview, initialTimeState } =
-  useTimeSelect(route, router, {
-    activeTab,
-    isInitialLoad,
-    currentSessionId,
-    onTimeRangeChange: () => loadAnalysisData(),
-  })
+const {
+  activeTab,
+  isLoading,
+  isInitialLoad,
+  session,
+  memberActivity,
+  hourlyActivity,
+  dailyActivity,
+  messageTypes,
+  timeRangeValue,
+  fullTimeRange,
+  availableYears,
+  timeFilter,
+  selectedYearForOverview,
+  initialTimeState,
+  loadData,
+} = useSessionAnalysisPageBase({
+  route,
+  router,
+  currentSessionId,
+  selectSession: sessionStore.selectSession,
+  defaultTab: settingsStore.defaultSessionTab,
+  validTabIds: allTabs.map((tab) => tab.id),
+})
 
 // 计算属性
 const topMembers = computed(() => memberActivity.value.slice(0, 3))
@@ -105,93 +102,11 @@ const filteredMemberCount = computed(() => {
   return memberActivity.value.filter((m) => m.messageCount > 0).length
 })
 
-// Sync route param to store
-function syncSession() {
-  const id = route.params.id as string
-  if (id) {
-    sessionStore.selectSession(id)
-    // If selection failed (e.g. invalid ID), redirect to home
-    if (sessionStore.currentSessionId !== id) {
-      router.replace('/')
-    }
-  }
-}
-
-// 加载基础数据（仅会话信息，时间范围由 TimeSelect 内部拉取）
-async function loadBaseData() {
-  if (!currentSessionId.value) return
-
-  try {
-    const sessionData = await window.chatApi.getSession(currentSessionId.value)
-    session.value = sessionData
-  } catch (error) {
-    console.error('加载基础数据失败:', error)
-  }
-}
-
-// 加载分析数据（受年份筛选影响）
-async function loadAnalysisData() {
-  if (!currentSessionId.value) return
-
-  isLoading.value = true
-
-  try {
-    const filter = timeFilter.value
-
-    const [members, hourly, daily, types] = await Promise.all([
-      window.chatApi.getMemberActivity(currentSessionId.value, filter),
-      window.chatApi.getHourlyActivity(currentSessionId.value, filter),
-      window.chatApi.getDailyActivity(currentSessionId.value, filter),
-      window.chatApi.getMessageTypeDistribution(currentSessionId.value, filter),
-    ])
-
-    memberActivity.value = members
-    hourlyActivity.value = hourly
-    dailyActivity.value = daily
-    messageTypes.value = types
-  } catch (error) {
-    console.error('加载分析数据失败:', error)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-// 加载所有数据
-async function loadData() {
-  if (!currentSessionId.value) return
-
-  isInitialLoad.value = true
-  await loadBaseData()
-  isInitialLoad.value = false
-}
-
-// 监听路由参数变化
-watch(
-  () => route.params.id,
-  () => {
-    activeTab.value = resolveActiveTabFromRoute()
-    syncSession()
-  }
-)
-
-watch(
-  () => route.query.tab,
-  () => {
-    activeTab.value = resolveActiveTabFromRoute()
-  }
-)
-
-// 监听会话变化（切换会话时由 TimeSelect 自行发出新范围，避免 Tab Content 双重重建）
-watch(
-  currentSessionId,
-  () => {
-    loadData()
-  },
-  { immediate: true }
-)
-
-onMounted(() => {
-  syncSession()
+const { headerDescription } = useSessionHeaderDescription({
+  session,
+  fullTimeRange,
+  timeRangeValue,
+  descriptionKey: 'analysis.groupChat.description',
 })
 </script>
 
@@ -205,13 +120,7 @@ onMounted(() => {
       <!-- Header -->
       <PageHeader
         :title="session.name"
-        :description="
-          t('analysis.groupChat.description', {
-            dateRange: timeRangeValue?.displayLabel ?? '',
-            memberCount: timeRangeValue?.isFullRange !== false ? session.memberCount : filteredMemberCount,
-            messageCount: timeRangeValue?.isFullRange !== false ? session.messageCount : filteredMessageCount,
-          })
-        "
+        :description="headerDescription"
         :avatar="session.groupAvatar"
         icon="i-heroicons-chat-bubble-left-right"
         icon-class="bg-primary-600 text-white dark:bg-primary-500 dark:text-white"

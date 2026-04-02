@@ -3,13 +3,13 @@
     "title": "群聊分析",
     "loading": "加载分析数据...",
     "loadError": "无法加载会话数据",
-    "description": "{dateRange}，{memberCount} 位成员共聊了 {messageCount} 条消息"
+    "description": "从 {startDate} 到 {endDate}，你们共聊了 {messageCount} 条消息"
   },
   "privateChat": {
     "title": "私聊分析",
     "loading": "加载分析数据...",
     "loadError": "无法加载会话数据",
-    "description": "{dateRange}，共 {messageCount} 条消息"
+    "description": "从 {startDate} 到 {endDate}，你们共聊了 {messageCount} 条消息"
   },
   "tabs": {
     "overview": "总览",

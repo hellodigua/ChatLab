@@ -97,3 +97,16 @@ export function formatDateRange(
   }
   return `${start}${separator}${end}`
 }
+
+/**
+ * 按指定语言环境格式化日期（默认长日期）
+ * @param ts Unix 时间戳（秒）
+ * @param locale 语言环境（如 zh-CN / en-US / ja-JP）
+ */
+export function formatLocalizedDate(ts: number, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(new Date(ts * 1000))
+}

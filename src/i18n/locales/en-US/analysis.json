@@ -3,13 +3,13 @@
     "title": "Group Chat Analysis",
     "loading": "Loading analysis data...",
     "loadError": "Unable to load session data",
-    "description": "{dateRange}, {memberCount} members chatted {messageCount} messages"
+    "description": "You've exchanged {messageCount} messages between {startDate} and {endDate}"
   },
   "privateChat": {
     "title": "Private Chat Analysis",
     "loading": "Loading analysis data...",
     "loadError": "Unable to load session data",
-    "description": "{dateRange}, {messageCount} messages in total"
+    "description": "You've exchanged {messageCount} messages between {startDate} and {endDate}"
   },
   "tabs": {
     "overview": "Overview",
