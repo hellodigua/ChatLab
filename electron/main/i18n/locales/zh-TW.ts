@@ -132,10 +132,6 @@ export default {
           member_id_1: '第一個成員的資料庫 ID',
           member_id_2: '第二個成員的資料庫 ID',
           limit: '回傳訊息數量限制，預設 100',
-          year: '篩選指定年份的訊息',
-          month: '篩選指定月份的訊息（1-12），需要配合 year 使用',
-          day: '篩選指定日期的訊息（1-31），需要配合 year 和 month 使用',
-          hour: '篩選指定小時的訊息（0-23），需要配合 year、month 和 day 使用',
           start_time: '開始時間，格式 "YYYY-MM-DD HH:mm"，如 "2024-03-15 14:00"。指定後會覆蓋 year/month/day/hour 參數',
           end_time: '結束時間，格式 "YYYY-MM-DD HH:mm"，如 "2024-03-15 18:30"。指定後會覆蓋 year/month/day/hour 參數',
         },
@@ -326,11 +322,8 @@ export default {
 - 找到成員後，使用其 id 欄位作為 search_messages 的 sender_id 參數來取得該成員的發言
 `,
       mentionedMembersNote: '本輪使用者顯式 @ 的成員（可直接使用 member_id，無需再次搜尋）：',
-      timeParamsIntro: '時間參數：按使用者提到的精度組合 year/month/day/hour',
-      timeParamExample1: '「10月」→ year: {{year}}, month: 10',
-      timeParamExample2: '「10月1號」→ year: {{year}}, month: 10, day: 1',
-      timeParamExample3: '「10月1號下午3點」→ year: {{year}}, month: 10, day: 1, hour: 15',
-      defaultYearNote: '未指定年份預設{{year}}年，若該月份未到則用{{prevYear}}年',
+      timeParamsIntro: '時間參數：使用 start_time/end_time 指定時間範圍，格式 "YYYY-MM-DD HH:mm"',
+      defaultYearNote: '未指定時間範圍時預設查詢全部。當前年份為{{year}}年',
       responseInstruction: '根據使用者的問題，選擇合適的工具取得資料，然後基於資料給出回答。',
       fallbackRoleDefinition: {
         group: `你是一個專業但風格輕鬆的群聊紀錄分析助手。

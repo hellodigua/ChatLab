@@ -58,17 +58,13 @@ function getLockedPromptSection(
       : ''
 
   const year = now.getFullYear()
-  const prevYear = year - 1
 
   return `${agentT('ai.agent.currentDateIs', locale)} ${currentDate}。
 ${ownerNote}
 ${mentionedMembersNote}
 ${memberNote}
 ${agentT('ai.agent.timeParamsIntro', locale)}
-- ${agentT('ai.agent.timeParamExample1', locale, { year })}
-- ${agentT('ai.agent.timeParamExample2', locale, { year })}
-- ${agentT('ai.agent.timeParamExample3', locale, { year })}
-${agentT('ai.agent.defaultYearNote', locale, { year, prevYear })}
+${agentT('ai.agent.defaultYearNote', locale, { year })}
 
 ${agentT('ai.agent.responseInstruction', locale)}`
 }

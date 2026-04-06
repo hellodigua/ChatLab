@@ -78,7 +78,8 @@ export default {
       deep_search_messages: {
         desc: '完全部分文字列マッチでチャット履歴を検索する。速度は遅いが、キーワードを含むメッセージを漏らさない。通常の検索（search_messages）の結果が不十分な場合や、部分的な単語・単一文字を検索する場合に使用する。',
         params: {
-          keywords: '検索キーワードリスト。部分文字列マッチ（LIKE）を使用し、いずれかのキーワードにマッチしたメッセージを返す',
+          keywords:
+            '検索キーワードリスト。部分文字列マッチ（LIKE）を使用し、いずれかのキーワードにマッチしたメッセージを返す',
           sender_id: '送信者のメンバー ID。特定メンバーの送信メッセージをフィルタリングする',
           limit: '返却メッセージ数の上限。デフォルト 1000、最大 50000',
           year: '指定年のメッセージをフィルタリング（例：2024）',
@@ -140,10 +141,6 @@ export default {
           member_id_1: '1人目のメンバーのデータベース ID',
           member_id_2: '2人目のメンバーのデータベース ID',
           limit: '返却メッセージ数の上限。デフォルト 100',
-          year: '指定年のメッセージをフィルタリング',
-          month: '指定月のメッセージをフィルタリング（1-12）。year と併用する必要がある',
-          day: '指定日のメッセージをフィルタリング（1-31）。year と month と併用する必要がある',
-          hour: '指定時間のメッセージをフィルタリング（0-23）。year、month、day と併用する必要がある',
           start_time:
             '開始時刻。形式 "YYYY-MM-DD HH:mm"（例："2024-03-15 14:00"）。指定すると year/month/day/hour パラメータを上書きする',
           end_time:
@@ -337,12 +334,8 @@ export default {
 `,
       mentionedMembersNote:
         'このラウンドでユーザーが明示的に @ 選択したメンバー（member_id を再検索なしで直接使えます）：',
-      timeParamsIntro: '時間パラメータ：ユーザーが言及した精度に応じて year/month/day/hour を組み合わせる',
-      timeParamExample1: '"10月" → year: {{year}}, month: 10',
-      timeParamExample2: '"10月1日" → year: {{year}}, month: 10, day: 1',
-      timeParamExample3: '"10月1日午後3時" → year: {{year}}, month: 10, day: 1, hour: 15',
-      defaultYearNote:
-        '年が指定されていない場合はデフォルトで{{year}}年。該当月がまだ来ていない場合は{{prevYear}}年を使用する',
+      timeParamsIntro: '時間パラメータ：start_time/end_time で範囲を指定。形式は "YYYY-MM-DD HH:mm"',
+      defaultYearNote: '時間範囲を指定しない場合は全期間が対象。現在の年は{{year}}年',
       responseInstruction: 'ユーザーの質問に応じて適切なツールを選択してデータを取得し、データに基づいて回答する。',
       fallbackRoleDefinition: {
         group: `あなたはプロフェッショナルだがカジュアルなスタイルのグループチャット履歴分析アシスタントです。

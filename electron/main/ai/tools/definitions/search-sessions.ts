@@ -1,7 +1,7 @@
 import { Type } from '@mariozechner/pi-ai'
 import type { AgentTool } from '@mariozechner/pi-agent-core'
 import type { ToolContext } from '../types'
-import { timeParamPropertiesNoHour } from '../utils/schemas'
+import { timeParamProperties } from '../utils/schemas'
 import * as workerManager from '../../../worker/workerManager'
 import { parseExtendedTimeParams } from '../utils/time-params'
 import { formatTimeRange, formatMessageCompact, isChineseLocale } from '../utils/format'
@@ -9,7 +9,7 @@ import { formatTimeRange, formatMessageCompact, isChineseLocale } from '../utils
 const schema = Type.Object({
   keywords: Type.Optional(Type.Array(Type.String(), { description: 'ai.tools.search_sessions.params.keywords' })),
   limit: Type.Optional(Type.Number({ description: 'ai.tools.search_sessions.params.limit' })),
-  ...timeParamPropertiesNoHour,
+  ...timeParamProperties,
 })
 
 /** 搜索聊天会话（对话段落）。会话是根据消息时间间隔自动切分的对话单元。适用于查找特定话题的讨论、了解某个时间段内发生了几次对话等场景。返回匹配的会话列表及每个会话的前5条消息预览。 */

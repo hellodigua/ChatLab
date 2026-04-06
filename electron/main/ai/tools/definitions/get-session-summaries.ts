@@ -4,12 +4,12 @@ import type { ToolContext } from '../types'
 import * as workerManager from '../../../worker/workerManager'
 import { parseExtendedTimeParams } from '../utils/time-params'
 import { formatTimeRange, isChineseLocale } from '../utils/format'
-import { timeParamPropertiesNoHour } from '../utils/schemas'
+import { timeParamProperties } from '../utils/schemas'
 
 const schema = Type.Object({
   keywords: Type.Optional(Type.Array(Type.String(), { description: 'ai.tools.get_session_summaries.params.keywords' })),
   limit: Type.Optional(Type.Number({ description: 'ai.tools.get_session_summaries.params.limit' })),
-  ...timeParamPropertiesNoHour,
+  ...timeParamProperties,
 })
 
 /** 获取会话摘要列表，快速了解群聊历史讨论的主题。适用场景：1. 了解群里最近在聊什么话题 2. 按关键词搜索讨论过的话题 3. 概览性问题如"群里有没有讨论过旅游"。返回的摘要是对每个会话的简短总结，可以帮助快速定位感兴趣的会话，然后用 get_session_messages 获取详情。 */

@@ -139,10 +139,6 @@ export default {
           member_id_1: 'Database ID of the first member',
           member_id_2: 'Database ID of the second member',
           limit: 'Message count limit, default 100',
-          year: 'Filter messages by year',
-          month: 'Filter messages by month (1-12), use with year',
-          day: 'Filter messages by day (1-31), use with year and month',
-          hour: 'Filter messages by hour (0-23), use with year, month, and day',
           start_time:
             'Start time, format "YYYY-MM-DD HH:mm", e.g. "2024-03-15 14:00". Overrides year/month/day/hour when specified',
           end_time:
@@ -336,12 +332,8 @@ Returned summaries are brief descriptions of each session, helping quickly locat
 `,
       mentionedMembersNote:
         'Members explicitly @-selected by the user in this round (member_id can be used directly without another search):',
-      timeParamsIntro: 'Time parameters: combine year/month/day/hour based on user mention',
-      timeParamExample1: '"October" → year: {{year}}, month: 10',
-      timeParamExample2: '"October 1st" → year: {{year}}, month: 10, day: 1',
-      timeParamExample3: '"October 1st 3 PM" → year: {{year}}, month: 10, day: 1, hour: 15',
-      defaultYearNote:
-        'If year is not specified, defaults to {{year}}. If the month has not yet occurred, {{prevYear}} is used.',
+      timeParamsIntro: 'Time parameters: use start_time/end_time to specify the range, format "YYYY-MM-DD HH:mm"',
+      defaultYearNote: 'When no time range is specified, queries default to all data. Current year is {{year}}.',
       currentTask: 'Current Task',
       skillPriorityNote:
         'Note: When executing this task, prioritize the output format requirements below. This can override your usual response style.',
