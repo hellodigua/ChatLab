@@ -57,24 +57,15 @@ export function registerSessionRoutes(server: FastifyInstance): void {
     const keywords = keyword ? [keyword] : []
     const senderIdNum = senderId ? parseInt(senderId, 10) : undefined
 
-    const result = await worker.searchMessages(
-      id,
-      keywords,
-      hasFilter ? filter : undefined,
-      limit,
-      offset,
-      senderIdNum
-    )
+    const result = await worker.searchMessages(id, keywords, hasFilter ? filter : undefined, limit, offset, senderIdNum)
 
-    return successResponse(
-      {
-        messages: result.messages,
-        total: result.total,
-        page,
-        limit,
-        totalPages: Math.ceil(result.total / limit),
-      }
-    )
+    return successResponse({
+      messages: result.messages,
+      total: result.total,
+      page,
+      limit,
+      totalPages: Math.ceil(result.total / limit),
+    })
   })
 
   // GET /api/v1/sessions/:id/members — Member list
@@ -117,33 +108,30 @@ export function registerSessionRoutes(server: FastifyInstance): void {
   })
 
   // POST /api/v1/sessions/:id/sql — Execute SQL (read-only)
-  server.post<{ Params: { id: string }; Body: { sql: string } }>(
-    '/api/v1/sessions/:id/sql',
-    async (request, reply) => {
-      const { id } = request.params
-      await ensureSession(id)
+  server.post<{ Params: { id: string }; Body: { sql: string } }>('/api/v1/sessions/:id/sql', async (request, reply) => {
+    const { id } = request.params
+    await ensureSession(id)
 
-      const { sql } = request.body || {}
-      if (!sql || typeof sql !== 'string') {
-        const err = sqlExecutionError('Missing sql parameter')
-        return reply.code(err.statusCode).send(errorResponse(err))
-      }
-
-      try {
-        const result = await worker.executeRawSQL(id, sql)
-        return successResponse(result)
-      } catch (err: any) {
-        const message = err.message || 'SQL execution error'
-        if (message.includes('SELECT') || message.includes('只读') || message.includes('readonly')) {
-          const apiErr = new ApiError('SQL_READONLY_VIOLATION' as any, message)
-          apiErr.statusCode = 400
-          return reply.code(400).send(errorResponse(apiErr))
-        }
-        const apiErr = sqlExecutionError(message)
-        return reply.code(apiErr.statusCode).send(errorResponse(apiErr))
-      }
+    const { sql } = request.body || {}
+    if (!sql || typeof sql !== 'string') {
+      const err = sqlExecutionError('Missing sql parameter')
+      return reply.code(err.statusCode).send(errorResponse(err))
     }
-  )
+
+    try {
+      const result = await worker.executeRawSQL(id, sql)
+      return successResponse(result)
+    } catch (err: any) {
+      const message = err.message || 'SQL execution error'
+      if (message.includes('SELECT') || message.includes('只读') || message.includes('readonly')) {
+        const apiErr = new ApiError('SQL_READONLY_VIOLATION' as any, message)
+        apiErr.statusCode = 400
+        return reply.code(400).send(errorResponse(apiErr))
+      }
+      const apiErr = sqlExecutionError(message)
+      return reply.code(apiErr.statusCode).send(errorResponse(apiErr))
+    }
+  })
 
   // GET /api/v1/sessions/:id/export — Export ChatLab Format JSON
   server.get<{ Params: { id: string } }>('/api/v1/sessions/:id/export', async (request, reply) => {

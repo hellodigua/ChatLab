@@ -345,9 +345,7 @@ function searchMessagesWithFts(
       LIMIT ? OFFSET ?
     `
 
-    const rows = db
-      .prepare(sql)
-      .all(matchQuery, ...timeParams, ...senderParams, limit, offset) as DbMessageRow[]
+    const rows = db.prepare(sql).all(matchQuery, ...timeParams, ...senderParams, limit, offset) as DbMessageRow[]
 
     return {
       messages: rows.map(sanitizeMessageRow),

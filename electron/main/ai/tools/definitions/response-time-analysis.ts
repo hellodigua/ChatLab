@@ -37,7 +37,9 @@ export function createTool(context: ToolContext): AgentTool<typeof schema> {
       `
       const rows = await workerManager.pluginQuery<MsgRow>(sessionId, sql, { days })
       if (!rows || rows.length < 2) {
-        const text = isZh ? '该时间范围内消息不足，无法分析响应时间' : 'Not enough messages in this time range to analyze response time'
+        const text = isZh
+          ? '该时间范围内消息不足，无法分析响应时间'
+          : 'Not enough messages in this time range to analyze response time'
         return { content: [{ type: 'text', text }], details: null }
       }
 

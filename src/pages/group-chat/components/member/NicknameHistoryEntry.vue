@@ -20,7 +20,9 @@ const isOpen = ref(false)
   <UModal v-if="props.sessionId" v-model:open="isOpen" :ui="{ content: 'max-w-6xl h-[85vh]' }">
     <template #content>
       <div class="flex h-full flex-col overflow-hidden bg-white dark:bg-gray-900">
-        <div class="flex flex-none items-center justify-between border-b border-gray-200 px-5 py-3 dark:border-gray-700">
+        <div
+          class="flex flex-none items-center justify-between border-b border-gray-200 px-5 py-3 dark:border-gray-700"
+        >
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
             {{ t('analysis.subTabs.member.nicknameHistory') }}
           </h2>

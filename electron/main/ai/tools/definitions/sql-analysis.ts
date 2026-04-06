@@ -15,8 +15,7 @@ const SQL_TOOL_DEFS: CustomSqlToolDef[] = [
   // ==================== 通用分析 ====================
   {
     name: 'message_type_breakdown',
-    description:
-      '按消息类型统计近 N 天的消息分布（文本、图片、语音、表情等各有多少条）。适用于了解沟通方式偏好。',
+    description: '按消息类型统计近 N 天的消息分布（文本、图片、语音、表情等各有多少条）。适用于了解沟通方式偏好。',
     parameters: {
       type: 'object',
       properties: {
@@ -183,8 +182,7 @@ const SQL_TOOL_DEFS: CustomSqlToolDef[] = [
   },
   {
     name: 'conversation_initiator_stats',
-    description:
-      '统计每个成员发起会话（作为会话首条消息的发送者）的次数，找出谁最常开启话题。需要已生成会话索引。',
+    description: '统计每个成员发起会话（作为会话首条消息的发送者）的次数，找出谁最常开启话题。需要已生成会话索引。',
     parameters: {
       type: 'object',
       properties: {
@@ -204,8 +202,7 @@ const SQL_TOOL_DEFS: CustomSqlToolDef[] = [
   },
   {
     name: 'activity_heatmap',
-    description:
-      '返回 星期×小时 的消息数矩阵，适合生成活跃度热力图。weekday: 0=周日, 1=周一, ..., 6=周六。',
+    description: '返回 星期×小时 的消息数矩阵，适合生成活跃度热力图。weekday: 0=周日, 1=周一, ..., 6=周六。',
     parameters: {
       type: 'object',
       properties: {

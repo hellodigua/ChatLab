@@ -394,7 +394,9 @@ function fillInput(content: string) {
   })
 }
 
-function handleSelectMention(member: Pick<MentionCandidate, 'memberId' | 'platformId' | 'displayName' | 'insertName' | 'aliases'>) {
+function handleSelectMention(
+  member: Pick<MentionCandidate, 'memberId' | 'platformId' | 'displayName' | 'insertName' | 'aliases'>
+) {
   if (props.disabled || !mentionRange.value) return
 
   const prefix = inputValue.value.slice(0, mentionRange.value.start)

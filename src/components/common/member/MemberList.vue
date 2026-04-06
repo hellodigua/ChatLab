@@ -194,7 +194,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="main-content" :class="props.showHeader ? 'max-w-5xl p-6' : 'flex h-full max-w-none flex-col overflow-hidden p-4'">
+  <div
+    class="main-content"
+    :class="props.showHeader ? 'max-w-5xl p-6' : 'flex h-full max-w-none flex-col overflow-hidden p-4'"
+  >
     <!-- 页面标题 -->
     <div v-if="props.showHeader" class="mb-6">
       <div class="flex items-center gap-3">

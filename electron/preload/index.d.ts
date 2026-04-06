@@ -916,7 +916,9 @@ interface ApiServerApi {
   regenerateToken: () => Promise<ApiServerConfig>
   onStartupError: (callback: (data: { error: string }) => void) => () => void
   getDataSources: () => Promise<DataSource[]>
-  addDataSource: (partial: Omit<DataSource, 'id' | 'createdAt' | 'lastPullAt' | 'lastStatus' | 'lastError' | 'lastNewMessages'>) => Promise<DataSource>
+  addDataSource: (
+    partial: Omit<DataSource, 'id' | 'createdAt' | 'lastPullAt' | 'lastStatus' | 'lastError' | 'lastNewMessages'>
+  ) => Promise<DataSource>
   updateDataSource: (id: string, updates: Partial<DataSource>) => Promise<DataSource | null>
   deleteDataSource: (id: string) => Promise<boolean>
   triggerPull: (id: string) => Promise<{ success: boolean; error?: string }>

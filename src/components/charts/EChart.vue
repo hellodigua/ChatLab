@@ -76,7 +76,7 @@ function initChart() {
   chartInstance.setOption({ backgroundColor: 'transparent', ...props.option })
 }
 
-  // 更新图表
+// 更新图表
 function updateChart() {
   if (!chartInstance) {
     initChart()

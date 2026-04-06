@@ -111,11 +111,7 @@ export interface OverviewCache {
 /**
  * 从数据库计算概览统计并写入缓存
  */
-export function computeAndSetOverviewCache(
-  db: Database.Database,
-  sessionId: string,
-  cacheDir: string
-): OverviewCache {
+export function computeAndSetOverviewCache(db: Database.Database, sessionId: string, cacheDir: string): OverviewCache {
   const msgStats = db.prepare('SELECT MIN(ts) as first_ts, MAX(ts) as last_ts FROM message').get() as {
     first_ts: number | null
     last_ts: number | null
@@ -169,11 +165,7 @@ export interface MembersCache {
 /**
  * 从数据库计算成员统计并写入缓存
  */
-export function computeAndSetMembersCache(
-  db: Database.Database,
-  sessionId: string,
-  cacheDir: string
-): MembersCache {
+export function computeAndSetMembersCache(db: Database.Database, sessionId: string, cacheDir: string): MembersCache {
   const rows = db
     .prepare(
       `SELECT msg.sender_id, COUNT(*) as count,

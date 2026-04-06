@@ -394,9 +394,10 @@ export function getTimeRange(sessionId: string): { start: number; end: number } 
   const db = openDatabase(sessionId)
   if (!db) return null
 
-  const row = db
-    .prepare('SELECT MIN(ts) as start, MAX(ts) as end FROM message')
-    .get() as { start: number | null; end: number | null }
+  const row = db.prepare('SELECT MIN(ts) as start, MAX(ts) as end FROM message').get() as {
+    start: number | null
+    end: number | null
+  }
 
   if (row.start === null || row.end === null) return null
 

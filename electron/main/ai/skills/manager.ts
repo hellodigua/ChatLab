@@ -16,13 +16,7 @@ import { createHash } from 'crypto'
 import { getAiDataDir, ensureDir } from '../../paths'
 import { aiLogger } from '../logger'
 import { parseSkillFile } from './parser'
-import type {
-  SkillDef,
-  SkillSummary,
-  SkillInitResult,
-  SkillSaveResult,
-  BuiltinSkillInfo,
-} from './types'
+import type { SkillDef, SkillSummary, SkillInitResult, SkillSaveResult, BuiltinSkillInfo } from './types'
 
 // ==================== 内置技能模板 ====================
 // 云端市场上线后，本地不再内置技能模板，全部从云端获取
@@ -271,10 +265,7 @@ const MAX_SKILL_MENU_ITEMS = 15
  * 构建 AI 自选技能菜单文本
  * 只包含与当前 chatType + 助手工具权限兼容的技能
  */
-export function getSkillMenu(
-  chatType: 'group' | 'private',
-  allowedTools?: string[]
-): string | null {
+export function getSkillMenu(chatType: 'group' | 'private', allowedTools?: string[]): string | null {
   ensureInitialized()
 
   const compatible = Array.from(cachedSkills.values()).filter((skill) => {

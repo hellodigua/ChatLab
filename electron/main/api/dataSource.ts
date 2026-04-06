@@ -64,7 +64,9 @@ export function generateId(): string {
   return `ds_${crypto.randomBytes(6).toString('hex')}`
 }
 
-export function addDataSource(partial: Omit<DataSource, 'id' | 'createdAt' | 'lastPullAt' | 'lastStatus' | 'lastError' | 'lastNewMessages'>): DataSource {
+export function addDataSource(
+  partial: Omit<DataSource, 'id' | 'createdAt' | 'lastPullAt' | 'lastStatus' | 'lastError' | 'lastNewMessages'>
+): DataSource {
   const sources = loadDataSources()
   const ds: DataSource = {
     ...partial,

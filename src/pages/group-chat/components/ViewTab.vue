@@ -72,7 +72,11 @@ const viewTimeFilter = computed(() => ({
           :session-id="props.sessionId"
           :time-filter="viewTimeFilter"
         />
-        <ClusterView v-else-if="activeSubTab === 'cluster'" :session-id="props.sessionId" :time-filter="viewTimeFilter" />
+        <ClusterView
+          v-else-if="activeSubTab === 'cluster'"
+          :session-id="props.sessionId"
+          :time-filter="viewTimeFilter"
+        />
         <RankingView
           v-else-if="activeSubTab === 'ranking'"
           :session-id="props.sessionId"

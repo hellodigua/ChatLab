@@ -68,7 +68,9 @@ export const apiServerApi = {
     return ipcRenderer.invoke('api:getDataSources')
   },
 
-  addDataSource: (partial: Omit<DataSource, 'id' | 'createdAt' | 'lastPullAt' | 'lastStatus' | 'lastError' | 'lastNewMessages'>): Promise<DataSource> => {
+  addDataSource: (
+    partial: Omit<DataSource, 'id' | 'createdAt' | 'lastPullAt' | 'lastStatus' | 'lastError' | 'lastNewMessages'>
+  ): Promise<DataSource> => {
     return ipcRenderer.invoke('api:addDataSource', partial)
   },
 

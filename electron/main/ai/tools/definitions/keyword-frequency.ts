@@ -40,7 +40,11 @@ export function createTool(context: ToolContext): AgentTool<typeof schema> {
       }
 
       const texts = rows.map((r) => r.content)
-      const segLocale: SupportedLocale = locale?.startsWith('ja') ? 'ja-JP' : locale?.startsWith('zh') ? 'zh-CN' : 'en-US'
+      const segLocale: SupportedLocale = locale?.startsWith('ja')
+        ? 'ja-JP'
+        : locale?.startsWith('zh')
+          ? 'zh-CN'
+          : 'en-US'
       const segOptions: BatchSegmentOptions = {
         minCount: 2,
         topN,

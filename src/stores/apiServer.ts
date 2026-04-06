@@ -126,7 +126,9 @@ export const useApiServerStore = defineStore('apiServer', () => {
     }
   }
 
-  async function addDataSource(partial: Omit<DataSource, 'id' | 'createdAt' | 'lastPullAt' | 'lastStatus' | 'lastError' | 'lastNewMessages'>) {
+  async function addDataSource(
+    partial: Omit<DataSource, 'id' | 'createdAt' | 'lastPullAt' | 'lastStatus' | 'lastError' | 'lastNewMessages'>
+  ) {
     try {
       const ds = await window.apiServerApi.addDataSource(partial)
       dataSources.value.push(ds)

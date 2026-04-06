@@ -126,9 +126,14 @@ function formatTime(ts: number): string {
 <template>
   <div class="space-y-6">
     <!-- Beta 提示 -->
-    <div class="rounded-lg border border-amber-200/60 bg-amber-50 px-4 py-3 dark:border-amber-500/20 dark:bg-amber-500/10">
+    <div
+      class="rounded-lg border border-amber-200/60 bg-amber-50 px-4 py-3 dark:border-amber-500/20 dark:bg-amber-500/10"
+    >
       <div class="flex items-start gap-3">
-        <UIcon name="i-heroicons-exclamation-triangle" class="mt-0.5 h-5 w-5 shrink-0 text-amber-500 dark:text-amber-400" />
+        <UIcon
+          name="i-heroicons-exclamation-triangle"
+          class="mt-0.5 h-5 w-5 shrink-0 text-amber-500 dark:text-amber-400"
+        />
         <p class="text-sm font-medium text-amber-800 dark:text-amber-300">
           {{ t('settings.api.betaWarning') }}
         </p>

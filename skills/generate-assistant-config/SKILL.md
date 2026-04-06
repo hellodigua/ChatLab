@@ -121,10 +121,12 @@ description: Use when 用户希望根据一句自然语言需求创建新的 Cha
 ## 工具选择规则
 
 工具分为两类：
+
 - **核心工具（core）**：始终启用，无需在 `allowedBuiltinTools` 中列出。包括：get_chat_overview, search_messages, get_recent_messages, get_message_context, search_sessions, get_session_messages, get_members
 - **分析工具（analysis）**：需在 `allowedBuiltinTools` 中显式列出才会启用
 
 `allowedBuiltinTools` 仅用于控制分析工具，核心工具始终可用：
+
 - 若角色不需要分析工具，可省略 `allowedBuiltinTools`（默认仅核心工具可用）
 - 若角色需要特定分析能力，列出所需的分析工具名称
 - 仅在角色明显聚焦时选择对应的分析工具，例如：

@@ -46,7 +46,10 @@ export function registerSystemRoutes(server: FastifyInstance): void {
           required: ['name', 'platform', 'type'],
           properties: {
             name: { type: 'string' },
-            platform: { type: 'string', enum: ['qq', 'wechat', 'telegram', 'discord', 'line', 'whatsapp', 'instagram', 'unknown'] },
+            platform: {
+              type: 'string',
+              enum: ['qq', 'wechat', 'telegram', 'discord', 'line', 'whatsapp', 'instagram', 'unknown'],
+            },
             type: { type: 'string', enum: ['group', 'private'] },
             groupId: { type: 'string' },
           },

@@ -37,13 +37,13 @@ Response example:
 
 ## General Information
 
-| Item | Description |
-|------|-------------|
-| Base URL | `http://127.0.0.1:5200` |
-| API Prefix | `/api/v1` |
-| Authentication | Bearer Token |
-| Data Format | JSON |
-| Bind Address | `127.0.0.1` (localhost only) |
+| Item           | Description                  |
+| -------------- | ---------------------------- |
+| Base URL       | `http://127.0.0.1:5200`      |
+| API Prefix     | `/api/v1`                    |
+| Authentication | Bearer Token                 |
+| Data Format    | JSON                         |
+| Bind Address   | `127.0.0.1` (localhost only) |
 
 ### Authentication
 
@@ -88,29 +88,29 @@ The Token can be viewed and regenerated in Settings → ChatLab API.
 
 ### System
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/v1/status` | Service status |
-| GET | `/api/v1/schema` | ChatLab Format JSON Schema |
+| Method | Path             | Description                |
+| ------ | ---------------- | -------------------------- |
+| GET    | `/api/v1/status` | Service status             |
+| GET    | `/api/v1/schema` | ChatLab Format JSON Schema |
 
 ### Data Query (Export)
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/v1/sessions` | List all sessions |
-| GET | `/api/v1/sessions/:id` | Get single session details |
-| GET | `/api/v1/sessions/:id/messages` | Query messages (paginated) |
-| GET | `/api/v1/sessions/:id/members` | Get member list |
-| GET | `/api/v1/sessions/:id/stats/overview` | Get overview statistics |
-| POST | `/api/v1/sessions/:id/sql` | Execute custom SQL (read-only) |
-| GET | `/api/v1/sessions/:id/export` | Export ChatLab Format JSON |
+| Method | Path                                  | Description                    |
+| ------ | ------------------------------------- | ------------------------------ |
+| GET    | `/api/v1/sessions`                    | List all sessions              |
+| GET    | `/api/v1/sessions/:id`                | Get single session details     |
+| GET    | `/api/v1/sessions/:id/messages`       | Query messages (paginated)     |
+| GET    | `/api/v1/sessions/:id/members`        | Get member list                |
+| GET    | `/api/v1/sessions/:id/stats/overview` | Get overview statistics        |
+| POST   | `/api/v1/sessions/:id/sql`            | Execute custom SQL (read-only) |
+| GET    | `/api/v1/sessions/:id/export`         | Export ChatLab Format JSON     |
 
 ### Data Import
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/v1/import` | Import chat records (new session) |
-| POST | `/api/v1/sessions/:id/import` | Incremental import to existing session |
+| Method | Path                          | Description                            |
+| ------ | ----------------------------- | -------------------------------------- |
+| POST   | `/api/v1/import`              | Import chat records (new session)      |
+| POST   | `/api/v1/sessions/:id/import` | Incremental import to existing session |
 
 ---
 
@@ -122,12 +122,12 @@ Get the running status of the API service.
 
 **Response:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `name` | string | Service name (`ChatLab API`) |
-| `version` | string | ChatLab application version |
-| `uptime` | number | Service uptime in seconds |
-| `sessionCount` | number | Total number of sessions |
+| Field          | Type   | Description                  |
+| -------------- | ------ | ---------------------------- |
+| `name`         | string | Service name (`ChatLab API`) |
+| `version`      | string | ChatLab application version  |
+| `uptime`       | number | Service uptime in seconds    |
+| `sessionCount` | number | Total number of sessions     |
 
 ---
 
@@ -167,9 +167,9 @@ Get detailed information for a single session.
 
 **Path parameters:**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | string | Session ID |
+| Parameter | Type   | Description |
+| --------- | ------ | ----------- |
+| `id`      | string | Session ID  |
 
 ---
 
@@ -179,15 +179,15 @@ Query messages from a specific session with pagination and filtering support.
 
 **Query parameters:**
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `page` | number | 1 | Page number |
-| `limit` | number | 100 | Items per page (max 1000) |
-| `startTime` | number | - | Start timestamp (Unix seconds) |
-| `endTime` | number | - | End timestamp (Unix seconds) |
-| `keyword` | string | - | Keyword search |
-| `senderId` | string | - | Filter by sender's platformId |
-| `type` | number | - | Filter by message type |
+| Parameter   | Type   | Default | Description                    |
+| ----------- | ------ | ------- | ------------------------------ |
+| `page`      | number | 1       | Page number                    |
+| `limit`     | number | 100     | Items per page (max 1000)      |
+| `startTime` | number | -       | Start timestamp (Unix seconds) |
+| `endTime`   | number | -       | End timestamp (Unix seconds)   |
+| `keyword`   | string | -       | Keyword search                 |
+| `senderId`  | string | -       | Filter by sender's platformId  |
+| `type`      | number | -       | Filter by message type         |
 
 **Request example:**
 
@@ -262,7 +262,7 @@ Get overview statistics for a specific session.
 ```
 
 | Field | Description |
-|-------|-------------|
+| --- | --- |
 | `messageCount` | Total message count |
 | `memberCount` | Total member count |
 | `timeRange` | Earliest/latest message timestamps (Unix seconds) |
@@ -339,7 +339,7 @@ Import chat records into ChatLab, **creating a new session**.
 #### Supported Content-Types
 
 | Content-Type | Format | Use Case | Body Limit |
-|------|------|------|------|
+| --- | --- | --- | --- |
 | `application/json` | ChatLab Format JSON | Small to medium data (quick testing, script integration) | **50MB** |
 | `application/x-ndjson` | ChatLab JSONL format | Large-scale data (production integration) | **Unlimited** |
 
@@ -409,9 +409,9 @@ The unique key for each message is `timestamp + senderPlatformId + contentLength
 
 **Path parameters:**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `id` | string | Target session ID |
+| Parameter | Type   | Description       |
+| --------- | ------ | ----------------- |
+| `id`      | string | Target session ID |
 
 Content-Type and request body format are the same as `POST /api/v1/import`.
 
@@ -432,30 +432,30 @@ Content-Type and request body format are the same as `POST /api/v1/import`.
 
 ## Concurrency & Limits
 
-| Limit | Value | Description |
-|-------|-------|-------------|
-| JSON body size | 50MB | `application/json` mode |
-| JSONL body size | Unlimited | `application/x-ndjson` streaming mode |
-| Export message limit | 100,000 | `/export` endpoint |
-| Max page size | 1,000 | `/messages` endpoint |
-| Import concurrency | 1 | Only one import operation allowed at a time |
+| Limit                | Value     | Description                                 |
+| -------------------- | --------- | ------------------------------------------- |
+| JSON body size       | 50MB      | `application/json` mode                     |
+| JSONL body size      | Unlimited | `application/x-ndjson` streaming mode       |
+| Export message limit | 100,000   | `/export` endpoint                          |
+| Max page size        | 1,000     | `/messages` endpoint                        |
+| Import concurrency   | 1         | Only one import operation allowed at a time |
 
 ---
 
 ## Error Codes
 
-| Error Code | HTTP Status | Description |
-|------------|-------------|-------------|
-| `UNAUTHORIZED` | 401 | Invalid or missing token |
-| `SESSION_NOT_FOUND` | 404 | Session not found |
-| `INVALID_FORMAT` | 400 | Request body does not conform to ChatLab Format |
-| `SQL_READONLY_VIOLATION` | 400 | SQL is not a SELECT statement |
-| `SQL_EXECUTION_ERROR` | 400 | SQL execution error |
-| `EXPORT_TOO_LARGE` | 400 | Message count exceeds export limit (100K) |
-| `BODY_TOO_LARGE` | 413 | Request body exceeds 50MB (JSON mode only) |
-| `IMPORT_IN_PROGRESS` | 409 | Another import is already in progress |
-| `IMPORT_FAILED` | 500 | Import failed |
-| `SERVER_ERROR` | 500 | Internal server error |
+| Error Code               | HTTP Status | Description                                     |
+| ------------------------ | ----------- | ----------------------------------------------- |
+| `UNAUTHORIZED`           | 401         | Invalid or missing token                        |
+| `SESSION_NOT_FOUND`      | 404         | Session not found                               |
+| `INVALID_FORMAT`         | 400         | Request body does not conform to ChatLab Format |
+| `SQL_READONLY_VIOLATION` | 400         | SQL is not a SELECT statement                   |
+| `SQL_EXECUTION_ERROR`    | 400         | SQL execution error                             |
+| `EXPORT_TOO_LARGE`       | 400         | Message count exceeds export limit (100K)       |
+| `BODY_TOO_LARGE`         | 413         | Request body exceeds 50MB (JSON mode only)      |
+| `IMPORT_IN_PROGRESS`     | 409         | Another import is already in progress           |
+| `IMPORT_FAILED`          | 500         | Import failed                                   |
+| `SERVER_ERROR`           | 500         | Internal server error                           |
 
 ---
 
@@ -494,6 +494,6 @@ Configure external data source URLs in the Settings page. ChatLab will automatic
 
 ## Version History
 
-| Version | Description |
-|---------|-------------|
-| v1 | Initial release — session query, message search, SQL, export, import (JSON + JSONL), Pull scheduler |
+| Version | Description                                                                                         |
+| ------- | --------------------------------------------------------------------------------------------------- |
+| v1      | Initial release — session query, message search, SQL, export, import (JSON + JSONL), Pull scheduler |

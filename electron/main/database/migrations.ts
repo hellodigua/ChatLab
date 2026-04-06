@@ -144,9 +144,7 @@ const migrations: Migration[] = [
     descriptionKey: 'database.migrationV4Desc',
     userMessageKey: 'database.migrationV4Message',
     up: (db) => {
-      const hasTable = db
-        .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='message_fts'")
-        .get()
+      const hasTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='message_fts'").get()
       if (hasTable) return
 
       db.exec(`
@@ -161,9 +159,7 @@ const migrations: Migration[] = [
       const insertFts = db.prepare('INSERT INTO message_fts(rowid, content) VALUES (?, ?)')
 
       const countRow = db
-        .prepare(
-          "SELECT COUNT(*) as total FROM message WHERE type = 0 AND content IS NOT NULL AND content != ''"
-        )
+        .prepare("SELECT COUNT(*) as total FROM message WHERE type = 0 AND content IS NOT NULL AND content != ''")
         .get() as { total: number }
 
       let offset = 0

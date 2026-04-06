@@ -120,7 +120,6 @@ const otherMemberAvatar = computed(() => {
 
   return null
 })
-
 </script>
 
 <template>
@@ -260,19 +259,18 @@ const otherMemberAvatar = computed(() => {
     <UModal v-if="currentSessionId" v-model:open="showMemberManagementModal" :ui="{ content: 'max-w-6xl h-[85vh]' }">
       <template #content>
         <div class="flex h-full flex-col overflow-hidden bg-white dark:bg-gray-900">
-          <div class="flex flex-none items-center justify-between border-b border-gray-200 px-5 py-3 dark:border-gray-700">
+          <div
+            class="flex flex-none items-center justify-between border-b border-gray-200 px-5 py-3 dark:border-gray-700"
+          >
             <div>
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('analysis.tooltip.memberManagement') }}</h2>
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                {{ t('analysis.tooltip.memberManagement') }}
+              </h2>
               <p class="text-sm text-gray-500 dark:text-gray-400">
                 {{ t('members.private.description', { count: session?.memberCount ?? 0 }) }}
               </p>
             </div>
-            <UButton
-              variant="ghost"
-              icon="i-heroicons-x-mark"
-              size="sm"
-              @click="showMemberManagementModal = false"
-            />
+            <UButton variant="ghost" icon="i-heroicons-x-mark" size="sm" @click="showMemberManagementModal = false" />
           </div>
           <div class="flex-1 overflow-auto">
             <MemberManagementPanel :session-id="currentSessionId" :show-header="false" />

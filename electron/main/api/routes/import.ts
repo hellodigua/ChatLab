@@ -62,11 +62,7 @@ export function getImportingStatus(): boolean {
   return isImporting
 }
 
-async function handleImport(
-  request: FastifyRequest,
-  reply: FastifyReply,
-  sessionId?: string
-): Promise<void> {
+async function handleImport(request: FastifyRequest, reply: FastifyReply, sessionId?: string): Promise<void> {
   if (isImporting) {
     const err = importInProgress()
     reply.code(err.statusCode).send(errorResponse(err))
@@ -174,12 +170,9 @@ async function handleImport(
 
 export function registerImportRoutes(server: FastifyInstance): void {
   // JSONL mode: skip fastify's default body parsing, use request.raw stream directly
-  server.addContentTypeParser(
-    'application/x-ndjson',
-    (_request, _payload, done) => {
-      done(null, undefined)
-    }
-  )
+  server.addContentTypeParser('application/x-ndjson', (_request, _payload, done) => {
+    done(null, undefined)
+  })
 
   // POST /api/v1/import — Import to new session
   server.post('/api/v1/import', async (request, reply) => {
@@ -187,10 +180,7 @@ export function registerImportRoutes(server: FastifyInstance): void {
   })
 
   // POST /api/v1/sessions/:id/import — Incremental import to existing session
-  server.post<{ Params: { id: string } }>(
-    '/api/v1/sessions/:id/import',
-    async (request, reply) => {
-      await handleImport(request, reply, request.params.id)
-    }
-  )
+  server.post<{ Params: { id: string } }>('/api/v1/sessions/:id/import', async (request, reply) => {
+    await handleImport(request, reply, request.params.id)
+  })
 }

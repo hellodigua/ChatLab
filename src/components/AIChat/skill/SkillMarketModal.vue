@@ -285,9 +285,7 @@ function handleRetry() {
                 </button>
 
                 <template v-else>
-                  <span
-                    class="px-3 py-1.5 text-xs font-medium text-gray-400 dark:text-gray-500"
-                  >
+                  <span class="px-3 py-1.5 text-xs font-medium text-gray-400 dark:text-gray-500">
                     {{ t('ai.skill.market.imported') }}
                   </span>
                   <button
@@ -302,7 +300,10 @@ function handleRetry() {
             </div>
           </div>
 
-          <div v-if="!cloudLoading && !cloudError && sortedCatalog.length === 0" class="py-12 text-center text-sm text-gray-400">
+          <div
+            v-if="!cloudLoading && !cloudError && sortedCatalog.length === 0"
+            class="py-12 text-center text-sm text-gray-400"
+          >
             {{ t('ai.skill.market.noCatalog') }}
           </div>
         </div>

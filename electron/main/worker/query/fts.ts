@@ -43,9 +43,9 @@ export function hasFtsIndex(sessionId: string): boolean {
   const db = openDatabase(sessionId)
   if (!db) return false
   try {
-    const row = db
-      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='message_fts'")
-      .get() as { name: string } | undefined
+    const row = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='message_fts'").get() as
+      | { name: string }
+      | undefined
     return !!row
   } catch {
     return false
@@ -72,9 +72,9 @@ export function buildFtsIndex(sessionId: string): { indexed: number } {
 
     const insertFts = db.prepare('INSERT INTO message_fts(rowid, content) VALUES (?, ?)')
 
-    const countRow = db.prepare(
-      "SELECT COUNT(*) as total FROM message WHERE type = 0 AND content IS NOT NULL AND content != ''"
-    ).get() as { total: number }
+    const countRow = db
+      .prepare("SELECT COUNT(*) as total FROM message WHERE type = 0 AND content IS NOT NULL AND content != ''")
+      .get() as { total: number }
     const total = countRow.total
 
     let indexed = 0
@@ -121,9 +121,7 @@ export function rebuildFtsIndex(sessionId: string): { indexed: number } {
   if (!db) return { indexed: 0 }
 
   try {
-    const hasTable = db
-      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='message_fts'")
-      .get()
+    const hasTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='message_fts'").get()
 
     if (hasTable) {
       db.exec('DROP TABLE message_fts')
@@ -142,17 +140,12 @@ export function rebuildFtsIndex(sessionId: string): { indexed: number } {
  * 批量写入 FTS 条目
  * 用于增量导入时同步写入
  */
-export function insertFtsEntries(
-  sessionId: string,
-  entries: Array<{ id: number; content: string | null }>
-): void {
+export function insertFtsEntries(sessionId: string, entries: Array<{ id: number; content: string | null }>): void {
   const db = openWritableDb(sessionId)
   if (!db) return
 
   try {
-    const hasTable = db
-      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='message_fts'")
-      .get()
+    const hasTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='message_fts'").get()
     if (!hasTable) {
       db.close()
       return
@@ -194,14 +187,12 @@ export function searchByFts(
   if (!matchQuery) return { rowids: [], total: 0 }
 
   try {
-    const countRow = db
-      .prepare('SELECT COUNT(*) as total FROM message_fts WHERE content MATCH ?')
-      .get(matchQuery) as { total: number }
+    const countRow = db.prepare('SELECT COUNT(*) as total FROM message_fts WHERE content MATCH ?').get(matchQuery) as {
+      total: number
+    }
 
     const rows = db
-      .prepare(
-        `SELECT rowid FROM message_fts WHERE content MATCH ? ORDER BY rank LIMIT ? OFFSET ?`
-      )
+      .prepare(`SELECT rowid FROM message_fts WHERE content MATCH ? ORDER BY rank LIMIT ? OFFSET ?`)
       .all(matchQuery, limit, offset) as Array<{ rowid: number }>
 
     return {

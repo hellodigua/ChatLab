@@ -6,19 +6,8 @@ import { ipcMain } from 'electron'
 import type { IpcContext } from './types'
 import * as apiServer from '../api'
 import { loadConfig, regenerateToken, updateConfig } from '../api/config'
-import {
-  loadDataSources,
-  addDataSource,
-  updateDataSource,
-  deleteDataSource,
-  type DataSource,
-} from '../api/dataSource'
-import {
-  initScheduler,
-  stopAllTimers,
-  reloadTimer,
-  triggerPull,
-} from '../api/pullScheduler'
+import { loadDataSources, addDataSource, updateDataSource, deleteDataSource, type DataSource } from '../api/dataSource'
+import { initScheduler, stopAllTimers, reloadTimer, triggerPull } from '../api/pullScheduler'
 
 export function registerApiHandlers(_ctx: IpcContext): void {
   // ==================== API Server Management ====================
@@ -63,10 +52,7 @@ export function registerApiHandlers(_ctx: IpcContext): void {
     'api:addDataSource',
     (
       _event,
-      partial: Omit<
-        DataSource,
-        'id' | 'createdAt' | 'lastPullAt' | 'lastStatus' | 'lastError' | 'lastNewMessages'
-      >
+      partial: Omit<DataSource, 'id' | 'createdAt' | 'lastPullAt' | 'lastStatus' | 'lastError' | 'lastNewMessages'>
     ) => {
       const ds = addDataSource(partial)
       if (ds.enabled) {

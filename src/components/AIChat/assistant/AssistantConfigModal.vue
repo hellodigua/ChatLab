@@ -467,17 +467,11 @@ function closeModal() {
                     {{ t('ai.assistant.config.analysisTools') }}
                   </h3>
                   <div v-if="!readonly" class="flex gap-2">
-                    <button
-                      class="text-[10px] text-primary-500 hover:text-primary-600"
-                      @click="selectAllAnalysisTools"
-                    >
+                    <button class="text-[10px] text-primary-500 hover:text-primary-600" @click="selectAllAnalysisTools">
                       {{ t('ai.assistant.config.selectAll') }}
                     </button>
                     <span class="text-[10px] text-gray-300 dark:text-gray-600">|</span>
-                    <button
-                      class="text-[10px] text-primary-500 hover:text-primary-600"
-                      @click="clearAllAnalysisTools"
-                    >
+                    <button class="text-[10px] text-primary-500 hover:text-primary-600" @click="clearAllAnalysisTools">
                       {{ t('ai.assistant.config.deselectAll') }}
                     </button>
                   </div>
