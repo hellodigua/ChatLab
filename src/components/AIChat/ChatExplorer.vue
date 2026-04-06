@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useToast } from '@nuxt/ui/runtime/composables/useToast.js'
+import { useToast } from '@/composables/useToast'
 import ConversationList from './chat/ConversationList.vue'
 import DataSourcePanel from './chat/DataSourcePanel.vue'
 import ChatMessage from './chat/ChatMessage.vue'
@@ -162,20 +162,13 @@ const showWelcomeCard = computed(() => {
 })
 
 function showRunningTaskToast() {
-  toast.add({
-    title: t('ai.chat.backgroundTask.runningTitle'),
+  toast.warn(t('ai.chat.backgroundTask.runningTitle'), {
     description: t('ai.chat.backgroundTask.runningDescription'),
-    color: 'warning',
-    icon: 'i-heroicons-sparkles',
   })
 }
 
 function showLockedActionToast() {
-  toast.add({
-    title: t('ai.chat.backgroundTask.blockedAction'),
-    color: 'warning',
-    icon: 'i-heroicons-lock-closed',
-  })
+  toast.warn(t('ai.chat.backgroundTask.blockedAction'))
 }
 
 // 选择助手

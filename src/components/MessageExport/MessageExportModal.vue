@@ -10,7 +10,7 @@
 
 import { ref, computed, watch, toRaw } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useToast } from '@nuxt/ui/runtime/composables/useToast.js'
+import { useToast } from '@/composables/useToast'
 import { useSessionStore } from '@/stores/session'
 import ConditionPanel from './ConditionPanel.vue'
 import SessionPanel from './SessionPanel.vue'
@@ -274,28 +274,15 @@ async function exportFeedPack() {
     const exportResult = await window.aiApi.exportFilterResultToFile(exportParams)
 
     if (exportResult.success && exportResult.filePath) {
-      toast.add({
-        title: t('analysis.filter.exportSuccess'),
-        description: exportResult.filePath,
-        color: 'green',
-        icon: 'i-heroicons-check-circle',
-      })
+      toast.success(t('analysis.filter.exportSuccess'), { description: exportResult.filePath })
     } else {
-      toast.add({
-        title: t('analysis.filter.exportFailed'),
+      toast.fail(t('analysis.filter.exportFailed'), {
         description: exportResult.error || t('common.error.unknown'),
-        color: 'red',
-        icon: 'i-heroicons-x-circle',
       })
     }
   } catch (error) {
     console.error('导出失败:', error)
-    toast.add({
-      title: t('analysis.filter.exportFailed'),
-      description: String(error),
-      color: 'red',
-      icon: 'i-heroicons-x-circle',
-    })
+    toast.fail(t('analysis.filter.exportFailed'), { description: String(error) })
   } finally {
     stopExportProgressListener()
     isExporting.value = false

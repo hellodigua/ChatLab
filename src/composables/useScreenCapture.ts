@@ -4,7 +4,7 @@
  */
 import { ref } from 'vue'
 import { captureAsImageData } from '@/utils/snapCapture'
-import { useToast } from '@nuxt/ui/runtime/composables/useToast.js'
+import { useToast } from '@/composables/useToast'
 import { useLayoutStore } from '@/stores/layout'
 
 /** 默认移动端最大宽度 */
@@ -53,9 +53,7 @@ export function useScreenCapture() {
         toast.add({
           title: '截图已保存',
           description: `已保存到下载目录：${filename}`,
-          icon: 'i-heroicons-check-circle',
           color: 'primary',
-          duration: 3000,
           actions: [
             {
               label: '打开目录',
@@ -70,13 +68,7 @@ export function useScreenCapture() {
       }
     } catch (error) {
       console.error('保存图片失败:', error)
-      toast.add({
-        title: '保存失败',
-        description: String(error),
-        icon: 'i-heroicons-x-circle',
-        color: 'error',
-        duration: 3000,
-      })
+      toast.fail('保存失败', { description: String(error) })
     }
   }
 
@@ -88,9 +80,7 @@ export function useScreenCapture() {
 
     toast.add({
       title: '截图已复制到剪贴板',
-      icon: 'i-heroicons-check-circle',
       color: 'primary',
-      duration: 3000,
       actions: [
         {
           label: '预览截图',
@@ -430,13 +420,7 @@ export function useScreenCapture() {
         showSuccessToast(imageData)
       } else {
         // 复制失败时，直接打开预览弹窗
-        toast.add({
-          title: '截图完成',
-          description: '复制到剪贴板失败，请手动保存',
-          icon: 'i-heroicons-exclamation-triangle',
-          color: 'warning',
-          duration: 3000,
-        })
+        toast.warn('截图完成', { description: '复制到剪贴板失败，请手动保存' })
         layoutStore.openScreenCaptureModal(imageData)
       }
 
@@ -451,13 +435,7 @@ export function useScreenCapture() {
         errorMessage = '页面包含无法处理的特殊字符，请尝试截屏其他区域'
       }
 
-      toast.add({
-        title: '截屏失败',
-        description: errorMessage,
-        icon: 'i-heroicons-x-circle',
-        color: 'error',
-        duration: 3000,
-      })
+      toast.fail('截屏失败', { description: errorMessage })
       return false
     } finally {
       // 移除水印

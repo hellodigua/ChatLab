@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useToast } from '@nuxt/ui/runtime/composables/useToast.js'
 import dayjs from 'dayjs'
 import MarkdownIt from 'markdown-it'
 import type { ContentBlock, ToolBlockContent } from '@/composables/useAIChat'
 import CaptureButton from '@/components/common/CaptureButton.vue'
+import { useToast } from '@/composables/useToast'
 
 const { t, te, locale } = useI18n()
 const toast = useToast()
@@ -286,20 +286,9 @@ async function handleCopyMarkdown() {
 
   try {
     await navigator.clipboard.writeText(copyMarkdownText.value)
-    toast.add({
-      title: t('ai.chat.message.copy.success'),
-      color: 'primary',
-      icon: 'i-heroicons-clipboard-document-check',
-      duration: 2000,
-    })
+    toast.success(t('ai.chat.message.copy.success'))
   } catch (error) {
-    toast.add({
-      title: t('ai.chat.message.copy.failed'),
-      description: String(error),
-      color: 'error',
-      icon: 'i-heroicons-x-circle',
-      duration: 3000,
-    })
+    toast.fail(t('ai.chat.message.copy.failed'), { description: String(error) })
   }
 }
 </script>

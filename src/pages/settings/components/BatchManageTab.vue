@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
-import { useToast } from '@nuxt/ui/runtime/composables/useToast.js'
+import { useToast } from '@/composables/useToast'
 import { useSessionStore } from '@/stores/session'
 import type { AnalysisSession } from '@/types/base'
 import dayjs from 'dayjs'
@@ -296,18 +296,10 @@ async function executeMerge() {
     showMergeModal.value = false
 
     // 提示成功
-    toast.add({
-      title: t('tools.batchManage.mergeSuccess', { count: selectedSessionIds.length }),
-      icon: 'i-heroicons-check-circle',
-      color: 'success',
-    })
+    toast.success(t('tools.batchManage.mergeSuccess', { count: selectedSessionIds.length }))
   } catch (error) {
     console.error('[BatchDelete] 合并失败:', error)
-    toast.add({
-      title: t('tools.batchManage.mergeError', { error: String(error) }),
-      icon: 'i-heroicons-exclamation-circle',
-      color: 'error',
-    })
+    toast.fail(t('tools.batchManage.mergeError', { error: String(error) }))
 
     // 清理临时文件
     if (tempFiles.length > 0) {

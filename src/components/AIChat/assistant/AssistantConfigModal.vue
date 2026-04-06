@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useToast } from '@nuxt/ui/runtime/composables/useToast.js'
+import { useToast } from '@/composables/useToast'
 import { useAssistantStore, type AssistantConfigFull } from '@/stores/assistant'
 
 const { t } = useI18n()
@@ -123,7 +123,7 @@ async function loadConfig(id: string) {
     }
   } catch (error) {
     console.error('[AssistantConfigModal] Failed to load config:', error)
-    toast.add({ title: t('ai.assistant.toast.loadFailed'), description: String(error), color: 'error' })
+    toast.fail(t('ai.assistant.toast.loadFailed'), { description: String(error) })
   } finally {
     isLoading.value = false
   }
@@ -146,34 +146,30 @@ async function handleSave() {
     if (isCreateMode.value) {
       const result = await assistantStore.createAssistant(payload)
       if (result.success) {
-        toast.add({ title: t('ai.assistant.toast.createSuccess'), color: 'success' })
+        toast.success(t('ai.assistant.toast.createSuccess'))
         emit('created', result.id!)
         closeModal()
       } else {
-        toast.add({
-          title: t('ai.assistant.toast.createFailed'),
+        toast.fail(t('ai.assistant.toast.createFailed'), {
           description: result.error || t('ai.assistant.toast.unknownError'),
-          color: 'error',
         })
       }
     } else {
       if (!props.assistantId) return
       const result = await assistantStore.updateAssistant(props.assistantId, payload)
       if (result.success) {
-        toast.add({ title: t('ai.assistant.toast.saveSuccess'), color: 'success' })
+        toast.success(t('ai.assistant.toast.saveSuccess'))
         emit('saved')
         closeModal()
       } else {
-        toast.add({
-          title: t('ai.assistant.toast.saveFailed'),
+        toast.fail(t('ai.assistant.toast.saveFailed'), {
           description: result.error || t('ai.assistant.toast.unknownError'),
-          color: 'error',
         })
       }
     }
   } catch (error) {
     console.error('[AssistantConfigModal] Save failed:', error)
-    toast.add({ title: t('ai.assistant.toast.saveFailed'), description: String(error), color: 'error' })
+    toast.fail(t('ai.assistant.toast.saveFailed'), { description: String(error) })
   } finally {
     isSaving.value = false
   }
@@ -186,18 +182,16 @@ async function handleReset() {
   try {
     const result = await assistantStore.resetAssistant(props.assistantId)
     if (result.success) {
-      toast.add({ title: t('ai.assistant.toast.resetSuccess'), color: 'success' })
+      toast.success(t('ai.assistant.toast.resetSuccess'))
       await loadConfig(props.assistantId)
       emit('saved')
     } else {
-      toast.add({
-        title: t('ai.assistant.toast.resetFailed'),
+      toast.fail(t('ai.assistant.toast.resetFailed'), {
         description: result.error || t('ai.assistant.toast.unknownError'),
-        color: 'error',
       })
     }
   } catch (error) {
-    toast.add({ title: t('ai.assistant.toast.resetFailed'), description: String(error), color: 'error' })
+    toast.fail(t('ai.assistant.toast.resetFailed'), { description: String(error) })
   } finally {
     isSaving.value = false
   }

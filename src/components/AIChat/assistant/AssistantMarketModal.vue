@@ -3,7 +3,7 @@ import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useAssistantStore, type CloudAssistantItem } from '@/stores/assistant'
-import { useToast } from '@nuxt/ui/runtime/composables/useToast.js'
+import { useToast } from '@/composables/useToast'
 
 const { t, locale } = useI18n()
 const toast = useToast()
@@ -74,9 +74,9 @@ async function handleImportCloud(item: CloudAssistantItem) {
   try {
     const result = await assistantStore.importFromCloud(item)
     if (result.success) {
-      toast.add({ title: t('ai.assistant.market.importSuccess'), color: 'success' })
+      toast.success(t('ai.assistant.market.importSuccess'))
     } else {
-      toast.add({ title: t('ai.assistant.market.importFailed'), description: result.error, color: 'error' })
+      toast.fail(t('ai.assistant.market.importFailed'), { description: result.error })
     }
   } finally {
     const next = new Set(importingIds.value)
@@ -91,14 +91,14 @@ async function handleReimportCloud(item: CloudAssistantItem) {
   try {
     const deleteResult = await assistantStore.deleteAssistant(item.id)
     if (!deleteResult.success) {
-      toast.add({ title: t('ai.assistant.market.importFailed'), description: deleteResult.error, color: 'error' })
+      toast.fail(t('ai.assistant.market.importFailed'), { description: deleteResult.error })
       return
     }
     const importResult = await assistantStore.importFromCloud(item)
     if (importResult.success) {
-      toast.add({ title: t('ai.assistant.market.importSuccess'), color: 'success' })
+      toast.success(t('ai.assistant.market.importSuccess'))
     } else {
-      toast.add({ title: t('ai.assistant.market.importFailed'), description: importResult.error, color: 'error' })
+      toast.fail(t('ai.assistant.market.importFailed'), { description: importResult.error })
     }
   } finally {
     const next = new Set(importingIds.value)

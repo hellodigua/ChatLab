@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
-import { useToast } from '@nuxt/ui/runtime/composables/useToast.js'
+import { useToast } from '@/composables/useToast'
 import MarkdownIt from 'markdown-it'
 import dayjs from 'dayjs'
 import type { SQLResult } from './types'
@@ -240,9 +240,7 @@ async function exportResult() {
       toast.add({
         title: t('common.exportSuccess'),
         description: filename,
-        icon: 'i-heroicons-check-circle',
         color: 'primary',
-        duration: 3000,
         actions: [
           {
             label: t('common.openFolder'),
@@ -253,23 +251,11 @@ async function exportResult() {
         ],
       })
     } else {
-      toast.add({
-        title: t('common.exportFailed'),
-        description: result.error,
-        icon: 'i-heroicons-x-circle',
-        color: 'error',
-        duration: 3000,
-      })
+      toast.fail(t('common.exportFailed'), { description: result.error })
     }
   } catch (err) {
     console.error('导出失败:', err)
-    toast.add({
-      title: t('common.exportFailed'),
-      description: String(err),
-      icon: 'i-heroicons-x-circle',
-      color: 'error',
-      duration: 3000,
-    })
+    toast.fail(t('common.exportFailed'), { description: String(err) })
   } finally {
     isExporting.value = false
   }

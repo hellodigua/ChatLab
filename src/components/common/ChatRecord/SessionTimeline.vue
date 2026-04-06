@@ -5,7 +5,7 @@
  */
 import { ref, computed, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useToast } from '@nuxt/ui/runtime/composables/useToast.js'
+import { useToast } from '@/composables/useToast'
 import { useVirtualizer } from '@tanstack/vue-virtual'
 import BatchSummaryModal from './BatchSummaryModal.vue'
 
@@ -247,18 +247,12 @@ async function generateSummary(session: ChatSessionItem, event: Event) {
         allSessions.value[index] = { ...allSessions.value[index], summary: result.summary }
       }
     } else {
-      toast.add({
-        title: t('records.summaryFailed', '摘要生成失败'),
+      toast.fail(t('records.summaryFailed', '摘要生成失败'), {
         description: result.error || t('records.summaryUnknownError', '未知错误'),
-        color: 'error',
       })
     }
   } catch (error) {
-    toast.add({
-      title: t('records.summaryFailed', '摘要生成失败'),
-      description: String(error),
-      color: 'error',
-    })
+    toast.fail(t('records.summaryFailed', '摘要生成失败'), { description: String(error) })
   } finally {
     generatingSummaryIds.value.delete(session.id)
     console.log('[SessionTimeline] 生成完成')

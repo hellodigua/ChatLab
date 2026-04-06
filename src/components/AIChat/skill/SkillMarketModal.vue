@@ -3,7 +3,7 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useSkillStore, type CloudSkillItem } from '@/stores/skill'
-import { useToast } from '@nuxt/ui/runtime/composables/useToast.js'
+import { useToast } from '@/composables/useToast'
 
 const { t, locale } = useI18n()
 const toast = useToast()
@@ -71,9 +71,9 @@ async function handleImportCloud(item: CloudSkillItem) {
   try {
     const result = await skillStore.importFromCloud(item)
     if (result.success) {
-      toast.add({ title: t('ai.skill.market.importSuccess'), color: 'success' })
+      toast.success(t('ai.skill.market.importSuccess'))
     } else {
-      toast.add({ title: t('ai.skill.market.importFailed'), description: result.error, color: 'error' })
+      toast.fail(t('ai.skill.market.importFailed'), { description: result.error })
     }
   } finally {
     const next = new Set(importingIds.value)
@@ -88,14 +88,14 @@ async function handleReimportCloud(item: CloudSkillItem) {
   try {
     const deleteResult = await skillStore.deleteSkill(item.id)
     if (!deleteResult.success) {
-      toast.add({ title: t('ai.skill.market.importFailed'), description: deleteResult.error, color: 'error' })
+      toast.fail(t('ai.skill.market.importFailed'), { description: deleteResult.error })
       return
     }
     const importResult = await skillStore.importFromCloud(item)
     if (importResult.success) {
-      toast.add({ title: t('ai.skill.market.importSuccess'), color: 'success' })
+      toast.success(t('ai.skill.market.importSuccess'))
     } else {
-      toast.add({ title: t('ai.skill.market.importFailed'), description: importResult.error, color: 'error' })
+      toast.fail(t('ai.skill.market.importFailed'), { description: importResult.error })
     }
   } finally {
     const next = new Set(importingIds.value)

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useToast } from '@nuxt/ui/runtime/composables/useToast.js'
+import { useToast } from '@/composables/useToast'
 
 interface LegacyPromptStoreData {
   customPromptPresets?: Array<{
@@ -79,20 +79,9 @@ async function handleCopyJson() {
 
   try {
     await navigator.clipboard.writeText(formattedPromptStoreJson.value)
-    toast.add({
-      title: t('settings.aiPrompt.legacyPrompt.copySuccess'),
-      color: 'primary',
-      icon: 'i-heroicons-clipboard-document-check',
-      duration: 2000,
-    })
+    toast.success(t('settings.aiPrompt.legacyPrompt.copySuccess'))
   } catch (error) {
-    toast.add({
-      title: t('settings.aiPrompt.legacyPrompt.copyFailed'),
-      description: String(error),
-      color: 'error',
-      icon: 'i-heroicons-x-circle',
-      duration: 3000,
-    })
+    toast.fail(t('settings.aiPrompt.legacyPrompt.copyFailed'), { description: String(error) })
   }
 }
 

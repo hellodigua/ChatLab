@@ -26,6 +26,12 @@ const tooltip = {
   delayDuration: 100,
 }
 
+const toaster = {
+  position: 'top-center' as const,
+  progress: false,
+  duration: 2000,
+}
+
 // 应用启动时初始化
 onMounted(async () => {
   // 平台检测 - 设置 CSS 类名以驱动平台差异化样式（如标题栏安全区域高度）
@@ -46,7 +52,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <UApp :tooltip="tooltip">
+  <UApp :tooltip="tooltip" :toaster="toaster">
     <!-- 自定义标题栏 - 拖拽区域 + 窗口控制按钮 -->
     <TitleBar />
     <div class="relative flex h-screen w-full overflow-hidden bg-gray-50 dark:bg-gray-900">

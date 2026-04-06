@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
-import { useToast } from '@nuxt/ui/runtime/composables/useToast.js'
+import { useToast } from '@/composables/useToast'
 import { useRouter } from 'vue-router'
 import { usePromptStore } from '@/stores/prompt'
 import { useLLMStore } from '@/stores/llm'
@@ -95,12 +95,7 @@ async function switchModelConfig(configId: string) {
   if (success) {
     isModelPopoverOpen.value = false
   } else {
-    toast.add({
-      title: t('ai.chat.statusBar.model.switchFailed'),
-      icon: 'i-heroicons-x-circle',
-      color: 'error',
-      duration: 2000,
-    })
+    toast.fail(t('ai.chat.statusBar.model.switchFailed'))
   }
 }
 
@@ -123,12 +118,7 @@ async function handleExportConversation() {
     ])
 
     if (!conv || messages.length === 0) {
-      toast.add({
-        title: t('ai.chat.conversation.export.noMessages'),
-        icon: 'i-heroicons-exclamation-triangle',
-        color: 'warning',
-        duration: 2000,
-      })
+      toast.warn(t('ai.chat.conversation.export.noMessages'))
       return
     }
 
@@ -152,9 +142,7 @@ async function handleExportConversation() {
       toast.add({
         title: t('common.exportSuccess'),
         description: filename,
-        icon: 'i-heroicons-check-circle',
         color: 'primary',
-        duration: 2000,
         actions: [
           {
             label: t('common.openFolder'),
@@ -165,23 +153,11 @@ async function handleExportConversation() {
         ],
       })
     } else {
-      toast.add({
-        title: t('common.exportFailed'),
-        description: result.error,
-        icon: 'i-heroicons-x-circle',
-        color: 'error',
-        duration: 2000,
-      })
+      toast.fail(t('common.exportFailed'), { description: result.error })
     }
   } catch (error) {
     console.error('导出对话失败：', error)
-    toast.add({
-      title: t('common.exportFailed'),
-      description: String(error),
-      icon: 'i-heroicons-x-circle',
-      color: 'error',
-      duration: 2000,
-    })
+    toast.fail(t('common.exportFailed'), { description: String(error) })
   } finally {
     isExporting.value = false
   }
@@ -194,23 +170,13 @@ async function openAiLogFile() {
   try {
     const result = await window.aiApi.showAiLogFile()
     if (!result?.success) {
-      toast.add({
-        title: t('ai.chat.statusBar.log.openFailed'),
+      toast.fail(t('ai.chat.statusBar.log.openFailed'), {
         description: result?.error || t('ai.chat.statusBar.log.openFailedDesc'),
-        icon: 'i-heroicons-x-circle',
-        color: 'error',
-        duration: 2000,
       })
     }
   } catch (error) {
     console.error('打开 AI 日志失败：', error)
-    toast.add({
-      title: t('ai.chat.statusBar.log.openFailed'),
-      description: String(error),
-      icon: 'i-heroicons-x-circle',
-      color: 'error',
-      duration: 2000,
-    })
+    toast.fail(t('ai.chat.statusBar.log.openFailed'), { description: String(error) })
   } finally {
     isOpeningLog.value = false
   }
