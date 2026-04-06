@@ -26,8 +26,10 @@ class MainProcess {
     // E2E 测试隔离：为并行测试实例设置独立的用户数据目录
     // 这防止了并发进程的状态泄漏、死锁和数据库冲突
     const e2eUserDataDir = process.env.CHATLAB_E2E_USER_DATA_DIR
-    if (e2eUserDataDir) {
+    if (this.isTestMode && e2eUserDataDir) {
       app.setPath('userData', e2eUserDataDir)
+    } else if (!this.isTestMode && e2eUserDataDir) {
+      console.warn('[Main] Ignored CHATLAB_E2E_USER_DATA_DIR because TEST_MODE is not enabled')
     }
 
     // 设置应用程序名称

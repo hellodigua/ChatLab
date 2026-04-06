@@ -59,5 +59,13 @@ export default defineConfigWithVueTs(
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-var-requires': 'off',
     },
+  },
+
+  // E2E Node helper/test 使用 CommonJS，允许 require
+  {
+    files: ['tests/e2e/**/*.js'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
   }
 )
