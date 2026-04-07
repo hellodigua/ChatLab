@@ -61,7 +61,12 @@
         "get_members": "取得成員列表",
         "get_member_name_history": "取得暱稱歷史",
         "get_conversation_between": "取得對話紀錄",
-        "get_message_context": "取得上下文"
+        "get_message_context": "取得上下文",
+        "search_sessions": "搜尋會話",
+        "get_session_messages": "取得會話訊息",
+        "get_session_summaries": "取得會話摘要",
+        "response_time_analysis": "回覆時間分析",
+        "keyword_frequency": "關鍵詞頻率分析"
       },
       "generating": "正在產生回覆...",
       "think": {

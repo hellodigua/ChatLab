@@ -61,7 +61,12 @@
         "get_members": "メンバー一覧を取得",
         "get_member_name_history": "ニックネーム履歴を取得",
         "get_conversation_between": "やり取り履歴を取得",
-        "get_message_context": "コンテキストを取得"
+        "get_message_context": "コンテキストを取得",
+        "search_sessions": "セッションを検索",
+        "get_session_messages": "セッションメッセージを取得",
+        "get_session_summaries": "セッション要約を取得",
+        "response_time_analysis": "応答時間分析",
+        "keyword_frequency": "キーワード頻度分析"
       },
       "generating": "回答を作成中...",
       "think": {

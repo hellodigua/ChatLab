@@ -61,7 +61,12 @@
         "get_members": "获取成员列表",
         "get_member_name_history": "获取昵称历史",
         "get_conversation_between": "获取对话记录",
-        "get_message_context": "获取上下文"
+        "get_message_context": "获取上下文",
+        "search_sessions": "搜索会话",
+        "get_session_messages": "获取会话消息",
+        "get_session_summaries": "获取会话摘要",
+        "response_time_analysis": "回复时间分析",
+        "keyword_frequency": "关键词频率分析"
       },
       "generating": "正在生成回复...",
       "think": {

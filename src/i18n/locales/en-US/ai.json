@@ -61,7 +61,12 @@
         "get_members": "Get Members",
         "get_member_name_history": "Get Nickname History",
         "get_conversation_between": "Get Conversation",
-        "get_message_context": "Get Message Context"
+        "get_message_context": "Get Message Context",
+        "search_sessions": "Search Sessions",
+        "get_session_messages": "Get Session Messages",
+        "get_session_summaries": "Get Session Summaries",
+        "response_time_analysis": "Response Time Analysis",
+        "keyword_frequency": "Keyword Frequency"
       },
       "generating": "Generating response...",
       "think": {
