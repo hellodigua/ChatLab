@@ -41,12 +41,7 @@ export function createTool(context: ToolContext): AgentTool<typeof schema> {
       if ((contextBefore > 0 || contextAfter > 0) && result.messages.length > 0) {
         const hitIds = result.messages.map((m) => m.id).filter((id): id is number => id != null)
         if (hitIds.length > 0) {
-          finalMessages = await workerManager.getSearchMessageContext(
-            sessionId,
-            hitIds,
-            contextBefore,
-            contextAfter
-          )
+          finalMessages = await workerManager.getSearchMessageContext(sessionId, hitIds, contextBefore, contextAfter)
         }
       }
 

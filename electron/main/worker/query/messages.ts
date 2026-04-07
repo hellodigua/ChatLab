@@ -556,9 +556,9 @@ export function getSearchMessageContext(
     contextIds.add(messageId)
 
     if (hasSessionData) {
-      const sessionRow = db
-        .prepare('SELECT session_id FROM message_context WHERE message_id = ?')
-        .get(messageId) as { session_id: number } | undefined
+      const sessionRow = db.prepare('SELECT session_id FROM message_context WHERE message_id = ?').get(messageId) as
+        | { session_id: number }
+        | undefined
 
       if (sessionRow) {
         if (contextBefore > 0) {

@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AIModelConfigTab from './AI/AIModelConfigTab.vue'
 import AIPromptConfigTab from './AI/AIPromptConfigTab.vue'
-import AIPromptPresetTab from './AI/AIPromptPresetTab.vue'
 import AIPreprocessTab from './AI/AIPreprocessTab.vue'
 // TODO: 向量模型暂时隐藏，待功能完善后恢复
 // import RAGConfigTab from './AI/RAGConfigTab.vue'
@@ -24,7 +23,6 @@ const navItems = computed(() => [
   // { id: 'rag', label: t('settings.tabs.aiRAG') },
   { id: 'chat', label: t('settings.tabs.aiPrompt') },
   { id: 'preprocess', label: t('settings.tabs.aiPreprocess') },
-  { id: 'preset', label: t('settings.tabs.aiPreset') },
 ])
 
 // 使用二级导航滚动联动 composable
@@ -90,14 +88,6 @@ void aiModelConfigRef.value
         <!-- 预处理配置 -->
         <div :ref="(el) => setSectionRef('preprocess', el as HTMLElement)">
           <AIPreprocessTab />
-        </div>
-
-        <!-- 分隔线 -->
-        <div class="border-t border-gray-200 dark:border-gray-700" />
-
-        <!-- 旧版提示词查看 -->
-        <div :ref="(el) => setSectionRef('preset', el as HTMLElement)">
-          <AIPromptPresetTab />
         </div>
       </div>
     </div>
