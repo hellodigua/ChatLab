@@ -350,7 +350,9 @@ export function deleteSession(sessionId: string): boolean {
     if (fs.existsSync(shmPath)) {
       fs.unlinkSync(shmPath)
     }
-    deleteSessionCache(sessionId, getCacheDir())
+    const cacheDir = getCacheDir()
+    deleteSessionCache(sessionId, cacheDir)
+    deleteSessionCache(sessionId, path.join(cacheDir, 'query'))
     return true
   } catch (error) {
     console.error('[Database] Failed to delete session:', error)

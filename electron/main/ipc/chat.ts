@@ -636,7 +636,9 @@ export function registerChatHandlers(ctx: IpcContext): void {
    */
   ipcMain.handle('chat:updateMemberAliases', async (_, sessionId: string, memberId: number, aliases: string[]) => {
     try {
-      return await worker.updateMemberAliases(sessionId, memberId, aliases)
+      const result = await worker.updateMemberAliases(sessionId, memberId, aliases)
+      if (result) worker.invalidateAnalysisCache(sessionId).catch(() => {})
+      return result
     } catch (error) {
       console.error('Failed to update member alias:', error)
       return false
@@ -651,7 +653,9 @@ export function registerChatHandlers(ctx: IpcContext): void {
       // 先关闭数据库连接
       await worker.closeDatabase(sessionId)
       // 执行删除
-      return await worker.deleteMember(sessionId, memberId)
+      const result = await worker.deleteMember(sessionId, memberId)
+      if (result) worker.invalidateAnalysisCache(sessionId).catch(() => {})
+      return result
     } catch (error) {
       console.error('Failed to delete member:', error)
       return false
@@ -1029,6 +1033,8 @@ export function registerChatHandlers(ctx: IpcContext): void {
         } catch (e) {
           console.error('[IpcMain] Failed to incrementally generate session index:', e)
         }
+        // 数据变更后清除分析缓存
+        worker.invalidateAnalysisCache(sessionId).catch(() => {})
       }
 
       return result

@@ -9,8 +9,10 @@
  * 4. 返回结果
  */
 
+import * as path from 'path'
 import { parentPort, workerData } from 'worker_threads'
-import { initDbDir, closeDatabase, closeAllDatabases } from './core'
+import { initDbDir, closeDatabase, closeAllDatabases, getCacheDir } from './core'
+import { getCache, setCache, deleteSessionCache } from '../database/sessionCache'
 import {
   getAvailableYears,
   getMemberActivity,
@@ -72,6 +74,57 @@ import { streamImport, streamParseFileInfo, analyzeIncrementalImport, incrementa
 
 // 初始化数据库目录
 initDbDir(workerData.dbDir, workerData.cacheDir)
+
+// ==================== 分析结果缓存 ====================
+
+const ANALYSIS_CACHE_PREFIX = 'analysis:'
+
+function getQueryCacheDir(): string {
+  const cacheDir = getCacheDir()
+  return cacheDir ? path.join(cacheDir, 'query') : ''
+}
+
+const CACHEABLE_QUERIES = new Set([
+  'getAvailableYears',
+  'getMemberActivity',
+  'getHourlyActivity',
+  'getDailyActivity',
+  'getWeekdayActivity',
+  'getMonthlyActivity',
+  'getYearlyActivity',
+  'getMessageLengthDistribution',
+  'getMessageTypeDistribution',
+  'getTimeRange',
+  'getCatchphraseAnalysis',
+  'getMentionAnalysis',
+  'getMentionGraph',
+  'getLaughAnalysis',
+  'getClusterGraph',
+  'getWordFrequency',
+])
+
+function buildAnalysisCacheKey(type: string, payload: any): string {
+  const parts = [ANALYSIS_CACHE_PREFIX + type]
+  // 标准 filter 对象（大多数分析查询）
+  const filter = payload.filter || payload.timeFilter
+  if (filter) {
+    if (filter.startTs !== undefined) parts.push(`s${filter.startTs}`)
+    if (filter.endTs !== undefined) parts.push(`e${filter.endTs}`)
+    if (filter.memberId !== undefined && filter.memberId !== null) {
+      parts.push(`m${filter.memberId}`)
+    }
+  }
+  // 顶层 memberId（如 getWordFrequency 直接传 memberId）
+  if (payload.memberId !== undefined && payload.memberId !== null) parts.push(`m${payload.memberId}`)
+  if (payload.keywords) parts.push(`k${JSON.stringify(payload.keywords)}`)
+  if (payload.options) parts.push(`o${JSON.stringify(payload.options)}`)
+  // getWordFrequency 特有参数
+  if (payload.locale) parts.push(`l${payload.locale}`)
+  if (payload.topN) parts.push(`n${payload.topN}`)
+  if (payload.minLength) parts.push(`ml${payload.minLength}`)
+  if (payload.posTags) parts.push(`pt${JSON.stringify(payload.posTags)}`)
+  return parts.join(':')
+}
 
 // ==================== 消息处理 ====================
 
@@ -167,6 +220,15 @@ const syncHandlers: Record<string, (payload: any) => any> = {
 
   // 深度搜索（LIKE 子串匹配）
   deepSearchMessages: (p) => deepSearchMessages(p.sessionId, p.keywords, p.filter, p.limit, p.offset, p.senderId),
+
+  // 缓存管理
+  invalidateAnalysisCache: (p) => {
+    const queryCacheDir = getQueryCacheDir()
+    if (queryCacheDir && p.sessionId) {
+      deleteSessionCache(p.sessionId, queryCacheDir)
+    }
+    return true
+  },
 }
 
 // 异步消息处理器（流式操作）
@@ -199,6 +261,21 @@ parentPort?.on('message', async (message: WorkerMessage) => {
     const syncHandler = syncHandlers[type]
     if (!syncHandler) {
       throw new Error(`Unknown message type: ${type}`)
+    }
+
+    // 可缓存查询：先查缓存，miss 后执行并写回
+    const queryCacheDir = getQueryCacheDir()
+    if (queryCacheDir && CACHEABLE_QUERIES.has(type) && payload.sessionId) {
+      const cacheKey = buildAnalysisCacheKey(type, payload)
+      const cached = getCache(payload.sessionId, cacheKey, queryCacheDir)
+      if (cached !== null) {
+        parentPort?.postMessage({ id, success: true, result: cached })
+        return
+      }
+      const result = syncHandler(payload)
+      setCache(payload.sessionId, cacheKey, result, queryCacheDir)
+      parentPort?.postMessage({ id, success: true, result })
+      return
     }
 
     const result = syncHandler(payload)

@@ -253,6 +253,16 @@ export async function pluginCompute<TOutput = any>(fnString: string, input: any)
   return sendToWorker('pluginCompute', { fnString, input }, 120000)
 }
 
+// ==================== 缓存管理 ====================
+
+/**
+ * 清除指定 session 的所有分析结果缓存
+ * 在数据变更（增量导入、成员删除/别名更新）后调用
+ */
+export async function invalidateAnalysisCache(sessionId: string): Promise<boolean> {
+  return sendToWorker('invalidateAnalysisCache', { sessionId })
+}
+
 // ==================== 导出的异步 API ====================
 
 export async function getAvailableYears(sessionId: string): Promise<number[]> {
