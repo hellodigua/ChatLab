@@ -5,9 +5,12 @@ import { useRoute } from 'vue-router'
 import { SubTabs } from '@/components/UI'
 import { ChatExplorer } from '../AIChat'
 import SQLLabTab from './SQLLabTab.vue'
+import ToolTestTab from './ToolTestTab.vue'
+import { useSettingsStore } from '@/stores/settings'
 
 const { t } = useI18n()
 const route = useRoute()
+const settingsStore = useSettingsStore()
 
 // Props
 const props = defineProps<{
@@ -19,9 +22,14 @@ const props = defineProps<{
 }>()
 
 const subTabs = computed(() => {
-  // 实验室模式下只保留 SQL 实验室子 Tab，一级导航由外层页面承载。
   if (props.mode === 'sql-only') {
-    return [{ id: 'sql-lab', label: t('ai.tab.sqlLab'), icon: 'i-heroicons-command-line' }]
+    const tabs = [
+      { id: 'sql-lab', label: t('ai.tab.sqlLab'), icon: 'i-heroicons-command-line' },
+    ]
+    if (settingsStore.debugMode) {
+      tabs.push({ id: 'tool-test', label: t('ai.lab.basicTools'), icon: 'i-heroicons-wrench-screwdriver' })
+    }
+    return tabs
   }
 
   return [
@@ -32,17 +40,27 @@ const subTabs = computed(() => {
 
 const activeSubTab = ref(props.mode === 'sql-only' ? 'sql-lab' : (route.query.aiSubTab as string) || 'chat-explorer')
 
-// 悬浮任务条返回时会通过 query 指定目标子页，这里同步一次，确保能直接回到对话流。
 watch(
   () => route.query.aiSubTab,
   (nextTab) => {
     if (props.mode === 'sql-only') {
-      activeSubTab.value = 'sql-lab'
+      if (nextTab === 'sql-lab' || (nextTab === 'tool-test' && settingsStore.debugMode)) {
+        activeSubTab.value = nextTab
+      }
       return
     }
 
     if (nextTab === 'chat-explorer' || nextTab === 'sql-lab') {
       activeSubTab.value = nextTab
+    }
+  }
+)
+
+watch(
+  () => settingsStore.debugMode,
+  (enabled) => {
+    if (!enabled && activeSubTab.value === 'tool-test') {
+      activeSubTab.value = 'sql-lab'
     }
   }
 )
@@ -78,6 +96,12 @@ defineExpose({
           :session-name="sessionName"
           :time-filter="timeFilter"
           :chat-type="chatType"
+        />
+        <!-- 基础工具测试 -->
+        <ToolTestTab
+          v-else-if="activeSubTab === 'tool-test'"
+          class="h-full"
+          :session-id="props.sessionId"
         />
         <!-- SQL 实验室 -->
         <SQLLabTab v-else class="h-full" :session-id="props.sessionId" :chat-type="props.chatType" />

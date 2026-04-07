@@ -113,6 +113,24 @@ export interface DesensitizeRule {
   locales: string[]
 }
 
+/** 工具目录条目（实验室 - 基础工具） */
+export interface ToolCatalogEntry {
+  name: string
+  category: 'core' | 'analysis'
+  description: string
+  parameters: Record<string, unknown>
+}
+
+/** 工具执行结果 */
+export interface ToolExecuteResult {
+  success: boolean
+  elapsed?: number
+  content?: Array<{ type: string; text: string }>
+  details?: Record<string, unknown>
+  error?: string
+  truncated?: boolean
+}
+
 /** 聊天记录预处理配置 */
 export interface PreprocessConfig {
   dataCleaning: boolean
@@ -500,6 +518,23 @@ export const aiApi = {
 
   mergeDesensitizeRules: (existingRules: DesensitizeRule[], locale: string): Promise<DesensitizeRule[]> => {
     return ipcRenderer.invoke('ai:mergeDesensitizeRules', existingRules, locale)
+  },
+
+  getToolCatalog: (): Promise<ToolCatalogEntry[]> => {
+    return ipcRenderer.invoke('ai:getToolCatalog')
+  },
+
+  executeTool: (
+    testId: string,
+    toolName: string,
+    params: Record<string, unknown>,
+    sessionId: string
+  ): Promise<ToolExecuteResult> => {
+    return ipcRenderer.invoke('ai:executeTool', testId, toolName, params, sessionId)
+  },
+
+  cancelToolTest: (testId: string): Promise<{ success: boolean }> => {
+    return ipcRenderer.invoke('ai:cancelToolTest', testId)
   },
 }
 

@@ -66,7 +66,18 @@
         "get_session_messages": "获取会话消息",
         "get_session_summaries": "获取会话摘要",
         "response_time_analysis": "回复时间分析",
-        "keyword_frequency": "关键词频率分析"
+        "keyword_frequency": "关键词频率分析",
+        "message_type_breakdown": "消息类型分布",
+        "peak_chat_hours_by_member": "成员活跃时段",
+        "member_activity_trend": "成员活跃趋势",
+        "silent_members": "沉默成员检测",
+        "reply_interaction_ranking": "回复互动排行",
+        "mutual_interaction_pairs": "互动频繁成员对",
+        "member_message_length_stats": "消息长度统计",
+        "daily_active_members": "每日活跃人数",
+        "conversation_initiator_stats": "话题发起者统计",
+        "activity_heatmap": "活跃度热力图",
+        "unanswered_messages": "未回复消息"
       },
       "generating": "正在生成回复...",
       "think": {
@@ -412,6 +423,22 @@
       "saveFailed": "技能保存失败",
       "deleteSuccess": "技能已删除",
       "deleteFailed": "删除失败"
+    }
+  },
+  "lab": {
+    "basicTools": "基础工具",
+    "toolTest": {
+      "selectTool": "选择工具",
+      "selectToolPlaceholder": "请选择一个工具...",
+      "coreTools": "核心工具",
+      "analysisTools": "分析工具",
+      "parameters": "参数",
+      "arrayPlaceholder": "多个值用逗号分隔",
+      "execute": "执行",
+      "cancel": "取消",
+      "elapsed": "耗时 {ms}ms",
+      "result": "执行结果",
+      "truncated": "结果过大，已截断显示。建议减小 limit 参数以获取完整数据。"
     }
   }
 }

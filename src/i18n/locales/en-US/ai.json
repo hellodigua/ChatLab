@@ -66,7 +66,18 @@
         "get_session_messages": "Get Session Messages",
         "get_session_summaries": "Get Session Summaries",
         "response_time_analysis": "Response Time Analysis",
-        "keyword_frequency": "Keyword Frequency"
+        "keyword_frequency": "Keyword Frequency",
+        "message_type_breakdown": "Message Type Breakdown",
+        "peak_chat_hours_by_member": "Peak Hours by Member",
+        "member_activity_trend": "Member Activity Trend",
+        "silent_members": "Silent Members",
+        "reply_interaction_ranking": "Reply Interaction Ranking",
+        "mutual_interaction_pairs": "Mutual Interaction Pairs",
+        "member_message_length_stats": "Message Length Stats",
+        "daily_active_members": "Daily Active Members",
+        "conversation_initiator_stats": "Conversation Initiators",
+        "activity_heatmap": "Activity Heatmap",
+        "unanswered_messages": "Unanswered Messages"
       },
       "generating": "Generating response...",
       "think": {
@@ -412,6 +423,22 @@
       "saveFailed": "Failed to save skill",
       "deleteSuccess": "Skill deleted",
       "deleteFailed": "Failed to delete"
+    }
+  },
+  "lab": {
+    "basicTools": "Basic Tools",
+    "toolTest": {
+      "selectTool": "Select Tool",
+      "selectToolPlaceholder": "Select a tool...",
+      "coreTools": "Core Tools",
+      "analysisTools": "Analysis Tools",
+      "parameters": "Parameters",
+      "arrayPlaceholder": "Separate values with commas",
+      "execute": "Execute",
+      "cancel": "Cancel",
+      "elapsed": "Elapsed {ms}ms",
+      "result": "Result",
+      "truncated": "Result too large, truncated. Try reducing the limit parameter for complete data."
     }
   }
 }

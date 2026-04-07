@@ -66,7 +66,18 @@
         "get_session_messages": "取得會話訊息",
         "get_session_summaries": "取得會話摘要",
         "response_time_analysis": "回覆時間分析",
-        "keyword_frequency": "關鍵詞頻率分析"
+        "keyword_frequency": "關鍵詞頻率分析",
+        "message_type_breakdown": "訊息類型分佈",
+        "peak_chat_hours_by_member": "成員活躍時段",
+        "member_activity_trend": "成員活躍趨勢",
+        "silent_members": "沉默成員偵測",
+        "reply_interaction_ranking": "回覆互動排行",
+        "mutual_interaction_pairs": "互動頻繁成員對",
+        "member_message_length_stats": "訊息長度統計",
+        "daily_active_members": "每日活躍人數",
+        "conversation_initiator_stats": "話題發起者統計",
+        "activity_heatmap": "活躍度熱力圖",
+        "unanswered_messages": "未回覆訊息"
       },
       "generating": "正在產生回覆...",
       "think": {
@@ -376,6 +387,22 @@
     },
     "active": {
       "label": "主動呼叫技能：{name}"
+    }
+  },
+  "lab": {
+    "basicTools": "基礎工具",
+    "toolTest": {
+      "selectTool": "選擇工具",
+      "selectToolPlaceholder": "請選擇一個工具...",
+      "coreTools": "核心工具",
+      "analysisTools": "分析工具",
+      "parameters": "參數",
+      "arrayPlaceholder": "多個值用逗號分隔",
+      "execute": "執行",
+      "cancel": "取消",
+      "elapsed": "耗時 {ms}ms",
+      "result": "執行結果",
+      "truncated": "結果過大，已截斷顯示。建議減小 limit 參數以獲取完整資料。"
     }
   }
 }

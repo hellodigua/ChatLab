@@ -377,6 +377,9 @@ interface AiApi {
   showAiLogFile: () => Promise<{ success: boolean; path?: string; error?: string }>
   getDefaultDesensitizeRules: (locale: string) => Promise<DesensitizeRule[]>
   mergeDesensitizeRules: (existingRules: DesensitizeRule[], locale: string) => Promise<DesensitizeRule[]>
+  getToolCatalog: () => Promise<ToolCatalogEntry[]>
+  executeTool: (testId: string, toolName: string, params: Record<string, unknown>, sessionId: string) => Promise<ToolExecuteResult>
+  cancelToolTest: (testId: string) => Promise<{ success: boolean }>
   // 自定义筛选（支持分页）
   filterMessagesWithContext: (
     sessionId: string,
@@ -630,6 +633,24 @@ interface DesensitizeRule {
   enabled: boolean
   builtin: boolean
   locales: string[]
+}
+
+/** 工具目录条目（实验室 - 基础工具） */
+interface ToolCatalogEntry {
+  name: string
+  category: 'core' | 'analysis'
+  description: string
+  parameters: Record<string, unknown>
+}
+
+/** 工具执行结果 */
+interface ToolExecuteResult {
+  success: boolean
+  elapsed?: number
+  content?: Array<{ type: string; text: string }>
+  details?: Record<string, unknown>
+  error?: string
+  truncated?: boolean
 }
 
 /** 聊天记录预处理配置 */
@@ -1053,6 +1074,8 @@ export {
   ToolContext,
   DesensitizeRule,
   PreprocessConfig,
+  ToolCatalogEntry,
+  ToolExecuteResult,
   TokenUsage,
   CacheDirectoryInfo,
   CacheInfo,

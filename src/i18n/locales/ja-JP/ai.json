@@ -66,7 +66,18 @@
         "get_session_messages": "セッションメッセージを取得",
         "get_session_summaries": "セッション要約を取得",
         "response_time_analysis": "応答時間分析",
-        "keyword_frequency": "キーワード頻度分析"
+        "keyword_frequency": "キーワード頻度分析",
+        "message_type_breakdown": "メッセージ種別分布",
+        "peak_chat_hours_by_member": "メンバー活動時間帯",
+        "member_activity_trend": "メンバー活動傾向",
+        "silent_members": "休眠メンバー検出",
+        "reply_interaction_ranking": "返信インタラクションランキング",
+        "mutual_interaction_pairs": "頻繁なインタラクションペア",
+        "member_message_length_stats": "メッセージ長統計",
+        "daily_active_members": "日別アクティブ人数",
+        "conversation_initiator_stats": "話題開始者統計",
+        "activity_heatmap": "活動ヒートマップ",
+        "unanswered_messages": "未返信メッセージ"
       },
       "generating": "回答を作成中...",
       "think": {
@@ -376,6 +387,22 @@
     },
     "active": {
       "label": "手動呼び出しスキル：{name}"
+    }
+  },
+  "lab": {
+    "basicTools": "基本ツール",
+    "toolTest": {
+      "selectTool": "ツールを選択",
+      "selectToolPlaceholder": "ツールを選択してください...",
+      "coreTools": "コアツール",
+      "analysisTools": "分析ツール",
+      "parameters": "パラメータ",
+      "arrayPlaceholder": "カンマで区切って入力",
+      "execute": "実行",
+      "cancel": "キャンセル",
+      "elapsed": "所要時間 {ms}ms",
+      "result": "実行結果",
+      "truncated": "結果が大きすぎるため、切り捨てて表示しています。limit パラメータを小さくしてください。"
     }
   }
 }

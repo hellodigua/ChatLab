@@ -21,6 +21,7 @@ import {
 } from '@mariozechner/pi-ai'
 import { t } from '../i18n'
 import type { ToolContext } from '../ai/tools/types'
+import { TOOL_REGISTRY } from '../ai/tools/definitions'
 import { getDefaultRulesForLocale, mergeRulesForLocale } from '../ai/preprocessor/builtin-rules'
 import type { IpcContext } from './types'
 
@@ -145,6 +146,29 @@ function formatAIError(error: unknown, provider?: llm.LLMProvider): string {
   }
 
   return friendlyMessage
+}
+
+/**
+ * 递归剥离对象中的 avatar/senderAvatar 字段（base64 大数据）
+ * 用于工具测试场景，避免传输和序列化大量无用头像数据
+ */
+function stripAvatarFields(obj: unknown): void {
+  if (!obj || typeof obj !== 'object') return
+  if (Array.isArray(obj)) {
+    for (const item of obj) stripAvatarFields(item)
+    return
+  }
+  const record = obj as Record<string, unknown>
+  for (const key of Object.keys(record)) {
+    if ((key === 'avatar' || key === 'senderAvatar') && typeof record[key] === 'string') {
+      const val = record[key] as string
+      if (val.length > 200) {
+        record[key] = '[stripped]'
+      }
+    } else if (typeof record[key] === 'object' && record[key] !== null) {
+      stripAvatarFields(record[key])
+    }
+  }
 }
 
 export function registerAIHandlers({ win }: IpcContext): void {
@@ -818,6 +842,94 @@ export function registerAIHandlers({ win }: IpcContext): void {
       console.error('Failed to import skill from markdown:', error)
       return { success: false, error: String(error) }
     }
+  })
+
+  // ==================== 工具测试 API（实验室 - 基础工具） ====================
+
+  const activeToolTests = new Map<string, AbortController>()
+
+  ipcMain.handle('ai:getToolCatalog', async () => {
+    try {
+      return TOOL_REGISTRY.map((entry) => {
+        const dummyContext: ToolContext = { sessionId: '__catalog__' }
+        const tool = entry.factory(dummyContext)
+        const descKey = `ai.tools.${entry.name}.desc`
+        const translated = t(descKey)
+        return {
+          name: entry.name,
+          category: entry.category,
+          description: translated !== descKey ? translated : (tool.description ?? ''),
+          parameters: tool.parameters ?? {},
+        }
+      })
+    } catch (error) {
+      console.error('Failed to get tool catalog:', error)
+      return []
+    }
+  })
+
+  ipcMain.handle(
+    'ai:executeTool',
+    async (_, testId: string, toolName: string, params: Record<string, unknown>, sessionId: string) => {
+      const MAX_RESULT_CHARS = 500_000
+      const abortController = new AbortController()
+      activeToolTests.set(testId, abortController)
+
+      try {
+        const entry = TOOL_REGISTRY.find((e) => e.name === toolName)
+        if (!entry) {
+          return { success: false, error: `Tool not found: ${toolName}` }
+        }
+
+        const context: ToolContext = { sessionId }
+        const tool = entry.factory(context)
+        const startTime = Date.now()
+        const result = await tool.execute(`test_${Date.now()}`, params)
+        const elapsed = Date.now() - startTime
+
+        if (abortController.signal.aborted) {
+          return { success: false, error: 'cancelled' }
+        }
+
+        let details = result.details as Record<string, unknown> | undefined
+        let truncated = false
+
+        if (details) {
+          stripAvatarFields(details)
+          const raw = JSON.stringify(details)
+          if (raw.length > MAX_RESULT_CHARS) {
+            truncated = true
+            details = { _truncated: true, _originalSize: raw.length, _preview: raw.slice(0, MAX_RESULT_CHARS) }
+          }
+        }
+
+        return {
+          success: true,
+          elapsed,
+          content: result.content,
+          details,
+          truncated,
+        }
+      } catch (error) {
+        if (abortController.signal.aborted) {
+          return { success: false, error: 'cancelled' }
+        }
+        console.error(`Failed to execute tool ${toolName}:`, error)
+        return { success: false, error: String(error) }
+      } finally {
+        activeToolTests.delete(testId)
+      }
+    }
+  )
+
+  ipcMain.handle('ai:cancelToolTest', async (_, testId: string) => {
+    const controller = activeToolTests.get(testId)
+    if (controller) {
+      controller.abort()
+      activeToolTests.delete(testId)
+      return { success: true }
+    }
+    return { success: false }
   })
 
   // ==================== AI Agent API ====================
