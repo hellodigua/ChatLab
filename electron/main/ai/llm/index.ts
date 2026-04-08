@@ -14,129 +14,66 @@ import { encryptApiKey, decryptApiKey, isEncrypted } from './crypto'
 import { t } from '../../i18n'
 import { completeSimple, type Model as PiModel } from '@mariozechner/pi-ai'
 
-// 导出类型
+// 新模型系统导出
+export { BUILTIN_PROVIDERS, getBuiltinProviderById } from './provider-registry'
+export { BUILTIN_MODELS, getBuiltinModelsByProvider, getBuiltinModelById } from './model-catalog'
+export {
+  loadCustomProviders,
+  addCustomProvider,
+  updateCustomProvider,
+  deleteCustomProvider,
+} from './custom-provider-store'
+export { loadCustomModels, addCustomModel, updateCustomModel, deleteCustomModel } from './custom-model-store'
+export * from './model-types'
+
+// 兼容类型导出
 export * from './types'
 
-// ==================== 新增提供商信息 ====================
+// ==================== 合并 Registry / Catalog（内置 + 自定义）====================
 
-/** DeepSeek 提供商信息 */
-const DEEPSEEK_INFO: ProviderInfo = {
-  id: 'deepseek',
-  name: 'DeepSeek',
-  description: 'DeepSeek AI 大语言模型',
-  defaultBaseUrl: 'https://api.deepseek.com/v1',
-  models: [
-    { id: 'deepseek-chat', name: 'DeepSeek Chat', description: '通用对话模型' },
-    { id: 'deepseek-coder', name: 'DeepSeek Coder', description: '代码生成模型' },
-  ],
+import { BUILTIN_PROVIDERS, getBuiltinProviderById } from './provider-registry'
+import { BUILTIN_MODELS, getBuiltinModelsByProvider } from './model-catalog'
+import { loadCustomProviders } from './custom-provider-store'
+import { loadCustomModels } from './custom-model-store'
+import type { ProviderDefinition, ModelDefinition } from './model-types'
+
+/** 获取完整 provider registry（内置 + 自定义） */
+export function getProviderRegistry(): ProviderDefinition[] {
+  return [...BUILTIN_PROVIDERS, ...loadCustomProviders()]
 }
 
-/** 通义千问 (Qwen) 提供商信息 */
-const QWEN_INFO: ProviderInfo = {
-  id: 'qwen',
-  name: '通义千问',
-  description: '阿里云通义千问大语言模型',
-  defaultBaseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-  models: [
-    { id: 'qwen-turbo', name: 'Qwen Turbo', description: '通义千问超大规模语言模型，速度快' },
-    { id: 'qwen-plus', name: 'Qwen Plus', description: '通义千问超大规模语言模型，效果好' },
-    { id: 'qwen-max', name: 'Qwen Max', description: '通义千问千亿级别超大规模语言模型' },
-  ],
+/** 获取完整 model catalog（内置 + 自定义） */
+export function getModelCatalog(): ModelDefinition[] {
+  return [...BUILTIN_MODELS, ...loadCustomModels()]
 }
 
-/** MiniMax 提供商信息 */
-const MINIMAX_INFO: ProviderInfo = {
-  id: 'minimax',
-  name: 'MiniMax',
-  description: 'MiniMax 大语言模型，支持多模态和长上下文',
-  defaultBaseUrl: 'https://api.minimaxi.com/v1',
-  models: [
-    { id: 'MiniMax-M2', name: 'MiniMax-M2', description: '旗舰模型' },
-    { id: 'MiniMax-M2-Stable', name: 'MiniMax-M2-Stable', description: '稳定版本' },
-  ],
+/** 获取指定 provider 下的全部模型（内置 + 自定义） */
+export function getModelsByProvider(providerId: string): ModelDefinition[] {
+  return [...getBuiltinModelsByProvider(providerId), ...loadCustomModels().filter((m) => m.providerId === providerId)]
 }
 
-/** 智谱 GLM 提供商信息 */
-const GLM_INFO: ProviderInfo = {
-  id: 'glm',
-  name: 'GLM',
-  description: '智谱 AI 大语言模型，ChatGLM 系列',
-  defaultBaseUrl: 'https://open.bigmodel.cn/api/paas/v4',
-  models: [
-    { id: 'glm-4-plus', name: 'GLM-4-Plus', description: '旗舰模型，效果最佳' },
-    { id: 'glm-4-flash', name: 'GLM-4-Flash', description: '高速模型，性价比高' },
-    { id: 'glm-4', name: 'GLM-4', description: '标准模型' },
-    { id: 'glm-4v-plus', name: 'GLM-4V-Plus', description: '多模态视觉模型' },
-    { id: 'glm-4.6v-flash', name: '4.6V免费版', description: '4.6V免费版模型' },
-    { id: 'glm-4.5-flash', name: '4.5免费版', description: '4.5免费版模型' },
-  ],
+/** 按 id 查找 provider（内置优先） */
+export function getProviderDefinitionById(id: string): ProviderDefinition | null {
+  return getBuiltinProviderById(id) || loadCustomProviders().find((p) => p.id === id) || null
 }
 
-/** Kimi (月之暗面 Moonshot) 提供商信息 */
-const KIMI_INFO: ProviderInfo = {
-  id: 'kimi',
-  name: 'Kimi',
-  description: 'Moonshot AI 大语言模型，支持超长上下文',
-  defaultBaseUrl: 'https://api.moonshot.cn/v1',
-  models: [
-    { id: 'moonshot-v1-8k', name: 'Moonshot-V1-8K', description: '8K 上下文' },
-    { id: 'moonshot-v1-32k', name: 'Moonshot-V1-32K', description: '32K 上下文' },
-    { id: 'moonshot-v1-128k', name: 'Moonshot-V1-128K', description: '128K 超长上下文' },
-  ],
+function providerDefinitionToInfo(def: ProviderDefinition): ProviderInfo {
+  const models = getBuiltinModelsByProvider(def.id)
+  return {
+    id: def.id,
+    name: def.name,
+    defaultBaseUrl: def.defaultBaseUrl,
+    models: models
+      .filter((m) => !m.capabilities.includes('embedding') && !m.capabilities.includes('ranking'))
+      .map((m) => ({ id: m.id, name: m.name, description: m.description })),
+  }
 }
 
-/** 豆包 (字节跳动 ByteDance) 提供商信息 */
-const DOUBAO_INFO: ProviderInfo = {
-  id: 'doubao',
-  name: '豆包',
-  description: '字节跳动豆包 AI 大语言模型',
-  defaultBaseUrl: 'https://ark.cn-beijing.volces.com/api/v3',
-  models: [
-    { id: 'doubao-seed-1-6-lite-251015', name: '豆包1.6-lite', description: '豆包1.6模型，性价比' },
-    { id: 'doubao-seed-1-6-251015', name: '豆包1.6', description: '更强豆包1.6模型' },
-    { id: 'doubao-seed-1-6-flash-250828', name: '豆包1.6-flash', description: '更快的豆包1.6模型' },
-    { id: 'doubao-1-5-lite-32k-250115', name: '豆包1.5-lite', description: '豆包1.5Pro模型模型' },
-  ],
-}
-
-/** Gemini 提供商信息 */
-const GEMINI_INFO: ProviderInfo = {
-  id: 'gemini',
-  name: 'Gemini',
-  description: 'Google Gemini 大语言模型',
-  defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
-  models: [
-    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', description: '高性价比，低延迟，适合大多数场景' },
-    { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', description: '深度推理与复杂任务' },
-    { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash Preview', description: '前沿性能，预览版' },
-    { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro Preview', description: '最先进推理模型，预览版' },
-  ],
-}
-
-/** OpenAI 兼容提供商信息 */
-const OPENAI_COMPATIBLE_INFO: ProviderInfo = {
-  id: 'openai-compatible',
-  name: 'OpenAI 兼容',
-  description: '支持任何兼容 OpenAI API 的服务（如 Ollama、LocalAI、vLLM 等）',
-  defaultBaseUrl: 'http://localhost:11434/v1',
-  models: [
-    { id: 'llama3.2', name: 'Llama 3.2', description: 'Meta Llama 3.2 模型' },
-    { id: 'qwen2.5', name: 'Qwen 2.5', description: '通义千问 2.5 模型' },
-    { id: 'deepseek-r1', name: 'DeepSeek R1', description: 'DeepSeek R1 推理模型' },
-  ],
-}
-
-// 所有支持的提供商信息
-export const PROVIDERS: ProviderInfo[] = [
-  DEEPSEEK_INFO,
-  QWEN_INFO,
-  GEMINI_INFO,
-  MINIMAX_INFO,
-  GLM_INFO,
-  KIMI_INFO,
-  DOUBAO_INFO,
-  OPENAI_COMPATIBLE_INFO,
-]
+/**
+ * 所有 provider 信息（兼容旧格式）
+ * @deprecated 使用 BUILTIN_PROVIDERS 代替
+ */
+export const PROVIDERS: ProviderInfo[] = BUILTIN_PROVIDERS.map(providerDefinitionToInfo)
 
 // 配置文件路径
 let CONFIG_PATH: string | null = null
@@ -156,23 +93,18 @@ interface LegacyStoredConfig {
   maxTokens?: number
 }
 
-/**
- * 检测是否为旧格式配置
- */
 function isLegacyConfig(data: unknown): data is LegacyStoredConfig {
   if (!data || typeof data !== 'object') return false
   const obj = data as Record<string, unknown>
   return 'provider' in obj && 'apiKey' in obj && !('configs' in obj)
 }
 
-/**
- * 迁移旧配置到新格式
- */
 function migrateLegacyConfig(legacy: LegacyStoredConfig): AIConfigStore {
   const now = Date.now()
+  const providerDef = getBuiltinProviderById(legacy.provider)
   const newConfig: AIServiceConfig = {
     id: randomUUID(),
-    name: getProviderInfo(legacy.provider)?.name || legacy.provider,
+    name: providerDef?.name || legacy.provider,
     provider: legacy.provider,
     apiKey: legacy.apiKey,
     model: legacy.model,
@@ -187,11 +119,87 @@ function migrateLegacyConfig(legacy: LegacyStoredConfig): AIConfigStore {
   }
 }
 
+// ==================== Schema 版本迁移 ====================
+
+import { addCustomProvider as _addCustomProviderDirect } from './custom-provider-store'
+import { addCustomModel as _addCustomModelDirect } from './custom-model-store'
+import { getBuiltinModelById } from './model-catalog'
+
+const CURRENT_SCHEMA_VERSION = 2
+
+/**
+ * MiniMax 等旧 provider 的兼容映射表
+ * 这些旧 provider 不在新 BUILTIN_PROVIDERS 中，需要自动迁移为自定义 provider
+ */
+const LEGACY_PROVIDER_FALLBACKS: Record<string, { name: string; defaultBaseUrl: string }> = {
+  minimax: { name: 'MiniMax', defaultBaseUrl: 'https://api.minimaxi.com/v1' },
+}
+
+/**
+ * 将旧 AIConfigStore (schemaVersion=1 或无) 迁移到 schemaVersion=2
+ * - provider 在新 registry 中存在 → 保持不变
+ * - provider 不存在 → 自动创建自定义 provider
+ * - model 不在 catalog 中 → 自动创建自定义 model
+ * - disableThinking / isReasoningModel → 不迁移（兼容期通过 compat 字段保留）
+ */
+function migrateToSchemaV2(store: AIConfigStore): AIConfigStore {
+  aiLogger.info('LLM', 'Migrating config store to schema v2')
+
+  for (const config of store.configs) {
+    const providerId = config.provider
+
+    if (!getBuiltinProviderById(providerId)) {
+      const fallback = LEGACY_PROVIDER_FALLBACKS[providerId]
+      if (fallback) {
+        try {
+          _addCustomProviderDirect({
+            name: fallback.name,
+            kind: 'openai-compatible',
+            defaultBaseUrl: fallback.defaultBaseUrl,
+            authMode: 'api-key',
+            supportsCustomModels: true,
+            modelIds: [],
+          })
+          aiLogger.info('LLM', `Created custom provider for legacy provider: ${providerId}`)
+        } catch {
+          // already exists
+        }
+      }
+    }
+
+    if (config.model && getBuiltinProviderById(providerId)) {
+      const modelInCatalog = getBuiltinModelById(providerId, config.model)
+      if (!modelInCatalog) {
+        try {
+          _addCustomModelDirect({
+            id: config.model,
+            providerId,
+            name: config.model,
+            capabilities: ['chat'],
+            recommendedFor: ['chat'],
+            status: 'stable',
+          })
+          aiLogger.info('LLM', `Created custom model "${config.model}" under provider "${providerId}"`)
+        } catch {
+          // already exists
+        }
+      }
+    }
+  }
+
+  return {
+    ...store,
+    configs: store.configs.map((c) => {
+      const { disableThinking: _dt, isReasoningModel: _rm, ...rest } = c as AIServiceConfig & Record<string, unknown>
+      return rest as AIServiceConfig
+    }),
+  }
+}
+
 // ==================== 多配置管理 ====================
 
 /**
  * 加载配置存储（自动处理迁移和解密）
- * 返回的配置中 API Key 已解密
  */
 export function loadConfigStore(): AIConfigStore {
   const configPath = getConfigPath()
@@ -204,21 +212,24 @@ export function loadConfigStore(): AIConfigStore {
     const content = fs.readFileSync(configPath, 'utf-8')
     const data = JSON.parse(content)
 
-    // 检查是否需要迁移旧格式
     if (isLegacyConfig(data)) {
       aiLogger.info('LLM', 'Old config format detected, migrating')
       const migrated = migrateLegacyConfig(data)
       saveConfigStore(migrated)
-      return loadConfigStore() // 重新加载以触发加密迁移
+      return loadConfigStore()
     }
 
-    const store = data as AIConfigStore
+    let store = data as AIConfigStore & { schemaVersion?: number }
 
-    // 检查是否需要加密迁移（明文 -> 加密）
+    // Schema v1 → v2 迁移
+    if (!store.schemaVersion || store.schemaVersion < CURRENT_SCHEMA_VERSION) {
+      store = { ...migrateToSchemaV2(store), schemaVersion: CURRENT_SCHEMA_VERSION } as typeof store
+      // 先解密再保存（migrateToSchemaV2 不改 apiKey 格式）
+    }
+
     let needsEncryptionMigration = false
     const decryptedConfigs = store.configs.map((config) => {
       if (config.apiKey && !isEncrypted(config.apiKey)) {
-        // 发现明文 API Key，需要加密迁移
         needsEncryptionMigration = true
         aiLogger.info('LLM', `Config "${config.name}" API Key needs encryption migration`)
       }
@@ -228,9 +239,8 @@ export function loadConfigStore(): AIConfigStore {
       }
     })
 
-    // 如果有明文 API Key，执行加密迁移
-    if (needsEncryptionMigration) {
-      aiLogger.info('LLM', 'Executing API Key encryption migration')
+    if (needsEncryptionMigration || (!data.schemaVersion && store.schemaVersion)) {
+      aiLogger.info('LLM', 'Saving migrated config store')
       saveConfigStoreRaw({
         ...store,
         configs: store.configs.map((config) => ({
@@ -252,10 +262,8 @@ export function loadConfigStore(): AIConfigStore {
 
 /**
  * 保存配置存储（自动加密 API Key）
- * 传入的配置中 API Key 应为明文
  */
 export function saveConfigStore(store: AIConfigStore): void {
-  // 加密所有 API Key 后保存
   const encryptedStore: AIConfigStore = {
     ...store,
     configs: store.configs.map((config) => ({
@@ -266,10 +274,6 @@ export function saveConfigStore(store: AIConfigStore): void {
   saveConfigStoreRaw(encryptedStore)
 }
 
-/**
- * 保存配置存储（原始写入，不加密）
- * 内部使用
- */
 function saveConfigStoreRaw(store: AIConfigStore): void {
   const configPath = getConfigPath()
   const dir = path.dirname(configPath)
@@ -281,33 +285,21 @@ function saveConfigStoreRaw(store: AIConfigStore): void {
   fs.writeFileSync(configPath, JSON.stringify(store, null, 2), 'utf-8')
 }
 
-/**
- * 获取所有配置列表
- */
 export function getAllConfigs(): AIServiceConfig[] {
   return loadConfigStore().configs
 }
 
-/**
- * 获取当前激活的配置
- */
 export function getActiveConfig(): AIServiceConfig | null {
   const store = loadConfigStore()
   if (!store.activeConfigId) return null
   return store.configs.find((c) => c.id === store.activeConfigId) || null
 }
 
-/**
- * 获取单个配置
- */
 export function getConfigById(id: string): AIServiceConfig | null {
   const store = loadConfigStore()
   return store.configs.find((c) => c.id === id) || null
 }
 
-/**
- * 添加新配置
- */
 export function addConfig(config: Omit<AIServiceConfig, 'id' | 'createdAt' | 'updatedAt'>): {
   success: boolean
   config?: AIServiceConfig
@@ -329,7 +321,6 @@ export function addConfig(config: Omit<AIServiceConfig, 'id' | 'createdAt' | 'up
 
   store.configs.push(newConfig)
 
-  // 如果是第一个配置，自动设为激活
   if (store.configs.length === 1) {
     store.activeConfigId = newConfig.id
   }
@@ -338,9 +329,6 @@ export function addConfig(config: Omit<AIServiceConfig, 'id' | 'createdAt' | 'up
   return { success: true, config: newConfig }
 }
 
-/**
- * 更新配置
- */
 export function updateConfig(
   id: string,
   updates: Partial<Omit<AIServiceConfig, 'id' | 'createdAt' | 'updatedAt'>>
@@ -362,9 +350,6 @@ export function updateConfig(
   return { success: true }
 }
 
-/**
- * 删除配置
- */
 export function deleteConfig(id: string): { success: boolean; error?: string } {
   const store = loadConfigStore()
   const index = store.configs.findIndex((c) => c.id === id)
@@ -375,7 +360,6 @@ export function deleteConfig(id: string): { success: boolean; error?: string } {
 
   store.configs.splice(index, 1)
 
-  // 如果删除的是当前激活的配置，选择第一个作为新的激活配置
   if (store.activeConfigId === id) {
     store.activeConfigId = store.configs.length > 0 ? store.configs[0].id : null
   }
@@ -384,9 +368,6 @@ export function deleteConfig(id: string): { success: boolean; error?: string } {
   return { success: true }
 }
 
-/**
- * 设置激活的配置
- */
 export function setActiveConfig(id: string): { success: boolean; error?: string } {
   const store = loadConfigStore()
   const config = store.configs.find((c) => c.id === id)
@@ -400,17 +381,11 @@ export function setActiveConfig(id: string): { success: boolean; error?: string 
   return { success: true }
 }
 
-/**
- * 检查是否有激活的配置
- */
 export function hasActiveConfig(): boolean {
   const config = getActiveConfig()
   return config !== null
 }
 
-/**
- * 不再自动补齐 Base URL，对 DeepSeek/Qwen 的格式做显式校验
- */
 function validateProviderBaseUrl(provider: LLMProvider, baseUrl?: string): void {
   if (!baseUrl) return
 
@@ -439,7 +414,8 @@ function validateProviderBaseUrl(provider: LLMProvider, baseUrl?: string): void 
 }
 
 /**
- * 获取提供商信息
+ * 获取提供商信息（兼容旧调用）
+ * @deprecated 使用 getBuiltinProviderById 代替
  */
 export function getProviderInfo(provider: LLMProvider): ProviderInfo | null {
   return PROVIDERS.find((p) => p.id === provider) || null
@@ -447,12 +423,10 @@ export function getProviderInfo(provider: LLMProvider): ProviderInfo | null {
 
 // ==================== pi-ai Model 构建 ====================
 
-/**
- * 将 AIServiceConfig 转换为 pi-ai Model 对象
- */
 export function buildPiModel(config: AIServiceConfig): PiModel<'openai-completions'> | PiModel<'google-generative-ai'> {
+  const providerDef = getBuiltinProviderById(config.provider)
   const providerInfo = getProviderInfo(config.provider)
-  const baseUrl = config.baseUrl || providerInfo?.defaultBaseUrl || ''
+  const baseUrl = config.baseUrl || providerDef?.defaultBaseUrl || providerInfo?.defaultBaseUrl || ''
   const modelId = config.model || providerInfo?.models?.[0]?.id || ''
 
   validateProviderBaseUrl(config.provider, baseUrl)
@@ -487,10 +461,6 @@ export function buildPiModel(config: AIServiceConfig): PiModel<'openai-completio
   }
 }
 
-/**
- * 验证 API Key（基于 pi-ai completeSimple）
- * 发送一个最小请求来验证 API Key 是否有效
- */
 export async function validateApiKey(
   provider: LLMProvider,
   apiKey: string,

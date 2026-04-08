@@ -14,6 +14,18 @@ import { apiServerApi } from './apis/api-server'
 
 // 为渲染进程提供统一的类型入口，避免 type-only import 指向无导出的运行时代码。
 export type { PreprocessConfig, EmbeddingServiceConfig, EmbeddingServiceConfigDisplay } from './apis/ai'
+export type {
+  ProviderDefinition,
+  ProviderKind,
+  ModelDefinition,
+  ModelCapability,
+  ModelStatus,
+  ModelRecommendedFor,
+  LLMConnectionConfig,
+  LLMConnectionConfigCompat,
+  ModelUsage,
+  ModelSelectionState,
+} from '../../electron/main/ai/llm/model-types'
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise

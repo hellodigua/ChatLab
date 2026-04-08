@@ -1,12 +1,15 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { EmbeddingServiceConfigDisplay } from '@electron/preload/index'
+import { useLLMStore } from './llm'
 
 /**
  * Embedding 配置状态管理
  * 集中管理 Embedding 配置的获取、切换和刷新
  */
 export const useEmbeddingStore = defineStore('embedding', () => {
+  const llmStore = useLLMStore()
+
   // ============ 状态 ============
 
   /** 所有配置列表 */
@@ -38,6 +41,16 @@ export const useEmbeddingStore = defineStore('embedding', () => {
 
   /** 是否达到最大配置数量 */
   const isMaxConfigs = computed(() => configs.value.length >= 10)
+
+  /** 从 Model Catalog 中筛选出 embedding 能力的模型 */
+  const embeddingModels = computed(() => {
+    return llmStore.modelCatalog.filter((m) => m.capabilities.includes('embedding'))
+  })
+
+  /** 从 Model Catalog 中筛选出 ranking 能力的模型（预留） */
+  const rankingModels = computed(() => {
+    return llmStore.modelCatalog.filter((m) => m.capabilities.includes('ranking'))
+  })
 
   /** 格式化的存储大小 */
   const vectorStoreSizeFormatted = computed(() => {
@@ -154,6 +167,8 @@ export const useEmbeddingStore = defineStore('embedding', () => {
     activeConfig,
     hasConfig,
     isMaxConfigs,
+    embeddingModels,
+    rankingModels,
     vectorStoreSizeFormatted,
     // 方法
     init,

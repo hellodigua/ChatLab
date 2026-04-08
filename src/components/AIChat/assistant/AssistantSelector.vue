@@ -109,13 +109,7 @@ function handleConfigure(id: string) {
 
       <!-- 管理助手入口 -->
       <div class="mt-6 shrink-0 text-center">
-        <UButton
-          color="primary"
-          variant="soft"
-          size="sm"
-          icon="i-heroicons-cog-6-tooth"
-          @click="emit('market')"
-        >
+        <UButton color="primary" variant="soft" size="sm" icon="i-heroicons-cog-6-tooth" @click="emit('market')">
           {{ t('ai.assistant.selector.manage') }}
         </UButton>
       </div>

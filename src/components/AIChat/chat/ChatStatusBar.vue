@@ -223,7 +223,12 @@ async function openAiLogFile() {
                   class="h-4 w-4 shrink-0"
                   :class="[config.id === activeConfig?.id ? 'text-pink-500' : 'text-gray-400']"
                 />
-                <span class="truncate">{{ config.name }}</span>
+                <div class="flex flex-col truncate">
+                  <span class="truncate">{{ config.name }}</span>
+                  <span v-if="config.model" class="truncate text-[10px] text-gray-400 dark:text-gray-500">
+                    {{ llmStore.getModelById(config.provider, config.model)?.name || config.model }}
+                  </span>
+                </div>
               </button>
             </template>
 

@@ -1,7 +1,6 @@
 {
   "deepseek": {
     "name": "DeepSeek",
-    "description": "DeepSeek の大規模言語モデル",
     "models": {
       "deepseek-chat": "汎用チャットモデル",
       "deepseek-coder": "コード生成モデル"
@@ -9,7 +8,6 @@
   },
   "qwen": {
     "name": "通義千問",
-    "description": "Alibaba Cloud Qwen 大規模言語モデル",
     "models": {
       "qwen-turbo": "Qwen の高速モデル",
       "qwen-plus": "Qwen の高性能モデル",
@@ -18,7 +16,6 @@
   },
   "gemini": {
     "name": "Gemini",
-    "description": "Google Gemini 大規模言語モデル",
     "models": {
       "gemini-3-flash-preview": "高速プレビュー版",
       "gemini-3-pro-preview": "高性能プレビュー版"
@@ -26,7 +23,6 @@
   },
   "minimax": {
     "name": "MiniMax",
-    "description": "MiniMax 大規模言語モデル。マルチモーダルと長文脈に対応",
     "models": {
       "MiniMax-M2": "フラッグシップモデル",
       "MiniMax-M2-Stable": "安定版"
@@ -34,7 +30,6 @@
   },
   "glm": {
     "name": "GLM",
-    "description": "Zhipu AI の大規模言語モデル、ChatGLM シリーズ",
     "models": {
       "glm-4-plus": "フラグシップモデル、最高性能",
       "glm-4-flash": "高速モデル、コスト性能良好",
@@ -46,7 +41,6 @@
   },
   "kimi": {
     "name": "Kimi",
-    "description": "Moonshot AI 大規模言語モデル。超長文コンテキストに対応",
     "models": {
       "moonshot-v1-8k": "8K コンテキスト",
       "moonshot-v1-32k": "32K コンテキスト",
@@ -55,7 +49,6 @@
   },
   "doubao": {
     "name": "豆包",
-    "description": "ByteDance Doubao 大規模言語モデル",
     "models": {
       "doubao-seed-1-6-lite-251015": "Doubao 1.6 軽量モデル",
       "doubao-seed-1-6-251015": "Doubao 1.6 高性能モデル",
@@ -63,13 +56,19 @@
       "doubao-1-5-lite-32k-250115": "Doubao 1.5 Pro モデル"
     }
   },
+  "siliconflow": {
+    "name": "SiliconFlow"
+  },
+  "groq": {
+    "name": "Groq"
+  },
+  "openrouter": {
+    "name": "OpenRouter"
+  },
+  "xai": {
+    "name": "xAI"
+  },
   "openai-compatible": {
-    "name": "OpenAI 互換",
-    "description": "OpenAI API互換サービスに対応（Ollama、LocalAI、vLLM など）",
-    "models": {
-      "llama3.2": "Meta Llama 3.2 モデル",
-      "qwen2.5": "通義千問 2.5 モデル",
-      "deepseek-r1": "DeepSeek R1 推論モデル"
-    }
+    "name": "OpenAI 互換"
   }
 }

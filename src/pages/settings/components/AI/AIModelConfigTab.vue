@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useLLMStore, type AIServiceConfigDisplay } from '@/stores/llm'
+import type { ProviderDefinition } from '@electron/preload/index'
 import AIModelEditModal from './AIModelEditModal.vue'
 import AlertTips from './AlertTips.vue'
 
@@ -23,7 +24,7 @@ const aiTips = computed(() => {
 // ============ Store ============
 
 const llmStore = useLLMStore()
-const { configs, providers, activeConfigId, isLoading, isMaxConfigs } = storeToRefs(llmStore)
+const { configs, providers, providerRegistry, activeConfigId, isLoading, isMaxConfigs } = storeToRefs(llmStore)
 
 // 弹窗状态
 const showEditModal = ref(false)
@@ -71,14 +72,27 @@ async function setActive(id: string) {
 }
 
 function getProviderName(providerId: string): string {
-  // Get localized provider name
   const key = `providers.${providerId}.name`
   const translated = t(key)
   if (translated !== key) {
     return translated
   }
-  // Fallback to store method
   return llmStore.getProviderName(providerId)
+}
+
+function getProviderKindLabel(providerId: string): string | null {
+  const def = providerRegistry.value.find((p: ProviderDefinition) => p.id === providerId)
+  if (!def || def.kind === 'official') return null
+  if (def.kind === 'aggregator') return t('settings.aiConfig.providerKind.aggregator')
+  if (def.kind === 'openai-compatible') return t('settings.aiConfig.providerKind.compatible')
+  if (!def.builtin) return t('settings.aiConfig.providerKind.custom')
+  return null
+}
+
+function getModelDisplayName(providerId: string, modelId?: string): string {
+  if (!modelId) return t('settings.aiConfig.defaultModel')
+  const model = llmStore.getModelById(providerId, modelId)
+  return model?.name || modelId
 }
 
 // ============ 暴露方法 ============
@@ -148,10 +162,13 @@ onMounted(() => {
                 {{ t('settings.aiConfig.inUse') }}
               </UBadge>
             </div>
-            <div class="mt-0.5 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <div class="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               <span>{{ getProviderName(config.provider) }}</span>
+              <UBadge v-if="getProviderKindLabel(config.provider)" color="neutral" variant="subtle" size="xs">
+                {{ getProviderKindLabel(config.provider) }}
+              </UBadge>
               <span>·</span>
-              <span>{{ config.model || t('settings.aiConfig.defaultModel') }}</span>
+              <span>{{ getModelDisplayName(config.provider, config.model) }}</span>
               <span v-if="config.baseUrl">·</span>
               <span v-if="config.baseUrl" class="text-violet-500">
                 {{ t('settings.aiConfig.customEndpoint') }}

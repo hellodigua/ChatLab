@@ -2,35 +2,21 @@
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from '@/stores/settings'
+import { useLLMStore } from '@/stores/llm'
+import UITabs from '@/components/UI/Tabs.vue'
 import AlertTips from './AlertTips.vue'
 import ApiKeyInput from './ApiKeyInput.vue'
-import Tabs from '@/components/UI/Tabs.vue'
 
 const { t, locale } = useI18n()
 const settingsStore = useSettingsStore()
+const llmStore = useLLMStore()
 
-// 仅在中文环境显示的提供商（中国市场特定）
-const CHINA_MARKET_PROVIDERS = ['kimi', 'doubao']
+const CHINA_MARKET_PROVIDERS = ['doubao', 'siliconflow']
 
-// Get localized provider name
 function getLocalizedProviderName(providerId: string): string {
   const key = `providers.${providerId}.name`
   const translated = t(key)
   return translated === key ? providerId : translated
-}
-
-// Get localized provider description
-function getLocalizedProviderDescription(providerId: string): string {
-  const key = `providers.${providerId}.description`
-  const translated = t(key)
-  return translated === key ? '' : translated
-}
-
-// Get localized model description
-function getLocalizedModelDescription(providerId: string, modelId: string): string {
-  const key = `providers.${providerId}.models.${modelId}`
-  const translated = t(key)
-  return translated === key ? '' : translated
 }
 
 // ============ 类型定义 ============
@@ -52,13 +38,9 @@ interface AIServiceConfig {
 interface Provider {
   id: string
   name: string
-  description: string
   defaultBaseUrl: string
   models: Array<{ id: string; name: string; description?: string }>
 }
-
-// 三种配置类型
-type ConfigType = 'preset' | 'local' | 'openai-compatible'
 
 const aiTips = computed(() => {
   const config = JSON.parse(
@@ -83,19 +65,32 @@ const emit = defineEmits<{
 
 // ============ 状态 ============
 
-const configType = ref<ConfigType>('preset')
+type ConnectionMode = 'preset' | 'local' | 'openai-compat'
+
+const connectionMode = ref<ConnectionMode>('preset')
+const connectionModeItems = computed(() => [
+  { label: t('settings.aiConfig.modal.presetService'), value: 'preset' },
+  { label: t('settings.aiConfig.modal.thirdPartyService'), value: 'openai-compat' },
+  { label: t('settings.aiConfig.modal.localService'), value: 'local' },
+])
+
 const isValidating = ref(false)
 const isSaving = ref(false)
-const showAdvanced = ref(false)
+const showValidationFailConfirm = ref(false)
+const validationFailMessage = ref('')
+
+const showAddModelDialog = ref(false)
+const newModelName = ref('')
+const newModelId = ref('')
+const compatModels = ref<Array<{ id: string; name: string }>>([])
 
 const formData = ref({
-  name: '',
   provider: '',
   apiKey: '',
   model: '',
   baseUrl: '',
-  disableThinking: true, // 默认禁用思考模式
-  isReasoningModel: false, // 是否为推理模型
+  disableThinking: true,
+  isReasoningModel: false,
 })
 
 const validationResult = ref<'idle' | 'valid' | 'invalid'>('idle')
@@ -103,12 +98,8 @@ const validationMessage = ref('')
 
 // ============ 计算属性 ============
 
-// 预设服务商（排除 openai-compatible，英文环境下排除中国市场特定提供商）
-const presetProviders = computed(() => {
-  return props.providers.filter((p) => {
-    // 排除 openai-compatible（通过另一个配置类型访问）
-    if (p.id === 'openai-compatible') return false
-    // 非中文环境下，排除中国市场特定提供商
+const registryProviders = computed(() => {
+  return llmStore.providerRegistry.filter((p) => {
     if (!settingsStore.locale.startsWith('zh') && CHINA_MARKET_PROVIDERS.includes(p.id)) {
       return false
     }
@@ -116,49 +107,58 @@ const presetProviders = computed(() => {
   })
 })
 
-const currentProvider = computed(() => {
-  return props.providers.find((p) => p.id === formData.value.provider)
+const officialProviders = computed(() =>
+  registryProviders.value.filter((p) => p.kind === 'official' && p.id !== 'openai-compatible')
+)
+
+const customProviders = computed(() => registryProviders.value.filter((p) => !p.builtin))
+
+const currentProviderDef = computed(() => llmStore.providerRegistry.find((p) => p.id === formData.value.provider))
+
+const isLocalMode = computed(() => connectionMode.value === 'local')
+const isOpenAICompat = computed(() => connectionMode.value === 'openai-compat')
+const isPresetMode = computed(() => connectionMode.value === 'preset')
+const isCompatMode = computed(() => isLocalMode.value || isOpenAICompat.value)
+
+const catalogModels = computed(() => {
+  if (!formData.value.provider) return []
+  return llmStore
+    .getModelsByProviderId(formData.value.provider)
+    .filter((m) => !m.capabilities.includes('embedding') && !m.capabilities.includes('ranking'))
 })
 
-const modelOptions = computed(() => {
-  if (!currentProvider.value) return []
-  return currentProvider.value.models.map((m) => ({
+const modelTabItems = computed(() => {
+  if (isCompatMode.value) {
+    return compatModels.value.map((m) => ({ label: m.name, value: m.id }))
+  }
+  return catalogModels.value.map((m) => ({
     label: m.name,
     value: m.id,
-    description: getLocalizedModelDescription(currentProvider.value!.id, m.id) || m.description,
   }))
 })
 
-const selectedModel = computed(() => {
-  if (!currentProvider.value) return null
-  return currentProvider.value.models.find((m) => m.id === formData.value.model)
+const selectedModelIsCustom = computed(() => {
+  if (!formData.value.model) return false
+  if (isCompatMode.value) {
+    return compatModels.value.some((m) => m.id === formData.value.model)
+  }
+  const model = catalogModels.value.find((m) => m.id === formData.value.model)
+  return model ? !model.builtin : false
 })
 
 const canSave = computed(() => {
   const { provider, apiKey, baseUrl, model } = formData.value
 
-  if (props.mode === 'add') {
-    switch (configType.value) {
-      case 'preset':
-        // 预设服务：需要提供商、API Key（名称选填）
-        return provider && apiKey.trim()
-      case 'local':
-        // 本地服务：需要端点、模型名（名称选填）
-        return baseUrl.trim() && model.trim()
-      case 'openai-compatible':
-        // OpenAI 兼容：需要端点、API Key、模型名（名称选填）
-        return baseUrl.trim() && apiKey.trim() && model.trim()
-    }
-  }
-
-  // 编辑模式
-  if (formData.value.provider === 'openai-compatible') {
-    if (configType.value === 'local') {
-      return baseUrl.trim() && model.trim()
-    }
+  if (isLocalMode.value) {
     return baseUrl.trim() && model.trim()
   }
-  return provider
+
+  if (isOpenAICompat.value) {
+    return baseUrl.trim() && apiKey.trim() && model.trim()
+  }
+
+  if (!provider) return false
+  return apiKey.trim()
 })
 
 const modalTitle = computed(() =>
@@ -168,80 +168,158 @@ const modalTitle = computed(() =>
 // ============ 方法 ============
 
 function resetForm() {
-  configType.value = 'preset'
-  showAdvanced.value = false
+  connectionMode.value = 'preset'
+  compatModels.value = []
+  const defaultProvider = officialProviders.value[0]?.id || ''
+  const defaultModels = defaultProvider ? llmStore.getModelsByProviderId(defaultProvider) : []
+  const defaultChat = defaultModels.find((m) => m.recommendedFor.includes('chat'))
+  const defaultProviderDef = defaultProvider ? llmStore.providerRegistry.find((p) => p.id === defaultProvider) : null
   formData.value = {
-    name: '',
-    provider: presetProviders.value[0]?.id || '',
+    provider: defaultProvider,
     apiKey: '',
-    model: presetProviders.value[0]?.models[0]?.id || '',
-    baseUrl: '',
-    disableThinking: true, // 默认禁用思考模式
-    isReasoningModel: false, // 是否为推理模型
+    model: defaultChat?.id || defaultModels[0]?.id || '',
+    baseUrl: defaultProviderDef?.defaultBaseUrl || '',
+    disableThinking: true,
+    isReasoningModel: false,
   }
   validationResult.value = 'idle'
   validationMessage.value = ''
 }
 
 function initFromConfig(config: AIServiceConfig) {
-  // 判断配置类型
-  if (config.provider === 'openai-compatible') {
-    // 根据是否有 API Key 和 baseUrl 判断是本地还是 OpenAI 兼容
-    const isLocal = !config.apiKeySet || (config.baseUrl?.includes('localhost') ?? false)
-    configType.value = isLocal ? 'local' : 'openai-compatible'
-    showAdvanced.value = isLocal && !!config.apiKeySet
+  const providerDef = llmStore.providerRegistry.find((p) => p.id === config.provider)
+  const isCompat = config.provider === 'openai-compatible' || config.provider.startsWith('custom:')
+  const hasModelInCatalog = !!(config.model && llmStore.getModelById(config.provider, config.model))
+
+  if (isCompat) {
+    const looksLocal = !config.apiKeySet || (config.baseUrl?.includes('localhost') ?? false)
+    connectionMode.value = looksLocal ? 'local' : 'openai-compat'
+    compatModels.value = config.model ? [{ id: config.model, name: config.model }] : []
   } else {
-    configType.value = 'preset'
-    showAdvanced.value = false
+    connectionMode.value = 'preset'
+    compatModels.value = []
   }
 
   formData.value = {
-    name: config.name,
     provider: config.provider,
-    apiKey: config.apiKey || '', // 编辑时填充已有的 API Key
-    model: config.model || '',
-    baseUrl: config.baseUrl || '',
-    disableThinking: config.disableThinking ?? true, // 默认禁用
-    isReasoningModel: config.isReasoningModel ?? false, // 是否为推理模型
+    apiKey: config.apiKey || '',
+    model: isCompat ? config.model || '' : hasModelInCatalog ? config.model || '' : '',
+    baseUrl: config.baseUrl || providerDef?.defaultBaseUrl || '',
+    disableThinking: config.disableThinking ?? true,
+    isReasoningModel: config.isReasoningModel ?? false,
   }
   validationResult.value = 'idle'
   validationMessage.value = ''
 }
 
-function switchConfigType(type: ConfigType) {
-  configType.value = type
+function selectProvider(providerId: string) {
+  formData.value.provider = providerId
   validationResult.value = 'idle'
   validationMessage.value = ''
-  showAdvanced.value = false
 
-  switch (type) {
-    case 'preset':
-      formData.value.provider = presetProviders.value[0]?.id || ''
-      formData.value.model = presetProviders.value[0]?.models[0]?.id || ''
-      formData.value.baseUrl = ''
-      formData.value.apiKey = ''
-      break
-    case 'local':
-      formData.value.provider = 'openai-compatible'
-      formData.value.model = ''
-      formData.value.baseUrl = 'http://localhost:11434/v1'
-      formData.value.apiKey = ''
-      break
-    case 'openai-compatible':
-      formData.value.provider = 'openai-compatible'
-      formData.value.model = ''
-      formData.value.baseUrl = ''
-      formData.value.apiKey = ''
-      break
+  formData.value.baseUrl = llmStore.providerRegistry.find((p) => p.id === providerId)?.defaultBaseUrl || ''
+  const models = llmStore.getModelsByProviderId(providerId)
+  const chatModels = models.filter((m) => m.recommendedFor.includes('chat'))
+  formData.value.model = chatModels[0]?.id || models[0]?.id || ''
+  formData.value.apiKey = ''
+}
+
+function onConnectionModeChange(mode: string | number) {
+  connectionMode.value = mode as ConnectionMode
+  validationResult.value = 'idle'
+  validationMessage.value = ''
+
+  if (mode === 'local') {
+    formData.value.provider = 'openai-compatible'
+    formData.value.baseUrl = 'http://localhost:11434/v1'
+    formData.value.model = compatModels.value[0]?.id || ''
+    formData.value.apiKey = ''
+  } else if (mode === 'openai-compat') {
+    formData.value.provider = 'openai-compatible'
+    formData.value.baseUrl = ''
+    formData.value.model = compatModels.value[0]?.id || ''
+    formData.value.apiKey = ''
+  } else {
+    compatModels.value = []
+    const defaultProvider = officialProviders.value[0]?.id || ''
+    formData.value.provider = defaultProvider
+    formData.value.baseUrl = llmStore.providerRegistry.find((p) => p.id === defaultProvider)?.defaultBaseUrl || ''
+    const models = defaultProvider ? llmStore.getModelsByProviderId(defaultProvider) : []
+    const chatModels = models.filter((m) => m.recommendedFor.includes('chat'))
+    formData.value.model = chatModels[0]?.id || models[0]?.id || ''
+    formData.value.apiKey = ''
+  }
+}
+
+function openAddModelDialog() {
+  newModelName.value = ''
+  newModelId.value = ''
+  showAddModelDialog.value = true
+}
+
+async function confirmAddModel() {
+  const modelId = newModelId.value.trim()
+  const modelName = newModelName.value.trim() || modelId
+  if (!modelId) return
+
+  if (isCompatMode.value) {
+    if (!compatModels.value.some((m) => m.id === modelId)) {
+      compatModels.value.push({ id: modelId, name: modelName })
+    }
+    formData.value.model = modelId
+    showAddModelDialog.value = false
+    return
+  }
+
+  const providerId = formData.value.provider || 'openai-compatible'
+
+  try {
+    await window.llmApi.addCustomModel({
+      id: modelId,
+      providerId,
+      name: modelName,
+      capabilities: ['chat'],
+      recommendedFor: [],
+      description: '',
+      status: 'stable',
+    })
+    await llmStore.refreshConfigs()
+    formData.value.model = modelId
+    showAddModelDialog.value = false
+  } catch (error) {
+    console.error('添加自定义模型失败：', error)
+  }
+}
+
+async function deleteCustomModel(modelId: string) {
+  if (isCompatMode.value) {
+    const index = compatModels.value.findIndex((m) => m.id === modelId)
+    if (index !== -1) compatModels.value.splice(index, 1)
+    if (formData.value.model === modelId) {
+      formData.value.model = compatModels.value[0]?.id || ''
+    }
+    return
+  }
+
+  const providerId = formData.value.provider || 'openai-compatible'
+  try {
+    await window.llmApi.deleteCustomModel(providerId, modelId)
+    await llmStore.refreshConfigs()
+    if (formData.value.model === modelId) {
+      const models = catalogModels.value
+      formData.value.model = models[0]?.id || ''
+    }
+  } catch (error) {
+    console.error('删除自定义模型失败：', error)
   }
 }
 
 async function validateKey() {
   const { provider, apiKey, baseUrl } = formData.value
 
-  // 本地服务可以不需要 API Key
-  if (configType.value === 'local') {
+  if (!isPresetMode.value) {
     if (!baseUrl) return
+    if (isOpenAICompat.value && !apiKey) return
   } else {
     if (!provider || !apiKey) {
       validationResult.value = 'idle'
@@ -265,7 +343,6 @@ async function validateKey() {
     if (result.success) {
       validationMessage.value = t('settings.aiConfig.modal.validationSuccess')
     } else {
-      // 显示详细的错误信息
       validationMessage.value = result.error || t('settings.aiConfig.modal.validationFailed')
     }
   } catch (error) {
@@ -276,48 +353,40 @@ async function validateKey() {
   }
 }
 
-/**
- * 生成默认配置名称
- */
-function getDefaultName(): string {
-  switch (configType.value) {
-    case 'preset': {
-      // 使用服务商名称
-      const provider = props.providers.find((p) => p.id === formData.value.provider)
-      return provider?.name || formData.value.provider
-    }
-    case 'local':
-    case 'openai-compatible': {
-      // 使用 API 端点（简化显示）
-      try {
-        const url = new URL(formData.value.baseUrl)
-        return url.hostname
-      } catch {
+function generateName(): string {
+  const def = currentProviderDef.value
+  const providerName = def
+    ? getLocalizedProviderName(def.id) || def.name
+    : (() => {
+        const legacy = props.providers.find((p) => p.id === formData.value.provider)
+        if (legacy) return legacy.name
+        try {
+          return new URL(formData.value.baseUrl).hostname
+        } catch {
+          /* ignore */
+        }
         return formData.value.baseUrl || t('settings.aiConfig.modal.customService')
-      }
-    }
-    default:
-      return t('settings.aiConfig.modal.unnamedConfig')
-  }
+      })()
+
+  const modelId = formData.value.model.trim()
+  if (!modelId) return providerName
+
+  const modelDef = llmStore.getModelById(formData.value.provider, modelId)
+  const modelName = modelDef?.name || modelId
+  return `${providerName} - ${modelName}`
 }
 
-async function saveConfig() {
-  if (!canSave.value) return
-
+async function doSave() {
   isSaving.value = true
   try {
-    // 确定最终的 provider
-    const finalProvider = configType.value === 'preset' ? formData.value.provider : 'openai-compatible'
-
-    // 确定 API Key
+    const finalProvider = formData.value.provider
     let finalApiKey = formData.value.apiKey.trim()
-    if (!finalApiKey && configType.value === 'local') {
+    if (!finalApiKey && isLocalMode.value) {
       finalApiKey = 'sk-no-key-required'
     }
+    const finalName = generateName()
 
-    // 确定名称（如果未填写则自动生成）
-    const finalName = formData.value.name.trim() || getDefaultName()
-
+    const isReasoning = formData.value.isReasoningModel
     if (props.mode === 'add') {
       const result = await window.llmApi.addConfig({
         name: finalName,
@@ -325,9 +394,8 @@ async function saveConfig() {
         apiKey: finalApiKey,
         model: formData.value.model.trim() || undefined,
         baseUrl: formData.value.baseUrl.trim() || undefined,
-        // 仅本地服务才传递这些选项
-        disableThinking: configType.value === 'local' ? formData.value.disableThinking : undefined,
-        isReasoningModel: configType.value === 'local' ? formData.value.isReasoningModel : undefined,
+        disableThinking: isReasoning ? formData.value.disableThinking : undefined,
+        isReasoningModel: isReasoning || undefined,
       })
 
       if (result.success) {
@@ -342,9 +410,8 @@ async function saveConfig() {
         provider: finalProvider,
         model: formData.value.model.trim() || undefined,
         baseUrl: formData.value.baseUrl.trim() || undefined,
-        // 仅本地服务才传递这些选项
-        disableThinking: configType.value === 'local' ? formData.value.disableThinking : undefined,
-        isReasoningModel: configType.value === 'local' ? formData.value.isReasoningModel : undefined,
+        disableThinking: isReasoning ? formData.value.disableThinking : undefined,
+        isReasoningModel: isReasoning || undefined,
       }
 
       if (formData.value.apiKey.trim()) {
@@ -367,6 +434,49 @@ async function saveConfig() {
   }
 }
 
+async function saveConfig() {
+  if (!canSave.value) return
+
+  if (validationResult.value === 'valid') {
+    return doSave()
+  }
+
+  isValidating.value = true
+  try {
+    const testApiKey = formData.value.apiKey.trim() || 'sk-no-key-required'
+    const result = await window.llmApi.validateApiKey(
+      formData.value.provider || 'openai-compatible',
+      testApiKey,
+      formData.value.baseUrl.trim() || undefined,
+      formData.value.model.trim() || undefined
+    )
+
+    if (result.success) {
+      validationResult.value = 'valid'
+      validationMessage.value = ''
+      return doSave()
+    }
+
+    validationResult.value = 'invalid'
+    validationFailMessage.value = result.error || t('settings.aiConfig.modal.validationFailed')
+    showValidationFailConfirm.value = true
+  } catch (error) {
+    validationFailMessage.value = String(error)
+    showValidationFailConfirm.value = true
+  } finally {
+    isValidating.value = false
+  }
+}
+
+function confirmSaveAnyway() {
+  showValidationFailConfirm.value = false
+  doSave()
+}
+
+function cancelSave() {
+  showValidationFailConfirm.value = false
+}
+
 function closeModal() {
   emit('update:open', false)
 }
@@ -387,18 +497,6 @@ watch(
 )
 
 watch(
-  () => formData.value.provider,
-  (newProvider) => {
-    const provider = props.providers.find((p) => p.id === newProvider)
-    if (provider && provider.models.length > 0 && configType.value === 'preset') {
-      formData.value.model = provider.models[0].id
-    }
-    validationResult.value = 'idle'
-    validationMessage.value = ''
-  }
-)
-
-watch(
   () => formData.value.apiKey,
   () => {
     validationResult.value = 'idle'
@@ -408,147 +506,83 @@ watch(
 </script>
 
 <template>
-  <UModal :open="open" @update:open="emit('update:open', $event)">
+  <UModal :open="open" :ui="{ content: 'max-w-2xl' }" @update:open="emit('update:open', $event)">
     <template #content>
-      <div class="p-6">
+      <div class="max-h-[80vh] overflow-y-auto p-6">
         <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">{{ modalTitle }}</h3>
 
-        <!-- 配置类型选择（仅新增时显示）-->
-        <div v-if="mode === 'add'" class="mb-6">
-          <div class="grid grid-cols-3 gap-2">
-            <!-- 预设服务商 -->
-            <button
-              class="flex flex-col items-center gap-2 rounded-lg border-2 p-3 transition-colors"
-              :class="[
-                configType === 'preset'
-                  ? 'border-primary-500 bg-primary-50 dark:border-primary-400 dark:bg-primary-900/20'
-                  : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600',
-              ]"
-              @click="switchConfigType('preset')"
-            >
-              <UIcon
-                name="i-heroicons-cloud"
-                class="h-5 w-5"
-                :class="[configType === 'preset' ? 'text-primary-500' : 'text-gray-400']"
-              />
-              <div class="text-center">
-                <p
-                  class="text-xs font-medium"
-                  :class="[
-                    configType === 'preset'
-                      ? 'text-primary-600 dark:text-primary-400'
-                      : 'text-gray-700 dark:text-gray-300',
-                  ]"
-                >
-                  {{ t('settings.aiConfig.modal.officialApi') }}
-                </p>
-                <p class="mt-0.5 text-[10px] text-gray-500">{{ t('settings.aiConfig.modal.officialApiDesc') }}</p>
-              </div>
-            </button>
-
-            <!-- 本地服务 -->
-            <button
-              class="flex flex-col items-center gap-2 rounded-lg border-2 p-3 transition-colors"
-              :class="[
-                configType === 'local'
-                  ? 'border-primary-500 bg-primary-50 dark:border-primary-400 dark:bg-primary-900/20'
-                  : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600',
-              ]"
-              @click="switchConfigType('local')"
-            >
-              <UIcon
-                name="i-heroicons-server"
-                class="h-5 w-5"
-                :class="[configType === 'local' ? 'text-primary-500' : 'text-gray-400']"
-              />
-              <div class="text-center">
-                <p
-                  class="text-xs font-medium"
-                  :class="[
-                    configType === 'local'
-                      ? 'text-primary-600 dark:text-primary-400'
-                      : 'text-gray-700 dark:text-gray-300',
-                  ]"
-                >
-                  {{ t('settings.aiConfig.modal.localService') }}
-                </p>
-                <p class="mt-0.5 text-[10px] text-gray-500">{{ t('settings.aiConfig.modal.localServiceDesc') }}</p>
-              </div>
-            </button>
-
-            <!-- OpenAI 兼容 -->
-            <button
-              class="flex flex-col items-center gap-2 rounded-lg border-2 p-3 transition-colors"
-              :class="[
-                configType === 'openai-compatible'
-                  ? 'border-primary-500 bg-primary-50 dark:border-primary-400 dark:bg-primary-900/20'
-                  : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600',
-              ]"
-              @click="switchConfigType('openai-compatible')"
-            >
-              <UIcon
-                name="i-heroicons-globe-alt"
-                class="h-5 w-5"
-                :class="[configType === 'openai-compatible' ? 'text-primary-500' : 'text-gray-400']"
-              />
-              <div class="text-center">
-                <p
-                  class="text-xs font-medium"
-                  :class="[
-                    configType === 'openai-compatible'
-                      ? 'text-primary-600 dark:text-primary-400'
-                      : 'text-gray-700 dark:text-gray-300',
-                  ]"
-                >
-                  {{ t('settings.aiConfig.modal.openaiCompatible') }}
-                </p>
-                <p class="mt-0.5 text-[10px] text-gray-500">{{ t('settings.aiConfig.modal.openaiCompatibleDesc') }}</p>
-              </div>
-            </button>
-          </div>
-        </div>
-
         <div class="space-y-4">
-          <!-- 配置名称（选填） -->
-          <div>
-            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              {{ t('settings.aiConfig.modal.configName') }}
-              <span class="font-normal text-gray-400">{{ t('settings.aiConfig.modal.optional') }}</span>
-            </label>
-            <UInput
-              v-model="formData.name"
-              :placeholder="
-                configType === 'preset'
-                  ? t('settings.aiConfig.modal.configNamePlaceholderPreset')
-                  : t('settings.aiConfig.modal.configNamePlaceholderCustom')
-              "
-              class="w-full"
-            />
-          </div>
+          <!-- ===== 连接模式 Tab ===== -->
+          <UITabs
+            :model-value="connectionMode"
+            :items="connectionModeItems"
+            size="sm"
+            @update:model-value="onConnectionModeChange"
+          />
 
-          <!-- ========== 预设服务商配置 ========== -->
-          <template v-if="configType === 'preset'">
-            <!-- 模型指南提示 -->
-            <AlertTips
-              v-if="aiTips.modelGuide?.show"
-              icon="i-heroicons-information-circle"
-              :content="aiTips.modelGuide?.content"
-              class="mb-4"
-            />
-
-            <!-- 服务商选择 -->
+          <!-- ===== 预设服务模式 ===== -->
+          <template v-if="isPresetMode">
+            <!-- Provider 选择 -->
             <div>
               <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 {{ t('settings.aiConfig.modal.aiProvider') }}
               </label>
-              <Tabs
-                v-model="formData.provider"
-                :items="presetProviders.map((p) => ({ label: getLocalizedProviderName(p.id), value: p.id }))"
-                class="w-full"
-              />
-              <p v-if="currentProvider" class="mt-2 text-xs text-gray-500">
-                {{ getLocalizedProviderDescription(currentProvider.id) || currentProvider.description }}
-              </p>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="p in officialProviders"
+                  :key="p.id"
+                  class="rounded-lg border-2 px-3 py-1.5 text-xs font-medium transition-colors"
+                  :class="[
+                    formData.provider === p.id
+                      ? 'border-primary-500 bg-primary-50 text-primary-700 dark:border-primary-400 dark:bg-primary-900/20 dark:text-primary-300'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-300 dark:border-gray-700 dark:text-gray-400 dark:hover:border-gray-600',
+                  ]"
+                  @click="selectProvider(p.id)"
+                >
+                  {{ getLocalizedProviderName(p.id) || p.name }}
+                </button>
+
+                <button
+                  v-for="p in customProviders"
+                  :key="p.id"
+                  class="rounded-lg border-2 px-3 py-1.5 text-xs font-medium transition-colors"
+                  :class="[
+                    formData.provider === p.id
+                      ? 'border-primary-500 bg-primary-50 text-primary-700 dark:border-primary-400 dark:bg-primary-900/20 dark:text-primary-300'
+                      : 'border-dashed border-gray-300 text-gray-500 hover:border-gray-400 dark:border-gray-600 dark:text-gray-400',
+                  ]"
+                  @click="selectProvider(p.id)"
+                >
+                  {{ p.name }}
+                </button>
+              </div>
+
+              <!-- Provider 说明卡片 -->
+              <div
+                v-if="currentProviderDef && (currentProviderDef.website || currentProviderDef.consoleUrl)"
+                class="mt-3 rounded-lg border border-gray-100 bg-gray-50/50 px-3 py-2 dark:border-gray-800 dark:bg-gray-800/50"
+              >
+                <div class="flex gap-3">
+                  <a
+                    v-if="currentProviderDef.website"
+                    :href="currentProviderDef.website"
+                    target="_blank"
+                    rel="noopener"
+                    class="text-[10px] text-primary-500 hover:underline"
+                  >
+                    {{ t('settings.aiConfig.modal.visitWebsite') }}
+                  </a>
+                  <a
+                    v-if="currentProviderDef.consoleUrl"
+                    :href="currentProviderDef.consoleUrl"
+                    target="_blank"
+                    rel="noopener"
+                    class="text-[10px] text-primary-500 hover:underline"
+                  >
+                    {{ t('settings.aiConfig.modal.getApiKey') }}
+                  </a>
+                </div>
+              </div>
             </div>
 
             <!-- API Key -->
@@ -563,25 +597,61 @@ watch(
               @validate="validateKey"
             />
 
+            <!-- API 端点（官方 Provider 自定义 URL） -->
+            <div>
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {{ t('settings.aiConfig.modal.apiEndpoint') }}
+              </label>
+              <UInput
+                v-model="formData.baseUrl"
+                class="mt-2 w-full"
+                :placeholder="currentProviderDef?.defaultBaseUrl || 'https://api.example.com/v1'"
+              />
+              <p class="mt-1 text-[10px] text-gray-400">
+                {{ t('settings.aiConfig.modal.apiEndpointOverrideHint') }}
+              </p>
+            </div>
+
             <!-- 模型选择 -->
             <div>
               <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 {{ t('settings.aiConfig.modal.model') }}
               </label>
-              <Tabs v-model="formData.model" :items="modelOptions" />
-              <!-- 模型详情 -->
-              <div v-if="selectedModel && currentProvider" class="mt-3 rounded-md p-3 text-xs text-gray-500">
-                <p class="mb-1 text-gray-700 dark:text-gray-300">
-                  {{ selectedModel.id }}：{{
-                    getLocalizedModelDescription(currentProvider.id, selectedModel.id) || selectedModel.description
-                  }}
-                </p>
+
+              <UITabs v-if="modelTabItems.length > 0" v-model="formData.model" :items="modelTabItems" size="xs" />
+              <p v-if="formData.model" class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                {{ t('settings.aiConfig.modal.customModelId') }}: {{ formData.model }}
+              </p>
+
+              <div class="mt-2 flex items-center gap-2">
+                <button
+                  v-if="currentProviderDef?.supportsCustomModels"
+                  class="text-xs text-primary-500 hover:underline"
+                  @click="openAddModelDialog"
+                >
+                  + {{ t('settings.aiConfig.modal.addCustomModel') }}
+                </button>
+                <button
+                  v-if="selectedModelIsCustom"
+                  class="text-xs text-red-400 hover:text-red-500 hover:underline"
+                  @click="deleteCustomModel(formData.model)"
+                >
+                  {{ t('settings.aiConfig.modal.deleteCustomModel') }}
+                </button>
               </div>
             </div>
           </template>
 
-          <!-- ========== 本地服务配置 ========== -->
-          <template v-else-if="configType === 'local'">
+          <!-- ===== 本地服务模式 ===== -->
+          <template v-else-if="isLocalMode">
+            <!-- API Key -->
+            <ApiKeyInput
+              v-model="formData.apiKey"
+              :placeholder="t('settings.aiConfig.modal.apiKeyPlaceholderLocal')"
+              :optional-text="t('settings.aiConfig.modal.optional')"
+              :hint="t('settings.aiConfig.modal.apiKeyHintLocal')"
+            />
+
             <!-- API 端点 -->
             <div>
               <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -595,43 +665,33 @@ watch(
               </div>
             </div>
 
-            <!-- 模型名称 -->
+            <!-- 模型选择 -->
             <div>
               <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                {{ t('settings.aiConfig.modal.modelName') }}
+                {{ t('settings.aiConfig.modal.model') }}
               </label>
-              <UInput
-                v-model="formData.model"
-                :placeholder="t('settings.aiConfig.modal.modelNamePlaceholderLocal')"
-                class="w-full"
-              />
-              <p class="mt-1 text-xs text-gray-500">{{ t('settings.aiConfig.modal.modelNameHintLocal') }}</p>
-            </div>
 
-            <!-- 禁用思考模式 -->
-            <div class="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
-              <div>
-                <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {{ t('settings.aiConfig.modal.disableThinking') }}
-                </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">
-                  {{ t('settings.aiConfig.modal.disableThinkingDesc') }}
-                </p>
-              </div>
-              <USwitch v-model="formData.disableThinking" />
-            </div>
+              <UITabs v-if="modelTabItems.length > 0" v-model="formData.model" :items="modelTabItems" size="xs" />
+              <p v-if="formData.model" class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                {{ t('settings.aiConfig.modal.customModelId') }}: {{ formData.model }}
+              </p>
 
-            <!-- 推理模型 -->
-            <div class="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
-              <div>
-                <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {{ t('settings.aiConfig.modal.isReasoningModel') }}
-                </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">
-                  {{ t('settings.aiConfig.modal.isReasoningModelDesc') }}
-                </p>
+              <div class="mt-2 flex items-center gap-2">
+                <button
+                  v-if="currentProviderDef?.supportsCustomModels"
+                  class="text-xs text-primary-500 hover:underline"
+                  @click="openAddModelDialog"
+                >
+                  + {{ t('settings.aiConfig.modal.addCustomModel') }}
+                </button>
+                <button
+                  v-if="selectedModelIsCustom"
+                  class="text-xs text-red-400 hover:text-red-500 hover:underline"
+                  @click="deleteCustomModel(formData.model)"
+                >
+                  {{ t('settings.aiConfig.modal.deleteCustomModel') }}
+                </button>
               </div>
-              <USwitch v-model="formData.isReasoningModel" />
             </div>
 
             <!-- 验证结果 -->
@@ -651,49 +711,15 @@ watch(
                 {{ validationMessage }}
               </div>
             </div>
-
-            <!-- 高级选项（API Key） -->
-            <div>
-              <button
-                class="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                @click="showAdvanced = !showAdvanced"
-              >
-                <UIcon
-                  name="i-heroicons-chevron-right"
-                  class="h-4 w-4 transition-transform"
-                  :class="{ 'rotate-90': showAdvanced }"
-                />
-                {{ t('settings.aiConfig.modal.advancedOptions') }}
-              </button>
-
-              <div v-if="showAdvanced" class="mt-3 rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
-                <ApiKeyInput
-                  v-model="formData.apiKey"
-                  :placeholder="t('settings.aiConfig.modal.apiKeyPlaceholderLocal')"
-                  :optional-text="t('settings.aiConfig.modal.optional')"
-                  :hint="t('settings.aiConfig.modal.apiKeyHintLocal')"
-                />
-              </div>
-            </div>
           </template>
 
-          <!-- ========== OpenAI 兼容配置 ========== -->
-          <template v-else>
-            <!-- 风险提示 -->
+          <!-- ===== OpenAI 兼容模式 ===== -->
+          <template v-else-if="isOpenAICompat">
             <AlertTips
               v-if="aiTips.thirdPartyApi?.show"
               icon="i-heroicons-exclamation-triangle"
               :content="aiTips.thirdPartyApi?.content"
             />
-
-            <!-- API 端点 -->
-            <div>
-              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                {{ t('settings.aiConfig.modal.apiEndpoint') }}
-              </label>
-              <UInput v-model="formData.baseUrl" class="w-full" placeholder="https://api.example.com/v1" />
-              <p class="mt-1 text-xs text-gray-500">{{ t('settings.aiConfig.modal.apiEndpointHint') }}</p>
-            </div>
 
             <!-- API Key -->
             <ApiKeyInput
@@ -707,17 +733,72 @@ watch(
               @validate="validateKey"
             />
 
-            <!-- 模型名称 -->
+            <!-- API 端点 -->
             <div>
               <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                {{ t('settings.aiConfig.modal.modelName') }}
+                {{ t('settings.aiConfig.modal.apiEndpoint') }}
               </label>
-              <UInput
-                v-model="formData.model"
-                class="w-full"
-                :placeholder="t('settings.aiConfig.modal.modelNamePlaceholder')"
-              />
-              <p class="mt-1 text-xs text-gray-500">{{ t('settings.aiConfig.modal.modelNameHint') }}</p>
+              <UInput v-model="formData.baseUrl" class="w-full" placeholder="https://api.example.com/v1" />
+              <p class="mt-1 text-xs text-gray-500">{{ t('settings.aiConfig.modal.apiEndpointHint') }}</p>
+            </div>
+
+            <!-- 模型选择 -->
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {{ t('settings.aiConfig.modal.model') }}
+              </label>
+
+              <UITabs v-if="modelTabItems.length > 0" v-model="formData.model" :items="modelTabItems" size="xs" />
+              <p v-if="formData.model" class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                {{ t('settings.aiConfig.modal.customModelId') }}: {{ formData.model }}
+              </p>
+
+              <div class="mt-2 flex items-center gap-2">
+                <button
+                  v-if="currentProviderDef?.supportsCustomModels"
+                  class="text-xs text-primary-500 hover:underline"
+                  @click="openAddModelDialog"
+                >
+                  + {{ t('settings.aiConfig.modal.addCustomModel') }}
+                </button>
+                <button
+                  v-if="selectedModelIsCustom"
+                  class="text-xs text-red-400 hover:text-red-500 hover:underline"
+                  @click="deleteCustomModel(formData.model)"
+                >
+                  {{ t('settings.aiConfig.modal.deleteCustomModel') }}
+                </button>
+              </div>
+            </div>
+          </template>
+
+          <!-- ===== 通用：推理模型选项 ===== -->
+          <template v-if="formData.provider || !isPresetMode">
+            <div class="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+              <div>
+                <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {{ t('settings.aiConfig.modal.isReasoningModel') }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('settings.aiConfig.modal.isReasoningModelDesc') }}
+                </p>
+              </div>
+              <USwitch v-model="formData.isReasoningModel" />
+            </div>
+
+            <div
+              v-if="formData.isReasoningModel"
+              class="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-800"
+            >
+              <div>
+                <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {{ t('settings.aiConfig.modal.disableThinking') }}
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('settings.aiConfig.modal.disableThinkingDesc') }}
+                </p>
+              </div>
+              <USwitch v-model="formData.disableThinking" />
             </div>
           </template>
         </div>
@@ -725,8 +806,73 @@ watch(
         <!-- 底部按钮 -->
         <div class="mt-6 flex justify-end gap-2">
           <UButton variant="soft" @click="closeModal">{{ t('common.cancel') }}</UButton>
-          <UButton color="primary" :disabled="!canSave" :loading="isSaving" @click="saveConfig">
+          <UButton color="primary" :disabled="!canSave" :loading="isSaving || isValidating" @click="saveConfig">
             {{ mode === 'add' ? t('common.add') : t('common.save') }}
+          </UButton>
+        </div>
+      </div>
+    </template>
+  </UModal>
+
+  <!-- 验证失败确认弹窗 -->
+  <UModal :open="showValidationFailConfirm" @update:open="showValidationFailConfirm = $event">
+    <template #content>
+      <div class="p-6">
+        <div class="mb-4 flex items-start gap-3">
+          <UIcon name="i-heroicons-exclamation-triangle" class="mt-0.5 h-6 w-6 shrink-0 text-amber-500" />
+          <div>
+            <h4 class="font-medium text-gray-900 dark:text-white">
+              {{ t('settings.aiConfig.modal.validationFailedTitle') }}
+            </h4>
+            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ validationFailMessage }}</p>
+            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              {{ t('settings.aiConfig.modal.saveAnywayHint') }}
+            </p>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2">
+          <UButton variant="soft" @click="cancelSave">{{ t('common.cancel') }}</UButton>
+          <UButton color="warning" @click="confirmSaveAnyway">
+            {{ t('settings.aiConfig.modal.saveAnyway') }}
+          </UButton>
+        </div>
+      </div>
+    </template>
+  </UModal>
+
+  <!-- 添加自定义模型小弹窗 -->
+  <UModal :open="showAddModelDialog" @update:open="showAddModelDialog = $event">
+    <template #content>
+      <div class="p-5">
+        <h4 class="mb-4 text-base font-semibold text-gray-900 dark:text-white">
+          {{ t('settings.aiConfig.modal.addCustomModel') }}
+        </h4>
+        <div class="space-y-3">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {{ t('settings.aiConfig.modal.customModelId') }}
+            </label>
+            <UInput v-model="newModelId" class="w-full" placeholder="gpt-4o-custom, deepseek-r1, ..." />
+            <p class="mt-1 text-[10px] text-gray-400">
+              {{ t('settings.aiConfig.modal.customModelIdHint') }}
+            </p>
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {{ t('settings.aiConfig.modal.customModelDisplayName') }}
+              <span class="font-normal text-gray-400">{{ t('settings.aiConfig.modal.optional') }}</span>
+            </label>
+            <UInput
+              v-model="newModelName"
+              class="w-full"
+              :placeholder="newModelId || t('settings.aiConfig.modal.customModelDisplayNamePlaceholder')"
+            />
+          </div>
+        </div>
+        <div class="mt-4 flex justify-end gap-2">
+          <UButton variant="soft" @click="showAddModelDialog = false">{{ t('common.cancel') }}</UButton>
+          <UButton color="primary" :disabled="!newModelId.trim()" @click="confirmAddModel">
+            {{ t('common.add') }}
           </UButton>
         </div>
       </div>

@@ -6,7 +6,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import * as crypto from 'crypto'
-import { net } from 'electron'
+import { net, BrowserWindow } from 'electron'
 import { getTempDir } from '../paths'
 import * as worker from '../worker/workerManager'
 import { loadDataSources, saveDataSources, type DataSource } from './dataSource'
@@ -30,7 +30,6 @@ function cleanupTempFile(filePath: string): void {
 
 function notifySessionListChanged(): void {
   try {
-    const { BrowserWindow } = require('electron')
     const wins = BrowserWindow.getAllWindows()
     for (const win of wins) {
       win.webContents.send('api:importCompleted')
@@ -42,7 +41,6 @@ function notifySessionListChanged(): void {
 
 function notifyPullResult(dsId: string, status: 'success' | 'error', detail: string): void {
   try {
-    const { BrowserWindow } = require('electron')
     const wins = BrowserWindow.getAllWindows()
     for (const win of wins) {
       win.webContents.send('api:pullResult', { dsId, status, detail })

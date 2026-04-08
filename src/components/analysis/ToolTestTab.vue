@@ -135,7 +135,7 @@ async function execute() {
       elapsed.value = res.elapsed ?? null
       resultTruncated.value = !!res.truncated
       resultJson.value = res.truncated
-        ? (res.details as Record<string, unknown>)?._preview as string ?? ''
+        ? (((res.details as Record<string, unknown>)?._preview as string) ?? '')
         : JSON.stringify(res.details ?? res.content, null, 2)
     } else {
       resultError.value = res.error ?? 'Unknown error'
@@ -160,7 +160,9 @@ async function cancel() {
 <template>
   <div class="flex h-full">
     <!-- Left Sidebar: Tool List -->
-    <div class="w-56 shrink-0 overflow-y-auto border-r border-gray-200 bg-gray-50/50 dark:border-gray-700 dark:bg-gray-800/50">
+    <div
+      class="w-56 shrink-0 overflow-y-auto border-r border-gray-200 bg-gray-50/50 dark:border-gray-700 dark:bg-gray-800/50"
+    >
       <!-- Core Tools Group -->
       <div v-if="coreTools.length > 0" class="py-2">
         <div class="px-3 py-1.5 text-[11px] font-semibold tracking-wide text-gray-400 uppercase dark:text-gray-500">
@@ -209,7 +211,10 @@ async function cancel() {
     <!-- Right Content: Parameters + Result -->
     <div class="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
       <!-- Tool Description -->
-      <div v-if="selectedTool" class="rounded-lg border border-primary-200 bg-primary-50/50 px-4 py-3 dark:border-primary-800 dark:bg-primary-900/20">
+      <div
+        v-if="selectedTool"
+        class="rounded-lg border border-primary-200 bg-primary-50/50 px-4 py-3 dark:border-primary-800 dark:bg-primary-900/20"
+      >
         <div class="text-sm font-medium text-primary-700 dark:text-primary-300">
           {{ toolLabel(selectedTool.name) }}
         </div>
@@ -266,12 +271,7 @@ async function cancel() {
         >
           {{ t('ai.lab.toolTest.execute') }}
         </UButton>
-        <UButton
-          v-else
-          color="error"
-          icon="i-heroicons-stop"
-          @click="cancel"
-        >
+        <UButton v-else color="error" icon="i-heroicons-stop" @click="cancel">
           {{ t('ai.lab.toolTest.cancel') }}
         </UButton>
         <UIcon v-if="isExecuting" name="i-heroicons-arrow-path" class="h-4 w-4 animate-spin text-gray-400" />
@@ -300,7 +300,8 @@ async function cancel() {
           </div>
           <pre
             class="max-h-[60vh] overflow-auto rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs leading-relaxed text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
-          >{{ resultJson }}</pre>
+            >{{ resultJson }}</pre
+          >
         </template>
       </div>
     </div>

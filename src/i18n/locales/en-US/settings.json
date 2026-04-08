@@ -3,7 +3,7 @@
   "tabs": {
     "basic": "General",
     "ai": "AI Settings",
-    "aiConfig": "Chat Model",
+    "aiConfig": "Model Service",
     "aiRAG": "Vector Model",
     "aiPrompt": "Chat Config",
     "aiPreprocess": "Preprocess",
@@ -58,7 +58,8 @@
     }
   },
   "aiConfig": {
-    "title": "Chat Model",
+    "title": "Service Configurations",
+    "providerTitle": "Service Providers",
     "loading": "Loading...",
     "inUse": "Active",
     "defaultModel": "Default Model",
@@ -93,6 +94,9 @@
       "validate": "Validate",
       "validationSuccess": "Connection validated successfully",
       "validationFailed": "Connection validation failed",
+      "validationFailedTitle": "API Connection Validation Failed",
+      "saveAnywayHint": "Validation did not pass. The configuration may be incorrect. Save anyway?",
+      "saveAnyway": "Save Anyway",
       "validationError": "Validation failed: ",
       "model": "Model",
       "modelName": "Model Name",
@@ -100,15 +104,43 @@
       "modelNamePlaceholderLocal": "e.g. qwen3, deepseek-r1",
       "modelNameHint": "Enter the model name supported by the API",
       "modelNameHintLocal": "Enter the locally deployed model name",
-      "apiEndpoint": "API Endpoint",
+      "apiEndpoint": "API URL",
       "apiEndpointHint": "OpenAI-compatible API endpoint",
+      "apiEndpointOverrideHint": "Default URL is prefilled. Replace if needed",
       "disableThinking": "Disable Thinking Mode",
       "disableThinkingDesc": "For models like Qwen3, DeepSeek-R1. Uses standard tool calling format when disabled.",
       "isReasoningModel": "Reasoning Model",
       "isReasoningModelDesc": "Extracts thinking process and disables tool calling (e.g. DeepSeek-R1, QwQ)",
       "advancedOptions": "Advanced Options",
       "customService": "Custom Service",
-      "unnamedConfig": "Unnamed Configuration"
+      "unnamedConfig": "Unnamed Configuration",
+      "visitWebsite": "Visit Website",
+      "getApiKey": "Get API Key",
+      "presetService": "Preset",
+      "thirdPartyService": "Third-party",
+      "customModelInput": "Enter model manually",
+      "selectFromList": "Select from list",
+      "addCustomModel": "Add Custom Model",
+      "deleteCustomModel": "Delete selected custom model",
+      "customModelId": "Model Endpoint Name",
+      "customModelIdHint": "The model identifier used in API calls",
+      "customModelDisplayName": "Display Name",
+      "customModelDisplayNamePlaceholder": "Custom display name",
+      "modelCapabilities": "Model Capabilities"
+    },
+    "providerKind": {
+      "official": "Official",
+      "aggregator": "Aggregator",
+      "compatible": "Compatible",
+      "custom": "Custom"
+    },
+    "capabilities": {
+      "chat": "Chat",
+      "reasoning": "Reasoning",
+      "vision": "Vision",
+      "function_calling": "Function Calling",
+      "embedding": "Embedding",
+      "ranking": "Ranking"
     }
   },
   "storage": {

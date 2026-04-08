@@ -3,7 +3,7 @@
   "tabs": {
     "basic": "基本設定",
     "ai": "AI 設定",
-    "aiConfig": "對話模型",
+    "aiConfig": "模型服務",
     "aiRAG": "向量模型",
     "aiPrompt": "聊天設定",
     "aiPreprocess": "前處理",
@@ -58,7 +58,8 @@
     }
   },
   "aiConfig": {
-    "title": "聊天模型",
+    "title": "服務配置",
+    "providerTitle": "服務提供商",
     "loading": "載入中...",
     "inUse": "使用中",
     "defaultModel": "預設模型",
@@ -93,6 +94,9 @@
       "validate": "驗證",
       "validationSuccess": "連線驗證成功",
       "validationFailed": "連線驗證失敗",
+      "validationFailedTitle": "API 連線驗證失敗",
+      "saveAnywayHint": "驗證未通過，設定資訊可能有誤。是否仍然儲存？",
+      "saveAnyway": "仍然儲存",
       "validationError": "驗證失敗：",
       "model": "模型",
       "modelName": "模型名稱",
@@ -100,15 +104,43 @@
       "modelNamePlaceholderLocal": "如 qwen3、deepseek-r1",
       "modelNameHint": "輸入 API 支援的模型名稱",
       "modelNameHintLocal": "輸入本機部署的模型名稱",
-      "apiEndpoint": "API 端點",
+      "apiEndpoint": "API 位址",
       "apiEndpointHint": "相容 OpenAI 格式的 API 端點",
+      "apiEndpointOverrideHint": "預設地址已填入，可按需改為完整 URL",
       "disableThinking": "關閉思考模式",
       "disableThinkingDesc": "針對 Qwen3、DeepSeek-R1 等模型，停用後使用標準工具呼叫格式",
       "isReasoningModel": "推理模型",
       "isReasoningModelDesc": "啟用後將提取思考過程並停用工具呼叫（如 DeepSeek-R1、QwQ 等）",
       "advancedOptions": "進階設定",
       "customService": "自訂服務",
-      "unnamedConfig": "未命名設定"
+      "unnamedConfig": "未命名設定",
+      "visitWebsite": "訪問官網",
+      "getApiKey": "取得 API Key",
+      "presetService": "預設服務",
+      "thirdPartyService": "第三方服務",
+      "customModelInput": "手動輸入模型",
+      "selectFromList": "從列表選擇",
+      "addCustomModel": "新增自訂模型",
+      "deleteCustomModel": "刪除選中自訂模型",
+      "customModelId": "模型端點名稱",
+      "customModelIdHint": "API 呼叫時使用的模型識別碼",
+      "customModelDisplayName": "顯示名稱",
+      "customModelDisplayNamePlaceholder": "自訂顯示名稱",
+      "modelCapabilities": "模型能力標註"
+    },
+    "providerKind": {
+      "official": "官方",
+      "aggregator": "聚合",
+      "compatible": "相容",
+      "custom": "自訂"
+    },
+    "capabilities": {
+      "chat": "對話",
+      "reasoning": "推理",
+      "vision": "視覺",
+      "function_calling": "工具呼叫",
+      "embedding": "向量",
+      "ranking": "排序"
     }
   },
   "storage": {

@@ -10,6 +10,7 @@
  */
 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
+import { BrowserWindow } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as crypto from 'crypto'
@@ -48,7 +49,6 @@ function cleanupTempFile(filePath: string): void {
  */
 function notifySessionListChanged(): void {
   try {
-    const { BrowserWindow } = require('electron')
     const wins = BrowserWindow.getAllWindows()
     for (const win of wins) {
       win.webContents.send('api:importCompleted')

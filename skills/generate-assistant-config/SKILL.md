@@ -26,7 +26,7 @@ description: Use when 用户希望根据一句自然语言需求创建新的 Cha
 
 1. 项目与 AI 总体上下文
    - `.docs/README.md`
-   - `.docs/ai/aiArchitecture.md`
+   - `.docs/ai/README.md`
    - `.docs/ai/assistantSystem.md`
 2. assistant 真实格式与落地约束
    - `electron/main/ai/assistant/parser.ts`

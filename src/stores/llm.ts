@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import type { ProviderDefinition, ModelDefinition } from '@electron/preload/index'
 
 /**
  * LLM 服务配置（展示用，不含敏感信息）
@@ -16,72 +17,77 @@ export interface AIServiceConfigDisplay {
 }
 
 /**
- * LLM 提供商信息
+ * @deprecated 使用 ProviderDefinition 代替
  */
 export interface LLMProvider {
   id: string
   name: string
-  description: string
   defaultBaseUrl: string
   models: Array<{ id: string; name: string; description?: string }>
 }
 
 /**
  * LLM 配置状态管理
- * 集中管理 LLM 配置的获取、切换和刷新
  */
 export const useLLMStore = defineStore('llm', () => {
   // ============ 状态 ============
 
-  /** 所有配置列表 */
   const configs = ref<AIServiceConfigDisplay[]>([])
 
-  /** 所有提供商列表 */
+  /** @deprecated 使用 providerRegistry 代替 */
   const providers = ref<LLMProvider[]>([])
 
-  /** 当前激活配置 ID */
   const activeConfigId = ref<string | null>(null)
-
-  /** 是否正在加载 */
   const isLoading = ref(false)
-
-  /** 是否已初始化 */
   const isInitialized = ref(false)
+
+  /** 新模型系统：Provider Registry（内置 + 自定义） */
+  const providerRegistry = ref<ProviderDefinition[]>([])
+
+  /** 新模型系统：Model Catalog（内置 + 自定义） */
+  const modelCatalog = ref<ModelDefinition[]>([])
 
   // ============ 计算属性 ============
 
-  /** 当前激活的配置 */
   const activeConfig = computed(() => configs.value.find((c) => c.id === activeConfigId.value) || null)
-
-  /** 是否有可用配置 */
   const hasConfig = computed(() => !!activeConfigId.value)
-
-  /** 是否达到最大配置数量 */
   const isMaxConfigs = computed(() => configs.value.length >= 99)
+
+  // ============ 新模型系统 computed ============
+
+  function getProviderById(id: string): ProviderDefinition | undefined {
+    return providerRegistry.value.find((p) => p.id === id)
+  }
+
+  function getModelsByProviderId(providerId: string): ModelDefinition[] {
+    return modelCatalog.value.filter((m) => m.providerId === providerId)
+  }
+
+  function getModelById(providerId: string, modelId: string): ModelDefinition | undefined {
+    return modelCatalog.value.find((m) => m.providerId === providerId && m.id === modelId)
+  }
 
   // ============ 方法 ============
 
-  /**
-   * 初始化加载配置（仅首次调用生效）
-   */
   async function init() {
     if (isInitialized.value) return
     await loadConfigs()
     isInitialized.value = true
   }
 
-  /**
-   * 加载所有配置和提供商
-   */
   async function loadConfigs() {
     isLoading.value = true
     try {
-      const [providersData, configsData, activeId] = await Promise.all([
+      const [providersData, registryData, catalogData, configsData, activeId] = await Promise.all([
         window.llmApi.getProviders(),
+        window.llmApi.getProviderRegistry(),
+        window.llmApi.getModelCatalog(),
         window.llmApi.getAllConfigs(),
         window.llmApi.getActiveConfigId(),
       ])
       providers.value = providersData
+      providerRegistry.value = registryData
+      modelCatalog.value = catalogData
       configs.value = configsData
       activeConfigId.value = activeId
     } catch (error) {
@@ -91,11 +97,6 @@ export const useLLMStore = defineStore('llm', () => {
     }
   }
 
-  /**
-   * 切换激活配置
-   * @param id 配置 ID
-   * @returns 是否成功
-   */
   async function setActiveConfig(id: string): Promise<boolean> {
     try {
       const result = await window.llmApi.setActiveConfig(id)
@@ -111,20 +112,13 @@ export const useLLMStore = defineStore('llm', () => {
     }
   }
 
-  /**
-   * 刷新配置列表
-   * 供外部（如设置页面修改后）调用
-   */
   async function refreshConfigs() {
     await loadConfigs()
   }
 
-  /**
-   * 获取提供商名称
-   * @param providerId 提供商 ID
-   * @returns 提供商名称
-   */
   function getProviderName(providerId: string): string {
+    const def = providerRegistry.value.find((p) => p.id === providerId)
+    if (def) return def.name
     return providers.value.find((p) => p.id === providerId)?.name || providerId
   }
 
@@ -132,6 +126,8 @@ export const useLLMStore = defineStore('llm', () => {
     // 状态
     configs,
     providers,
+    providerRegistry,
+    modelCatalog,
     activeConfigId,
     isLoading,
     isInitialized,
@@ -145,5 +141,8 @@ export const useLLMStore = defineStore('llm', () => {
     setActiveConfig,
     refreshConfigs,
     getProviderName,
+    getProviderById,
+    getModelsByProviderId,
+    getModelById,
   }
 })

@@ -378,7 +378,12 @@ interface AiApi {
   getDefaultDesensitizeRules: (locale: string) => Promise<DesensitizeRule[]>
   mergeDesensitizeRules: (existingRules: DesensitizeRule[], locale: string) => Promise<DesensitizeRule[]>
   getToolCatalog: () => Promise<ToolCatalogEntry[]>
-  executeTool: (testId: string, toolName: string, params: Record<string, unknown>, sessionId: string) => Promise<ToolExecuteResult>
+  executeTool: (
+    testId: string,
+    toolName: string,
+    params: Record<string, unknown>,
+    sessionId: string
+  ) => Promise<ToolExecuteResult>
   cancelToolTest: (testId: string) => Promise<{ success: boolean }>
   // 自定义筛选（支持分页）
   filterMessagesWithContext: (
@@ -412,11 +417,44 @@ interface AiApi {
   onExportProgress: (callback: (progress: ExportProgress) => void) => () => void
 }
 
-// LLM 相关类型
+// ==================== 新模型系统类型 ====================
+
+type ProviderKind = 'official' | 'aggregator' | 'openai-compatible'
+
+interface ProviderDefinition {
+  id: string
+  name: string
+  kind: ProviderKind
+  website?: string
+  consoleUrl?: string
+  defaultBaseUrl: string
+  authMode: 'api-key'
+  supportsCustomModels: boolean
+  builtin: boolean
+  enabledByDefault: boolean
+  modelIds: string[]
+}
+
+type ModelCapability = 'chat' | 'reasoning' | 'vision' | 'function_calling' | 'embedding' | 'ranking'
+type ModelStatus = 'stable' | 'preview' | 'deprecated'
+type ModelRecommendedFor = 'chat' | 'embedding' | 'rerank'
+
+interface ModelDefinition {
+  id: string
+  providerId: string
+  name: string
+  description?: string
+  capabilities: ModelCapability[]
+  recommendedFor: ModelRecommendedFor[]
+  status: ModelStatus
+  builtin: boolean
+  editable: boolean
+}
+
+// LLM 相关类型（旧，兼容）
 interface LLMProviderInfo {
   id: string
   name: string
-  description: string
   defaultBaseUrl: string
   models: Array<{ id: string; name: string; description?: string }>
 }
@@ -454,7 +492,28 @@ interface LLMChatStreamChunk {
 }
 
 interface LlmApi {
-  // 提供商
+  // Provider Registry / Model Catalog
+  getProviderRegistry: () => Promise<ProviderDefinition[]>
+  getModelCatalog: () => Promise<ModelDefinition[]>
+  addCustomProvider: (
+    input: Omit<ProviderDefinition, 'id' | 'builtin' | 'enabledByDefault'>
+  ) => Promise<{ success: boolean; provider?: ProviderDefinition; error?: string }>
+  updateCustomProvider: (
+    id: string,
+    updates: Partial<Omit<ProviderDefinition, 'id' | 'builtin'>>
+  ) => Promise<{ success: boolean; error?: string }>
+  deleteCustomProvider: (id: string) => Promise<{ success: boolean; error?: string }>
+  addCustomModel: (
+    input: Omit<ModelDefinition, 'builtin' | 'editable'>
+  ) => Promise<{ success: boolean; model?: ModelDefinition; error?: string }>
+  updateCustomModel: (
+    providerId: string,
+    modelId: string,
+    updates: Partial<Omit<ModelDefinition, 'id' | 'providerId' | 'builtin'>>
+  ) => Promise<{ success: boolean; error?: string }>
+  deleteCustomModel: (providerId: string, modelId: string) => Promise<{ success: boolean; error?: string }>
+
+  /** @deprecated 使用 getProviderRegistry 代替 */
   getProviders: () => Promise<LLMProviderInfo[]>
 
   // 多配置管理 API
@@ -1044,6 +1103,12 @@ export {
   MergeApi,
   AiApi,
   LlmApi,
+  ProviderDefinition,
+  ProviderKind,
+  ModelDefinition,
+  ModelCapability,
+  ModelStatus,
+  ModelRecommendedFor,
   EmbeddingApi,
   EmbeddingServiceConfig,
   EmbeddingServiceConfigDisplay,

@@ -23,9 +23,7 @@ const props = defineProps<{
 
 const subTabs = computed(() => {
   if (props.mode === 'sql-only') {
-    const tabs = [
-      { id: 'sql-lab', label: t('ai.tab.sqlLab'), icon: 'i-heroicons-command-line' },
-    ]
+    const tabs = [{ id: 'sql-lab', label: t('ai.tab.sqlLab'), icon: 'i-heroicons-command-line' }]
     if (settingsStore.debugMode) {
       tabs.push({ id: 'tool-test', label: t('ai.lab.basicTools'), icon: 'i-heroicons-wrench-screwdriver' })
     }
@@ -98,11 +96,7 @@ defineExpose({
           :chat-type="chatType"
         />
         <!-- 基础工具测试 -->
-        <ToolTestTab
-          v-else-if="activeSubTab === 'tool-test'"
-          class="h-full"
-          :session-id="props.sessionId"
-        />
+        <ToolTestTab v-else-if="activeSubTab === 'tool-test'" class="h-full" :session-id="props.sessionId" />
         <!-- SQL 实验室 -->
         <SQLLabTab v-else class="h-full" :session-id="props.sessionId" :chat-type="props.chatType" />
       </Transition>

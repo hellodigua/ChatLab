@@ -541,9 +541,41 @@ export const aiApi = {
 // ==================== LLM API ====================
 
 export const llmApi = {
-  /**
-   * 获取所有支持的 LLM 提供商
-   */
+  // ==================== Provider Registry / Model Catalog ====================
+
+  getProviderRegistry: () => {
+    return ipcRenderer.invoke('llm:getProviderRegistry')
+  },
+
+  getModelCatalog: () => {
+    return ipcRenderer.invoke('llm:getModelCatalog')
+  },
+
+  addCustomProvider: (input: Record<string, unknown>) => {
+    return ipcRenderer.invoke('llm:addCustomProvider', input)
+  },
+
+  updateCustomProvider: (id: string, updates: Record<string, unknown>) => {
+    return ipcRenderer.invoke('llm:updateCustomProvider', id, updates)
+  },
+
+  deleteCustomProvider: (id: string) => {
+    return ipcRenderer.invoke('llm:deleteCustomProvider', id)
+  },
+
+  addCustomModel: (input: Record<string, unknown>) => {
+    return ipcRenderer.invoke('llm:addCustomModel', input)
+  },
+
+  updateCustomModel: (providerId: string, modelId: string, updates: Record<string, unknown>) => {
+    return ipcRenderer.invoke('llm:updateCustomModel', providerId, modelId, updates)
+  },
+
+  deleteCustomModel: (providerId: string, modelId: string) => {
+    return ipcRenderer.invoke('llm:deleteCustomModel', providerId, modelId)
+  },
+
+  /** @deprecated 使用 getProviderRegistry 代替 */
   getProviders: (): Promise<LLMProvider[]> => {
     return ipcRenderer.invoke('llm:getProviders')
   },

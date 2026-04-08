@@ -56,350 +56,359 @@ interface RememberedAssistantState {
 const REMEMBER_ASSISTANT_DAYS = 7
 const REMEMBER_ASSISTANT_MS = REMEMBER_ASSISTANT_DAYS * 24 * 60 * 60 * 1000
 
-export const useAssistantStore = defineStore('assistant', () => {
-  const assistants = ref<AssistantSummary[]>([])
-  const selectedAssistantId = ref<string | null>(null)
-  const rememberedAssistant = ref<RememberedAssistantState | null>(null)
-  const isLoaded = ref(false)
+export const useAssistantStore = defineStore(
+  'assistant',
+  () => {
+    const assistants = ref<AssistantSummary[]>([])
+    const selectedAssistantId = ref<string | null>(null)
+    const rememberedAssistant = ref<RememberedAssistantState | null>(null)
+    const isLoaded = ref(false)
 
-  /** @deprecated 本地内置目录已清空，保留兼容 */
-  const builtinCatalog = ref<BuiltinAssistantInfo[]>([])
+    /** @deprecated 本地内置目录已清空，保留兼容 */
+    const builtinCatalog = ref<BuiltinAssistantInfo[]>([])
 
-  /** 内置工具目录（含分类） */
-  const builtinToolCatalog = ref<Array<{ name: string; category: 'core' | 'analysis' }>>([])
+    /** 内置工具目录（含分类） */
+    const builtinToolCatalog = ref<Array<{ name: string; category: 'core' | 'analysis' }>>([])
 
-  /** 云端市场目录 */
-  const cloudCatalog = ref<CloudAssistantItem[]>([])
-  const cloudLoading = ref(false)
-  const cloudError = ref<string | null>(null)
+    /** 云端市场目录 */
+    const cloudCatalog = ref<CloudAssistantItem[]>([])
+    const cloudLoading = ref(false)
+    const cloudError = ref<string | null>(null)
 
-  /** 当前过滤条件 */
-  const currentChatType = ref<'group' | 'private'>('group')
-  const currentLocale = ref<string>('zh-CN')
+    /** 当前过滤条件 */
+    const currentChatType = ref<'group' | 'private'>('group')
+    const currentLocale = ref<string>('zh-CN')
 
-  const selectedAssistant = computed(() => {
-    if (!selectedAssistantId.value) return null
-    return assistants.value.find((a) => a.id === selectedAssistantId.value) ?? null
-  })
-
-  const filteredAssistants = computed(() => {
-    return assistants.value.filter((a) => {
-      const typeMatch = !a.applicableChatTypes?.length || a.applicableChatTypes.includes(currentChatType.value)
-      const localeMatch =
-        !a.supportedLocales?.length || a.supportedLocales.some((l) => currentLocale.value.startsWith(l))
-      return typeMatch && localeMatch
+    const selectedAssistant = computed(() => {
+      if (!selectedAssistantId.value) return null
+      return assistants.value.find((a) => a.id === selectedAssistantId.value) ?? null
     })
-  })
 
-  const defaultVisibleCount = 4
-
-  const defaultAssistants = computed(() => filteredAssistants.value.slice(0, defaultVisibleCount))
-
-  const moreAssistants = computed(() => filteredAssistants.value.slice(defaultVisibleCount))
-
-  const hasMoreAssistants = computed(() => filteredAssistants.value.length > defaultVisibleCount)
-
-  /** 云端目录中标注导入状态 */
-  const cloudCatalogWithStatus = computed(() => {
-    const localIds = new Set(assistants.value.map((a) => a.id))
-    return cloudCatalog.value.map((item) => ({
-      ...item,
-      imported: localIds.has(item.id),
-    }))
-  })
-
-  function getValidRememberedAssistantId(): string | null {
-    const remembered = rememberedAssistant.value
-    if (!remembered) return null
-    if (!remembered.assistantId || typeof remembered.expiresAt !== 'number') {
-      rememberedAssistant.value = null
-      return null
-    }
-    if (remembered.expiresAt <= Date.now()) {
-      rememberedAssistant.value = null
-      return null
-    }
-    return remembered.assistantId
-  }
-
-  function isAssistantAvailableForContext(assistant: AssistantSummary, chatType: 'group' | 'private', locale: string): boolean {
-    const typeMatch = !assistant.applicableChatTypes?.length || assistant.applicableChatTypes.includes(chatType)
-    const localeMatch = !assistant.supportedLocales?.length || assistant.supportedLocales.some((l) => locale.startsWith(l))
-    return typeMatch && localeMatch
-  }
-
-  function setFilterContext(chatType: 'group' | 'private', locale: string): void {
-    currentChatType.value = chatType
-    currentLocale.value = locale
-  }
-
-  async function loadAssistants(): Promise<void> {
-    try {
-      assistants.value = await window.assistantApi.getAll()
-      const rememberedAssistantId = getValidRememberedAssistantId()
-      if (rememberedAssistantId && !assistants.value.some((assistant) => assistant.id === rememberedAssistantId)) {
-        rememberedAssistant.value = null
-      }
-      isLoaded.value = true
-    } catch (error) {
-      console.error('[AssistantStore] Failed to load assistants:', error)
-    }
-  }
-
-  /** @deprecated 本地内置目录已清空，保留兼容 */
-  async function loadBuiltinCatalog(): Promise<void> {
-    try {
-      builtinCatalog.value = await window.assistantApi.getBuiltinCatalog()
-    } catch (error) {
-      console.error('[AssistantStore] Failed to load builtin catalog:', error)
-    }
-  }
-
-  async function loadBuiltinToolCatalog(): Promise<void> {
-    try {
-      builtinToolCatalog.value = await window.assistantApi.getBuiltinToolCatalog()
-    } catch (error) {
-      console.error('[AssistantStore] Failed to load builtin tool catalog:', error)
-    }
-  }
-
-  // ==================== 云端市场 ====================
-
-  async function fetchCloudCatalog(localeOverride?: string): Promise<void> {
-    // 助手市场请求只依赖 locale，不应该反向修改选择页的筛选上下文。
-    const langPath = LOCALE_PATH_MAP[localeOverride || currentLocale.value] ?? 'en'
-    const url = `${CLOUD_MARKET_BASE_URL}/${langPath}/assistant.json`
-
-    cloudLoading.value = true
-    cloudError.value = null
-
-    try {
-      const result = await window.api.app.fetchRemoteConfig(url)
-      if (!result.success || !result.data) {
-        cloudError.value = result.error || 'Failed to fetch cloud catalog'
-        cloudCatalog.value = []
-        return
-      }
-
-      const data = result.data as CloudAssistantItem[]
-      if (!Array.isArray(data)) {
-        cloudError.value = 'Invalid catalog format'
-        cloudCatalog.value = []
-        return
-      }
-
-      cloudCatalog.value = data.filter((item) => item.id && item.name && item.path)
-    } catch (error) {
-      cloudError.value = String(error)
-      cloudCatalog.value = []
-    } finally {
-      cloudLoading.value = false
-    }
-  }
-
-  async function importFromCloud(item: CloudAssistantItem): Promise<{ success: boolean; error?: string }> {
-    const mdUrl = `${CLOUD_MARKET_BASE_URL}${item.path}`
-
-    try {
-      const mdResult = await window.api.app.fetchRemoteConfig(mdUrl)
-      if (!mdResult.success || typeof mdResult.data !== 'string') {
-        return { success: false, error: mdResult.error || 'Failed to fetch assistant content' }
-      }
-
-      const result = await window.assistantApi.importFromMd(mdResult.data)
-      if (result.success) {
-        await loadAssistants()
-      }
-      return result
-    } catch (error) {
-      return { success: false, error: String(error) }
-    }
-  }
-
-  function isCloudItemImported(id: string): boolean {
-    return assistants.value.some((a) => a.id === id)
-  }
-
-  // ==================== 基础 CRUD ====================
-
-  function selectAssistant(id: string): void {
-    selectedAssistantId.value = id
-  }
-
-  function clearSelection(): void {
-    selectedAssistantId.value = null
-  }
-
-  function rememberAssistantForDays(id: string | null, days = REMEMBER_ASSISTANT_DAYS): void {
-    if (!id) {
-      rememberedAssistant.value = null
-      return
-    }
-    rememberedAssistant.value = {
-      assistantId: id,
-      expiresAt: Date.now() + days * 24 * 60 * 60 * 1000,
-    }
-  }
-
-  function getRememberedAssistantIdForContext(chatType: 'group' | 'private', locale: string): string | null {
-    const rememberedAssistantId = getValidRememberedAssistantId()
-    if (!rememberedAssistantId) return null
-    const remembered = assistants.value.find((assistant) => assistant.id === rememberedAssistantId)
-    if (!remembered) return null
-    return isAssistantAvailableForContext(remembered, chatType, locale) ? remembered.id : null
-  }
-
-  async function getAssistantConfig(id: string): Promise<AssistantConfigFull | null> {
-    try {
-      return await window.assistantApi.getConfig(id)
-    } catch (error) {
-      console.error('[AssistantStore] Failed to get config:', error)
-      return null
-    }
-  }
-
-  async function updateAssistant(
-    id: string,
-    updates: Partial<AssistantConfigFull>
-  ): Promise<{ success: boolean; error?: string }> {
-    try {
-      const result = await window.assistantApi.update(id, updates)
-      if (result.success) {
-        await loadAssistants()
-      }
-      return result
-    } catch (error) {
-      return { success: false, error: String(error) }
-    }
-  }
-
-  async function resetAssistant(id: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      const result = await window.assistantApi.reset(id)
-      if (result.success) {
-        await loadAssistants()
-      }
-      return result
-    } catch (error) {
-      return { success: false, error: String(error) }
-    }
-  }
-
-  async function importAssistant(builtinId: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      const result = await window.assistantApi.importAssistant(builtinId)
-      if (result.success) {
-        await loadAssistants()
-        await loadBuiltinCatalog()
-      }
-      return result
-    } catch (error) {
-      return { success: false, error: String(error) }
-    }
-  }
-
-  async function reimportAssistant(id: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      const result = await window.assistantApi.reimportAssistant(id)
-      if (result.success) {
-        await loadAssistants()
-        await loadBuiltinCatalog()
-      }
-      return result
-    } catch (error) {
-      return { success: false, error: String(error) }
-    }
-  }
-
-  async function createAssistant(
-    config: Omit<AssistantConfigFull, 'id'>
-  ): Promise<{ success: boolean; id?: string; error?: string }> {
-    try {
-      const result = await window.assistantApi.create(config)
-      if (result.success) {
-        await loadAssistants()
-      }
-      return result
-    } catch (error) {
-      return { success: false, error: String(error) }
-    }
-  }
-
-  async function duplicateAssistant(id: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      const config = await window.assistantApi.getConfig(id)
-      if (!config) {
-        return { success: false, error: 'Assistant not found' }
-      }
-      const { id: _id, builtinId: _bid, ...rest } = config
-      const result = await window.assistantApi.create({
-        ...rest,
-        name: `${config.name}${i18n.global.t('ai.assistant.duplicateSuffix')}`,
+    const filteredAssistants = computed(() => {
+      return assistants.value.filter((a) => {
+        const typeMatch = !a.applicableChatTypes?.length || a.applicableChatTypes.includes(currentChatType.value)
+        const localeMatch =
+          !a.supportedLocales?.length || a.supportedLocales.some((l) => currentLocale.value.startsWith(l))
+        return typeMatch && localeMatch
       })
-      if (result.success) {
-        await loadAssistants()
-      }
-      return result
-    } catch (error) {
-      return { success: false, error: String(error) }
-    }
-  }
+    })
 
-  async function deleteAssistant(id: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      const result = await window.assistantApi.delete(id)
-      if (result.success) {
-        await loadAssistants()
-      }
-      return result
-    } catch (error) {
-      return { success: false, error: String(error) }
-    }
-  }
+    const defaultVisibleCount = 4
 
-  return {
-    assistants,
-    selectedAssistantId,
-    rememberedAssistant,
-    selectedAssistant,
-    isLoaded,
-    builtinCatalog,
-    builtinToolCatalog,
-    cloudCatalog,
-    cloudLoading,
-    cloudError,
-    cloudCatalogWithStatus,
-    currentChatType,
-    currentLocale,
-    filteredAssistants,
-    defaultAssistants,
-    moreAssistants,
-    hasMoreAssistants,
-    loadAssistants,
-    loadBuiltinCatalog,
-    loadBuiltinToolCatalog,
-    fetchCloudCatalog,
-    importFromCloud,
-    isCloudItemImported,
-    selectAssistant,
-    clearSelection,
-    rememberAssistantForDays,
-    getRememberedAssistantIdForContext,
-    setFilterContext,
-    getAssistantConfig,
-    updateAssistant,
-    createAssistant,
-    duplicateAssistant,
-    resetAssistant,
-    importAssistant,
-    reimportAssistant,
-    deleteAssistant,
+    const defaultAssistants = computed(() => filteredAssistants.value.slice(0, defaultVisibleCount))
+
+    const moreAssistants = computed(() => filteredAssistants.value.slice(defaultVisibleCount))
+
+    const hasMoreAssistants = computed(() => filteredAssistants.value.length > defaultVisibleCount)
+
+    /** 云端目录中标注导入状态 */
+    const cloudCatalogWithStatus = computed(() => {
+      const localIds = new Set(assistants.value.map((a) => a.id))
+      return cloudCatalog.value.map((item) => ({
+        ...item,
+        imported: localIds.has(item.id),
+      }))
+    })
+
+    function getValidRememberedAssistantId(): string | null {
+      const remembered = rememberedAssistant.value
+      if (!remembered) return null
+      if (!remembered.assistantId || typeof remembered.expiresAt !== 'number') {
+        rememberedAssistant.value = null
+        return null
+      }
+      if (remembered.expiresAt <= Date.now()) {
+        rememberedAssistant.value = null
+        return null
+      }
+      return remembered.assistantId
+    }
+
+    function isAssistantAvailableForContext(
+      assistant: AssistantSummary,
+      chatType: 'group' | 'private',
+      locale: string
+    ): boolean {
+      const typeMatch = !assistant.applicableChatTypes?.length || assistant.applicableChatTypes.includes(chatType)
+      const localeMatch =
+        !assistant.supportedLocales?.length || assistant.supportedLocales.some((l) => locale.startsWith(l))
+      return typeMatch && localeMatch
+    }
+
+    function setFilterContext(chatType: 'group' | 'private', locale: string): void {
+      currentChatType.value = chatType
+      currentLocale.value = locale
+    }
+
+    async function loadAssistants(): Promise<void> {
+      try {
+        assistants.value = await window.assistantApi.getAll()
+        const rememberedAssistantId = getValidRememberedAssistantId()
+        if (rememberedAssistantId && !assistants.value.some((assistant) => assistant.id === rememberedAssistantId)) {
+          rememberedAssistant.value = null
+        }
+        isLoaded.value = true
+      } catch (error) {
+        console.error('[AssistantStore] Failed to load assistants:', error)
+      }
+    }
+
+    /** @deprecated 本地内置目录已清空，保留兼容 */
+    async function loadBuiltinCatalog(): Promise<void> {
+      try {
+        builtinCatalog.value = await window.assistantApi.getBuiltinCatalog()
+      } catch (error) {
+        console.error('[AssistantStore] Failed to load builtin catalog:', error)
+      }
+    }
+
+    async function loadBuiltinToolCatalog(): Promise<void> {
+      try {
+        builtinToolCatalog.value = await window.assistantApi.getBuiltinToolCatalog()
+      } catch (error) {
+        console.error('[AssistantStore] Failed to load builtin tool catalog:', error)
+      }
+    }
+
+    // ==================== 云端市场 ====================
+
+    async function fetchCloudCatalog(localeOverride?: string): Promise<void> {
+      // 助手市场请求只依赖 locale，不应该反向修改选择页的筛选上下文。
+      const langPath = LOCALE_PATH_MAP[localeOverride || currentLocale.value] ?? 'en'
+      const url = `${CLOUD_MARKET_BASE_URL}/${langPath}/assistant.json`
+
+      cloudLoading.value = true
+      cloudError.value = null
+
+      try {
+        const result = await window.api.app.fetchRemoteConfig(url)
+        if (!result.success || !result.data) {
+          cloudError.value = result.error || 'Failed to fetch cloud catalog'
+          cloudCatalog.value = []
+          return
+        }
+
+        const data = result.data as CloudAssistantItem[]
+        if (!Array.isArray(data)) {
+          cloudError.value = 'Invalid catalog format'
+          cloudCatalog.value = []
+          return
+        }
+
+        cloudCatalog.value = data.filter((item) => item.id && item.name && item.path)
+      } catch (error) {
+        cloudError.value = String(error)
+        cloudCatalog.value = []
+      } finally {
+        cloudLoading.value = false
+      }
+    }
+
+    async function importFromCloud(item: CloudAssistantItem): Promise<{ success: boolean; error?: string }> {
+      const mdUrl = `${CLOUD_MARKET_BASE_URL}${item.path}`
+
+      try {
+        const mdResult = await window.api.app.fetchRemoteConfig(mdUrl)
+        if (!mdResult.success || typeof mdResult.data !== 'string') {
+          return { success: false, error: mdResult.error || 'Failed to fetch assistant content' }
+        }
+
+        const result = await window.assistantApi.importFromMd(mdResult.data)
+        if (result.success) {
+          await loadAssistants()
+        }
+        return result
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    }
+
+    function isCloudItemImported(id: string): boolean {
+      return assistants.value.some((a) => a.id === id)
+    }
+
+    // ==================== 基础 CRUD ====================
+
+    function selectAssistant(id: string): void {
+      selectedAssistantId.value = id
+    }
+
+    function clearSelection(): void {
+      selectedAssistantId.value = null
+    }
+
+    function rememberAssistantForDays(id: string | null, days = REMEMBER_ASSISTANT_DAYS): void {
+      if (!id) {
+        rememberedAssistant.value = null
+        return
+      }
+      rememberedAssistant.value = {
+        assistantId: id,
+        expiresAt: Date.now() + days * 24 * 60 * 60 * 1000,
+      }
+    }
+
+    function getRememberedAssistantIdForContext(chatType: 'group' | 'private', locale: string): string | null {
+      const rememberedAssistantId = getValidRememberedAssistantId()
+      if (!rememberedAssistantId) return null
+      const remembered = assistants.value.find((assistant) => assistant.id === rememberedAssistantId)
+      if (!remembered) return null
+      return isAssistantAvailableForContext(remembered, chatType, locale) ? remembered.id : null
+    }
+
+    async function getAssistantConfig(id: string): Promise<AssistantConfigFull | null> {
+      try {
+        return await window.assistantApi.getConfig(id)
+      } catch (error) {
+        console.error('[AssistantStore] Failed to get config:', error)
+        return null
+      }
+    }
+
+    async function updateAssistant(
+      id: string,
+      updates: Partial<AssistantConfigFull>
+    ): Promise<{ success: boolean; error?: string }> {
+      try {
+        const result = await window.assistantApi.update(id, updates)
+        if (result.success) {
+          await loadAssistants()
+        }
+        return result
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    }
+
+    async function resetAssistant(id: string): Promise<{ success: boolean; error?: string }> {
+      try {
+        const result = await window.assistantApi.reset(id)
+        if (result.success) {
+          await loadAssistants()
+        }
+        return result
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    }
+
+    async function importAssistant(builtinId: string): Promise<{ success: boolean; error?: string }> {
+      try {
+        const result = await window.assistantApi.importAssistant(builtinId)
+        if (result.success) {
+          await loadAssistants()
+          await loadBuiltinCatalog()
+        }
+        return result
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    }
+
+    async function reimportAssistant(id: string): Promise<{ success: boolean; error?: string }> {
+      try {
+        const result = await window.assistantApi.reimportAssistant(id)
+        if (result.success) {
+          await loadAssistants()
+          await loadBuiltinCatalog()
+        }
+        return result
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    }
+
+    async function createAssistant(
+      config: Omit<AssistantConfigFull, 'id'>
+    ): Promise<{ success: boolean; id?: string; error?: string }> {
+      try {
+        const result = await window.assistantApi.create(config)
+        if (result.success) {
+          await loadAssistants()
+        }
+        return result
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    }
+
+    async function duplicateAssistant(id: string): Promise<{ success: boolean; error?: string }> {
+      try {
+        const config = await window.assistantApi.getConfig(id)
+        if (!config) {
+          return { success: false, error: 'Assistant not found' }
+        }
+        const { id: _id, builtinId: _bid, ...rest } = config
+        const result = await window.assistantApi.create({
+          ...rest,
+          name: `${config.name}${i18n.global.t('ai.assistant.duplicateSuffix')}`,
+        })
+        if (result.success) {
+          await loadAssistants()
+        }
+        return result
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    }
+
+    async function deleteAssistant(id: string): Promise<{ success: boolean; error?: string }> {
+      try {
+        const result = await window.assistantApi.delete(id)
+        if (result.success) {
+          await loadAssistants()
+        }
+        return result
+      } catch (error) {
+        return { success: false, error: String(error) }
+      }
+    }
+
+    return {
+      assistants,
+      selectedAssistantId,
+      rememberedAssistant,
+      selectedAssistant,
+      isLoaded,
+      builtinCatalog,
+      builtinToolCatalog,
+      cloudCatalog,
+      cloudLoading,
+      cloudError,
+      cloudCatalogWithStatus,
+      currentChatType,
+      currentLocale,
+      filteredAssistants,
+      defaultAssistants,
+      moreAssistants,
+      hasMoreAssistants,
+      loadAssistants,
+      loadBuiltinCatalog,
+      loadBuiltinToolCatalog,
+      fetchCloudCatalog,
+      importFromCloud,
+      isCloudItemImported,
+      selectAssistant,
+      clearSelection,
+      rememberAssistantForDays,
+      getRememberedAssistantIdForContext,
+      setFilterContext,
+      getAssistantConfig,
+      updateAssistant,
+      createAssistant,
+      duplicateAssistant,
+      resetAssistant,
+      importAssistant,
+      reimportAssistant,
+      deleteAssistant,
+    }
+  },
+  {
+    persist: [
+      {
+        pick: ['rememberedAssistant'],
+        storage: localStorage,
+      },
+    ],
   }
-}, {
-  persist: [
-    {
-      pick: ['rememberedAssistant'],
-      storage: localStorage,
-    },
-  ],
-})
+)

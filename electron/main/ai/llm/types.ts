@@ -1,19 +1,24 @@
 /**
  * LLM 服务类型定义
+ * 新类型系统基于 model-types.ts，此文件保留兼容别名
  */
 
-/**
- * 支持的 LLM 提供商
- */
-export type LLMProvider = 'deepseek' | 'qwen' | 'minimax' | 'glm' | 'kimi' | 'gemini' | 'doubao' | 'openai-compatible'
+// 重新导出新类型系统
+export * from './model-types'
+
+// ==================== 兼容别名 ====================
 
 /**
- * 提供商信息
+ * @deprecated 使用 ProviderDefinition.id (string) 代替
+ */
+export type LLMProvider = string
+
+/**
+ * @deprecated 使用 ProviderDefinition 代替
  */
 export interface ProviderInfo {
-  id: LLMProvider
+  id: string
   name: string
-  description: string
   defaultBaseUrl: string
   models: Array<{
     id: string
@@ -22,39 +27,31 @@ export interface ProviderInfo {
   }>
 }
 
-// ==================== 多配置管理相关类型 ====================
+// ==================== 旧配置类型（兼容期保留） ====================
 
 /**
- * 单个 AI 服务配置
+ * @deprecated 使用 LLMConnectionConfigCompat 代替
  */
 export interface AIServiceConfig {
-  id: string // UUID
-  name: string // 用户自定义名称
+  id: string
+  name: string
   provider: LLMProvider
-  apiKey: string // 可为空（本地 API 场景）
+  apiKey: string
   model?: string
-  baseUrl?: string // 自定义端点
+  baseUrl?: string
   maxTokens?: number
-  /** 禁用思考模式（用于本地服务，如 Qwen3、DeepSeek-R1 等） */
   disableThinking?: boolean
-  /**
-   * 标记为推理模型（如 DeepSeek-R1、QwQ 等）
-   * 推理模型会使用 extractReasoningMiddleware 提取思考内容，且不支持 tool-calling
-   */
   isReasoningModel?: boolean
-  createdAt: number // 创建时间戳
-  updatedAt: number // 更新时间戳
+  createdAt: number
+  updatedAt: number
 }
 
 /**
- * AI 配置存储结构
+ * @deprecated 使用 LLMConnectionStore 代替
  */
 export interface AIConfigStore {
   configs: AIServiceConfig[]
   activeConfigId: string | null
 }
 
-/**
- * 最大配置数量限制
- */
 export const MAX_CONFIG_COUNT = 99

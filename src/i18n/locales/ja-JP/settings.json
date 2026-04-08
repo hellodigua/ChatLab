@@ -3,7 +3,7 @@
   "tabs": {
     "basic": "基本設定",
     "ai": "AI 設定",
-    "aiConfig": "チャットモデル",
+    "aiConfig": "モデルサービス",
     "aiRAG": "埋め込みモデル",
     "aiPrompt": "チャット設定",
     "aiPreprocess": "前処理",
@@ -58,7 +58,8 @@
     }
   },
   "aiConfig": {
-    "title": "チャットモデル",
+    "title": "サービス設定",
+    "providerTitle": "サービスプロバイダー",
     "loading": "読み込み中...",
     "inUse": "使用中",
     "defaultModel": "デフォルトモデル",
@@ -93,6 +94,9 @@
       "validate": "接続確認",
       "validationSuccess": "接続を確認しました",
       "validationFailed": "接続の確認に失敗しました",
+      "validationFailedTitle": "API接続の検証に失敗しました",
+      "saveAnywayHint": "検証に通過しませんでした。設定が正しくない可能性があります。それでも保存しますか？",
+      "saveAnyway": "保存する",
       "validationError": "検証に失敗：",
       "model": "モデル",
       "modelName": "モデル名",
@@ -100,15 +104,43 @@
       "modelNamePlaceholderLocal": "例: qwen3、deepseek-r1",
       "modelNameHint": "API がサポートするモデル名を入力",
       "modelNameHintLocal": "ローカルにデプロイしたモデル名を入力",
-      "apiEndpoint": "API エンドポイント",
+      "apiEndpoint": "API URL",
       "apiEndpointHint": "OpenAI 互換形式の API エンドポイント",
+      "apiEndpointOverrideHint": "デフォルトURLは入力済みです。必要に応じて変更してください",
       "disableThinking": "思考モードをオフ",
       "disableThinkingDesc": "Qwen3 や DeepSeek-R1 などのモデル向け。オフにすると標準のツール実行形式を使います",
       "isReasoningModel": "推論モデル",
       "isReasoningModelDesc": "有効にすると推論過程を抽出し、ツール実行を無効にします（DeepSeek-R1、QwQ など）",
       "advancedOptions": "詳細設定",
       "customService": "カスタムサービス",
-      "unnamedConfig": "名称未設定"
+      "unnamedConfig": "名称未設定",
+      "visitWebsite": "公式サイト",
+      "getApiKey": "APIキーを取得",
+      "presetService": "プリセット",
+      "thirdPartyService": "サードパーティ",
+      "customModelInput": "モデルを手動入力",
+      "selectFromList": "リストから選択",
+      "addCustomModel": "カスタムモデルを追加",
+      "deleteCustomModel": "選択中のカスタムモデルを削除",
+      "customModelId": "モデルエンドポイント名",
+      "customModelIdHint": "API呼び出しで使用されるモデル識別子",
+      "customModelDisplayName": "表示名",
+      "customModelDisplayNamePlaceholder": "カスタム表示名",
+      "modelCapabilities": "モデル能力ラベル"
+    },
+    "providerKind": {
+      "official": "公式",
+      "aggregator": "アグリゲータ",
+      "compatible": "互換",
+      "custom": "カスタム"
+    },
+    "capabilities": {
+      "chat": "チャット",
+      "reasoning": "推論",
+      "vision": "ビジョン",
+      "function_calling": "ツール呼出",
+      "embedding": "エンベディング",
+      "ranking": "ランキング"
     }
   },
   "storage": {

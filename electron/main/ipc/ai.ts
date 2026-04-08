@@ -515,6 +515,66 @@ export function registerAIHandlers({ win }: IpcContext): void {
     return llm.hasActiveConfig()
   })
 
+  // ==================== Provider Registry / Model Catalog ====================
+
+  ipcMain.handle('llm:getProviderRegistry', async () => {
+    return llm.getProviderRegistry()
+  })
+
+  ipcMain.handle('llm:getModelCatalog', async () => {
+    return llm.getModelCatalog()
+  })
+
+  ipcMain.handle('llm:addCustomProvider', async (_, input) => {
+    try {
+      const provider = llm.addCustomProvider(input)
+      return { success: true, provider }
+    } catch (error) {
+      return { success: false, error: String(error) }
+    }
+  })
+
+  ipcMain.handle('llm:updateCustomProvider', async (_, id: string, updates) => {
+    try {
+      return llm.updateCustomProvider(id, updates)
+    } catch (error) {
+      return { success: false, error: String(error) }
+    }
+  })
+
+  ipcMain.handle('llm:deleteCustomProvider', async (_, id: string) => {
+    try {
+      return llm.deleteCustomProvider(id)
+    } catch (error) {
+      return { success: false, error: String(error) }
+    }
+  })
+
+  ipcMain.handle('llm:addCustomModel', async (_, input) => {
+    try {
+      const model = llm.addCustomModel(input)
+      return { success: true, model }
+    } catch (error) {
+      return { success: false, error: String(error) }
+    }
+  })
+
+  ipcMain.handle('llm:updateCustomModel', async (_, providerId: string, modelId: string, updates) => {
+    try {
+      return llm.updateCustomModel(providerId, modelId, updates)
+    } catch (error) {
+      return { success: false, error: String(error) }
+    }
+  })
+
+  ipcMain.handle('llm:deleteCustomModel', async (_, providerId: string, modelId: string) => {
+    try {
+      return llm.deleteCustomModel(providerId, modelId)
+    } catch (error) {
+      return { success: false, error: String(error) }
+    }
+  })
+
   // ==================== LLM 直接调用 API（SQLLab 等非 Agent 场景使用） ====================
 
   /**
