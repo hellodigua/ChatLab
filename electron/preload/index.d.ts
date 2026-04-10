@@ -46,15 +46,6 @@ interface MigrationCheckResult {
   pendingMigrations: MigrationInfo[]
 }
 
-// 格式诊断信息（简化版，用于前端显示）
-interface FormatDiagnosisSimple {
-  suggestion: string
-  partialMatches: Array<{
-    formatName: string
-    missingFields: string[]
-  }>
-}
-
 // 导入诊断信息
 interface ImportDiagnostics {
   /** 日志文件路径 */
@@ -81,14 +72,12 @@ interface ChatApi {
     filePath?: string
     format?: string
     error?: string
-    diagnosis?: FormatDiagnosisSimple
   } | null>
   detectFormat: (filePath: string) => Promise<{ id: string; name: string; platform: string; multiChat: boolean } | null>
   import: (filePath: string) => Promise<{
     success: boolean
     sessionId?: string
     error?: string
-    diagnosis?: FormatDiagnosisSimple
     diagnostics?: ImportDiagnostics
   }>
   importWithOptions: (

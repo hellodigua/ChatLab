@@ -39,7 +39,8 @@
       "no_file_selected": "No file selected",
       "import_failed": "Import failed",
       "unrecognized_format": "Unrecognized file format",
-      "no_messages": "No messages parsed. Please check if the file format is correct."
+      "no_messages": "No messages parsed. Please check if the file format is correct.",
+      "actionHint": "You can try manual format matching or view the log below:"
     },
     "diagnostics": {
       "format": "Format: ",

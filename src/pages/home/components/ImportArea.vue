@@ -46,7 +46,6 @@ async function autoGenerateSessionIndex(sessionId: string) {
 }
 
 const importError = ref<string | null>(null)
-const diagnosisSuggestion = ref<string | null>(null)
 const hasImportLog = ref(false)
 const importDiagnostics = ref<{
   logFile: string | null
@@ -115,7 +114,6 @@ async function checkImportLog() {
 // 处理文件选择（点击选择）- 支持多选
 async function handleClickImport() {
   importError.value = null
-  diagnosisSuggestion.value = null
   hasImportLog.value = false
   importDiagnostics.value = null
 
@@ -144,7 +142,6 @@ async function handleFileDrop({ paths }: { files: File[]; paths: string[] }) {
   }
 
   importError.value = null
-  diagnosisSuggestion.value = null
   hasImportLog.value = false
   importDiagnostics.value = null
 
@@ -171,9 +168,6 @@ async function processFilePaths(paths: string[]) {
         // 格式无法识别时，记住文件路径以便手动选择格式
         if (result.error === 'error.unrecognized_format') {
           formatSelectorFilePath.value = paths[0]
-        }
-        if (result.diagnosisSuggestion) {
-          diagnosisSuggestion.value = result.diagnosisSuggestion
         }
         // 保存诊断信息
         if (result.diagnostics) {
@@ -209,7 +203,6 @@ async function handleFormatSelect(formatId: string) {
   if (!filePath) return
 
   importError.value = null
-  diagnosisSuggestion.value = null
   importDiagnostics.value = null
   isImporting.value = true
   importProgress.value = { stage: 'detecting', progress: 0, message: '' }
@@ -785,26 +778,18 @@ const getMergeFileProgressText = (file: MergeFileInfo) =>
           </div>
         </div>
       </div>
-      <!-- 诊断建议（如果有） -->
-      <div
-        v-if="diagnosisSuggestion"
-        class="w-full rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-900/30 dark:text-amber-200"
+      <p
+        v-if="formatSelectorFilePath || hasImportLog"
+        class="text-xs text-gray-500 dark:text-gray-400"
       >
-        <div class="flex items-start gap-2">
-          <UIcon name="i-heroicons-light-bulb" class="mt-0.5 h-4 w-4 shrink-0" />
-          <span>{{ diagnosisSuggestion }}</span>
-        </div>
-      </div>
+        {{ t('home.import.errors.actionHint') }}
+      </p>
       <div class="flex gap-2">
-        <UButton v-if="hasImportLog" size="xs" @click="openLatestImportLog">{{ t('home.import.viewLog') }}</UButton>
-        <UButton
-          v-if="formatSelectorFilePath"
-          size="xs"
-          variant="soft"
-          icon="i-heroicons-list-bullet"
-          @click="showFormatSelector = true"
-        >
+        <UButton v-if="formatSelectorFilePath" size="xs" @click="showFormatSelector = true">
           {{ t('home.formatSelector.manualSelect') }}
+        </UButton>
+        <UButton v-if="hasImportLog" size="xs" variant="soft" @click="openLatestImportLog">
+          {{ t('home.import.viewLog') }}
         </UButton>
       </div>
     </div>

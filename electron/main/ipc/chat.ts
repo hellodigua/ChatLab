@@ -7,7 +7,7 @@ import { getConversationCountsBySession } from '../ai/conversations'
 import * as databaseCore from '../database/core'
 import * as worker from '../worker/workerManager'
 import * as parser from '../parser'
-import { detectFormat, diagnoseFormat, scanMultiChatFile, type ParseProgress } from '../parser'
+import { detectFormat, scanMultiChatFile, type ParseProgress } from '../parser'
 import type { IpcContext } from './types'
 import { CURRENT_SCHEMA_VERSION, getPendingMigrationInfos } from '../database/migrations'
 import { exportSessionToTempFile, cleanupTempExportFiles } from '../merger'
@@ -82,19 +82,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       const formatFeature = detectFormat(filePath)
       const format = formatFeature?.name || null
       if (!format) {
-        // 使用诊断功能获取详细的错误信息
-        const diagnosis = diagnoseFormat(filePath)
-        // 返回详细的错误信息
-        return {
-          error: 'error.unrecognized_format',
-          diagnosis: {
-            suggestion: diagnosis.suggestion,
-            partialMatches: diagnosis.partialMatches.map((m) => ({
-              formatName: m.formatName,
-              missingFields: m.missingFields,
-            })),
-          },
-        }
+        return { error: 'error.unrecognized_format' }
       }
 
       return { filePath, format }
@@ -139,23 +127,6 @@ export function registerChatHandlers(ctx: IpcContext): void {
           progress: 0,
           message: result.error,
         })
-
-        // 如果是格式不识别错误，提供诊断信息
-        if (result.error === 'error.unrecognized_format') {
-          const diagnosis = diagnoseFormat(filePath)
-          return {
-            success: false,
-            error: result.error,
-            diagnosis: {
-              suggestion: diagnosis.suggestion,
-              partialMatches: diagnosis.partialMatches.map((m) => ({
-                formatName: m.formatName,
-                missingFields: m.missingFields,
-              })),
-            },
-            diagnostics: result.diagnostics,
-          }
-        }
 
         return { success: false, error: result.error, diagnostics: result.diagnostics }
       }
@@ -1008,13 +979,7 @@ export function registerChatHandlers(ctx: IpcContext): void {
       // 检测文件格式
       const formatFeature = detectFormat(filePath)
       if (!formatFeature) {
-        const diagnosis = diagnoseFormat(filePath)
-        return {
-          error: 'error.unrecognized_format',
-          diagnosis: {
-            suggestion: diagnosis.suggestion,
-          },
-        }
+        return { error: 'error.unrecognized_format' }
       }
 
       // 使用 Worker 分析

@@ -17,7 +17,6 @@ import type {
   ParsedMeta,
   ParsedMember,
   ParsedMessage,
-  FormatDiagnosis,
   MultiChatInfo,
 } from './types'
 
@@ -45,16 +44,6 @@ export function detectFormat(filePath: string): FormatFeature | null {
  */
 export function detectAllFormats(filePath: string): FormatFeature[] {
   return sniffer.sniffAll(filePath)
-}
-
-/**
- * 诊断文件格式
- * 当检测失败时，返回详细的诊断信息，帮助用户了解问题所在
- * @param filePath 文件路径
- * @returns 诊断结果，包含每个格式的匹配详情和建议
- */
-export function diagnoseFormat(filePath: string): FormatDiagnosis {
-  return sniffer.diagnose(filePath)
 }
 
 /**
@@ -275,7 +264,6 @@ export type {
   ParsedMeta,
   ParsedMember,
   ParsedMessage,
-  FormatDiagnosis,
   MultiChatInfo,
 }
 

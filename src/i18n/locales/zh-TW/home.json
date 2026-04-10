@@ -39,7 +39,8 @@
       "no_file_selected": "未選擇檔案",
       "import_failed": "匯入失敗",
       "unrecognized_format": "無法識別的檔案格式",
-      "no_messages": "未解析到任何訊息，請檢查檔案格式是否正確"
+      "no_messages": "未解析到任何訊息，請檢查檔案格式是否正確",
+      "actionHint": "你還可以嘗試下方手動匹配或查看日誌："
     },
     "diagnostics": {
       "format": "偵測格式：",

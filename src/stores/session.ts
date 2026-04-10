@@ -29,7 +29,6 @@ export interface BatchFileInfo {
   status: BatchFileStatus
   progress?: ImportProgress
   error?: string
-  diagnosisSuggestion?: string
   sessionId?: string
 }
 
@@ -171,7 +170,6 @@ export const useSessionStore = defineStore(
     async function importFile(): Promise<{
       success: boolean
       error?: string
-      diagnosisSuggestion?: string
     }> {
       try {
         const result = await window.chatApi.selectFile()
@@ -181,8 +179,7 @@ export const useSessionStore = defineStore(
         }
         // 有错误（如格式不识别）- 优先检查错误，因为此时可能没有 filePath
         if (result.error) {
-          const diagnosisSuggestion = result.diagnosis?.suggestion
-          return { success: false, error: result.error, diagnosisSuggestion }
+          return { success: false, error: result.error }
         }
         // 没有文件路径（用户取消）
         if (!result.filePath) {
@@ -215,7 +212,6 @@ export const useSessionStore = defineStore(
     async function importFileFromPath(filePath: string): Promise<{
       success: boolean
       error?: string
-      diagnosisSuggestion?: string
       diagnostics?: ImportDiagnosticsInfo
     }> {
       try {
@@ -296,12 +292,9 @@ export const useSessionStore = defineStore(
 
           return { success: true, diagnostics: importResult.diagnostics }
         } else {
-          // 传递诊断信息（如果有）
-          const diagnosisSuggestion = importResult.diagnosis?.suggestion
           return {
             success: false,
             error: importResult.error || 'error.import_failed',
-            diagnosisSuggestion,
             diagnostics: importResult.diagnostics,
           }
         }
@@ -460,7 +453,6 @@ export const useSessionStore = defineStore(
           } else {
             file.status = 'failed'
             file.error = importResult.error || 'error.import_failed'
-            file.diagnosisSuggestion = importResult.diagnosis?.suggestion
             failedCount++
           }
         } catch (error) {
