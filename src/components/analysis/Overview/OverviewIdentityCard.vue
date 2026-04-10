@@ -10,6 +10,7 @@ import type { EChartsOption } from 'echarts'
 import type { AnalysisSession } from '@/types/base'
 import type { DailyActivity } from '@/types/analysis'
 import { formatDateRange } from '@/utils'
+import { ThemeCard } from '@/components/UI'
 
 echarts.use([HeatmapChart, CalendarComponent, TooltipComponent, VisualMapComponent, CanvasRenderer])
 
@@ -202,9 +203,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div
-    class="relative overflow-hidden rounded-[24px] border border-gray-200/60 bg-white p-8 shadow-sm dark:border-white/5 dark:bg-card-dark"
-  >
+  <ThemeCard variant="elevated" decorative class="p-8">
     <div class="relative">
       <div class="flex flex-col">
         <!-- 上方：身份信息 + 统计数据 -->
@@ -284,5 +283,5 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
-  </div>
+  </ThemeCard>
 </template>

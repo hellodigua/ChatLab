@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { RelationshipStats, RelationshipMonthStats } from '@/types/analysis'
-import { SectionCard, EmptyState, LoadingState } from '@/components/UI'
+import { ThemeCard, SectionCard, EmptyState, LoadingState } from '@/components/UI'
 import { EChart } from '@/components/charts'
 import RelationshipMetricCard from './RelationshipMetricCard.vue'
 import type { EChartsOption } from 'echarts'
@@ -327,20 +327,7 @@ function formatDuration(seconds: number): string {
     <template v-else-if="stats && hasData">
       <div class="space-y-6">
         <!-- 关系大满贯 (Single Page Shareable Poster) -->
-        <div
-          id="shareable-poster"
-          class="relative flex flex-col overflow-hidden rounded-[24px] bg-white shadow-xl ring-1 ring-gray-900/5 dark:bg-card-dark dark:ring-white/10"
-        >
-          <!-- 全局分享图背景装饰 -->
-          <div class="pointer-events-none absolute inset-0 overflow-hidden">
-            <div
-              class="absolute -left-[20%] -top-[20%] h-[70%] w-[70%] rounded-full bg-blue-400/10 blur-[80px] dark:bg-blue-500/20"
-            />
-            <div
-              class="absolute -right-[20%] top-[10%] h-[70%] w-[70%] rounded-full bg-pink-400/10 blur-[80px] dark:bg-pink-500/20"
-            />
-          </div>
-
+        <ThemeCard id="shareable-poster" variant="elevated" decorative class="flex flex-col">
           <!-- 1. 主视觉区域 (Primary Module) -->
           <div
             class="relative z-10 flex flex-col items-center justify-center gap-10 px-6 pt-10 pb-6 sm:px-8 lg:flex-row lg:gap-16 xl:gap-24"
@@ -522,7 +509,7 @@ function formatDuration(seconds: number): string {
               {{ t('views.relationship.watermarkReport') }}
             </span>
           </div>
-        </div>
+        </ThemeCard>
       </div>
 
       <!-- 月度时间线 -->
@@ -548,7 +535,7 @@ function formatDuration(seconds: number): string {
 
               <!-- Month Content Card -->
               <div
-                class="group relative overflow-hidden rounded-[20px] bg-white shadow-sm ring-1 ring-gray-900/5 transition-all hover:-translate-y-0.5 hover:shadow-md dark:bg-card-dark dark:ring-white/10"
+                class="group relative overflow-hidden rounded-[20px] bg-card-bg shadow-sm ring-1 ring-gray-900/5 transition-all hover:-translate-y-0.5 hover:shadow-md dark:bg-card-dark dark:ring-white/10"
               >
                 <!-- 装饰背景 -->
                 <div

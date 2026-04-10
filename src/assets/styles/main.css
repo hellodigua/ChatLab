@@ -17,10 +17,12 @@
   --color-pink-900: #84173b;
   --color-pink-950: #4a071c;
 
-  /* 分析页面使用的更深背景 - 统一使用 zinc-900 */
+  /* 页面背景 - 语义化主题 Token，未来可通过设置动态覆盖 */
+  --color-page-bg: #f9fafb;
   --color-page-dark: #18181b;
 
-  /* 模块暗色模式半透明背景色 */
+  /* 卡片背景 - 语义化主题 Token，未来可通过设置动态覆盖 */
+  --color-card-bg: #ffffff;
   --color-card-dark: rgba(255, 255, 255, 0.03);
 }
 

@@ -1,9 +1,10 @@
 <script setup lang="ts">
 /**
  * 带标题的卡片容器组件
- * 统一的分析模块卡片样式
+ * 基于 ThemeCard 的组合封装，提供标题、描述、分隔线等布局能力
  */
 import { computed } from 'vue'
+import ThemeCard from './ThemeCard.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -25,7 +26,6 @@ const props = withDefaults(
   }
 )
 
-// 内容区域样式
 const contentStyle = computed(() => {
   if (!props.scrollable) return undefined
   return {
@@ -36,7 +36,7 @@ const contentStyle = computed(() => {
 </script>
 
 <template>
-  <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/5 dark:bg-card-dark">
+  <ThemeCard variant="section">
     <!-- 标题区域 -->
     <div class="px-5 py-3" :class="{ 'border-b border-gray-200 dark:border-white/5': showDivider && $slots.default }">
       <div class="flex items-center justify-between">
@@ -46,7 +46,6 @@ const contentStyle = computed(() => {
             {{ description }}
           </p>
         </div>
-        <!-- 标题右侧插槽 -->
         <slot name="headerRight" />
       </div>
     </div>
@@ -59,5 +58,5 @@ const contentStyle = computed(() => {
 
     <!-- 底部区域（在滚动区域外） -->
     <slot name="footer" />
-  </div>
+  </ThemeCard>
 </template>
