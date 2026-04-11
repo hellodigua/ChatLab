@@ -11,6 +11,7 @@ import type {
   YearlyActivity,
   MessageTypeCount,
   LengthDistribution,
+  TextStats,
 } from './types'
 
 interface TimeFilter {
@@ -152,6 +153,48 @@ export async function queryYearlyActivity(sessionId: string, timeFilter?: TimeFi
      ORDER BY year`,
     params
   )
+}
+
+/** 获取文字消息统计（数量、平均长度、最大长度） */
+export async function queryTextStats(sessionId: string, timeFilter?: TimeFilter): Promise<TextStats> {
+  const { conditions, params } = buildFilter(timeFilter)
+
+  const rows = await window.chatApi.pluginQuery<TextStats>(
+    sessionId,
+    `SELECT
+       COUNT(*) as textCount,
+       ROUND(AVG(LENGTH(msg.content)), 1) as avgLength,
+       MAX(LENGTH(msg.content)) as maxLength,
+       SUM(CASE WHEN LENGTH(msg.content) <= 5 THEN 1 ELSE 0 END) as shortCount
+     FROM message msg
+     JOIN member m ON msg.sender_id = m.id
+     WHERE 1=1 ${SYSTEM_FILTER} ${conditions}
+       AND msg.type = 0 AND msg.content IS NOT NULL AND LENGTH(msg.content) > 0`,
+    params
+  )
+
+  return rows[0] ?? { textCount: 0, avgLength: 0, maxLength: 0, shortCount: 0 }
+}
+
+/** 获取长消息（小作文）数量，minLength 为字符阈值 */
+export async function queryLongMessageCount(
+  sessionId: string,
+  timeFilter?: TimeFilter,
+  minLength = 30
+): Promise<number> {
+  const { conditions, params } = buildFilter(timeFilter)
+
+  const rows = await window.chatApi.pluginQuery<{ cnt: number }>(
+    sessionId,
+    `SELECT COUNT(*) as cnt
+     FROM message msg
+     JOIN member m ON msg.sender_id = m.id
+     WHERE 1=1 ${SYSTEM_FILTER} ${conditions}
+       AND msg.type = 0 AND msg.content IS NOT NULL AND LENGTH(msg.content) >= ?`,
+    [...params, minLength]
+  )
+
+  return rows[0]?.cnt ?? 0
 }
 
 /** 获取消息长度分布（仅文字消息） */

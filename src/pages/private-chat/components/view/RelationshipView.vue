@@ -101,20 +101,10 @@ const overallInitiateRatio = computed(() => {
 const timeRangeString = computed(() => {
   if (!stats.value || stats.value.months.length === 0) return ''
   const sorted = [...stats.value.months].sort((a, b) => a.month.localeCompare(b.month))
-  const first = sorted[0].month
-  const last = sorted[sorted.length - 1].month
-  const [firstYear, firstMonth] = first.split('-')
-  const [lastYear, lastMonth] = last.split('-')
-  const firstMonthText = t('views.relationship.hero.monthPart', {
-    year: firstYear,
-    month: Number.parseInt(firstMonth, 10),
-  })
-  const lastMonthText = t('views.relationship.hero.monthPart', {
-    year: lastYear,
-    month: Number.parseInt(lastMonth, 10),
-  })
-  if (first === last) return t('views.relationship.hero.timeRange.singleMonth', { month: firstMonthText })
-  return t('views.relationship.hero.timeRange.range', { start: firstMonthText, end: lastMonthText })
+  const first = sorted[0].month.replace('-', '/')
+  const last = sorted[sorted.length - 1].month.replace('-', '/')
+  if (first === last) return first
+  return `${first} – ${last}`
 })
 
 function getOverallLabel(): string {

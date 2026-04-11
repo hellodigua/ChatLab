@@ -12,6 +12,7 @@ import {
   queryMonthlyActivity,
   queryYearlyActivity,
   queryLengthDistribution,
+  queryTextStats,
 } from './queries'
 import { getMessageTypeName } from './types'
 import type {
@@ -21,7 +22,9 @@ import type {
   DailyActivity,
   YearlyActivity,
   MessageTypeCount,
+  TextStats,
 } from './types'
+import MessageProfileCard from './MessageProfileCard.vue'
 
 interface TimeFilter {
   startTs?: number
@@ -31,6 +34,7 @@ interface TimeFilter {
 
 const props = defineProps<{
   sessionId: string
+  sessionName?: string
   timeFilter?: TimeFilter
 }>()
 
@@ -46,6 +50,7 @@ const yearlyActivity = ref<YearlyActivity[]>([])
 const dailyActivity = ref<DailyActivity[]>([])
 const lengthDetail = ref<Array<{ len: number; count: number }>>([])
 const lengthGrouped = ref<Array<{ range: string; count: number }>>([])
+const textStats = ref<TextStats>({ textCount: 0, avgLength: 0, maxLength: 0, shortCount: 0 })
 
 // 星期名称（按 1=周一 到 7=周日 的顺序）
 const weekdayNames = computed(() => [
@@ -221,7 +226,7 @@ async function loadData() {
 
   isLoading.value = true
   try {
-    const [types, hourly, weekday, monthly, yearly, daily, lengthData] = await Promise.all([
+    const [types, hourly, weekday, monthly, yearly, daily, lengthData, txtStats] = await Promise.all([
       queryMessageTypes(props.sessionId, props.timeFilter),
       queryHourlyActivity(props.sessionId, props.timeFilter),
       queryWeekdayActivity(props.sessionId, props.timeFilter),
@@ -229,6 +234,7 @@ async function loadData() {
       queryYearlyActivity(props.sessionId, props.timeFilter),
       queryDailyActivity(props.sessionId, props.timeFilter),
       queryLengthDistribution(props.sessionId, props.timeFilter),
+      queryTextStats(props.sessionId, props.timeFilter),
     ])
 
     messageTypes.value = types
@@ -239,6 +245,7 @@ async function loadData() {
     dailyActivity.value = daily
     lengthDetail.value = lengthData.detail
     lengthGrouped.value = lengthData.grouped
+    textStats.value = txtStats
 
     if (calendarYears.value.length > 0) {
       selectedCalendarYear.value = calendarYears.value[0]
@@ -266,6 +273,19 @@ watch(
     </div>
 
     <template v-else>
+      <!-- 消息画像卡 -->
+      <MessageProfileCard
+        v-if="messageTypes.length > 0"
+        :session-id="sessionId"
+        :session-name="sessionName || ''"
+        :message-types="messageTypes"
+        :hourly-activity="hourlyActivity"
+        :weekday-activity="weekdayActivity"
+        :daily-activity="dailyActivity"
+        :text-stats="textStats"
+        :time-filter="timeFilter"
+      />
+
       <!-- 消息类型分布 -->
       <SectionCard :title="t('views.message.typeDistribution')" :show-divider="false">
         <div class="p-5">

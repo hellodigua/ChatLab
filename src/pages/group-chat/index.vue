@@ -196,6 +196,7 @@ const { headerDescription } = useSessionHeaderDescription({
               v-else-if="activeTab === 'view'"
               :key="'view-' + currentSessionId"
               :session-id="currentSessionId!"
+              :session-name="session.name"
               :time-filter="timeFilter"
             />
             <QuotesTab

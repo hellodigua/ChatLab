@@ -104,3 +104,11 @@ export interface LengthDistribution {
   detail: Array<{ len: number; count: number }>
   grouped: Array<{ range: string; count: number }>
 }
+
+/** 文字消息统计 */
+export interface TextStats {
+  textCount: number
+  avgLength: number
+  maxLength: number
+  shortCount: number
+}
