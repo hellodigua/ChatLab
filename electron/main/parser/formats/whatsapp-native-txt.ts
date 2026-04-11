@@ -5,12 +5,13 @@
  * 格式特征：
  * - 文件头：消息和通话已进行端到端加密 / Messages and calls are end-to-end encrypted
  * - 消息格式（V1，无方括号）：YYYY/MM/DD HH:MM - 昵称: 内容
- * - 消息格式（V2，方括号）：
- *   - [M/D/YY HH:MM:SS] 昵称: 内容（2 位年份）
- *   - [YYYY/MM/DD HH:MM:SS] 昵称: 内容（4 位年份在前，中文地区）
- *   - [DD/MM/YYYY, HH:MM:SS] 昵称: 内容（4 位年份在后，英文地区）
+ * - 消息格式（V2，方括号）：[时间戳] 昵称: 内容
+ *   时间戳由弹性解析器处理，自动适配各地区变体：
+ *   - 日期顺序：YYYY/MM/DD | DD/MM/YYYY | M/D/YY
+ *   - AM/PM 标记：24h 无标记 | AM/PM | 上午/下午 | 오전/오후 | 午前/午後
+ *   - 分隔符：逗号 / 空格 / 特殊空格（U+2009, U+202F）
  * - 系统消息：时间戳 + 系统内容（无冒号分隔）
- * - 媒体占位：<省略影音内容>
+ * - 媒体占位：<省略影音内容> / 圖片已略去 等
  */
 
 import * as fs from 'fs'
@@ -65,7 +66,7 @@ export const feature: FormatFeature = {
       /Messages and calls are end-to-end encrypted/i, // 英文加密提示（WhatsApp 独有）
       /你发送给自己的消息已进行端到端加密/, // 简体中文自己对话提示（WhatsApp 独有）
       /\d{4}\/\d{1,2}\/\d{1,2} \d{1,2}:\d{2} - /, // 消息行格式特征（无方括号，含 " - " 分隔符，WhatsApp 独有）
-      /\[\d{1,4}\/\d{1,2}\/\d{2,4},?[ \u2009]\d{1,2}:\d{2}:\d{2}\] /, // 消息行格式特征（方括号 + 秒级时间戳，支持 Thin Space）
+      /\[\d{1,4}\/\d{1,2}\/\d{2,4}[\s,].*\d{1,2}:\d{2}:\d{2}.*\] /, // 消息行格式特征（方括号 + 含日期和时间的时间戳，兼容各地区变体）
     ],
     // 文件名特征：与xxx的 WhatsApp 聊天.txt
     filename: [/^与.+的\s*WhatsApp\s*聊天\.txt$/i, /^與.+的\s*WhatsApp\s*對話\.txt$/i, /WhatsApp/i],
@@ -89,14 +90,10 @@ function cleanLine(line: string): string {
 // 支持月份、日期、小时为 1-2 位数字
 const MESSAGE_LINE_REGEX_V1 = /^(\d{4}\/\d{1,2}\/\d{1,2} \d{1,2}:\d{2}) - (.+)$/
 
-// 格式2（方括号格式）：支持多种地区导出
-// - [6/7/25 22:44:26] 或 [10/12/25, 12:50:16]（2 位年份，M/D/YY）
-// - [2024/10/31 15:50:46]（4 位年份在前，YYYY/MM/DD，中文地区）
-// - [31/10/2024, 15:50:46]（4 位年份在后，DD/MM/YYYY，英文地区）
-// - [14/10/2021, 3:34:09 PM]（12 小时制，英文地区）
-// 日期和时间之间可能有逗号（英文）或没有（中文）
-// 注意：部分导出文件在时间和 AM/PM 之间包含 \u202F (NNBSP) 字符
-const MESSAGE_LINE_REGEX_V2 = /^\[(\d{1,4}\/\d{1,2}\/\d{2,4},?\s*\d{1,2}:\d{2}:\d{2}(?:\s*(?:AM|PM))?)\] (.+)$/
+// 格式2（方括号格式）：宽松捕获 [时间戳] 后的内容
+// 时间戳的地区变体由 parseFlexibleV2Timestamp() 弹性解析器处理
+// 已知变体包括但不限于：中文 上午/下午、英文 AM/PM、韩文 오전/오후、各种日期顺序
+const MESSAGE_LINE_REGEX_V2 = /^\[([^\]]+)\] (.+)$/
 
 // 从消息内容中分离昵称和实际内容
 // 格式：昵称: 内容（冒号后可能是空格、U+200E LTR Mark 或两者组合）
@@ -148,16 +145,27 @@ function isSystemMessage(content: string): boolean {
 function detectMessageType(content: string): MessageType {
   const trimmed = content.trim()
 
-  // 媒体消息（简体/繁体）
-  if (trimmed === '<省略影音内容>' || trimmed === '<已省略多媒體檔案>') return MessageType.IMAGE
+  // 媒体消息（简体/繁体多种变体）
+  if (
+    trimmed === '<省略影音内容>' ||
+    trimmed === '<已省略多媒體檔案>' ||
+    trimmed === '圖片已略去' ||
+    trimmed === '影片已略去' ||
+    trimmed === '音訊已略去' ||
+    trimmed === 'image omitted' ||
+    trimmed === 'video omitted' ||
+    trimmed === 'audio omitted'
+  )
+    return MessageType.IMAGE
   if (trimmed.includes('<已附加:') || trimmed.includes('<附件:') || trimmed.includes('<已附加：'))
     return MessageType.FILE
 
   // 贴图/贴纸（繁体中文导出标记）
-  if (trimmed === '貼圖已忽略') return MessageType.EMOJI
+  if (trimmed === '貼圖已忽略' || trimmed === '貼圖已略去') return MessageType.EMOJI
 
-  // 删除消息（简体/繁体）
-  if (trimmed === '这条消息已删除' || trimmed.startsWith('此訊息已刪除')) return MessageType.RECALL
+  // 删除消息（简体/繁体多种变体）
+  if (trimmed === '这条消息已删除' || trimmed.startsWith('此訊息已刪除') || trimmed.startsWith('你已刪除此訊息'))
+    return MessageType.RECALL
 
   // 系统消息
   if (isSystemMessage(trimmed)) return MessageType.SYSTEM
@@ -167,62 +175,87 @@ function detectMessageType(content: string): MessageType {
 
 // ==================== 时间解析 ====================
 
+// 多语言 AM/PM 标记映射（值为 true 表示 PM，false 表示 AM）
+const AMPM_MARKERS: [RegExp, boolean][] = [
+  [/\bPM\b/i, true],
+  [/\bP\.M\.\b/i, true],
+  [/下午/, true],
+  [/午後/, true],
+  [/오후/, true],
+  [/\bAM\b/i, false],
+  [/\bA\.M\.\b/i, false],
+  [/上午/, false],
+  [/午前/, false],
+  [/오전/, false],
+]
+
 /**
- * 解析 WhatsApp 时间格式为秒级时间戳
- * 支持多种格式：
- * - 格式1：2025/12/22 12:35 或 2025/2/2 9:35（YYYY/M/D H:MM，月日时可为 1-2 位）
- * - 格式2（方括号）：
- *   - 6/7/25 22:44:26（M/D/YY HH:MM:SS，2 位年份）
- *   - 2024/10/31 15:50:46（YYYY/MM/DD HH:MM:SS，4 位年份在前，中文地区）
- *   - 31/10/2024, 15:50:46（DD/MM/YYYY, HH:MM:SS，4 位年份在后，英文地区）
- *   - 14/10/2021, 3:34:09 PM（12 小时制，英文地区）
+ * 弹性解析 V2（方括号）时间戳
+ * 自动处理各地区变体：日期顺序、AM/PM 多语言标记、特殊空格等
+ * @returns 秒级时间戳，解析失败返回 null
  */
-function parseWhatsAppTime(timeStr: string, isV2Format: boolean = false): number {
-  if (isV2Format) {
-    // 方括号格式：规范化特殊空格（Thin Space U+2009, NNBSP U+202F）和逗号
-    // 逗号替换为空格（非删除），确保日期和时间之间总有分隔
-    const normalizedStr = timeStr
-      .replace(/[\u2009\u202F]/g, ' ')
-      .replace(',', ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-    const match = normalizedStr.match(/^(\d{1,4})\/(\d{1,2})\/(\d{2,4}) (\d{1,2}):(\d{2}):(\d{2})(?:\s*(AM|PM))?$/i)
-    if (match) {
-      const [, part1, part2, part3, hour, minute, second, ampm] = match
-      let year: number, month: number, day: number, hourNum: number
+function parseFlexibleV2Timestamp(raw: string): number | null {
+  // 1. 规范化特殊空格和不可见字符
+  let str = raw.replace(/(?:\u2009|\u202F|\uFEFF|\u200E|\u200F|\u200B|\u200C|\u200D|\u2060)/g, ' ').trim()
 
-      if (part1.length === 4) {
-        // YYYY/MM/DD 格式（中文地区，4 位年份在前）
-        year = parseInt(part1, 10)
-        month = parseInt(part2, 10)
-        day = parseInt(part3, 10)
-      } else if (part3.length === 4) {
-        // DD/MM/YYYY 格式（英文地区，4 位年份在后）
-        day = parseInt(part1, 10)
-        month = parseInt(part2, 10)
-        year = parseInt(part3, 10)
-      } else {
-        // M/D/YY 格式（2 位年份，假设 00-99 对应 2000-2099）
-        month = parseInt(part1, 10)
-        day = parseInt(part2, 10)
-        year = 2000 + parseInt(part3, 10)
-      }
-
-      hourNum = parseInt(hour, 10)
-      if (ampm) {
-        if (ampm.toUpperCase() === 'PM' && hourNum !== 12) {
-          hourNum += 12
-        } else if (ampm.toUpperCase() === 'AM' && hourNum === 12) {
-          hourNum = 0
-        }
-      }
-
-      const date = new Date(year, month - 1, day, hourNum, parseInt(minute, 10), parseInt(second, 10))
-      return Math.floor(date.getTime() / 1000)
+  // 2. 提取并移除 AM/PM 标记（任何语言）
+  let isPM: boolean | null = null
+  for (const [pattern, pm] of AMPM_MARKERS) {
+    if (pattern.test(str)) {
+      isPM = pm
+      str = str.replace(pattern, '').trim()
+      break
     }
   }
 
-  // 格式1：YYYY/M/D H:MM（月、日、时可为 1-2 位数字）
+  // 3. 移除逗号，规范化连续空格
+  str = str.replace(/,/g, ' ').replace(/\s+/g, ' ').trim()
+
+  // 4. 提取日期部分（含 /）和时间部分（含 :）
+  const match = str.match(/^(\d{1,4}\/\d{1,2}\/\d{2,4})\s+(\d{1,2}:\d{2}(?::\d{2})?)$/)
+  if (!match) return null
+
+  const [, datePart, timePart] = match
+  const dateParts = datePart.split('/').map((s) => parseInt(s, 10))
+  const timeParts = timePart.split(':').map((s) => parseInt(s, 10))
+
+  // 5. 推断日期顺序
+  let year: number, month: number, day: number
+  if (dateParts[0] > 31) {
+    // 第一段 > 31 → 一定是年份 → YYYY/MM/DD
+    year = dateParts[0]
+    month = dateParts[1]
+    day = dateParts[2]
+  } else if (dateParts[2] > 31) {
+    // 第三段 > 31 → 一定是年份 → DD/MM/YYYY
+    day = dateParts[0]
+    month = dateParts[1]
+    year = dateParts[2]
+  } else {
+    // 全部 ≤ 31 → M/D/YY（2 位年份，00-99 → 2000-2099）
+    month = dateParts[0]
+    day = dateParts[1]
+    year = 2000 + dateParts[2]
+  }
+
+  // 6. 解析时间
+  let hour = timeParts[0]
+  const minute = timeParts[1]
+  const second = timeParts[2] ?? 0
+
+  if (isPM === true && hour !== 12) hour += 12
+  if (isPM === false && hour === 12) hour = 0
+
+  // 7. 构造日期并校验
+  const date = new Date(year, month - 1, day, hour, minute, second)
+  const ts = Math.floor(date.getTime() / 1000)
+  return isNaN(ts) ? null : ts
+}
+
+/**
+ * 解析 V1（无方括号）时间格式：YYYY/M/D H:MM
+ */
+function parseV1Timestamp(timeStr: string): number {
   const match = timeStr.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2}) (\d{1,2}):(\d{2})$/)
   if (match) {
     const [, year, month, day, hour, minute] = match
@@ -237,7 +270,7 @@ function parseWhatsAppTime(timeStr: string, isV2Format: boolean = false): number
     return Math.floor(date.getTime() / 1000)
   }
 
-  // 兜底：尝试标准格式解析（YYYY/MM/DD HH:MM）
+  // 兜底
   const normalized = timeStr.replace(/\//g, '-').replace(' ', 'T') + ':00'
   const date = new Date(normalized)
   return Math.floor(date.getTime() / 1000)
@@ -325,52 +358,62 @@ async function* parseWhatsApp(options: ParseOptions): AsyncGenerator<ParseEvent,
     // 清理行首不可见字符
     const cleanedLine = cleanLine(line)
 
-    // 尝试匹配消息行（两种格式）
-    let lineMatch = cleanedLine.match(MESSAGE_LINE_REGEX_V1)
-    let isV2Format = false
-    if (!lineMatch) {
-      lineMatch = cleanedLine.match(MESSAGE_LINE_REGEX_V2)
-      isV2Format = true
-    }
-
-    if (lineMatch) {
-      // 保存前一条消息
+    // 尝试匹配消息行：优先 V1（严格），再 V2（宽松 + 弹性时间解析）
+    const v1Match = cleanedLine.match(MESSAGE_LINE_REGEX_V1)
+    if (v1Match) {
       saveCurrentMessage()
-
-      const timeStr = lineMatch[1]
-      const restContent = lineMatch[2]
-
-      // 尝试分离发送者和内容
+      const restContent = v1Match[2]
       const senderMatch = restContent.match(SENDER_CONTENT_REGEX)
       if (senderMatch && !isSystemMessage(restContent)) {
-        // 普通消息
         currentMessage = {
-          timestamp: parseWhatsAppTime(timeStr, isV2Format),
+          timestamp: parseV1Timestamp(v1Match[1]),
           sender: senderMatch[1].trim(),
           contentLines: [senderMatch[2]],
         }
       } else {
-        // 系统消息
         currentMessage = {
-          timestamp: parseWhatsAppTime(timeStr, isV2Format),
+          timestamp: parseV1Timestamp(v1Match[1]),
           sender: null,
           contentLines: [restContent],
         }
       }
-
-      // 更新进度
       if (messagesProcessed % 500 === 0) {
-        const progress = createProgress(
-          'parsing',
-          bytesRead,
-          totalBytes,
-          messagesProcessed,
-          `已处理 ${messagesProcessed} 条消息...`
+        onProgress?.(
+          createProgress('parsing', bytesRead, totalBytes, messagesProcessed, `已处理 ${messagesProcessed} 条消息...`)
         )
-        onProgress?.(progress)
       }
-
       continue
+    }
+
+    const v2Match = cleanedLine.match(MESSAGE_LINE_REGEX_V2)
+    if (v2Match) {
+      const timestamp = parseFlexibleV2Timestamp(v2Match[1])
+      if (timestamp !== null) {
+        // 弹性解析成功 → 新消息
+        saveCurrentMessage()
+        const restContent = v2Match[2]
+        const senderMatch = restContent.match(SENDER_CONTENT_REGEX)
+        if (senderMatch && !isSystemMessage(restContent)) {
+          currentMessage = {
+            timestamp,
+            sender: senderMatch[1].trim(),
+            contentLines: [senderMatch[2]],
+          }
+        } else {
+          currentMessage = {
+            timestamp,
+            sender: null,
+            contentLines: [restContent],
+          }
+        }
+        if (messagesProcessed % 500 === 0) {
+          onProgress?.(
+            createProgress('parsing', bytesRead, totalBytes, messagesProcessed, `已处理 ${messagesProcessed} 条消息...`)
+          )
+        }
+        continue
+      }
+      // 弹性解析失败 → 方括号内容不是有效时间戳，降级为续行
     }
 
     // 非消息行：可能是多行消息的延续
