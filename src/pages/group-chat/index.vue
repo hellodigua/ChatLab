@@ -17,6 +17,7 @@ import SessionIndexModal from '@/components/analysis/SessionIndexModal.vue'
 import IncrementalImportModal from '@/components/analysis/IncrementalImportModal.vue'
 const MessageExportModal = defineAsyncComponent(() => import('@/components/MessageExport/MessageExportModal.vue'))
 import ActionToolsPanel from '@/components/layout/ActionToolsPanel.vue'
+import DebugToolsPanel from '@/components/layout/DebugToolsPanel.vue'
 import LoadingState from '@/components/UI/LoadingState.vue'
 import { useSessionStore } from '@/stores/session'
 import { useLayoutStore } from '@/stores/layout'
@@ -229,6 +230,7 @@ const { headerDescription } = useSessionHeaderDescription({
         @open-member-management="showMemberManagementModal = true"
         @open-message-export="showMessageExportModal = true"
       />
+      <DebugToolsPanel v-if="settingsStore.debugMode" />
     </template>
 
     <!-- Empty State -->
