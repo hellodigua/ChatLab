@@ -17,7 +17,8 @@
       "userFilter": "使用者篩選",
       "posFilter": "詞性過濾",
       "enableStopwords": "過濾停用詞",
-      "dict": "分詞詞庫"
+      "dict": "分詞詞庫",
+      "advanced": "進階設定"
     },
     "size": {
       "small": "小",
@@ -133,6 +134,37 @@
     "colon": "：",
     "viewChat": "檢視聊天紀錄",
     "empty": "暫無複讀資料"
+  },
+  "topicProfile": {
+    "dateAll": "全部訊息",
+    "dateNow": "至今",
+    "heroPrefix": "共分析了",
+    "heroMiddle": "則訊息，產生了",
+    "heroSuffix": "個不同詞彙",
+    "topTopicsPrefix": "你們最愛聊：",
+    "topKeywords": "熱門關鍵詞",
+    "hotTopic": "熱門話題",
+    "hotTopicDesc": "出現了 {count} 次",
+    "richness": "詞彙豐富度",
+    "richnessValue": "{value}%",
+    "richnessDesc": "不重複詞 {unique} / 總詞數 {total}",
+    "chatStyle": "聊天風格",
+    "styleEncyclopedia": "百科全書型",
+    "styleEncyclopediaDesc": "名詞佔比高，愛聊人、地、事",
+    "styleAction": "行動派",
+    "styleActionDesc": "動詞佔比高，愛討論做什麼",
+    "styleExpressive": "表達派",
+    "styleExpressiveDesc": "形容詞佔比高，善於修飾表達",
+    "styleBalanced": "均衡型",
+    "styleBalancedDesc": "聊天內容多元，各類話題均衡",
+    "expressionStyle": "表達風格",
+    "expressionCasual": "簡潔口語",
+    "expressionCasualDesc": "用詞簡短，輕鬆隨意",
+    "expressionFormal": "正式書面",
+    "expressionFormalDesc": "用詞考究，表達嚴謹",
+    "expressionMixed": "混合風格",
+    "expressionMixedDesc": "口語與書面兼顧",
+    "watermark": "話題畫像 · Topic Profile"
   },
   "catchphrase": {
     "title": "💬 口頭禪分析",

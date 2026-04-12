@@ -17,7 +17,8 @@
       "userFilter": "ユーザーフィルター",
       "posFilter": "品詞フィルター",
       "enableStopwords": "ストップワードを除外",
-      "dict": "辞書"
+      "dict": "辞書",
+      "advanced": "詳細設定"
     },
     "size": {
       "small": "小",
@@ -133,6 +134,37 @@
     "colon": "：",
     "viewChat": "チャット履歴を見る",
     "empty": "リピートデータがありません"
+  },
+  "topicProfile": {
+    "dateAll": "すべてのメッセージ",
+    "dateNow": "現在まで",
+    "heroPrefix": "",
+    "heroMiddle": "件のメッセージを分析し、",
+    "heroSuffix": "個のユニークな単語が見つかりました",
+    "topTopicsPrefix": "よく話すトピック：",
+    "topKeywords": "人気キーワード",
+    "hotTopic": "注目トピック",
+    "hotTopicDesc": "{count} 回出現",
+    "richness": "語彙の豊かさ",
+    "richnessValue": "{value}%",
+    "richnessDesc": "ユニーク {unique} / 合計 {total}",
+    "chatStyle": "チャットスタイル",
+    "styleEncyclopedia": "百科事典タイプ",
+    "styleEncyclopediaDesc": "名詞が多く、人・場所・物の話題が中心",
+    "styleAction": "アクション派",
+    "styleActionDesc": "動詞が多く、行動や計画の話題が中心",
+    "styleExpressive": "表現豊かタイプ",
+    "styleExpressiveDesc": "形容詞が多く、感情表現が豊か",
+    "styleBalanced": "バランス型",
+    "styleBalancedDesc": "多様なトピックでバランスの取れた会話",
+    "expressionStyle": "表現スタイル",
+    "expressionCasual": "カジュアル",
+    "expressionCasualDesc": "短い言葉でリラックスした表現",
+    "expressionFormal": "フォーマル",
+    "expressionFormalDesc": "丁寧な言葉遣いで正確な表現",
+    "expressionMixed": "ミックス",
+    "expressionMixedDesc": "カジュアルとフォーマルの混合",
+    "watermark": "トピックプロフィール"
   },
   "catchphrase": {
     "title": "💬 口癖分析",

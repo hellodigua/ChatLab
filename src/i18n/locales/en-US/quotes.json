@@ -17,7 +17,8 @@
       "userFilter": "User filter",
       "posFilter": "POS filter",
       "enableStopwords": "Filter stopwords",
-      "dict": "Dictionary"
+      "dict": "Dictionary",
+      "advanced": "Advanced"
     },
     "size": {
       "small": "S",
@@ -133,6 +134,37 @@
     "colon": ": ",
     "viewChat": "View chat history",
     "empty": "No repeat data available"
+  },
+  "topicProfile": {
+    "dateAll": "All messages",
+    "dateNow": "Present",
+    "heroPrefix": "Analyzed",
+    "heroMiddle": "messages, yielding",
+    "heroSuffix": "unique words",
+    "topTopicsPrefix": "You love talking about:",
+    "topKeywords": "Top Keywords",
+    "hotTopic": "Hot Topic",
+    "hotTopicDesc": "Appeared {count} times",
+    "richness": "Lexical Diversity",
+    "richnessValue": "{value}%",
+    "richnessDesc": "Unique {unique} / Total {total}",
+    "chatStyle": "Chat Style",
+    "styleEncyclopedia": "Encyclopedia",
+    "styleEncyclopediaDesc": "Noun-heavy, loves discussing people, places & things",
+    "styleAction": "Action-Oriented",
+    "styleActionDesc": "Verb-heavy, loves discussing what to do",
+    "styleExpressive": "Expressive",
+    "styleExpressiveDesc": "Adjective-heavy, rich in emotional expression",
+    "styleBalanced": "Balanced",
+    "styleBalancedDesc": "Diverse topics, well-rounded conversations",
+    "expressionStyle": "Expression Style",
+    "expressionCasual": "Casual",
+    "expressionCasualDesc": "Short words, relaxed and informal",
+    "expressionFormal": "Formal",
+    "expressionFormalDesc": "Elaborate words, precise expression",
+    "expressionMixed": "Mixed",
+    "expressionMixedDesc": "A blend of casual and formal",
+    "watermark": "Topic Profile"
   },
   "catchphrase": {
     "title": "💬 Catchphrase Analysis",

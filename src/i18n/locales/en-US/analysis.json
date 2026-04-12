@@ -58,7 +58,7 @@
       "relationship": "Relationship"
     },
     "quotes": {
-      "wordcloud": "Word Cloud",
+      "wordcloud": "Topics",
       "hotRepeat": "Hot Repeats",
       "catchphrase": "Catchphrases",
       "keywordAnalysis": "Keyword Analysis"

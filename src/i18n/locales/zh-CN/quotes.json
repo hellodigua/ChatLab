@@ -17,7 +17,8 @@
       "userFilter": "用户筛选",
       "posFilter": "词性过滤",
       "enableStopwords": "过滤停用词",
-      "dict": "分词词库"
+      "dict": "分词词库",
+      "advanced": "高级设置"
     },
     "size": {
       "small": "小",
@@ -133,6 +134,37 @@
     "colon": "：",
     "viewChat": "查看聊天记录",
     "empty": "暂无复读数据"
+  },
+  "topicProfile": {
+    "dateAll": "全部消息",
+    "dateNow": "至今",
+    "heroPrefix": "共分析了",
+    "heroMiddle": "条消息，产生了",
+    "heroSuffix": "个不同词汇",
+    "topTopicsPrefix": "你们最爱聊：",
+    "topKeywords": "热门关键词",
+    "hotTopic": "热门话题",
+    "hotTopicDesc": "出现了 {count} 次",
+    "richness": "词汇丰富度",
+    "richnessValue": "{value}%",
+    "richnessDesc": "不重复词 {unique} / 总词数 {total}",
+    "chatStyle": "聊天风格",
+    "styleEncyclopedia": "百科全书型",
+    "styleEncyclopediaDesc": "名词占比高，爱聊人、地、事",
+    "styleAction": "行动派",
+    "styleActionDesc": "动词占比高，爱讨论做什么",
+    "styleExpressive": "表达派",
+    "styleExpressiveDesc": "形容词占比高，善于修饰表达",
+    "styleBalanced": "均衡型",
+    "styleBalancedDesc": "聊天内容多元，各类话题均衡",
+    "expressionStyle": "表达风格",
+    "expressionCasual": "简洁口语",
+    "expressionCasualDesc": "用词简短，轻松随意",
+    "expressionFormal": "正式书面",
+    "expressionFormalDesc": "用词考究，表达严谨",
+    "expressionMixed": "混合风格",
+    "expressionMixedDesc": "口语与书面兼顾",
+    "watermark": "话题画像 · Topic Profile"
   },
   "catchphrase": {
     "title": "💬 口头禅分析",

@@ -365,18 +365,26 @@ export interface BatchSegmentOptions extends SegmentOptions {
   excludeWords?: string[]
 }
 
+export interface BatchSegmentResult {
+  /** topN 裁剪后的词频 Map */
+  words: Map<string, number>
+  /** 裁剪前的去重词数（过滤低频词后） */
+  uniqueWords: number
+  /** 裁剪前的总词次（过滤低频词后所有词的出现次数之和） */
+  totalWords: number
+}
+
 /**
  * 批量分词并统计词频
  * @param texts 文本数组
  * @param locale 语言
  * @param options 选项
- * @returns 词频 Map
  */
 export function batchSegmentWithFrequency(
   texts: string[],
   locale: SupportedLocale,
   options: BatchSegmentOptions = {}
-): Map<string, number> {
+): BatchSegmentResult {
   const { minLength, minCount = 2, topN = 100, posFilterMode, customPosTags, enableStopwords, dictType, excludeWords } = options
   const wordFrequency = new Map<string, number>()
   const excludeSet = excludeWords?.length ? new Set(excludeWords.map((w) => w.toLowerCase())) : null
@@ -391,14 +399,20 @@ export function batchSegmentWithFrequency(
 
   // 过滤低频词
   const filtered = new Map<string, number>()
+  let totalWords = 0
   for (const [word, count] of wordFrequency) {
     if (count >= minCount) {
       filtered.set(word, count)
+      totalWords += count
     }
   }
 
   // 排序并取 topN
   const sorted = [...filtered.entries()].sort((a, b) => b[1] - a[1]).slice(0, topN)
 
-  return new Map(sorted)
+  return {
+    words: new Map(sorted),
+    uniqueWords: filtered.size,
+    totalWords,
+  }
 }

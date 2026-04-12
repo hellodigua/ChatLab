@@ -30,6 +30,10 @@ interface Props {
   colorScheme?: 'default' | 'warm' | 'cool' | 'rainbow'
   /** 字体大小倍率 (0.5-2.0) */
   sizeScale?: number
+  /** 允许词语超出画布边界（适用于紧凑迷你词云） */
+  drawOutOfBound?: boolean
+  /** 词云形状，rectangle 可填满矩形区域减少边距 */
+  shape?: 'circle' | 'cardioid' | 'diamond' | 'triangle' | 'rectangle'
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -38,6 +42,8 @@ const props = withDefaults(defineProps<Props>(), {
   maxWords: 100,
   colorScheme: 'default',
   sizeScale: 1,
+  drawOutOfBound: false,
+  shape: 'circle',
 })
 
 const emit = defineEmits<{
@@ -125,8 +131,10 @@ const getOption = () => {
     series: [
       {
         type: 'wordCloud',
-        // 词云形状：circle, cardioid, diamond, triangle-forward, triangle, pentagon, star
-        shape: 'circle',
+        shape:
+          props.shape === 'rectangle'
+            ? (theta: number) => 1 / Math.max(Math.abs(Math.cos(theta)), Math.abs(Math.sin(theta)))
+            : props.shape,
         // 填满整个容器（无边距）
         left: 0,
         top: 0,
@@ -141,8 +149,7 @@ const getOption = () => {
         // 文字旋转范围
         rotationRange: [-45, 45],
         rotationStep: 15,
-        // 允许词语部分超出画布
-        drawOutOfBound: false,
+        drawOutOfBound: props.drawOutOfBound,
         // 布局动画
         layoutAnimation: true,
         // 全局文本样式

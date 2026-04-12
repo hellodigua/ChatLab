@@ -5,7 +5,14 @@
 
 import { openDatabase, buildTimeFilter, type TimeFilter } from '../core'
 import { segment, batchSegmentWithFrequency, getPosTagDefinitions, collectPosTagStats } from '../../nlp'
-import type { SupportedLocale, WordFrequencyResult, WordFrequencyParams, PosTagInfo, PosTagStat, DictType } from '../../nlp'
+import type {
+  SupportedLocale,
+  WordFrequencyResult,
+  WordFrequencyParams,
+  PosTagInfo,
+  PosTagStat,
+  DictType,
+} from '../../nlp'
 
 /**
  * 获取词频统计
@@ -80,7 +87,7 @@ export function getWordFrequency(params: WordFrequencyParams): WordFrequencyResu
     posTagStats = [...posStatsMap.entries()].map(([tag, count]) => ({ tag, count }))
   }
 
-  const wordFrequency = batchSegmentWithFrequency(texts, locale as SupportedLocale, {
+  const result = batchSegmentWithFrequency(texts, locale as SupportedLocale, {
     minLength: minWordLength,
     minCount,
     topN,
@@ -91,22 +98,22 @@ export function getWordFrequency(params: WordFrequencyParams): WordFrequencyResu
     excludeWords,
   })
 
-  let totalWords = 0
-  for (const count of wordFrequency.values()) {
-    totalWords += count
+  let topNTotalWords = 0
+  for (const count of result.words.values()) {
+    topNTotalWords += count
   }
 
-  const words = [...wordFrequency.entries()].map(([word, count]) => ({
+  const words = [...result.words.entries()].map(([word, count]) => ({
     word,
     count,
-    percentage: totalWords > 0 ? Math.round((count / totalWords) * 10000) / 100 : 0,
+    percentage: topNTotalWords > 0 ? Math.round((count / topNTotalWords) * 10000) / 100 : 0,
   }))
 
   return {
     words,
-    totalWords,
+    totalWords: result.totalWords,
     totalMessages: messages.length,
-    uniqueWords: wordFrequency.size,
+    uniqueWords: result.uniqueWords,
     posTagStats,
   }
 }
