@@ -3,7 +3,7 @@ import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDark } from '@vueuse/core'
 import * as echarts from 'echarts/core'
-import { HeatmapChart } from 'echarts/charts'
+import { HeatmapChart, CustomChart } from 'echarts/charts'
 import { CalendarComponent, TooltipComponent, VisualMapComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import type { EChartsOption } from 'echarts'
@@ -14,7 +14,7 @@ import { ThemeCard } from '@/components/UI'
 import { useOverviewStatistics } from '@/composables/analysis/useOverviewStatistics'
 import OverviewStatCards from './OverviewStatCards.vue'
 
-echarts.use([HeatmapChart, CalendarComponent, TooltipComponent, VisualMapComponent, CanvasRenderer])
+echarts.use([HeatmapChart, CustomChart, CalendarComponent, TooltipComponent, VisualMapComponent, CanvasRenderer])
 
 const { t, locale } = useI18n()
 const isDark = useDark()
@@ -116,10 +116,12 @@ const maxValue = computed(() => {
 
 const themeColors = {
   light: ['#fce4ec', '#f8a4b8', '#f06292', '#e91e63'],
-  dark: ['#3d1f24', '#6b2f3a', '#a34557', '#ee4567'],
+  // 消息越少，颜色越透明越灰白（不显眼）；消息越多，颜色越是实心的亮深粉色（视觉浓度更高）
+  dark: ['rgba(238, 69, 103, 0.15)', 'rgba(238, 69, 103, 0.45)', 'rgba(238, 69, 103, 0.75)', 'rgba(238, 69, 103, 1)'],
 }
 
-const emptyColor = computed(() => (isDark.value ? 'rgba(255, 255, 255, 0.08)' : '#ebedf0'))
+// 采用微透明的拟态毛玻璃底色，与 ThemeCard 的背景/光晕能够完美融合
+const emptyColor = computed(() => (isDark.value ? 'rgba(255, 255, 255, 0.04)' : '#ebedf0'))
 
 const chartOption = computed<EChartsOption>(() => ({
   tooltip: {
@@ -197,13 +199,33 @@ const chartOption = computed<EChartsOption>(() => ({
   },
   series: [
     {
-      type: 'heatmap',
+      type: 'custom',
       coordinateSystem: 'calendar',
       data: chartData.value,
+      renderItem: (params: any, api: any) => {
+        const cellPoint = api.coord(api.value(0))
+        const cellWidth = params.coordSys.cellWidth
+        const cellHeight = params.coordSys.cellHeight
+        
+        // 每个格子的边长减去 3 像素，从而形成真正的透明物理间隙，透出底部光效
+        const size = Math.min(cellWidth, cellHeight) - 3
+        
+        return {
+          type: 'rect',
+          shape: {
+            x: cellPoint[0] - size / 2,
+            y: cellPoint[1] - size / 2,
+            width: size,
+            height: size,
+            r: 3, // 圆角
+          },
+          style: api.style(),
+        }
+      },
       itemStyle: {
-        borderRadius: 3,
-        borderWidth: 2,
-        borderColor: isDark.value ? 'rgba(0, 0, 0, 0.01)' : '#ffffff',
+        // 对于白天的细微高光补充（非必需，保持干净）
+        borderColor: isDark.value ? 'transparent' : 'rgba(0,0,0,0.02)',
+        borderWidth: 1,
       },
     },
   ],
