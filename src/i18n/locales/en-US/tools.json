@@ -32,9 +32,10 @@
     },
     "clickToEdit": "Click to edit name",
     "merge": "Merge Selected",
-    "mergeHint": "Select 2 or more chat records from the same platform to merge",
+    "mergeHint": "Select at least 2 chat records of the same chat type to merge",
     "mergeConfirmTitle": "Merge Chat Records",
     "mergeConfirmMessage": "This will merge {count} selected chat records. The original records will be deleted and a new merged record will be created.",
+    "mergeRiskWarning": "Critical warning: this merge cannot be undone, and cross-platform context differences may cause semantic confusion. Please back up your original data before continuing.",
     "mergeSteps": {
       "exporting": "Exporting chat records...",
       "parsing": "Parsing files...",

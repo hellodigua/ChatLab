@@ -73,13 +73,14 @@ export async function parseFileInfo(filePath: string): Promise<FileParseInfo> {
 /**
  * 生成消息的唯一标识（用于去重和冲突检测）
  */
-function getMessageKey(msg: ParsedMessage): string {
+function getMessageKey(msg: ParsedMessage, senderPlatformIdOverride?: string): string {
   // 合并链路的去重语义需要和增量导入保持一致，否则两条链路会对重复消息得出不同结论。
   const normalizedContent = msg.content || null
+  const senderPlatformId = senderPlatformIdOverride || msg.senderPlatformId
   const hash = createHash('sha256')
   hash.update(String(msg.timestamp))
   hash.update('\0')
-  hash.update(msg.senderPlatformId)
+  hash.update(senderPlatformId)
   hash.update('\0')
   hash.update(normalizedContent === null ? 'null' : 'text')
   hash.update('\0')
@@ -93,6 +94,54 @@ function getParsedMessageDisplayName(msg: ParsedMessage): string {
   return msg.senderGroupNickname || msg.senderAccountName || msg.senderPlatformId
 }
 
+function getCollidingPlatformIds(
+  sources: Array<{ platform: string; members: Array<{ platformId: string }> }>
+): Set<string> {
+  const memberPlatformMap = new Map<string, Set<string>>()
+  for (const source of sources) {
+    for (const member of source.members) {
+      if (!memberPlatformMap.has(member.platformId)) {
+        memberPlatformMap.set(member.platformId, new Set())
+      }
+      memberPlatformMap.get(member.platformId)!.add(source.platform || 'unknown')
+    }
+  }
+
+  const collidingIds = new Set<string>()
+  for (const [platformId, platforms] of memberPlatformMap) {
+    if (platforms.size > 1) {
+      collidingIds.add(platformId)
+    }
+  }
+  return collidingIds
+}
+
+function normalizePlatformId(platformId: string, platform: string, collidingIds: Set<string>): string {
+  if (!collidingIds.has(platformId)) return platformId
+  return `${platform || 'unknown'}:${platformId}`
+}
+
+function getCollidingPlatformIdsFromMessages(
+  allMessages: Array<{ msg: ParsedMessage; source: string; platform: string }>
+): Set<string> {
+  const memberPlatformMap = new Map<string, Set<string>>()
+  for (const item of allMessages) {
+    const platformId = item.msg.senderPlatformId
+    if (!memberPlatformMap.has(platformId)) {
+      memberPlatformMap.set(platformId, new Set())
+    }
+    memberPlatformMap.get(platformId)!.add(item.platform || 'unknown')
+  }
+
+  const collidingIds = new Set<string>()
+  for (const [platformId, platforms] of memberPlatformMap) {
+    if (platforms.size > 1) {
+      collidingIds.add(platformId)
+    }
+  }
+  return collidingIds
+}
+
 /**
  * 检查消息是否是纯图片消息
  * 纯图片消息格式如：[图片: xxx.jpg]、[图片: {xxx}.jpg] 等
@@ -104,11 +153,13 @@ function isImageOnlyMessage(content: string | undefined): boolean {
 }
 
 function detectConflictsInMessages(
-  allMessages: Array<{ msg: ParsedMessage; source: string }>,
+  allMessages: Array<{ msg: ParsedMessage; source: string; platform: string }>,
   conflicts: MergeConflict[]
 ): ConflictCheckResult {
+  const collidingIds = getCollidingPlatformIdsFromMessages(allMessages)
+
   // 按时间戳分组检测冲突
-  const timeGroups = new Map<number, Array<{ msg: ParsedMessage; source: string }>>()
+  const timeGroups = new Map<number, Array<{ msg: ParsedMessage; source: string; platform: string }>>()
   for (const item of allMessages) {
     const ts = item.msg.timestamp
     if (!timeGroups.has(ts)) {
@@ -133,9 +184,9 @@ function detectConflictsInMessages(
     if (items.length < 2) continue
 
     // 按发送者分组
-    const senderGroups = new Map<string, Array<{ msg: ParsedMessage; source: string }>>()
+    const senderGroups = new Map<string, Array<{ msg: ParsedMessage; source: string; platform: string }>>()
     for (const item of items) {
-      const sender = item.msg.senderPlatformId
+      const sender = normalizePlatformId(item.msg.senderPlatformId, item.platform || 'unknown', collidingIds)
       if (!senderGroups.has(sender)) {
         senderGroups.set(sender, [])
       }
@@ -154,7 +205,7 @@ function detectConflictsInMessages(
       }
 
       // 按内容分组（完全相同的内容会被分到一组，自动去重）
-      const contentGroups = new Map<string, Array<{ msg: ParsedMessage; source: string }>>()
+      const contentGroups = new Map<string, Array<{ msg: ParsedMessage; source: string; platform: string }>>()
       for (const item of senderItems) {
         const content = item.msg.content || ''
         if (!contentGroups.has(content)) {
@@ -232,7 +283,8 @@ function detectConflictsInMessages(
   // 计算去重后的消息数
   const uniqueKeys = new Set<string>()
   for (const item of allMessages) {
-    uniqueKeys.add(getMessageKey(item.msg))
+    const normalizedSenderId = normalizePlatformId(item.msg.senderPlatformId, item.platform || 'unknown', collidingIds)
+    uniqueKeys.add(getMessageKey(item.msg, normalizedSenderId))
   }
   console.log(`[Merger] Messages after dedup: ${uniqueKeys.size}`)
 
@@ -286,17 +338,26 @@ async function executeMerge(
   _conflictResolutions: MergeParams['conflictResolutions'],
   andAnalyze: boolean
 ): Promise<MergeResult> {
+  const collidingIds = getCollidingPlatformIds(
+    parseResults.map(({ result }) => ({
+      platform: result.meta.platform || 'unknown',
+      members: result.members.map((m) => ({ platformId: m.platformId })),
+    }))
+  )
+
   const memberMap = new Map<string, ChatLabMember>()
   for (const { result } of parseResults) {
+    const sourcePlatform = result.meta.platform || 'unknown'
     for (const member of result.members) {
-      const existing = memberMap.get(member.platformId)
+      const normalizedMemberPlatformId = normalizePlatformId(member.platformId, sourcePlatform, collidingIds)
+      const existing = memberMap.get(normalizedMemberPlatformId)
       if (existing) {
         if (member.accountName) existing.accountName = member.accountName
         if (member.groupNickname) existing.groupNickname = member.groupNickname
         if (member.avatar) existing.avatar = member.avatar
       } else {
-        memberMap.set(member.platformId, {
-          platformId: member.platformId,
+        memberMap.set(normalizedMemberPlatformId, {
+          platformId: normalizedMemberPlatformId,
           accountName: member.accountName,
           groupNickname: member.groupNickname,
           avatar: member.avatar,
@@ -308,13 +369,15 @@ async function executeMerge(
   const seenKeys = new Set<string>()
   const mergedMessages: ChatLabMessage[] = []
   for (const { result } of parseResults) {
+    const sourcePlatform = result.meta.platform || 'unknown'
     for (const msg of result.messages) {
-      const key = getMessageKey(msg)
+      const normalizedSenderPlatformId = normalizePlatformId(msg.senderPlatformId, sourcePlatform, collidingIds)
+      const key = getMessageKey(msg, normalizedSenderPlatformId)
       if (seenKeys.has(key)) continue
       seenKeys.add(key)
 
       mergedMessages.push({
-        sender: msg.senderPlatformId,
+        sender: normalizedSenderPlatformId,
         accountName: msg.senderAccountName,
         groupNickname: msg.senderGroupNickname,
         timestamp: msg.timestamp,
@@ -346,9 +409,12 @@ async function executeMerge(
     description: `合并自 ${parseResults.length} 个文件`,
   }
 
+  const uniquePlatforms = [...new Set(parseResults.map(({ result }) => result.meta.platform || 'unknown'))]
+  const mergedPlatform = uniquePlatforms.length === 1 ? uniquePlatforms[0] : 'mixed'
+
   const chatLabMeta = {
     name: outputName,
-    platform: parseResults[0].result.meta.platform as ChatPlatform,
+    platform: mergedPlatform as ChatPlatform,
     type: parseResults[0].result.meta.type as ChatType,
     sources,
     groupId,
@@ -410,7 +476,7 @@ export async function checkConflictsWithTempDb(
   filePaths: string[],
   tempDbCache: Map<string, string>
 ): Promise<ConflictCheckResult> {
-  const allMessages: Array<{ msg: ParsedMessage; source: string }> = []
+  const allMessages: Array<{ msg: ParsedMessage; source: string; platform: string }> = []
   const conflicts: MergeConflict[] = []
 
   console.log('[Merger] checkConflictsWithTempDb: Checking conflicts')
@@ -443,22 +509,12 @@ export async function checkConflictsWithTempDb(
       // 流式读取消息，避免一次性加载到内存
       reader.streamMessages(10000, (messages) => {
         for (const msg of messages) {
-          allMessages.push({ msg, source: sourceName })
+          allMessages.push({ msg, source: sourceName, platform: meta?.platform || 'unknown' })
         }
       })
     }
 
     console.log(`[Merger] Total messages: ${allMessages.length}`)
-
-    // 检查格式一致性
-    const platforms = readers.map((r) => r.getMeta()?.platform || 'unknown')
-    const uniquePlatforms = [...new Set(platforms)]
-    if (uniquePlatforms.length > 1) {
-      throw new Error(
-        `不支持合并不同格式的聊天记录。\n检测到的格式：${uniquePlatforms.join('、')}\n请确保所有文件使用相同的导出工具和格式。`
-      )
-    }
-    console.log('[Merger] Format check passed:', uniquePlatforms[0])
 
     return detectConflictsInMessages(allMessages, conflicts)
   } finally {
@@ -519,11 +575,20 @@ export async function mergeFilesWithTempDb(
       parseResults.push({ meta, members, source: sourceName, reader })
     }
 
+    const collidingIds = getCollidingPlatformIds(
+      parseResults.map(({ meta, members }) => ({
+        platform: meta.platform || 'unknown',
+        members: members.map((m) => ({ platformId: m.platformId })),
+      }))
+    )
+
     // 合并成员
     const memberMap = new Map<string, ChatLabMember>()
-    for (const { members } of parseResults) {
+    for (const { meta, members } of parseResults) {
+      const sourcePlatform = meta.platform || 'unknown'
       for (const member of members) {
-        const existing = memberMap.get(member.platformId)
+        const normalizedMemberPlatformId = normalizePlatformId(member.platformId, sourcePlatform, collidingIds)
+        const existing = memberMap.get(normalizedMemberPlatformId)
         if (existing) {
           if (member.accountName) {
             existing.accountName = member.accountName
@@ -536,8 +601,8 @@ export async function mergeFilesWithTempDb(
             existing.avatar = member.avatar
           }
         } else {
-          memberMap.set(member.platformId, {
-            platformId: member.platformId,
+          memberMap.set(normalizedMemberPlatformId, {
+            platformId: normalizedMemberPlatformId,
             accountName: member.accountName,
             groupNickname: member.groupNickname,
             avatar: member.avatar,
@@ -553,13 +618,15 @@ export async function mergeFilesWithTempDb(
     let totalProcessed = 0
     const startTime = Date.now()
 
-    for (const { reader, source } of parseResults) {
+    for (const { meta, reader, source } of parseResults) {
+      const sourcePlatform = meta.platform || 'unknown'
       const readerStartTime = Date.now()
       let readerCount = 0
 
       reader.streamMessages(10000, (messages) => {
         for (const msg of messages) {
-          const key = getMessageKey(msg)
+          const normalizedSenderPlatformId = normalizePlatformId(msg.senderPlatformId, sourcePlatform, collidingIds)
+          const key = getMessageKey(msg, normalizedSenderPlatformId)
 
           // 跳过已处理的消息（去重）
           if (seenKeys.has(key)) {
@@ -571,7 +638,7 @@ export async function mergeFilesWithTempDb(
           // 决定了哪个版本的消息先被处理，后续相同 key 的消息会被跳过
 
           mergedMessages.push({
-            sender: msg.senderPlatformId,
+            sender: normalizedSenderPlatformId,
             accountName: msg.senderAccountName,
             groupNickname: msg.senderGroupNickname,
             timestamp: msg.timestamp,
@@ -596,8 +663,9 @@ export async function mergeFilesWithTempDb(
 
     console.log(`[Merger] Messages after merge: ${mergedMessages.length}`)
 
-    // 确定平台（使用第一个文件的平台）
-    const platform = parseResults[0].meta.platform
+    // 确定平台（跨平台时标记为 mixed）
+    const uniquePlatforms = [...new Set(parseResults.map((r) => r.meta.platform || 'unknown'))]
+    const platform = uniquePlatforms.length === 1 ? uniquePlatforms[0] : 'mixed'
 
     // 确定群ID和群头像（仅当所有文件都来自同一个群时保留）
     const groupIds = new Set(parseResults.map((r) => r.meta.groupId).filter(Boolean))

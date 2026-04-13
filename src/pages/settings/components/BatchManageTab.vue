@@ -194,12 +194,13 @@ const editingId = ref<string | null>(null)
 // 编辑中的名称
 const editingName = ref('')
 
-// 是否可以合并（选中 2 个以上同平台会话）
+const selectedMergeSessions = computed(() => sessions.value.filter((s) => selectedIds.value.has(s.id)))
+const selectedMergeTypes = computed(() => new Set(selectedMergeSessions.value.map((s) => s.type)))
+
+// 是否可以合并（选中 2 个以上同类型会话）
 const canMerge = computed(() => {
   if (selectedIds.value.size < 2) return false
-  const selectedSessions = sessions.value.filter((s) => selectedIds.value.has(s.id))
-  const platforms = new Set(selectedSessions.map((s) => s.platform))
-  return platforms.size === 1
+  return selectedMergeTypes.value.size === 1
 })
 
 // 全选状态（基于过滤后的列表）
@@ -267,6 +268,16 @@ function handleRowClick(index: number, id: string, event: MouseEvent) {
   }
   // 始终更新 lastClickedIndex
   lastClickedIndex.value = index
+}
+
+function handleRowMouseDown(event: MouseEvent) {
+  if (!event.shiftKey) return
+
+  const target = event.target as HTMLElement | null
+  if (target?.closest('input, textarea, [contenteditable="true"]')) return
+
+  // 避免浏览器默认的 Shift 文本范围选择，防止误选中行内文字
+  event.preventDefault()
 }
 
 // 判断是否选中
@@ -606,6 +617,7 @@ onMounted(() => {
           isSelected(session.id) ? 'bg-pink-50 dark:bg-pink-900/20' : '',
           index !== sortedSessions.length - 1 ? 'border-b border-gray-100 dark:border-gray-800' : '',
         ]"
+        @mousedown="handleRowMouseDown"
         @click="handleRowClick(index, session.id, $event)"
       >
         <!-- 复选框 -->
@@ -694,7 +706,7 @@ onMounted(() => {
     </div>
 
     <!-- 合并确认弹窗 -->
-    <UModal v-model:open="showMergeModal">
+    <UModal v-model:open="showMergeModal" :ui="{ content: 'z-100' }">
       <template #content>
         <div class="p-4">
           <div class="mb-4 flex items-center gap-3">
@@ -710,10 +722,22 @@ onMounted(() => {
             {{ t('tools.batchManage.mergeConfirmMessage', { count: selectedIds.size }) }}
           </p>
 
+          <!-- 强提醒 -->
+          <div
+            class="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 dark:border-red-800/50 dark:bg-red-900/20"
+          >
+            <div class="flex items-start gap-2">
+              <UIcon name="i-heroicons-exclamation-triangle" class="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+              <p class="text-xs leading-5 text-red-700 dark:text-red-300">
+                {{ t('tools.batchManage.mergeRiskWarning') }}
+              </p>
+            </div>
+          </div>
+
           <!-- 选中的会话预览 -->
           <div class="mb-4 max-h-40 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700">
             <div
-              v-for="session in sessions.filter((s) => selectedIds.has(s.id))"
+              v-for="session in selectedMergeSessions"
               :key="session.id"
               class="flex items-center gap-2 border-b border-gray-100 px-3 py-2 last:border-b-0 dark:border-gray-800"
             >
