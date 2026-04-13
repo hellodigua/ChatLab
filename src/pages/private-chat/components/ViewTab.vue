@@ -5,6 +5,7 @@ import { SubTabs } from '@/components/UI'
 import UserSelect from '@/components/common/UserSelect.vue'
 import MessageView from '@openchatlab/chart-message/MessageView.vue'
 import RelationshipView from './view/RelationshipView.vue'
+import { WordcloudTab } from '@/components/analysis/quotes'
 
 const { t } = useI18n()
 
@@ -22,6 +23,7 @@ const props = defineProps<{
 const subTabs = computed(() => [
   { id: 'relationship', label: t('analysis.subTabs.view.relationship'), icon: 'i-heroicons-heart' },
   { id: 'message', label: t('analysis.subTabs.view.message'), icon: 'i-heroicons-chat-bubble-left-right' },
+  { id: 'topic', label: t('analysis.subTabs.view.topic'), icon: 'i-heroicons-cloud' },
 ])
 
 const activeSubTab = ref('relationship')
@@ -56,6 +58,11 @@ const viewTimeFilter = computed(() => ({
         />
         <RelationshipView
           v-else-if="activeSubTab === 'relationship'"
+          :session-id="props.sessionId"
+          :time-filter="props.timeFilter"
+        />
+        <WordcloudTab
+          v-else-if="activeSubTab === 'topic'"
           :session-id="props.sessionId"
           :time-filter="props.timeFilter"
         />

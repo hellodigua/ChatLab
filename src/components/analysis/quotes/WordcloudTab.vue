@@ -123,8 +123,9 @@ const downloadingDictId = ref<string | null>(null)
 const showDictPromptModal = ref(false)
 const DICT_PROMPT_DISMISSED_KEY = 'chatlab_zhTW_dict_prompt_dismissed'
 
-const locale = computed(() => settingsStore.locale as 'zh-CN' | 'en-US')
+const locale = computed(() => settingsStore.locale as 'zh-CN' | 'en-US' | 'zh-TW' | 'ja-JP')
 const isTraditionalChinese = computed(() => settingsStore.locale === 'zh-TW')
+const requiresChineseDict = computed(() => locale.value.startsWith('zh'))
 
 const dictOptions = computed(() => {
   return dictList.value
@@ -138,6 +139,7 @@ const dictOptions = computed(() => {
 const hasAnyDict = computed(() => {
   return dictList.value.some((d) => d.downloaded)
 })
+const canAnalyzeWithoutDictBlocking = computed(() => !requiresChineseDict.value || hasAnyDict.value)
 
 const undownloadedDicts = computed(() => {
   return dictList.value.filter((d) => !d.downloaded)
@@ -245,7 +247,7 @@ async function loadPosTagDefinitions() {
 
 // 加载话题迷你词云数据（固定词性过滤）
 async function loadTopicMiniWords() {
-  if (!props.sessionId || !hasAnyDict.value) return
+  if (!props.sessionId || !canAnalyzeWithoutDictBlocking.value) return
   try {
     const result = await window.nlpApi.getWordFrequency({
       sessionId: props.sessionId,
@@ -273,7 +275,7 @@ async function loadTopicMiniWords() {
 
 // 加载词频数据
 async function loadWordFrequency() {
-  if (!props.sessionId || !hasAnyDict.value) return
+  if (!props.sessionId || !canAnalyzeWithoutDictBlocking.value) return
 
   isLoading.value = true
   try {
@@ -390,7 +392,7 @@ onMounted(async () => {
   <div class="main-content mx-auto max-w-[920px] space-y-6 p-6">
     <!-- 需要下载词库（全屏提示） -->
     <div
-      v-if="!hasAnyDict"
+      v-if="requiresChineseDict && !hasAnyDict"
       class="flex h-64 flex-col items-center justify-center gap-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-600"
     >
       <UIcon name="i-heroicons-arrow-down-tray" class="text-4xl text-gray-400" />

@@ -59,12 +59,15 @@ export function getJieba(dictType: DictType = 'default'): JiebaInstance {
     const { Jieba } = require('@node-rs/jieba')
 
     const diskDict = tryLoadDictFromDisk(effectiveType)
-    if (!diskDict) {
-      throw new Error(`Dict file not found for: ${effectiveType}. Please ensure the dictionary has been downloaded.`)
+    let instance: JiebaInstance
+    if (diskDict) {
+      instance = Jieba.withDict(diskDict)
+      console.log(`[NLP] jieba dict loaded: ${effectiveType} (${diskDict.length} bytes)`)
+    } else {
+      // 词库缺失时仍保留 jieba 能力，避免 FTS 退化为空格切分。
+      instance = new Jieba()
+      console.warn(`[NLP] jieba dict missing: ${effectiveType}, fallback to built-in tokenizer`)
     }
-
-    const instance: JiebaInstance = Jieba.withDict(diskDict)
-    console.log(`[NLP] jieba dict loaded: ${effectiveType} (${diskDict.length} bytes)`)
 
     jiebaInstances.set(effectiveType, instance)
     return instance

@@ -13,7 +13,7 @@
   },
   "tabs": {
     "overview": "Overview",
-    "view": "View",
+    "view": "Insights",
     "ranking": "Rankings",
     "groupQuotes": "Quotes",
     "quotes": "Quotes",
@@ -53,6 +53,7 @@
   "subTabs": {
     "view": {
       "message": "Messages",
+      "topic": "Topics",
       "interaction": "Interactions",
       "ranking": "Rankings",
       "relationship": "Relationship"

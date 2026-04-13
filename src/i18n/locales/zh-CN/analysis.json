@@ -13,7 +13,7 @@
   },
   "tabs": {
     "overview": "总览",
-    "view": "视图",
+    "view": "洞察",
     "ranking": "榜单",
     "groupQuotes": "语录",
     "quotes": "语录",
@@ -53,6 +53,7 @@
   "subTabs": {
     "view": {
       "message": "消息",
+      "topic": "话题",
       "interaction": "互动分析",
       "ranking": "榜单",
       "relationship": "关系"

@@ -899,7 +899,7 @@ interface NetworkApi {
 }
 
 // NLP API 类型 - 自然语言处理功能
-type SupportedLocale = 'zh-CN' | 'en-US'
+type SupportedLocale = 'zh-CN' | 'en-US' | 'zh-TW' | 'ja-JP'
 
 /** 词性过滤模式 */
 type PosFilterMode = 'all' | 'meaningful' | 'custom'

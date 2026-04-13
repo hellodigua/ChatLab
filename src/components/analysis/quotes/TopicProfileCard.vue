@@ -244,6 +244,9 @@ const KEYWORD_COLORS = ['#6366f1', '#ec4899', '#f97316', '#22c55e', '#3b82f6', '
 
             <!-- 第二行：独特词汇数 -->
             <div class="flex items-baseline gap-x-1.5">
+              <span class="text-xl font-medium text-gray-700 dark:text-gray-300">
+                {{ t('quotes.topicProfile.heroMiddleSecond') }}
+              </span>
               <span class="font-black text-3xl text-pink-500 dark:text-pink-400">
                 {{ uniqueWords.toLocaleString() }}
               </span>

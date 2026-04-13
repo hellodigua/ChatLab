@@ -13,7 +13,7 @@
   },
   "tabs": {
     "overview": "概要",
-    "view": "閲覧",
+    "view": "インサイト",
     "ranking": "ランキング",
     "groupQuotes": "名言集",
     "quotes": "名言集",
@@ -53,6 +53,7 @@
   "subTabs": {
     "view": {
       "message": "メッセージ",
+      "topic": "トピック",
       "interaction": "インタラクション分析",
       "ranking": "ランキング",
       "relationship": "関係"

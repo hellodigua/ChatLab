@@ -8,10 +8,6 @@ ChatLab focuses on analyzing exported data - we don't provide data extraction fe
 
 Tips: Welcome to join the [ChatLab Community](../other/community.md) to discuss issues and share feedback.
 
-::: danger Important Notice **When using third-party export tools, please carefully read their official documentation, privacy policies, and security instructions.**
-
-**ChatLab has no direct or indirect association with the projects listed below. These links are provided solely as technical information for your reference and do not imply any endorsement, guarantee, or warranty of their safety by ChatLab. Users must evaluate and assume all risks associated with using these third-party tools.** :::
-
 ## WhatsApp
 
 For WhatsApp, we currently support the official "Export Chat" feature.

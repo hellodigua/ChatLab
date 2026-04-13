@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { SubTabs } from '@/components/UI'
-import { CatchphraseTab, KeywordAnalysis, WordcloudTab } from '@/components/analysis/quotes'
+import { CatchphraseTab, KeywordAnalysis } from '@/components/analysis/quotes'
 
 const { t } = useI18n()
 
@@ -16,9 +16,8 @@ const props = defineProps<{
   timeFilter?: TimeFilter
 }>()
 
-// 子 Tab 配置（私聊：词云、口头禅、关键词分析）
+// 子 Tab 配置（私聊：口头禅、关键词分析）
 const subTabs = computed(() => [
-  { id: 'wordcloud', label: t('analysis.subTabs.quotes.wordcloud'), icon: 'i-heroicons-cloud' },
   {
     id: 'catchphrase',
     label: t('analysis.subTabs.quotes.catchphrase'),
@@ -27,7 +26,7 @@ const subTabs = computed(() => [
   { id: 'keyword', label: t('analysis.subTabs.quotes.keywordAnalysis'), icon: 'i-heroicons-magnifying-glass' },
 ])
 
-const activeSubTab = ref('wordcloud')
+const activeSubTab = ref('catchphrase')
 </script>
 
 <template>
@@ -41,13 +40,6 @@ const activeSubTab = ref('wordcloud')
         <!-- 口头禅分析 -->
         <CatchphraseTab
           v-if="activeSubTab === 'catchphrase'"
-          :session-id="props.sessionId"
-          :time-filter="props.timeFilter"
-        />
-
-        <!-- 词云分析 -->
-        <WordcloudTab
-          v-else-if="activeSubTab === 'wordcloud'"
           :session-id="props.sessionId"
           :time-filter="props.timeFilter"
         />

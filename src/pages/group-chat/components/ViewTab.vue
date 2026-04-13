@@ -8,6 +8,7 @@ import InteractionView from '@openchatlab/chart-interaction/InteractionView.vue'
 import RankingView from '@openchatlab/chart-ranking/RankingView.vue'
 import Relationships from './view/Relationships.vue'
 import ClusterView from '@openchatlab/chart-cluster/ClusterView.vue'
+import { WordcloudTab } from '@/components/analysis/quotes'
 import { isFeatureSupported, type LocaleType } from '@/i18n'
 
 const { t, locale } = useI18n()
@@ -27,6 +28,7 @@ const props = defineProps<{
 const subTabs = computed(() => {
   const tabs = [
     { id: 'message', label: t('analysis.subTabs.view.message'), icon: 'i-heroicons-chat-bubble-left-right' },
+    { id: 'topic', label: t('analysis.subTabs.view.topic'), icon: 'i-heroicons-cloud' },
     { id: 'interaction', label: t('analysis.subTabs.view.interaction'), icon: 'i-heroicons-arrows-right-left' },
     { id: 'relationships', label: t('analysis.subTabs.member.relationships'), icon: 'i-heroicons-heart' },
     { id: 'cluster', label: t('analysis.subTabs.member.cluster'), icon: 'i-heroicons-user-group' },
@@ -55,7 +57,7 @@ const viewTimeFilter = computed(() => ({
     <!-- 子 Tab 导航（右侧插槽放成员筛选） -->
     <SubTabs v-model="activeSubTab" :items="subTabs" persist-key="groupViewTab">
       <template #right>
-        <UserSelect v-model="selectedMemberId" :session-id="props.sessionId" />
+        <UserSelect v-if="activeSubTab !== 'topic'" v-model="selectedMemberId" :session-id="props.sessionId" />
       </template>
     </SubTabs>
 
@@ -67,6 +69,11 @@ const viewTimeFilter = computed(() => ({
           :session-id="props.sessionId"
           :session-name="props.sessionName"
           :time-filter="viewTimeFilter"
+        />
+        <WordcloudTab
+          v-else-if="activeSubTab === 'topic'"
+          :session-id="props.sessionId"
+          :time-filter="props.timeFilter"
         />
         <InteractionView
           v-else-if="activeSubTab === 'interaction'"

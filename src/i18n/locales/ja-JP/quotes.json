@@ -140,6 +140,7 @@
     "dateNow": "現在まで",
     "heroPrefix": "",
     "heroMiddle": "件のメッセージを分析し、",
+    "heroMiddleSecond": "その結果、",
     "heroSuffix": "個のユニークな単語が見つかりました",
     "topTopicsPrefix": "よく話すトピック：",
     "topKeywords": "人気キーワード",
