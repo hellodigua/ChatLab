@@ -12,16 +12,87 @@ export interface CaptureOptions {
   fullContent?: boolean
 }
 
+interface RgbaColor {
+  r: number
+  g: number
+  b: number
+  a: number
+}
+
+const colorProbeCanvas = document.createElement('canvas')
+colorProbeCanvas.width = 1
+colorProbeCanvas.height = 1
+const colorProbeCtx = colorProbeCanvas.getContext('2d', { willReadFrequently: true })
+
+function parseCssColorToRgba(color: string): RgbaColor | null {
+  if (!colorProbeCtx) return null
+
+  const ctx = colorProbeCtx
+  ctx.clearRect(0, 0, 1, 1)
+
+  // 先写入完全透明作为基底，确保读取到 alpha 信息。
+  ctx.fillStyle = 'rgba(0, 0, 0, 0)'
+  ctx.fillRect(0, 0, 1, 1)
+
+  try {
+    ctx.fillStyle = color
+  } catch {
+    return null
+  }
+
+  ctx.fillRect(0, 0, 1, 1)
+  const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data
+  if (a === 0) return null
+
+  return {
+    r,
+    g,
+    b,
+    a: a / 255,
+  }
+}
+
+function compositeOver(top: RgbaColor, bottom: RgbaColor): RgbaColor {
+  const alpha = top.a + bottom.a * (1 - top.a)
+  if (alpha <= 0) {
+    return { r: 0, g: 0, b: 0, a: 0 }
+  }
+
+  return {
+    r: (top.r * top.a + bottom.r * bottom.a * (1 - top.a)) / alpha,
+    g: (top.g * top.a + bottom.g * bottom.a * (1 - top.a)) / alpha,
+    b: (top.b * top.a + bottom.b * bottom.a * (1 - top.a)) / alpha,
+    a: alpha,
+  }
+}
+
+function toOpaqueRgbString(color: RgbaColor): string {
+  return `rgb(${Math.round(color.r)}, ${Math.round(color.g)}, ${Math.round(color.b)})`
+}
+
 function getEffectiveBackground(el: HTMLElement | null): string {
+  const fallbackBackground: RgbaColor = { r: 17, g: 17, b: 17, a: 1 }
+
   let node: HTMLElement | null = el
-  const isTransparent = (v: string) => !v || v === 'transparent' || v === 'rgba(0, 0, 0, 0)'
-  while (node && node !== document.documentElement) {
+  let blended: RgbaColor | null = null
+
+  while (node) {
     const bg = window.getComputedStyle(node).backgroundColor
-    if (!isTransparent(bg)) return bg
+    const parsed = parseCssColorToRgba(bg)
+    if (parsed && parsed.a > 0) {
+      blended = blended ? compositeOver(blended, parsed) : parsed
+      if (blended.a >= 0.999) {
+        return toOpaqueRgbString(blended)
+      }
+    }
     node = node.parentElement
   }
-  const bodyBg = window.getComputedStyle(document.body).backgroundColor
-  return isTransparent(bodyBg) ? '#111111' : bodyBg
+
+  if (!blended) {
+    return toOpaqueRgbString(fallbackBackground)
+  }
+
+  return toOpaqueRgbString(compositeOver(blended, fallbackBackground))
 }
 
 function triggerDownload(href: string, filename: string) {
