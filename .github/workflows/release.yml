@@ -165,7 +165,14 @@ jobs:
           retention-days: 1 # 只保留1天，Release后会上传到GitHub Releases
 
   build-linux:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x64
+          - os: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -188,9 +195,9 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-${{ matrix.arch }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+            ${{ runner.os }}-${{ matrix.arch }}-pnpm-store-
 
       - name: Install dependencies
         run: |
@@ -203,20 +210,25 @@ jobs:
           path: |
             ~/.cache/electron
             ~/.cache/electron-builder
-          key: ${{ runner.os }}-electron-builder-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-${{ matrix.arch }}-electron-builder-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-electron-builder-
+            ${{ runner.os }}-${{ matrix.arch }}-electron-builder-
 
-      - name: Build Electron app for Linux
+      - name: Build Electron app for Linux (${{ matrix.arch }})
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           APTABASE_APP_KEY: ${{ secrets.APTABASE_APP_KEY }}
-        run: pnpm build:linux
+        run: |
+          if [ "${{ matrix.arch }}" = "arm64" ]; then
+            pnpm run build && pnpm exec electron-builder --linux deb --arm64 --config electron-builder.yml -p never
+          else
+            pnpm build:linux
+          fi
 
-      - name: Upload Linux artifacts
+      - name: Upload Linux artifacts (${{ matrix.arch }})
         uses: actions/upload-artifact@v6
         with:
-          name: ChatLab-linux
+          name: ChatLab-linux-${{ matrix.arch }}
           path: |
             dist/*.AppImage
             dist/*.deb
@@ -256,7 +268,13 @@ jobs:
       - name: Download Linux artifacts
         uses: actions/download-artifact@v8
         with:
-          name: ChatLab-linux
+          name: ChatLab-linux-x64
+          path: dist
+
+      - name: Download Linux artifacts (arm64)
+        uses: actions/download-artifact@v8
+        with:
+          name: ChatLab-linux-arm64
           path: dist
 
       - name: List files
@@ -306,7 +324,8 @@ jobs:
             echo "| Mac (Intel) | [ChatLab-${VERSION_NUMBER}-x64.dmg](https://github.com/hellodigua/ChatLab/releases/download/v${VERSION_NUMBER}/ChatLab-${VERSION_NUMBER}-x64.dmg) |"
             echo "| Windows | [ChatLab-${VERSION_NUMBER}-setup.exe](https://github.com/hellodigua/ChatLab/releases/download/v${VERSION_NUMBER}/ChatLab-${VERSION_NUMBER}-setup.exe) |"
             echo "| Linux (AppImage) | [ChatLab-${VERSION_NUMBER}.AppImage](https://github.com/hellodigua/ChatLab/releases/download/v${VERSION_NUMBER}/ChatLab-${VERSION_NUMBER}.AppImage) |"
-            echo "| Linux (deb) | [chatlab_${VERSION_NUMBER}_amd64.deb](https://github.com/hellodigua/ChatLab/releases/download/v${VERSION_NUMBER}/chatlab_${VERSION_NUMBER}_amd64.deb) |"
+            echo "| Linux (deb, x86_64) | [chatlab_${VERSION_NUMBER}_amd64.deb](https://github.com/hellodigua/ChatLab/releases/download/v${VERSION_NUMBER}/chatlab_${VERSION_NUMBER}_amd64.deb) |"
+            echo "| Linux (deb, ARM64) | [chatlab_${VERSION_NUMBER}_arm64.deb](https://github.com/hellodigua/ChatLab/releases/download/v${VERSION_NUMBER}/chatlab_${VERSION_NUMBER}_arm64.deb) |"
           } > release_notes.md
 
           echo "Generated release notes:"
