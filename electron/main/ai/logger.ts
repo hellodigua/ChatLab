@@ -22,6 +22,15 @@ let LOG_DIR: string | null = null
 let LOG_FILE: string | null = null
 let logStream: fs.WriteStream | null = null
 
+function formatPathForLog(filePath: string): string {
+  return filePath.replace(/ /g, '\\ ')
+}
+
+function writeLogFileHeader(stream: fs.WriteStream, filePath: string): void {
+  const localPath = formatPathForLog(filePath)
+  stream.write(`Local Path:  ${localPath}\n\n`)
+}
+
 /**
  * 获取日志目录
  */
@@ -75,7 +84,11 @@ function getLogStream(): fs.WriteStream {
   if (logStream) return logStream
 
   const filePath = getLogFilePath()
+  const isNewOrEmptyFile = !fs.existsSync(filePath) || fs.statSync(filePath).size === 0
   logStream = fs.createWriteStream(filePath, { flags: 'a', encoding: 'utf-8' })
+  if (isNewOrEmptyFile) {
+    writeLogFileHeader(logStream, filePath)
+  }
 
   return logStream
 }
