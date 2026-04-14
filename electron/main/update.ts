@@ -16,7 +16,7 @@ const R2_MIRROR_URL = 'https://chatlab.1app.top/releases/download'
 // 更新源类型
 type UpdateSource = 'github' | 'r2'
 
-// 当前使用的更新源（默认 R2 优先）
+// 当前使用的更新源（默认 R2 优先，GitHub 作为网络失败兜底）
 let currentSource: UpdateSource = 'r2'
 
 // 是否已尝试过备用源
@@ -57,7 +57,6 @@ function switchToR2Mirror(): void {
  */
 function switchToGitHub(): void {
   currentSource = 'github'
-  // 使用 GitHub 作为 generic provider
   autoUpdater.setFeedURL({
     provider: 'github',
     owner: 'hellodigua',
@@ -117,7 +116,7 @@ const checkUpdate = (win) => {
   configureUpdateProxy()
 
   autoUpdater.autoDownload = false // 自动下载
-  autoUpdater.autoInstallOnAppQuit = true // 应用退出后自动安装
+  autoUpdater.autoInstallOnAppQuit = false // 关闭退出自动安装，必须显式确认安装
 
   // 开发模式下模拟更新检测（需要创建 dev-app-update.yml 文件）
   // 取消下面的注释来启用开发模式更新测试
@@ -187,9 +186,9 @@ const checkUpdate = (win) => {
       .showMessageBox({
         title: t('update.downloadComplete'),
         message: t('update.readyToInstall'),
-        buttons: [t('update.install'), platform.isMacOS ? t('update.remindLater') : t('update.installOnQuit')],
+        buttons: [t('update.install'), t('update.remindLater')],
         defaultId: 1,
-        cancelId: 2,
+        cancelId: 1,
         type: 'question',
       })
       .then(async (result) => {
@@ -230,11 +229,11 @@ const checkUpdate = (win) => {
     }
   })
 
-  // 错误处理（智能切换备用源）
+  // 错误处理（网络失败时切换备用源）
   autoUpdater.on('error', (err) => {
     logger.error(`[Update] Update error (${currentSource}): ${err.message || err}`)
 
-    // 如果是 R2 源且为网络错误，尝试切换到 GitHub 备用源
+    // 默认 R2 源网络失败时，尝试切换到 GitHub
     if (currentSource === 'r2' && !hasTriedFallback && isNetworkError(err)) {
       hasTriedFallback = true
       logger.info('[Update] R2 mirror failed, trying GitHub fallback...')
