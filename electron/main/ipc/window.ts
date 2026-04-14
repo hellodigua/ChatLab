@@ -118,10 +118,48 @@ export function registerWindowHandlers(ctx: IpcContext): void {
     const timeout = setTimeout(() => abortController.abort(), REMOTE_CONFIG_TIMEOUT_MS)
 
     try {
-      const response = await fetch(normalizedUrl, { signal: abortController.signal })
-      const finalUrl = response.url || normalizedUrl
+      // 使用 manual 重定向模式，手动验证每个重定向目标
+      let currentUrl = normalizedUrl
+      let response = await fetch(currentUrl, {
+        signal: abortController.signal,
+        redirect: 'manual',
+      })
+
+      // 处理重定向链（最多跟随3次重定向，避免无限循环）
+      let redirectCount = 0
+      const maxRedirects = 3
+
+      while (response.status >= 300 && response.status < 400 && redirectCount < maxRedirects) {
+        redirectCount++
+
+        const location = response.headers.get('location')
+        if (!location) {
+          return { success: false, error: `Redirect response without location header (hop ${redirectCount})` }
+        }
+
+        // 构建完整的重定向 URL
+        const redirectUrl = new URL(location, currentUrl).href
+        if (!isAllowedRemoteConfigUrl(redirectUrl)) {
+          return { success: false, error: `Redirect URL is not allowed (hop ${redirectCount}): ${redirectUrl}` }
+        }
+
+        // 跟随重定向
+        currentUrl = redirectUrl
+        response = await fetch(currentUrl, {
+          signal: abortController.signal,
+          redirect: 'manual',
+        })
+      }
+
+      // 检查是否超过最大重定向次数（严格大于，允许恰好等于最大次数）
+      if (redirectCount > maxRedirects) {
+        return { success: false, error: `Too many redirects (exceeded ${maxRedirects})` }
+      }
+
+      // 验证最终响应的 URL
+      const finalUrl = response.url || currentUrl
       if (!isAllowedRemoteConfigUrl(finalUrl)) {
-        return { success: false, error: 'Redirect URL is not allowed' }
+        return { success: false, error: 'Final URL is not allowed' }
       }
 
       const contentType = response.headers.get('content-type') || ''

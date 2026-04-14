@@ -206,10 +206,10 @@ const chartOption = computed<EChartsOption>(() => ({
         const cellPoint = api.coord(api.value(0))
         const cellWidth = params.coordSys.cellWidth
         const cellHeight = params.coordSys.cellHeight
-        
+
         // 每个格子的边长减去 3 像素，从而形成真正的透明物理间隙，透出底部光效
         const size = Math.min(cellWidth, cellHeight) - 3
-        
+
         return {
           type: 'rect',
           shape: {

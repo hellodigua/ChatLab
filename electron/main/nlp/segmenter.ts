@@ -30,6 +30,15 @@ export function initNlpDir(nlpDir: string): void {
 }
 
 /**
+ * 检查词库文件是否存在
+ */
+function existsDictOnDisk(dictId: string): boolean {
+  if (!_nlpDir) return false
+  const dictPath = path.join(_nlpDir, `${dictId}.dict`)
+  return fs.existsSync(dictPath)
+}
+
+/**
  * 尝试从 nlpDir 加载词库文件，返回 Buffer 或 null
  */
 function tryLoadDictFromDisk(dictId: string): Buffer | null {
@@ -52,24 +61,32 @@ function tryLoadDictFromDisk(dictId: string): Buffer | null {
 export function getJieba(dictType: DictType = 'default'): JiebaInstance {
   const effectiveType = dictType === 'default' ? 'zh-CN' : dictType
   const cached = jiebaInstances.get(effectiveType)
-  if (cached) return cached
+  if (cached) {
+    // 仅当磁盘词库仍存在时复用缓存；词库被删除后立即失效，避免继续使用陈旧实例。
+    // 使用 existsDictOnDisk 而不是 tryLoadDictFromDisk，避免在缓存检查时读取文件内容
+    if (existsDictOnDisk(effectiveType)) return cached
+    jiebaInstances.delete(effectiveType)
+    console.log(`[NLP] jieba cache invalidated (dict missing): ${effectiveType}`)
+  }
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { Jieba } = require('@node-rs/jieba')
 
-    const diskDict = tryLoadDictFromDisk(effectiveType)
     let instance: JiebaInstance
+    const diskDict = tryLoadDictFromDisk(effectiveType)
     if (diskDict) {
       instance = Jieba.withDict(diskDict)
       console.log(`[NLP] jieba dict loaded: ${effectiveType} (${diskDict.length} bytes)`)
+      jiebaInstances.set(effectiveType, instance)
     } else {
       // 词库缺失时仍保留 jieba 能力，避免 FTS 退化为空格切分。
+      // 缓存 fallback 实例以提升性能，但在词库下载/删除时会通过 clearJiebaInstance 主动失效缓存
       instance = new Jieba()
       console.warn(`[NLP] jieba dict missing: ${effectiveType}, fallback to built-in tokenizer`)
+      jiebaInstances.set(effectiveType, instance)
     }
 
-    jiebaInstances.set(effectiveType, instance)
     return instance
   } catch (error) {
     console.error(`[NLP] Failed to load jieba module (dict=${effectiveType}):`, error)

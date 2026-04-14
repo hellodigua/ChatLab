@@ -118,7 +118,10 @@ function getCollidingPlatformIds(
 
 function normalizePlatformId(platformId: string, platform: string, collidingIds: Set<string>): string {
   if (!collidingIds.has(platformId)) return platformId
-  return `${platform || 'unknown'}:${platformId}`
+  // 使用可编码且带命名空间的格式，避免与原始 platformId（如 "qq:123"）发生键碰撞。
+  const normalizedPlatform = encodeURIComponent(platform || 'unknown')
+  const normalizedId = encodeURIComponent(platformId)
+  return `__chatlab_platform__${normalizedPlatform}__${normalizedId}`
 }
 
 function getCollidingPlatformIdsFromMessages(
