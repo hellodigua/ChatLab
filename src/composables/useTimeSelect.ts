@@ -9,6 +9,12 @@ import type { Ref } from 'vue'
 import type { RouteLocationNormalizedLoaded, Router } from 'vue-router'
 import type { TimeRangeValue, TimeSelectState, TimeSelectMode } from '@/components/common/TimeSelect.vue'
 
+/**
+ * 模块级缓存：按 sessionId 保存用户最后设置的时间筛选状态。
+ * 解决从设置页/AI 对话等页面切回聊天分析页时时间筛选被重置的问题。
+ */
+const timeStateCache = new Map<string, Partial<TimeSelectState>>()
+
 interface UseTimeSelectOptions {
   /** 当前激活的 Tab ref（用于 URL 同步） */
   activeTab: Ref<string>
@@ -57,7 +63,10 @@ export function useTimeSelect(route: RouteLocationNormalizedLoaded, router: Rout
     return new Date(v.startTs * 1000).getFullYear()
   })
 
-  /** 从 URL query 构建 TimeSelect 初始状态；总览 Tab 默认「全部」，其余 Tab 默认「最近一年」 */
+  /**
+   * 从 URL query 构建 TimeSelect 初始状态。
+   * 优先级：URL 参数 > 缓存（上次用户设置）> 默认值（总览 Tab「全部」，其余「最近一年」）
+   */
   const initialTimeState = computed<Partial<TimeSelectState>>(() => {
     const q = route.query
     const m = q.timeMode as TimeSelectMode | undefined
@@ -71,6 +80,9 @@ export function useTimeSelect(route: RouteLocationNormalizedLoaded, router: Rout
         customStart: (q.timeStart as string) || undefined,
         customEnd: (q.timeEnd as string) || undefined,
       }
+    }
+    if (currentSessionId.value && timeStateCache.has(currentSessionId.value)) {
+      return timeStateCache.get(currentSessionId.value)!
     }
     return {
       mode: 'recent',
@@ -108,6 +120,8 @@ export function useTimeSelect(route: RouteLocationNormalizedLoaded, router: Rout
     timeRangeValue,
     (val) => {
       if (!val || !currentSessionId.value) return
+      // 缓存当前时间筛选状态，供从其他页面返回时恢复
+      timeStateCache.set(currentSessionId.value, val.state)
       onTimeRangeChange?.()
     },
     { immediate: true }
