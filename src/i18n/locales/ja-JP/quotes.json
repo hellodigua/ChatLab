@@ -165,7 +165,8 @@
     "expressionFormalDesc": "丁寧な言葉遣いで正確な表現",
     "expressionMixed": "ミックス",
     "expressionMixedDesc": "カジュアルとフォーマルの混合",
-    "watermark": "トピックプロフィール"
+    "watermark": "トピックプロフィール",
+    "sharedTopics": "共通のトピック"
   },
   "catchphrase": {
     "title": "💬 口癖分析",
@@ -188,5 +189,81 @@
     },
     "phraseCount": "{count} 件の口癖",
     "topN": "表示数"
+  },
+  "languagePreference": {
+    "loading": "言語傾向を分析中...",
+    "empty": "言語分析に十分なテキストメッセージがありません",
+    "card": {
+      "sharedWordsLabel": "共通の高頻度単語",
+      "syncSubtext": "品詞分布に基づく話し方の類似度",
+      "warmthWarm": "暖かい",
+      "warmthCrisp": "簡潔",
+      "warmthBalanced": "バランス",
+      "expressionLabel": "あなたたちの表現は",
+      "diversityTitle": "語彙の深さ",
+      "diversityDesc": "ユニーク単語の割合",
+      "styleTitle": "チャット気質",
+      "styleDesc": "品詞分布に基づく表現スタイル",
+      "punctTitle": "句読点パーソナリティ",
+      "punctDesc": "最も使われる句読点スタイル",
+      "punctTopTitle": "句読点 TOP5",
+      "punctTopDesc": "最もよく使う句読点",
+      "modalTopTitle": "終助詞 TOP5",
+      "modalTopDesc": "最もよく使う終助詞",
+      "sharedWordsTitle": "共通の高頻度単語",
+      "sharedWordsDesc": "二人とも高頻度で使う単語",
+      "watermark": "言語傾向 · Language Preference",
+      "radarFactual": "事実性",
+      "radarActive": "行動力",
+      "radarDescriptive": "描写力",
+      "radarAffable": "親和力",
+      "radarIntense": "強調度",
+      "radarNoun": "名詞",
+      "radarVerb": "動詞",
+      "radarAdj": "形容詞",
+      "radarModal": "終助詞",
+      "radarAdv": "副詞"
+    },
+    "catchphrasePK": {
+      "title": "口癖バトル",
+      "sharedCount": "{count} 個の共通口癖",
+      "hint": "クリックで関連メッセージを表示。ピンク枠は共通の口癖です。"
+    },
+    "pos": {
+      "title": "品詞ポートレート",
+      "styleEncyclopedia": "百科事典タイプ",
+      "styleAction": "行動派",
+      "styleExpressive": "感性派",
+      "styleBalanced": "バランス型"
+    },
+    "modal": {
+      "title": "終助詞プロフィール",
+      "toneSoft": "やわらかい",
+      "toneCurious": "好奇心旺盛",
+      "toneCasual": "カジュアル",
+      "toneCalm": "落ち着き",
+      "toneMixed": "多彩なスタイル",
+      "empty": "終助詞データがありません"
+    },
+    "punctuation": {
+      "title": "句読点パーソナリティ",
+      "none": "句読点なし",
+      "personalityDeep": "深い思考型",
+      "personalityPassionate": "情熱的",
+      "personalityCurious": "好奇心型",
+      "personalityCheerful": "明るい",
+      "personalityFreeflow": "自由型",
+      "personalityPrecise": "几帳面",
+      "empty": "句読点データがありません"
+    },
+    "sync": {
+      "title": "言語シンクロ度",
+      "description": "品詞分布に基づく話し方の類似度",
+
+      "labelSoulmate": "ソウルメイト",
+      "labelHighSync": "高い同期",
+      "labelUnique": "それぞれの個性",
+      "labelDiverse": "対照的なスタイル"
+    }
   }
 }

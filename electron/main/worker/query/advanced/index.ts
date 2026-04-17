@@ -18,6 +18,9 @@ export type {
   ClusterGraphOptions,
 } from './social'
 
+// 语言偏好分析（私聊专用）
+export { getLanguagePreferenceAnalysis } from './languagePreference'
+
 // 关系分析（私聊主动性）
 export { getRelationshipStats } from './relationship'
 export type {

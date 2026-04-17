@@ -481,6 +481,21 @@ export function registerChatHandlers(ctx: IpcContext): void {
   )
 
   /**
+   * 获取语言偏好分析数据（私聊专用）
+   */
+  ipcMain.handle(
+    'chat:getLanguagePreferenceAnalysis',
+    async (_, sessionId: string, locale: string, filter?: { startTs?: number; endTs?: number }, dictType?: string) => {
+      try {
+        return await worker.getLanguagePreferenceAnalysis({ sessionId, locale, timeFilter: filter, dictType })
+      } catch (error) {
+        console.error('Failed to get language preference analysis:', error)
+        return { members: [], sharedWords: [], similarityScore: 0 }
+      }
+    }
+  )
+
+  /**
    * 获取 @ 互动分析数据
    */
   ipcMain.handle(

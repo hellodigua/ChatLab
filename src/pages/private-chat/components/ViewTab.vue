@@ -5,7 +5,7 @@ import { SubTabs } from '@/components/UI'
 import UserSelect from '@/components/common/UserSelect.vue'
 import MessageView from '@openchatlab/chart-message/MessageView.vue'
 import RelationshipView from './view/RelationshipView.vue'
-import { WordcloudTab } from '@/components/analysis/quotes'
+import { WordcloudTab, LanguagePreferenceTab } from '@/components/analysis/quotes'
 
 const { t } = useI18n()
 
@@ -24,6 +24,7 @@ const subTabs = computed(() => [
   { id: 'relationship', label: t('analysis.subTabs.view.relationship'), icon: 'i-heroicons-heart' },
   { id: 'message', label: t('analysis.subTabs.view.message'), icon: 'i-heroicons-chat-bubble-left-right' },
   { id: 'topic', label: t('analysis.subTabs.view.topic'), icon: 'i-heroicons-cloud' },
+  { id: 'language-preference', label: t('analysis.subTabs.view.languagePreference'), icon: 'i-heroicons-language' },
 ])
 
 const activeSubTab = ref('relationship')
@@ -63,6 +64,12 @@ const viewTimeFilter = computed(() => ({
         />
         <WordcloudTab
           v-else-if="activeSubTab === 'topic'"
+          :session-id="props.sessionId"
+          :time-filter="props.timeFilter"
+          :show-shared-topics="true"
+        />
+        <LanguagePreferenceTab
+          v-else-if="activeSubTab === 'language-preference'"
           :session-id="props.sessionId"
           :time-filter="props.timeFilter"
         />

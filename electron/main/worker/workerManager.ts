@@ -375,6 +375,15 @@ export async function getCatchphraseAnalysis(sessionId: string, filter?: any): P
   return sendToWorker('getCatchphraseAnalysis', { sessionId, filter })
 }
 
+export async function getLanguagePreferenceAnalysis(params: {
+  sessionId: string
+  locale: string
+  timeFilter?: any
+  dictType?: string
+}): Promise<any> {
+  return sendToWorker('getLanguagePreferenceAnalysis', params)
+}
+
 export async function getMentionAnalysis(sessionId: string, filter?: any): Promise<any> {
   return sendToWorker('getMentionAnalysis', { sessionId, filter })
 }

@@ -56,13 +56,15 @@
       "topic": "話題",
       "interaction": "互動分析",
       "ranking": "榜單",
-      "relationship": "關係"
+      "relationship": "關係",
+      "languagePreference": "語言偏好"
     },
     "quotes": {
       "wordcloud": "話題",
       "hotRepeat": "熱門複讀",
       "catchphrase": "口頭禪",
-      "keywordAnalysis": "關鍵字分析"
+      "keywordAnalysis": "關鍵字分析",
+      "languagePreference": "語言偏好"
     },
     "member": {
       "memberList": "成員列表",

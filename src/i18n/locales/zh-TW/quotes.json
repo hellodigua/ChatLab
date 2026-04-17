@@ -165,7 +165,8 @@
     "expressionFormalDesc": "用詞考究，表達嚴謹",
     "expressionMixed": "混合風格",
     "expressionMixedDesc": "口語與書面兼顧",
-    "watermark": "話題畫像 · Topic Profile"
+    "watermark": "話題畫像 · Topic Profile",
+    "sharedTopics": "共同話題"
   },
   "catchphrase": {
     "title": "💬 口頭禪分析",
@@ -188,5 +189,83 @@
     },
     "phraseCount": "{count} 條口頭禪",
     "topN": "顯示數量"
+  },
+  "languagePreference": {
+    "loading": "正在分析語言偏好...",
+    "empty": "暫無足夠的文字訊息進行語言分析",
+    "card": {
+      "sharedWordsLabel": "共同高頻詞",
+      "syncSubtext": "基於詞性分佈的說話方式相似度",
+      "warmthWarm": "暖",
+      "warmthCrisp": "幹練",
+      "warmthBalanced": "自然",
+      "expressionLabel": "你們的表達充滿了",
+      "diversityTitle": "詞彙深度",
+      "diversityDesc": "不重複詞彙佔比",
+      "styleTitle": "聊天氣質",
+      "styleDesc": "基於詞性分佈推導的表達風格",
+      "punctTitle": "標點性格",
+      "punctDesc": "最常用的標點風格",
+      "punctTopTitle": "標點符號 TOP5",
+      "punctTopDesc": "各自最常使用的標點符號",
+      "modalTopTitle": "語氣詞 TOP5",
+      "modalTopDesc": "各自最常使用的語氣詞",
+      "sharedWordsTitle": "共同高頻詞",
+      "sharedWordsDesc": "雙方都高頻使用的詞彙",
+      "watermark": "語言偏好 · Language Preference",
+      "radarFactual": "事實性",
+      "radarActive": "行動感",
+      "radarDescriptive": "描述欲",
+      "radarAffable": "親和力",
+      "radarIntense": "程度感",
+      "radarNoun": "名詞",
+      "radarVerb": "動詞",
+      "radarAdj": "形容詞",
+      "radarModal": "語氣詞",
+      "radarAdv": "副詞",
+      "topCatchphrases": "熱門口頭禪",
+      "languageProfiles": "語言畫像"
+    },
+    "catchphrasePK": {
+      "title": "口頭禪 PK",
+      "sharedCount": "{count} 個共同口頭禪",
+      "hint": "提示：點擊可查看相關訊息，粉框標記為共同口頭禪"
+    },
+    "pos": {
+      "title": "詞性圖譜",
+      "styleEncyclopedia": "百科全書派",
+      "styleAction": "行動派",
+      "styleExpressive": "感性派",
+      "styleBalanced": "均衡派"
+    },
+    "modal": {
+      "title": "語氣詞畫像",
+      "toneSoft": "軟萌親和",
+      "toneCurious": "好奇探索",
+      "toneCasual": "隨和建議",
+      "toneCalm": "沉穩內斂",
+      "toneMixed": "多元風格",
+      "empty": "暫無語氣詞資料"
+    },
+    "punctuation": {
+      "title": "標點性格",
+      "none": "無標點",
+      "personalityDeep": "深沉文學型",
+      "personalityPassionate": "情緒飽滿型",
+      "personalityCurious": "好奇寶寶型",
+      "personalityCheerful": "心情愉悅型",
+      "personalityFreeflow": "意識流型",
+      "personalityPrecise": "嚴謹規範型",
+      "empty": "暫無標點資料"
+    },
+    "sync": {
+      "title": "語言同頻度",
+      "description": "基於詞性分佈的說話方式相似度",
+
+      "labelSoulmate": "靈魂伴侶",
+      "labelHighSync": "高度默契",
+      "labelUnique": "各有特色",
+      "labelDiverse": "風格迥異"
+    }
   }
 }

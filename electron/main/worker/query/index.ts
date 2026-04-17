@@ -33,6 +33,7 @@ export type { MembersPaginationParams, MembersPaginatedResult } from './basic'
 // 高级分析
 export {
   getCatchphraseAnalysis,
+  getLanguagePreferenceAnalysis,
   getMentionAnalysis,
   getMentionGraph,
   getLaughAnalysis,

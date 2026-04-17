@@ -56,13 +56,15 @@
       "topic": "话题",
       "interaction": "互动分析",
       "ranking": "榜单",
-      "relationship": "关系"
+      "relationship": "关系",
+      "languagePreference": "语言偏好"
     },
     "quotes": {
       "wordcloud": "话题",
       "hotRepeat": "最火复读",
       "catchphrase": "口头禅",
-      "keywordAnalysis": "关键词分析"
+      "keywordAnalysis": "关键词分析",
+      "languagePreference": "语言偏好"
     },
     "member": {
       "memberList": "成员列表",

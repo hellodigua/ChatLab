@@ -56,13 +56,15 @@
       "topic": "Topics",
       "interaction": "Interactions",
       "ranking": "Rankings",
-      "relationship": "Relationship"
+      "relationship": "Relationship",
+      "languagePreference": "Language Preference"
     },
     "quotes": {
       "wordcloud": "Topics",
       "hotRepeat": "Hot Repeats",
       "catchphrase": "Catchphrases",
-      "keywordAnalysis": "Keyword Analysis"
+      "keywordAnalysis": "Keyword Analysis",
+      "languagePreference": "Language"
     },
     "member": {
       "memberList": "Member List",

@@ -5,6 +5,7 @@ const EChartWordcloud = defineAsyncComponent(() => import('@/components/charts/E
 import type { EChartWordcloudData } from '@/components/charts'
 import { LoadingState, EmptyState, UITabs, SectionCard } from '@/components/UI'
 import TopicProfileCard from './TopicProfileCard.vue'
+import SharedTopicsCard from './SharedTopicsCard.vue'
 import type { WordFrequencyItem, PosTagStat } from './topicProfileTypes'
 import UserSelect from '@/components/common/UserSelect.vue'
 import WordFilterModal from '@/components/common/WordFilterModal.vue'
@@ -38,6 +39,7 @@ const props = defineProps<{
   sessionId: string
   timeFilter?: TimeFilter
   memberId?: number | null
+  showSharedTopics?: boolean
 }>()
 
 const isLoading = ref(false)
@@ -440,7 +442,17 @@ onMounted(async () => {
           @word-click="handleWordClick"
         />
 
-        <!-- 2. 热门词汇分布（词云 + 配置面板） -->
+        <!-- 2. 共同话题（仅私聊） -->
+        <SharedTopicsCard
+          v-if="props.showSharedTopics"
+          :session-id="props.sessionId"
+          :time-filter="props.timeFilter"
+          :dict-type="selectedDictType"
+          :exclude-words="currentExcludeWords"
+          @word-click="handleWordClick"
+        />
+
+        <!-- 3. 热门词汇分布（词云 + 配置面板） -->
         <SectionCard :title="t('quotes.wordcloud.stats.wordsLabel')" :show-divider="false">
           <div class="flex gap-6 p-4 sm:p-6">
             <!-- 左侧：词云图 -->

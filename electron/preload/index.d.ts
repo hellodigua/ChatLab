@@ -17,6 +17,7 @@ import type {
   RelationshipStats,
 } from '../../src/types/analysis'
 import type { FileParseInfo, ConflictCheckResult, MergeParams, MergeResult } from '../../src/types/format'
+import type { LanguagePreferenceResult } from '../../src/types/languagePreference'
 import type { TableSchema, SQLResult } from '../../src/components/analysis/SQLLab/types'
 
 interface TimeFilter {
@@ -127,6 +128,12 @@ interface ChatApi {
   getSupportedFormats: () => Promise<Array<{ id: string; name: string; platform: string; extensions: string[] }>>
   onImportProgress: (callback: (progress: ImportProgress) => void) => () => void
   getCatchphraseAnalysis: (sessionId: string, filter?: TimeFilter) => Promise<CatchphraseAnalysis>
+  getLanguagePreferenceAnalysis: (
+    sessionId: string,
+    locale: string,
+    filter?: TimeFilter,
+    dictType?: string
+  ) => Promise<LanguagePreferenceResult>
   getMentionAnalysis: (sessionId: string, filter?: TimeFilter) => Promise<MentionAnalysis>
   getMentionGraph: (sessionId: string, filter?: TimeFilter) => Promise<MentionGraphData>
   getClusterGraph: (sessionId: string, filter?: TimeFilter, options?: ClusterGraphOptions) => Promise<ClusterGraphData>

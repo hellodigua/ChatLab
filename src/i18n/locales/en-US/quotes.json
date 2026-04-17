@@ -165,7 +165,8 @@
     "expressionFormalDesc": "Elaborate words, precise expression",
     "expressionMixed": "Mixed",
     "expressionMixedDesc": "A blend of casual and formal",
-    "watermark": "Topic Profile"
+    "watermark": "Topic Profile",
+    "sharedTopics": "Shared Topics"
   },
   "catchphrase": {
     "title": "💬 Catchphrase Analysis",
@@ -188,5 +189,83 @@
     },
     "phraseCount": "{count} catchphrases",
     "topN": "Show count"
+  },
+  "languagePreference": {
+    "loading": "Analyzing language preferences...",
+    "empty": "Not enough text messages for language analysis",
+    "card": {
+      "sharedWordsLabel": "Shared High-Frequency Words",
+      "syncSubtext": "Speaking style similarity based on POS distribution",
+      "warmthWarm": "Warm",
+      "warmthCrisp": "Crisp",
+      "warmthBalanced": "Balanced",
+      "expressionLabel": "Your expressions are full of",
+      "diversityTitle": "Lexical Depth",
+      "diversityDesc": "Unique word ratio",
+      "styleTitle": "Chat Style",
+      "styleDesc": "Expression style based on POS distribution",
+      "punctTitle": "Punctuation Style",
+      "punctDesc": "Most used punctuation personality",
+      "punctTopTitle": "Punctuation TOP5",
+      "punctTopDesc": "Most frequently used punctuation marks",
+      "modalTopTitle": "Modal Particles TOP5",
+      "modalTopDesc": "Most frequently used modal particles",
+      "sharedWordsTitle": "Shared Words",
+      "sharedWordsDesc": "High-frequency words used by both",
+      "watermark": "Language Preference",
+      "radarFactual": "Factual",
+      "radarActive": "Active",
+      "radarDescriptive": "Descriptive",
+      "radarAffable": "Affable",
+      "radarIntense": "Intense",
+      "radarNoun": "Noun",
+      "radarVerb": "Verb",
+      "radarAdj": "Adjective",
+      "radarModal": "Modal",
+      "radarAdv": "Adverb",
+      "topCatchphrases": "Top Catchphrases",
+      "languageProfiles": "Language Profiles"
+    },
+    "catchphrasePK": {
+      "title": "Catchphrase Battle",
+      "sharedCount": "{count} shared catchphrases",
+      "hint": "Click to view messages. Pink outlines mark shared catchphrases."
+    },
+    "pos": {
+      "title": "POS Portrait",
+      "styleEncyclopedia": "Encyclopedia",
+      "styleAction": "Action-oriented",
+      "styleExpressive": "Expressive",
+      "styleBalanced": "Balanced"
+    },
+    "modal": {
+      "title": "Modal Particles",
+      "toneSoft": "Soft & Warm",
+      "toneCurious": "Curious",
+      "toneCasual": "Casual",
+      "toneCalm": "Calm & Steady",
+      "toneMixed": "Mixed Style",
+      "empty": "No modal particle data"
+    },
+    "punctuation": {
+      "title": "Punctuation Personality",
+      "none": "No punct.",
+      "personalityDeep": "Deep Thinker",
+      "personalityPassionate": "Passionate",
+      "personalityCurious": "Curious Mind",
+      "personalityCheerful": "Cheerful",
+      "personalityFreeflow": "Free-flow",
+      "personalityPrecise": "Precise",
+      "empty": "No punctuation data"
+    },
+    "sync": {
+      "title": "Language Sync",
+      "description": "Speaking style similarity based on POS distribution",
+
+      "labelSoulmate": "Soulmates",
+      "labelHighSync": "Highly Synced",
+      "labelUnique": "Unique Styles",
+      "labelDiverse": "Divergent"
+    }
   }
 }

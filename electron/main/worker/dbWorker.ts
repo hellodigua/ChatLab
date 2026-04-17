@@ -29,6 +29,7 @@ import {
   getSession,
   getChatOverview,
   getCatchphraseAnalysis,
+  getLanguagePreferenceAnalysis,
   getMentionAnalysis,
   getMentionGraph,
   getLaughAnalysis,
@@ -104,6 +105,7 @@ const CACHEABLE_QUERIES = new Set([
   'getMessageTypeDistribution',
   'getTimeRange',
   'getCatchphraseAnalysis',
+  'getLanguagePreferenceAnalysis',
   'getMentionAnalysis',
   'getMentionGraph',
   'getLaughAnalysis',
@@ -184,6 +186,7 @@ const syncHandlers: Record<string, (payload: any) => any> = {
 
   // 高级分析
   getCatchphraseAnalysis: (p) => getCatchphraseAnalysis(p.sessionId, p.filter),
+  getLanguagePreferenceAnalysis: (p) => getLanguagePreferenceAnalysis(p),
   getMentionAnalysis: (p) => getMentionAnalysis(p.sessionId, p.filter),
   getMentionGraph: (p) => getMentionGraph(p.sessionId, p.filter),
   getLaughAnalysis: (p) => getLaughAnalysis(p.sessionId, p.filter, p.keywords),

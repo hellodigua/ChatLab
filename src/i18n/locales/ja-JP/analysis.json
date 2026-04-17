@@ -56,13 +56,15 @@
       "topic": "トピック",
       "interaction": "インタラクション分析",
       "ranking": "ランキング",
-      "relationship": "関係"
+      "relationship": "関係",
+      "languagePreference": "言語傾向"
     },
     "quotes": {
       "wordcloud": "トピック",
       "hotRepeat": "盛り上がった復唱",
       "catchphrase": "口癖",
-      "keywordAnalysis": "キーワード分析"
+      "keywordAnalysis": "キーワード分析",
+      "languagePreference": "言語傾向"
     },
     "member": {
       "memberList": "メンバー一覧",
