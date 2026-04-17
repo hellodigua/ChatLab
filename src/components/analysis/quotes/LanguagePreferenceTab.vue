@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { LanguagePreferenceResult } from './languagePreferenceTypes'
+import type { LanguagePreferenceResult } from '@/types/quotes/languagePreference'
 import { LoadingState, EmptyState } from '@/components/UI'
 import { useLayoutStore } from '@/stores/layout'
 import LanguagePreferenceCard from './LanguagePreferenceCard.vue'

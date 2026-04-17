@@ -3,7 +3,7 @@ import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ThemeCard } from '@/components/UI'
 import { useSettingsStore } from '@/stores/settings'
-import type { SharedWord } from './languagePreferenceTypes'
+import type { SharedWord } from '@/types/quotes/languagePreference'
 import type { MemberWithStats } from '@/types/analysis'
 
 const { t } = useI18n()

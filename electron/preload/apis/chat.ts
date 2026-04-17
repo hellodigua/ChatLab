@@ -18,7 +18,7 @@ import type {
   ClusterGraphOptions,
   RelationshipStats,
 } from '../../../src/types/analysis'
-import type { LanguagePreferenceResult } from '../../../src/types/languagePreference'
+import type { LanguagePreferenceResult } from '../../../src/types/quotes/languagePreference'
 import type { FileParseInfo, ConflictCheckResult, MergeParams, MergeResult } from '../../../src/types/format'
 
 // Chat Analysis API

@@ -7,7 +7,11 @@ import { RadarChart } from 'echarts/charts'
 import { TooltipComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import { ThemeCard } from '@/components/UI'
-import type { LanguagePreferenceResult, MemberLanguageProfile, PunctuationStats } from './languagePreferenceTypes'
+import type {
+  LanguagePreferenceResult,
+  MemberLanguageProfile,
+  PunctuationStats,
+} from '@/types/quotes/languagePreference'
 
 echarts.use([RadarChart, TooltipComponent, CanvasRenderer])
 

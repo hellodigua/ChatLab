@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ThemeCard } from '@/components/UI'
-import type { SharedWord } from '../languagePreferenceTypes'
+import type { SharedWord } from '@/types/quotes/languagePreference'
 
 const { t } = useI18n()
 

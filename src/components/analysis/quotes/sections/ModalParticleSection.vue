@@ -7,7 +7,7 @@ import { BarChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import { ThemeCard } from '@/components/UI'
-import type { MemberLanguageProfile } from '../languagePreferenceTypes'
+import type { MemberLanguageProfile } from '@/types/quotes/languagePreference'
 
 echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer])
 

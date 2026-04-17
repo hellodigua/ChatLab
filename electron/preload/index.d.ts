@@ -17,7 +17,7 @@ import type {
   RelationshipStats,
 } from '../../src/types/analysis'
 import type { FileParseInfo, ConflictCheckResult, MergeParams, MergeResult } from '../../src/types/format'
-import type { LanguagePreferenceResult } from '../../src/types/languagePreference'
+import type { LanguagePreferenceResult } from '../../src/types/quotes/languagePreference'
 import type { TableSchema, SQLResult } from '../../src/components/analysis/SQLLab/types'
 
 interface TimeFilter {

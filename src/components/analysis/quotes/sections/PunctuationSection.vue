@@ -7,7 +7,7 @@ import { PieChart } from 'echarts/charts'
 import { TooltipComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import { ThemeCard } from '@/components/UI'
-import type { MemberLanguageProfile, PunctuationStats } from '../languagePreferenceTypes'
+import type { MemberLanguageProfile, PunctuationStats } from '@/types/quotes/languagePreference'
 
 echarts.use([PieChart, TooltipComponent, CanvasRenderer])
 

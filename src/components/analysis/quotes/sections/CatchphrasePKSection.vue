@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ThemeCard, UITabs } from '@/components/UI'
-import type { MemberLanguageProfile } from '../languagePreferenceTypes'
+import type { MemberLanguageProfile } from '@/types/quotes/languagePreference'
 
 const { t } = useI18n()
 
