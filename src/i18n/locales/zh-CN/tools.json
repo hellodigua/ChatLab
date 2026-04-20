@@ -34,8 +34,9 @@
     "merge": "合并选中",
     "mergeHint": "选择 2 个以上同聊天类型的聊天记录才能合并",
     "mergeConfirmTitle": "合并聊天记录",
-    "mergeConfirmMessage": "将合并选中的 {count} 个聊天记录。合并后原记录会被删除，并生成一条新的合并记录。",
-    "mergeRiskWarning": "强提醒：合并后不可恢复，且由于跨平台上下文差异，聊天语义可能出现错位或混乱。请确认你已备份原始数据并理解风险。",
+    "mergeConfirmMessage": "将合并选中的 {count} 个聊天记录，生成一条新的合并记录。",
+    "deleteOriginalsLabel": "合并后删除原聊天记录",
+    "mergeRiskWarning": "强提醒：删除后不可恢复，且由于跨平台上下文差异，聊天语义可能出现错位或混乱。请确认你已备份原始数据并理解风险。",
     "mergeSteps": {
       "exporting": "正在导出聊天记录...",
       "parsing": "正在解析文件...",

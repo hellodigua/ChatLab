@@ -34,8 +34,9 @@
     "merge": "Merge Selected",
     "mergeHint": "Select at least 2 chat records of the same chat type to merge",
     "mergeConfirmTitle": "Merge Chat Records",
-    "mergeConfirmMessage": "This will merge {count} selected chat records. The original records will be deleted and a new merged record will be created.",
-    "mergeRiskWarning": "Critical warning: this merge cannot be undone, and cross-platform context differences may cause semantic confusion. Please back up your original data before continuing.",
+    "mergeConfirmMessage": "This will merge {count} selected chat records into a new merged record.",
+    "deleteOriginalsLabel": "Delete original records after merge",
+    "mergeRiskWarning": "Critical warning: deletion cannot be undone, and cross-platform context differences may cause semantic confusion. Please back up your original data before continuing.",
     "mergeSteps": {
       "exporting": "Exporting chat records...",
       "parsing": "Parsing files...",

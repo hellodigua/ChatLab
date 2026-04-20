@@ -34,8 +34,9 @@
     "merge": "合併所選項目",
     "mergeHint": "選擇 2 個以上同聊天類型的聊天紀錄才能合併",
     "mergeConfirmTitle": "合併聊天紀錄",
-    "mergeConfirmMessage": "即將合併所選的 {count} 個聊天紀錄。合併後原始紀錄會被刪除，並建立一筆新的合併紀錄。",
-    "mergeRiskWarning": "強提醒：合併後無法復原，且跨平台上下文差異可能導致語意錯位或混亂。請先備份原始資料並確認你已理解風險。",
+    "mergeConfirmMessage": "即將合併所選的 {count} 個聊天紀錄，並建立一筆新的合併紀錄。",
+    "deleteOriginalsLabel": "合併後刪除原始聊天紀錄",
+    "mergeRiskWarning": "強提醒：刪除後無法復原，且跨平台上下文差異可能導致語意錯位或混亂。請先備份原始資料並確認你已理解風險。",
     "mergeSteps": {
       "exporting": "正在匯出聊天紀錄...",
       "parsing": "正在解析檔案...",

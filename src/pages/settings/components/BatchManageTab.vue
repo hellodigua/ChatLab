@@ -384,10 +384,12 @@ function openDeleteModal() {
 const showMergeModal = ref(false)
 const isMerging = ref(false)
 const mergeProgress = ref('')
+const deleteOriginalsAfterMerge = ref(false)
 
 // 合并选中的会话
 async function handleMerge() {
   if (!canMerge.value) return
+  deleteOriginalsAfterMerge.value = false
   showMergeModal.value = true
 }
 
@@ -445,10 +447,12 @@ async function executeMerge() {
       throw new Error(mergeResult.error || '合并失败')
     }
 
-    // 5. 删除原会话
-    mergeProgress.value = t('tools.batchManage.mergeSteps.cleaning')
-    for (const sessionId of selectedSessionIds) {
-      await sessionStore.deleteSession(sessionId)
+    // 5. 根据用户选择决定是否删除原会话
+    if (deleteOriginalsAfterMerge.value) {
+      mergeProgress.value = t('tools.batchManage.mergeSteps.cleaning')
+      for (const sessionId of selectedSessionIds) {
+        await sessionStore.deleteSession(sessionId)
+      }
     }
 
     // 6. 清理临时文件
@@ -722,18 +726,6 @@ onMounted(() => {
             {{ t('tools.batchManage.mergeConfirmMessage', { count: selectedIds.size }) }}
           </p>
 
-          <!-- 强提醒 -->
-          <div
-            class="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 dark:border-red-800/50 dark:bg-red-900/20"
-          >
-            <div class="flex items-start gap-2">
-              <UIcon name="i-heroicons-exclamation-triangle" class="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
-              <p class="text-xs leading-5 text-red-700 dark:text-red-300">
-                {{ t('tools.batchManage.mergeRiskWarning') }}
-              </p>
-            </div>
-          </div>
-
           <!-- 选中的会话预览 -->
           <div class="mb-4 max-h-40 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700">
             <div
@@ -747,6 +739,24 @@ onMounted(() => {
               />
               <span class="text-sm text-gray-700 dark:text-gray-300">{{ session.name }}</span>
               <span class="text-xs text-gray-400">{{ session.messageCount.toLocaleString() }} 条</span>
+            </div>
+          </div>
+
+          <!-- 删除原记录选项 -->
+          <div class="mb-4">
+            <UCheckbox v-model="deleteOriginalsAfterMerge" :label="t('tools.batchManage.deleteOriginalsLabel')" />
+          </div>
+
+          <!-- 强提醒（仅勾选删除时显示） -->
+          <div
+            v-if="deleteOriginalsAfterMerge"
+            class="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 dark:border-red-800/50 dark:bg-red-900/20"
+          >
+            <div class="flex items-start gap-2">
+              <UIcon name="i-heroicons-exclamation-triangle" class="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+              <p class="text-xs leading-5 text-red-700 dark:text-red-300">
+                {{ t('tools.batchManage.mergeRiskWarning') }}
+              </p>
             </div>
           </div>
 
