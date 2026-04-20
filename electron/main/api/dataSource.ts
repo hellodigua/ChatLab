@@ -39,12 +39,29 @@ function getConfigPath(): string {
   return path.join(getSettingsDir(), CONFIG_FILE)
 }
 
+/**
+ * Validate that parsed JSON conforms to the hierarchical DataSource[] schema.
+ * Returns false for legacy flat format (<=0.17.3) or any other unexpected shape.
+ */
+function isValidDataSourceArray(data: unknown): data is DataSource[] {
+  if (!Array.isArray(data)) return false
+  return data.every((item) => item && typeof item === 'object' && Array.isArray(item.sessions))
+}
+
 export function loadDataSources(): DataSource[] {
   try {
     const filePath = getConfigPath()
     if (fs.existsSync(filePath)) {
       const raw = fs.readFileSync(filePath, 'utf-8')
-      return JSON.parse(raw) as DataSource[]
+      const parsed = JSON.parse(raw)
+
+      if (!isValidDataSourceArray(parsed)) {
+        apiLogger.warn('[DataSource] Incompatible config format detected (likely pre-0.17.4). Resetting to [].')
+        saveDataSources([])
+        return []
+      }
+
+      return parsed
     }
   } catch (err) {
     apiLogger.error('[DataSource] Failed to load config', err)
@@ -78,7 +95,12 @@ export function normalizeBaseUrl(input: string): string {
 
 // ==================== DataSource CRUD ====================
 
-export function addDataSource(partial: { name?: string; baseUrl: string; token: string; intervalMinutes: number }): DataSource {
+export function addDataSource(partial: {
+  name?: string
+  baseUrl: string
+  token: string
+  intervalMinutes: number
+}): DataSource {
   const sources = loadDataSources()
   const ds: DataSource = {
     id: generateId('src'),

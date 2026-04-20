@@ -186,10 +186,7 @@ export const useApiServerStore = defineStore('apiServer', () => {
 
   // ==================== 导入会话管理 ====================
 
-  async function addImportSessions(
-    sourceId: string,
-    sessions: Array<{ name: string; remoteSessionId: string }>
-  ) {
+  async function addImportSessions(sourceId: string, sessions: Array<{ name: string; remoteSessionId: string }>) {
     try {
       const added = await window.apiServerApi.addImportSessions(sourceId, sessions)
       await fetchDataSources()
