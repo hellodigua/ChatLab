@@ -55,6 +55,7 @@
       "message": "訊息",
       "topic": "話題",
       "interaction": "互動分析",
+      "groupRelationships": "群關係",
       "ranking": "榜單",
       "relationship": "關係",
       "languagePreference": "語言偏好"
@@ -65,6 +66,11 @@
       "catchphrase": "口頭禪",
       "keywordAnalysis": "關鍵字分析",
       "languagePreference": "語言偏好"
+    },
+    "groupRelationships": {
+      "mentionGraph": "@ 關係圖",
+      "mentionRanking": "@ 排行",
+      "proximity": "發言臨近度"
     },
     "member": {
       "memberList": "成員列表",

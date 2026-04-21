@@ -55,6 +55,7 @@
       "message": "メッセージ",
       "topic": "トピック",
       "interaction": "インタラクション分析",
+      "groupRelationships": "グループ関係",
       "ranking": "ランキング",
       "relationship": "関係",
       "languagePreference": "言語傾向"
@@ -65,6 +66,11 @@
       "catchphrase": "口癖",
       "keywordAnalysis": "キーワード分析",
       "languagePreference": "言語傾向"
+    },
+    "groupRelationships": {
+      "mentionGraph": "@ 関係図",
+      "mentionRanking": "@ ランキング",
+      "proximity": "発言の近接度"
     },
     "member": {
       "memberList": "メンバー一覧",

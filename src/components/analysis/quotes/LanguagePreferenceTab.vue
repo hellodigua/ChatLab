@@ -52,7 +52,7 @@ watch(
 </script>
 
 <template>
-  <div class="main-content mx-auto max-w-[920px] py-6">
+  <div class="main-content mx-auto max-w-[920px] space-y-6 p-6">
     <LoadingState v-if="isLoading" :text="t('quotes.languagePreference.loading')" />
     <EmptyState v-else-if="!hasData" :text="t('quotes.languagePreference.empty')" />
 
@@ -61,16 +61,16 @@ watch(
       <LanguagePreferenceCard :data="data" @word-click="handleWordClick" />
 
       <!-- Section 1: 口头禅 PK -->
-      <CatchphrasePKSection :members="data.members" class="mt-6" @word-click="handleWordClick" />
+      <CatchphrasePKSection :members="data.members" @word-click="handleWordClick" />
 
       <!-- Section 2: 词性图谱 -->
-      <PosPortraitSection :members="data.members" class="mt-6" />
+      <PosPortraitSection :members="data.members" />
 
       <!-- Section 3: 语气词画像 -->
-      <ModalParticleSection :members="data.members" class="mt-6" />
+      <ModalParticleSection :members="data.members" />
 
       <!-- Section 4: 标点性格 -->
-      <PunctuationSection :members="data.members" class="mt-6" />
+      <PunctuationSection :members="data.members" />
     </template>
   </div>
 </template>

@@ -55,6 +55,7 @@
       "message": "Messages",
       "topic": "Topics",
       "interaction": "Interactions",
+      "groupRelationships": "Relationships",
       "ranking": "Rankings",
       "relationship": "Relationship",
       "languagePreference": "Language Preference"
@@ -65,6 +66,11 @@
       "catchphrase": "Catchphrases",
       "keywordAnalysis": "Keyword Analysis",
       "languagePreference": "Language"
+    },
+    "groupRelationships": {
+      "mentionGraph": "Mention Graph",
+      "mentionRanking": "Mention Ranking",
+      "proximity": "Proximity"
     },
     "member": {
       "memberList": "Member List",

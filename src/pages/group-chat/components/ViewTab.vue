@@ -4,10 +4,8 @@ import { useI18n } from 'vue-i18n'
 import { SubTabs } from '@/components/UI'
 import UserSelect from '@/components/common/UserSelect.vue'
 import MessageView from '@openchatlab/chart-message/MessageView.vue'
-import InteractionView from '@openchatlab/chart-interaction/InteractionView.vue'
 import RankingView from '@openchatlab/chart-ranking/RankingView.vue'
-import Relationships from './view/Relationships.vue'
-import ClusterView from '@openchatlab/chart-cluster/ClusterView.vue'
+import GroupRelationships from './view/GroupRelationships.vue'
 import { WordcloudTab, CatchphraseTab, HotRepeatTab } from '@/components/analysis/quotes'
 import { isFeatureSupported, type LocaleType } from '@/i18n'
 
@@ -29,9 +27,7 @@ const subTabs = computed(() => {
   const tabs = [
     { id: 'message', label: t('analysis.subTabs.view.message'), icon: 'i-heroicons-chat-bubble-left-right' },
     { id: 'topic', label: t('analysis.subTabs.view.topic'), icon: 'i-heroicons-cloud' },
-    { id: 'interaction', label: t('analysis.subTabs.view.interaction'), icon: 'i-heroicons-arrows-right-left' },
-    { id: 'relationships', label: t('analysis.subTabs.member.relationships'), icon: 'i-heroicons-heart' },
-    { id: 'cluster', label: t('analysis.subTabs.member.cluster'), icon: 'i-heroicons-user-group' },
+    { id: 'group-relationships', label: t('analysis.subTabs.view.groupRelationships'), icon: 'i-heroicons-heart' },
     { id: 'hot-repeat', label: t('analysis.subTabs.quotes.hotRepeat'), icon: 'i-heroicons-fire' },
     {
       id: 'catchphrase',
@@ -81,18 +77,8 @@ const viewTimeFilter = computed(() => ({
           :session-id="props.sessionId"
           :time-filter="props.timeFilter"
         />
-        <InteractionView
-          v-else-if="activeSubTab === 'interaction'"
-          :session-id="props.sessionId"
-          :time-filter="viewTimeFilter"
-        />
-        <Relationships
-          v-else-if="activeSubTab === 'relationships'"
-          :session-id="props.sessionId"
-          :time-filter="viewTimeFilter"
-        />
-        <ClusterView
-          v-else-if="activeSubTab === 'cluster'"
+        <GroupRelationships
+          v-else-if="activeSubTab === 'group-relationships'"
           :session-id="props.sessionId"
           :time-filter="viewTimeFilter"
         />
