@@ -21,8 +21,12 @@
     "member": "成員",
     "ai": "AI 實驗室",
     "aiChat": "AI 對話",
+    "memory": "記憶",
     "lab": "實驗室",
     "sqlLab": "SQL 實驗室"
+  },
+  "memory": {
+    "comingSoon": "記憶功能即將上線，敬請期待"
   },
   "yearFilter": {
     "allTime": "全部時間",

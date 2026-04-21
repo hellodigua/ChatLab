@@ -21,8 +21,12 @@
     "member": "Members",
     "ai": "AI Lab",
     "aiChat": "AI Chat",
+    "memory": "Memory",
     "lab": "Lab",
     "sqlLab": "SQL Lab"
+  },
+  "memory": {
+    "comingSoon": "Memory feature coming soon, stay tuned"
   },
   "yearFilter": {
     "allTime": "All Time",

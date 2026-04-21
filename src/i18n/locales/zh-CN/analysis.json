@@ -21,8 +21,13 @@
     "member": "成员",
     "ai": "AI实验室",
     "aiChat": "AI对话",
+    "memory": "记忆",
     "lab": "实验室",
     "sqlLab": "SQL实验室"
+  },
+  "memory": {
+    "comingSoon": "正在计划中，如果你对记忆功能有什么建议，欢迎加群讨论。",
+    "joinLink": "https://chatlab.fun/cn/other/community.html"
   },
   "yearFilter": {
     "allTime": "全部时间",

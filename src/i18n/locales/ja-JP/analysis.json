@@ -21,8 +21,12 @@
     "member": "メンバー",
     "ai": "AIラボ",
     "aiChat": "AIチャット",
+    "memory": "メモリー",
     "lab": "ラボ",
     "sqlLab": "SQLラボ"
+  },
+  "memory": {
+    "comingSoon": "メモリー機能は近日公開予定です。お楽しみに"
   },
   "yearFilter": {
     "allTime": "全期間",
