@@ -33,7 +33,7 @@
     "year": "{year}年"
   },
   "tooltip": {
-    "chatViewer": "チャット記録ビューア",
+    "viewChatRecord": "チャット履歴を見る",
     "sessionIndex": "セッション索引",
     "incrementalImport": "追加インポート",
     "memberManagement": "メンバー管理"

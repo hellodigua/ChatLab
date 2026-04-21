@@ -33,7 +33,7 @@
     "year": "{year}"
   },
   "tooltip": {
-    "chatViewer": "Chat Record Viewer",
+    "viewChatRecord": "View Chat History",
     "sessionIndex": "Session Index",
     "incrementalImport": "Import More",
     "memberManagement": "Manage Member"

@@ -28,14 +28,18 @@ function onMouseLeave() {
   }, 200)
 }
 
+type ToolEvent =
+  | 'openIncrementalImport'
+  | 'openSessionIndex'
+  | 'openMemberManagement'
+  | 'openChatRecord'
+  | 'openMessageExport'
+
 const emit = defineEmits<{
-  (e: 'openIncrementalImport'): void
-  (e: 'openSessionIndex'): void
-  (e: 'openMemberManagement'): void
-  (e: 'openMessageExport'): void
+  (e: ToolEvent): void
 }>()
 
-function handleToolClick(event: (typeof tools)[number]['event']) {
+function handleToolClick(event: ToolEvent) {
   emit(event)
   if (!isToolsPanelLocked.value) {
     isHovered.value = false
@@ -60,6 +64,12 @@ const tools = [
     icon: 'i-heroicons-user-group',
     hoverColor: 'group-hover:text-purple-500',
     labelKey: 'analysis.tooltip.memberManagement',
+  },
+  {
+    event: 'openChatRecord' as const,
+    icon: 'i-heroicons-chat-bubble-bottom-center-text',
+    hoverColor: 'group-hover:text-cyan-500',
+    labelKey: 'analysis.tooltip.viewChatRecord',
   },
   {
     event: 'openMessageExport' as const,

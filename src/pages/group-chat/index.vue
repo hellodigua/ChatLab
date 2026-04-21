@@ -128,15 +128,6 @@ const { headerDescription } = useSessionHeaderDescription({
         icon-class="bg-primary-600 text-white dark:bg-primary-500 dark:text-white"
       >
         <template #actions>
-          <UButton
-            color="primary"
-            variant="soft"
-            size="sm"
-            icon="i-heroicons-chat-bubble-bottom-center-text"
-            @click="openChatRecordViewer"
-          >
-            {{ t('analysis.tooltip.chatViewer') }}
-          </UButton>
           <CaptureButton />
         </template>
         <!-- Tabs -->
@@ -230,6 +221,7 @@ const { headerDescription } = useSessionHeaderDescription({
         @open-incremental-import="showIncrementalImportModal = true"
         @open-session-index="showSessionIndexModal = true"
         @open-member-management="showMemberManagementModal = true"
+        @open-chat-record="openChatRecordViewer"
         @open-message-export="showMessageExportModal = true"
       />
       <DebugToolsPanel v-if="settingsStore.debugMode" />

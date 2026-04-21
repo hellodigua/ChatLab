@@ -140,15 +140,6 @@ const otherMemberAvatar = computed(() => {
         icon-class="bg-pink-600 text-white dark:bg-pink-500 dark:text-white"
       >
         <template #actions>
-          <UButton
-            color="primary"
-            variant="soft"
-            size="sm"
-            icon="i-heroicons-chat-bubble-bottom-center-text"
-            @click="openChatRecordViewer"
-          >
-            {{ t('analysis.tooltip.chatViewer') }}
-          </UButton>
           <CaptureButton />
         </template>
         <!-- Tabs -->
@@ -239,6 +230,7 @@ const otherMemberAvatar = computed(() => {
         @open-incremental-import="showIncrementalImportModal = true"
         @open-session-index="showSessionIndexModal = true"
         @open-member-management="showMemberManagementModal = true"
+        @open-chat-record="openChatRecordViewer"
         @open-message-export="showMessageExportModal = true"
       />
       <DebugToolsPanel v-if="settingsStore.debugMode" />
