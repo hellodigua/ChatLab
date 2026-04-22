@@ -3,6 +3,11 @@ import { useToast as useNuxtToast } from '@nuxt/ui/composables'
 interface AppToastOptions {
   description?: string
   duration?: number
+  actions?: Array<{
+    label: string
+    icon?: string
+    onClick: () => void
+  }>
 }
 
 interface AppToastPayload extends AppToastOptions {

@@ -109,16 +109,6 @@ const timeRangeString = computed(() => {
 
 const heroTextMaxWidthClass = computed(() => (locale.value.startsWith('en') ? 'max-w-[420px]' : 'max-w-[320px]'))
 
-function getOverallLabel(): string {
-  if (!stats.value || stats.value.totalSessions <= 3) {
-    return t('views.relationship.labels.distantBond')
-  }
-  const ratio = overallInitiateRatio.value
-  if (ratio >= 40 && ratio <= 60) return t('views.relationship.labels.mutualPursuit')
-  if (ratio >= 80 || ratio <= 20) return t('views.relationship.labels.devotedHeart')
-  return t('views.relationship.labels.silentGuardian')
-}
-
 // 确保进度条视觉上可区分（至少 5% 最小宽度）
 function clampBarWidth(ratio: number): number {
   if (ratio <= 0) return 0

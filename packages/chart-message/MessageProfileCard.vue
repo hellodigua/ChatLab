@@ -34,16 +34,6 @@ const props = defineProps<{
   timeFilter?: TimeFilter
 }>()
 
-const weekdayNames = computed(() => [
-  t('common.weekday.mon'),
-  t('common.weekday.tue'),
-  t('common.weekday.wed'),
-  t('common.weekday.thu'),
-  t('common.weekday.fri'),
-  t('common.weekday.sat'),
-  t('common.weekday.sun'),
-])
-
 // ==================== 核心数字 ====================
 
 const totalMessages = computed(() => props.messageTypes.reduce((sum, item) => sum + item.count, 0))

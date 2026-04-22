@@ -38,6 +38,7 @@ watch(
     if (val) {
       if (isManageMode.value && props.manageSource) {
         formData.value = {
+          name: props.manageSource.name || '',
           baseUrl: props.manageSource.baseUrl,
           token: props.manageSource.token,
           intervalMinutes: props.manageSource.intervalMinutes,
