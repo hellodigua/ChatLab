@@ -494,6 +494,7 @@
         "directMode": "Direct URL",
         "remoteMode": "Remote Server",
         "baseUrl": "Server URL",
+        "baseUrlPlaceholder": "e.g. http://127.0.0.1:2333/api/v1",
         "browse": "Browse Sessions",
         "found": "Found {count} sessions",
         "selectAll": "Select All",

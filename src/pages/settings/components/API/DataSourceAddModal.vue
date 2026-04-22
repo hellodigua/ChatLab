@@ -163,7 +163,11 @@ function formatMessageCount(count?: number): string {
               <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
                 {{ t('settings.api.dataSources.discovery.baseUrl') }}
               </label>
-              <UInput v-model="formData.baseUrl" class="w-full" placeholder="https://example.com" />
+              <UInput
+                v-model="formData.baseUrl"
+                class="w-full"
+                :placeholder="t('settings.api.dataSources.discovery.baseUrlPlaceholder')"
+              />
             </div>
 
             <div>

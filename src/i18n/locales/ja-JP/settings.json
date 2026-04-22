@@ -493,6 +493,7 @@
         "directMode": "直接 URL",
         "remoteMode": "リモートサーバー",
         "baseUrl": "サーバーアドレス",
+        "baseUrlPlaceholder": "例：http://127.0.0.1:2333/api/v1",
         "browse": "セッションを参照",
         "found": "{count} 件のセッションが見つかりました",
         "selectAll": "すべて選択",

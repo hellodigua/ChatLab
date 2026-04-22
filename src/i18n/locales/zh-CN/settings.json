@@ -494,6 +494,7 @@
         "directMode": "直接 URL",
         "remoteMode": "远程服务器",
         "baseUrl": "服务器地址",
+        "baseUrlPlaceholder": "示例：http://127.0.0.1:2333/api/v1",
         "browse": "浏览远程会话",
         "found": "发现 {count} 个会话",
         "selectAll": "全选",

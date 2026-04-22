@@ -493,6 +493,7 @@
         "directMode": "直接 URL",
         "remoteMode": "遠端伺服器",
         "baseUrl": "伺服器地址",
+        "baseUrlPlaceholder": "示例：http://127.0.0.1:2333/api/v1",
         "browse": "瀏覽遠端會話",
         "found": "發現 {count} 個會話",
         "selectAll": "全選",
