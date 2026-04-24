@@ -38,6 +38,12 @@ const md = new MarkdownIt({
   typographer: true, // 启用排版优化
 })
 
+md.renderer.rules.link_open = (tokens, idx, options, _env, self) => {
+  tokens[idx].attrSet('target', '_blank')
+  tokens[idx].attrSet('rel', 'noopener noreferrer')
+  return self.renderToken(tokens, idx, options)
+}
+
 // 渲染 Markdown 文本
 function renderMarkdown(text: string): string {
   if (!text) return ''
