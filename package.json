@@ -4,7 +4,7 @@
   "description": "本地化的聊天记录分析工具，通过 SQL 和 AI Agent 回顾你的社交记忆",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hellodigua/ChatLab.git"
+    "url": "git+https://github.com/ChatLab/ChatLab.git"
   },
   "author": "digua <hello@digua.me>",
   "main": "./out/main/index.js",

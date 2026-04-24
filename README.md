@@ -6,7 +6,7 @@ Rediscover your social memories with private, AI-powered analysis.
 
 English | [简体中文](./docs/README.zh-CN.md) | [繁體中文](./docs/README.zh-TW.md) | [日本語](./docs/README.ja-JP.md)
 
-[Official Website](https://chatlab.fun/) · [Download](https://chatlab.fun/?type=download) · [Documentation](https://chatlab.fun/usage/) · [Roadmap](https://chatlabfun.featurebase.app/roadmap) · [Issue Submission](https://github.com/hellodigua/ChatLab/issues)
+[Official Website](https://chatlab.fun/) · [Download](https://chatlab.fun/?type=download) · [Documentation](https://chatlab.fun/usage/) · [Roadmap](https://chatlabfun.featurebase.app/roadmap) · [Issue Submission](https://github.com/ChatLab/ChatLab/issues)
 
 </div>
 
@@ -106,8 +106,8 @@ Please follow these principles before submitting a Pull Request:
 
 Thanks to all contributors:
 
-<a href="https://github.com/hellodigua/ChatLab/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=hellodigua/ChatLab" />
+<a href="https://github.com/ChatLab/ChatLab/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=ChatLab/ChatLab" />
 </a>
 
 ## License

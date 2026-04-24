@@ -27,7 +27,7 @@
 
 ## 4. 風險警告
 
-- **官方下載管道**：請僅透過 [chatlab.fun](https://chatlab.fun) 或 [GitHub Releases](https://github.com/hellodigua/ChatLab/releases) 下載本軟體。
+- **官方下載管道**：請僅透過 [chatlab.fun](https://chatlab.fun) 或 [GitHub Releases](https://github.com/ChatLab/ChatLab/releases) 下載本軟體。
 - **供應鏈風險**：本專案程式碼完全開源，任何人都可再次打包。非官方版本可能植入惡意程式碼，導致你的 API Token、聊天紀錄或本機資料外洩，請務必提高警覺。
 - **結果準確性**：軟體與 AI 產生的分析結果可能有誤或出現「幻覺」，僅供參考，不應作為法律證據或正式決策依據。
 

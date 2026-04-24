@@ -5,7 +5,7 @@ productName: ChatLab
 # 发布配置
 publish:
   provider: github
-  owner: hellodigua
+  owner: ChatLab
   repo: ChatLab
 # 构建资源所在的目录
 directories:

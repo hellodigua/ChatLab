@@ -59,7 +59,7 @@ function switchToGitHub(): void {
   currentSource = 'github'
   autoUpdater.setFeedURL({
     provider: 'github',
-    owner: 'hellodigua',
+    owner: 'ChatLab',
     repo: 'ChatLab',
   })
   logger.info('[Update] Switched to GitHub fallback source')

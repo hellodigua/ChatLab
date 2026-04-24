@@ -6,7 +6,7 @@
 
 [English](../README.md) | [简体中文](./README.zh-CN.md) | 繁體中文 | [日本語](./README.ja-JP.md)
 
-[官網](https://chatlab.fun/cn/) · [下載指南](https://chatlab.fun/cn/?type=download) · [使用文件](https://chatlab.fun/cn/usage/) · [Roadmap](https://chatlabfun.featurebase.app/roadmap) · [問題回報](https://github.com/hellodigua/ChatLab/issues)
+[官網](https://chatlab.fun/cn/) · [下載指南](https://chatlab.fun/cn/?type=download) · [使用文件](https://chatlab.fun/cn/usage/) · [Roadmap](https://chatlabfun.featurebase.app/roadmap) · [問題回報](https://github.com/ChatLab/ChatLab/issues)
 
 </div>
 
@@ -96,8 +96,8 @@ electron-fix start
 
 感謝所有為 ChatLab 做出貢獻的人！
 
-<a href="https://github.com/hellodigua/ChatLab/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=hellodigua/ChatLab" />
+<a href="https://github.com/ChatLab/ChatLab/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=ChatLab/ChatLab" />
 </a>
 
 ## License

@@ -43,7 +43,7 @@ function getDefaultLinks(): FooterLink[] {
       id: 'github',
       icon: 'i-simple-icons-github',
       title: 'Github',
-      url: 'https://github.com/hellodigua/ChatLab',
+      url: 'https://github.com/ChatLab/ChatLab',
     },
     {
       id: 'terms',
