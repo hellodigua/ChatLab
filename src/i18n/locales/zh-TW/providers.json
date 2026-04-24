@@ -2,8 +2,8 @@
   "deepseek": {
     "name": "DeepSeek",
     "models": {
-      "deepseek-chat": "通用對話模型",
-      "deepseek-coder": "程式碼生成模型"
+      "deepseek-v4-pro": "旗艦模型，1M 上下文，支援思考與非思考模式",
+      "deepseek-v4-flash": "高速模型，1M 上下文，支援思考與非思考模式"
     }
   },
   "qwen": {

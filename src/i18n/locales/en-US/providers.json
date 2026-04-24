@@ -2,8 +2,8 @@
   "deepseek": {
     "name": "DeepSeek",
     "models": {
-      "deepseek-chat": "General chat model",
-      "deepseek-coder": "Code generation model"
+      "deepseek-v4-pro": "Flagship model, 1M context, thinking & non-thinking",
+      "deepseek-v4-flash": "Fast model, 1M context, thinking & non-thinking"
     }
   },
   "qwen": {

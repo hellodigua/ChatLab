@@ -92,7 +92,7 @@ const DEEPSEEK: ProviderDefinition = {
   supportsCustomModels: true,
   builtin: true,
   enabledByDefault: true,
-  modelIds: ['deepseek-chat', 'deepseek-reasoner'],
+  modelIds: ['deepseek-v4-pro', 'deepseek-v4-flash'],
 }
 
 const QWEN: ProviderDefinition = {
@@ -216,7 +216,7 @@ const OPENROUTER: ProviderDefinition = {
   supportsCustomModels: true,
   builtin: true,
   enabledByDefault: true,
-  modelIds: ['deepseek/deepseek-chat', 'google/gemini-2.5-flash-preview', 'mistralai/mistral-7b-instruct:free'],
+  modelIds: ['deepseek/deepseek-v4-pro', 'google/gemini-2.5-flash-preview', 'mistralai/mistral-7b-instruct:free'],
 }
 
 const XAI: ProviderDefinition = {

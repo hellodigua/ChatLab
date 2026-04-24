@@ -301,20 +301,20 @@ const GEMINI_MODELS: ModelDefinition[] = [
 
 const DEEPSEEK_MODELS: ModelDefinition[] = [
   builtin({
-    id: 'deepseek-chat',
+    id: 'deepseek-v4-pro',
     providerId: 'deepseek',
-    name: 'DeepSeek Chat',
-    description: 'General chat model (V3)',
-    capabilities: ['chat', 'function_calling'],
+    name: 'DeepSeek V4 Pro',
+    description: 'Flagship model, 1M context, thinking & non-thinking',
+    capabilities: ['chat', 'reasoning', 'function_calling'],
     recommendedFor: ['chat'],
     status: 'stable',
   }),
   builtin({
-    id: 'deepseek-reasoner',
+    id: 'deepseek-v4-flash',
     providerId: 'deepseek',
-    name: 'DeepSeek Reasoner',
-    description: 'Deep reasoning model (R1)',
-    capabilities: ['chat', 'reasoning'],
+    name: 'DeepSeek V4 Flash',
+    description: 'Fast model, 1M context, thinking & non-thinking',
+    capabilities: ['chat', 'reasoning', 'function_calling'],
     recommendedFor: ['chat'],
     status: 'stable',
   }),
@@ -669,11 +669,11 @@ const GROQ_MODELS: ModelDefinition[] = [
 
 const OPENROUTER_MODELS: ModelDefinition[] = [
   builtin({
-    id: 'deepseek/deepseek-chat',
+    id: 'deepseek/deepseek-v4-pro',
     providerId: 'openrouter',
-    name: 'DeepSeek Chat',
-    description: 'DeepSeek V3 via OpenRouter',
-    capabilities: ['chat', 'function_calling'],
+    name: 'DeepSeek V4 Pro',
+    description: 'DeepSeek V4 Pro via OpenRouter',
+    capabilities: ['chat', 'reasoning', 'function_calling'],
     recommendedFor: ['chat'],
     status: 'stable',
   }),
