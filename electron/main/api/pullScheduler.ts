@@ -233,7 +233,6 @@ async function importTempFile(baseUrl: string, sess: ImportSession, tempFile: st
 // ==================== Core pull loop (per ImportSession) ====================
 
 const MAX_PAGES_PER_PULL = 50
-const DEFAULT_PULL_LIMIT = 1000
 const PULL_OVERLAP_SECONDS = 60
 
 interface PullSessionResult {
@@ -264,7 +263,7 @@ async function executePullSession(sourceId: string, ds: DataSource, sess: Import
         since,
         offset,
         end,
-        limit: DEFAULT_PULL_LIMIT,
+        limit: ds.pullLimit,
       })
 
       try {

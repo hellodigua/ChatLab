@@ -128,7 +128,13 @@ function openEditSource(ds: DataSource) {
   showEditModal.value = true
 }
 
-async function handleEditSaved(updates: { name: string; baseUrl: string; token: string; intervalMinutes: number }) {
+async function handleEditSaved(updates: {
+  name: string
+  baseUrl: string
+  token: string
+  intervalMinutes: number
+  pullLimit: number
+}) {
   if (!editingDataSource.value) return
   await store.updateDataSource(editingDataSource.value.id, updates)
 }

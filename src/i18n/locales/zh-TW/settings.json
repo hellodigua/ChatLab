@@ -497,6 +497,8 @@
         "token": "存取權杖（可選）",
         "tokenPlaceholder": "遠端 API 的 Bearer Token",
         "interval": "拉取間隔（分鐘）",
+        "pullLimit": "每次拉取訊息數",
+        "pullLimitPlaceholder": "預設 1000",
         "targetSession": "目標會話 ID（可選）",
         "targetSessionPlaceholder": "留空則每次新建會話",
         "add": "新增"

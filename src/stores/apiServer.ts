@@ -36,6 +36,7 @@ export interface DataSource {
   baseUrl: string
   token: string
   intervalMinutes: number
+  pullLimit: number
   enabled: boolean
   createdAt: number
   sessions: ImportSession[]
@@ -153,7 +154,13 @@ export const useApiServerStore = defineStore('apiServer', () => {
     }
   }
 
-  async function addDataSource(partial: { name?: string; baseUrl: string; token: string; intervalMinutes: number }) {
+  async function addDataSource(partial: {
+    name?: string
+    baseUrl: string
+    token: string
+    intervalMinutes: number
+    pullLimit?: number
+  }) {
     try {
       const ds = await window.apiServerApi.addDataSource(partial)
       dataSources.value.push(ds)
@@ -166,7 +173,7 @@ export const useApiServerStore = defineStore('apiServer', () => {
 
   async function updateDataSource(
     id: string,
-    updates: Partial<Pick<DataSource, 'name' | 'baseUrl' | 'token' | 'intervalMinutes' | 'enabled'>>
+    updates: Partial<Pick<DataSource, 'name' | 'baseUrl' | 'token' | 'intervalMinutes' | 'pullLimit' | 'enabled'>>
   ) {
     try {
       const ds = await window.apiServerApi.updateDataSource(id, updates)

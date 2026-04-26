@@ -10,7 +10,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  saved: [updates: { name: string; baseUrl: string; token: string; intervalMinutes: number }]
+  saved: [updates: { name: string; baseUrl: string; token: string; intervalMinutes: number; pullLimit: number }]
 }>()
 
 const { t } = useI18n()
@@ -20,6 +20,7 @@ const form = ref({
   baseUrl: '',
   token: '',
   intervalMinutes: 60,
+  pullLimit: 1000,
 })
 
 watch(
@@ -31,6 +32,7 @@ watch(
         baseUrl: props.dataSource.baseUrl,
         token: props.dataSource.token,
         intervalMinutes: props.dataSource.intervalMinutes,
+        pullLimit: props.dataSource.pullLimit,
       }
     }
   }
@@ -42,6 +44,7 @@ function save() {
     baseUrl: form.value.baseUrl,
     token: form.value.token,
     intervalMinutes: form.value.intervalMinutes,
+    pullLimit: form.value.pullLimit,
   })
   emit('update:open', false)
 }
@@ -85,11 +88,26 @@ function save() {
             />
           </div>
 
-          <div>
-            <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
-              {{ t('settings.api.dataSources.form.interval') }}
-            </label>
-            <UInput v-model.number="form.intervalMinutes" type="number" :min="1" class="w-full" />
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                {{ t('settings.api.dataSources.form.interval') }}
+              </label>
+              <UInput v-model.number="form.intervalMinutes" type="number" :min="1" class="w-full" />
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                {{ t('settings.api.dataSources.form.pullLimit') }}
+              </label>
+              <UInput
+                v-model.number="form.pullLimit"
+                type="number"
+                :min="100"
+                :max="10000"
+                class="w-full"
+                :placeholder="t('settings.api.dataSources.form.pullLimitPlaceholder')"
+              />
+            </div>
           </div>
 
           <div class="flex justify-end gap-2 pt-2">

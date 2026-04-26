@@ -35,6 +35,7 @@ export interface DataSource {
   baseUrl: string
   token: string
   intervalMinutes: number
+  pullLimit: number
   enabled: boolean
   createdAt: number
   sessions: ImportSession[]
@@ -100,13 +101,14 @@ export const apiServerApi = {
     baseUrl: string
     token: string
     intervalMinutes: number
+    pullLimit?: number
   }): Promise<DataSource> => {
     return ipcRenderer.invoke('api:addDataSource', partial)
   },
 
   updateDataSource: (
     id: string,
-    updates: Partial<Pick<DataSource, 'name' | 'baseUrl' | 'token' | 'intervalMinutes' | 'enabled'>>
+    updates: Partial<Pick<DataSource, 'name' | 'baseUrl' | 'token' | 'intervalMinutes' | 'pullLimit' | 'enabled'>>
   ): Promise<DataSource | null> => {
     return ipcRenderer.invoke('api:updateDataSource', id, updates)
   },

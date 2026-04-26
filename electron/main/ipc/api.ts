@@ -59,7 +59,10 @@ export function registerApiHandlers(_ctx: IpcContext): void {
 
   ipcMain.handle(
     'api:addDataSource',
-    (_event, partial: { name?: string; baseUrl: string; token: string; intervalMinutes: number }) => {
+    (
+      _event,
+      partial: { name?: string; baseUrl: string; token: string; intervalMinutes: number; pullLimit?: number }
+    ) => {
       const ds = addDataSource(partial)
       return ds
     }
@@ -70,7 +73,7 @@ export function registerApiHandlers(_ctx: IpcContext): void {
     (
       _event,
       id: string,
-      updates: Partial<Pick<DataSource, 'name' | 'baseUrl' | 'token' | 'intervalMinutes' | 'enabled'>>
+      updates: Partial<Pick<DataSource, 'name' | 'baseUrl' | 'token' | 'intervalMinutes' | 'pullLimit' | 'enabled'>>
     ) => {
       const ds = updateDataSource(id, updates)
       if (ds) {

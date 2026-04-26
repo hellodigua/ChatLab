@@ -498,6 +498,8 @@
         "token": "Access Token (optional)",
         "tokenPlaceholder": "Bearer Token for the remote API",
         "interval": "Pull Interval (minutes)",
+        "pullLimit": "Messages per Pull",
+        "pullLimitPlaceholder": "Default 1000",
         "targetSession": "Target Session ID (optional)",
         "targetSessionPlaceholder": "Leave empty to create new session each time",
         "add": "Add"
