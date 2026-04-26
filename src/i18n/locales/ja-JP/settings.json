@@ -497,6 +497,8 @@
         "token": "アクセストークン（任意）",
         "tokenPlaceholder": "リモート API の Bearer Token",
         "interval": "取得間隔（分）",
+        "pullLimit": "1回の取得メッセージ数",
+        "pullLimitPlaceholder": "デフォルト 1000",
         "targetSession": "ターゲットセッション ID（任意）",
         "targetSessionPlaceholder": "空欄の場合、毎回新規セッションを作成",
         "add": "追加"

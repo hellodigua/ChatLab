@@ -30,6 +30,7 @@ export interface DataSource {
   baseUrl: string
   token: string
   intervalMinutes: number
+  pullLimit: number
   enabled: boolean
   createdAt: number
   sessions: ImportSession[]
@@ -62,6 +63,9 @@ export function loadDataSources(): DataSource[] {
         return []
       }
 
+      for (const ds of parsed) {
+        if (!ds.pullLimit) ds.pullLimit = 1000
+      }
       return parsed
     }
   } catch (err) {
@@ -101,6 +105,7 @@ export function addDataSource(partial: {
   baseUrl: string
   token: string
   intervalMinutes: number
+  pullLimit?: number
 }): DataSource {
   const sources = loadDataSources()
   const ds: DataSource = {
@@ -109,6 +114,7 @@ export function addDataSource(partial: {
     baseUrl: normalizeBaseUrl(partial.baseUrl),
     token: partial.token,
     intervalMinutes: partial.intervalMinutes,
+    pullLimit: partial.pullLimit || 1000,
     enabled: true,
     createdAt: Math.floor(Date.now() / 1000),
     sessions: [],
@@ -120,7 +126,7 @@ export function addDataSource(partial: {
 
 export function updateDataSource(
   id: string,
-  updates: Partial<Pick<DataSource, 'name' | 'baseUrl' | 'token' | 'intervalMinutes' | 'enabled'>>
+  updates: Partial<Pick<DataSource, 'name' | 'baseUrl' | 'token' | 'intervalMinutes' | 'pullLimit' | 'enabled'>>
 ): DataSource | null {
   const sources = loadDataSources()
   const idx = sources.findIndex((s) => s.id === id)
@@ -130,6 +136,7 @@ export function updateDataSource(
   if (updates.baseUrl !== undefined) ds.baseUrl = normalizeBaseUrl(updates.baseUrl)
   if (updates.token !== undefined) ds.token = updates.token
   if (updates.intervalMinutes !== undefined) ds.intervalMinutes = updates.intervalMinutes
+  if (updates.pullLimit !== undefined) ds.pullLimit = updates.pullLimit
   if (updates.enabled !== undefined) ds.enabled = updates.enabled
   saveDataSources(sources)
   return ds

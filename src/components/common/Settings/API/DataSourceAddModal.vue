@@ -26,6 +26,7 @@ const formData = ref({
   baseUrl: '',
   token: '',
   intervalMinutes: 60,
+  pullLimit: 1000,
 })
 
 const remoteSessions = ref<RemoteSession[]>([])
@@ -53,9 +54,10 @@ watch(
           baseUrl: props.manageSource.baseUrl,
           token: props.manageSource.token,
           intervalMinutes: props.manageSource.intervalMinutes,
+          pullLimit: props.manageSource.pullLimit,
         }
       } else {
-        formData.value = { name: '', baseUrl: '', token: '', intervalMinutes: 60 }
+        formData.value = { name: '', baseUrl: '', token: '', intervalMinutes: 60, pullLimit: 1000 }
       }
       remoteSessions.value = []
       selectedSessionIds.value = new Set()
@@ -205,6 +207,7 @@ async function handleSubmit() {
       baseUrl: formData.value.baseUrl,
       token: formData.value.token,
       intervalMinutes: formData.value.intervalMinutes,
+      pullLimit: formData.value.pullLimit || undefined,
     })
     if (ds && selectedSessionIds.value.size > 0) {
       const sessions = remoteSessions.value
@@ -273,11 +276,26 @@ function formatMessageCount(count?: number): string {
               />
             </div>
 
-            <div>
-              <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
-                {{ t('settings.api.dataSources.form.interval') }}
-              </label>
-              <UInput v-model.number="formData.intervalMinutes" type="number" :min="1" class="w-full" />
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                  {{ t('settings.api.dataSources.form.interval') }}
+                </label>
+                <UInput v-model.number="formData.intervalMinutes" type="number" :min="1" class="w-full" />
+              </div>
+              <div>
+                <label class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                  {{ t('settings.api.dataSources.form.pullLimit') }}
+                </label>
+                <UInput
+                  v-model.number="formData.pullLimit"
+                  type="number"
+                  :min="100"
+                  :max="10000"
+                  class="w-full"
+                  :placeholder="t('settings.api.dataSources.form.pullLimitPlaceholder')"
+                />
+              </div>
             </div>
 
             <div class="flex items-center gap-2">
