@@ -178,6 +178,7 @@
       "newPath": "新目录路径",
       "defaultPath": "默认位置",
       "confirmWarning": "重启应用后，旧数据目录将被自动删除。请确保新目录路径正确。",
+      "installDirForbidden": "不能将数据目录放在应用安装目录下，应用更新时该目录会被清空",
       "cancel": "取消",
       "confirm": "确认切换",
       "migrationSuccessTitle": "数据迁移完成",

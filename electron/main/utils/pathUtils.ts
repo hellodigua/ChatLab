@@ -199,3 +199,29 @@ function hasChatLabStructure(entries: string[], markerFile: string, requiredDirs
   const hasRequiredDirs = requiredDirs.every((dir) => entries.includes(dir))
   return hasMarker && hasRequiredDirs
 }
+
+/**
+ * 获取应用安装根目录
+ * macOS: .app 包路径（如 /Applications/ChatLab.app）
+ * Windows/Linux: 可执行文件所在目录
+ */
+export function getAppInstallDir(exePath: string): string {
+  if (process.platform === 'darwin') {
+    const appBundleMatch = exePath.match(/^(.+?\.app)(\/|$)/)
+    if (appBundleMatch) {
+      return appBundleMatch[1]
+    }
+  }
+  return path.dirname(exePath)
+}
+
+/**
+ * 检查目标路径是否位于应用安装目录内（或等于安装目录）
+ */
+export function isInsideAppInstallDir(targetPath: string, exePath: string): boolean {
+  const installDir = getAppInstallDir(exePath)
+  const normalizedTarget = normalizePathForCompare(targetPath)
+  const normalizedInstall = normalizePathForCompare(installDir)
+
+  return normalizedTarget === normalizedInstall || normalizedTarget.startsWith(`${normalizedInstall}${path.sep}`)
+}

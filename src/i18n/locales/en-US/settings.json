@@ -178,6 +178,7 @@
       "newPath": "New directory path",
       "defaultPath": "Default location",
       "confirmWarning": "After restarting, the old data directory will be automatically deleted. Please ensure the new path is correct.",
+      "installDirForbidden": "Data directory cannot be placed inside the app installation directory, as it will be cleared during updates",
       "cancel": "Cancel",
       "confirm": "Confirm",
       "migrationSuccessTitle": "Migration Complete",

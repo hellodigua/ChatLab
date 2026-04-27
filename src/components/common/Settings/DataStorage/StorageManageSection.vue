@@ -119,7 +119,12 @@ async function selectDataDir() {
   dataDirError.value = null
   try {
     const result = await window.cacheApi.selectDataDir()
-    if (!result.success || !result.path) return
+    if (!result.success || !result.path) {
+      if (result.error === 'INSTALL_DIR_FORBIDDEN') {
+        dataDirError.value = t('settings.storage.dataLocation.installDirForbidden')
+      }
+      return
+    }
 
     // 显示确认弹窗
     pendingNewDir.value = result.path

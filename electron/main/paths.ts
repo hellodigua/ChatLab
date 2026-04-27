@@ -17,6 +17,7 @@ import {
   ensureMarkerFile,
   isDirectorySafeToUse,
   isExistingChatLabDir,
+  isInsideAppInstallDir,
   isPathSafe,
   isSubPath,
   writeMigrationLog,
@@ -207,6 +208,16 @@ export function setCustomDataDir(
     // 安全检查：不能使用系统关键目录
     if (!isPathSafe(normalized)) {
       return { success: false, error: '不能使用系统关键目录作为数据目录' }
+    }
+
+    // 安全检查：不能放在应用安装目录下（更新时会被清空）
+    try {
+      const exePath = app.getPath('exe')
+      if (isInsideAppInstallDir(normalized, exePath)) {
+        return { success: false, error: '不能将数据目录放在应用安装目录下，应用更新时该目录会被清空' }
+      }
+    } catch {
+      // 获取 exe 路径失败时跳过此检查
     }
 
     // 安全检查：目标目录应为空或已有 ChatLab 数据

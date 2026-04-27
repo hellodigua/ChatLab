@@ -1,5 +1,5 @@
 // electron/main/ipc/cache.ts
-import { ipcMain, shell, dialog } from 'electron'
+import { ipcMain, shell, dialog, app } from 'electron'
 import * as fs from 'fs/promises'
 import * as fsSync from 'fs'
 import * as path from 'path'
@@ -16,6 +16,7 @@ import {
   setCustomDataDir,
   ensureAppDirs,
 } from '../paths'
+import { isInsideAppInstallDir } from '../utils/pathUtils'
 
 /**
  * 递归计算目录大小
@@ -161,7 +162,22 @@ export function registerCacheHandlers(_context: IpcContext): void {
         return { success: false }
       }
 
-      return { success: true, path: result.filePaths[0] }
+      const selectedPath = result.filePaths[0]
+
+      // 安全检查：禁止选择应用安装目录（更新时会被清空）
+      try {
+        const exePath = app.getPath('exe')
+        if (isInsideAppInstallDir(selectedPath, exePath)) {
+          return {
+            success: false,
+            error: 'INSTALL_DIR_FORBIDDEN',
+          }
+        }
+      } catch {
+        // 获取 exe 路径失败时跳过此检查
+      }
+
+      return { success: true, path: selectedPath }
     } catch (error) {
       console.error('[Cache] Error selecting data dir:', error)
       return { success: false, error: String(error) }

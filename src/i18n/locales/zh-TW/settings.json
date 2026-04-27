@@ -178,6 +178,7 @@
       "newPath": "新目錄路徑",
       "defaultPath": "預設位置",
       "confirmWarning": "重新啟動應用程式後，舊資料目錄將被自動刪除。請確保新目錄路徑正確。",
+      "installDirForbidden": "不能將資料目錄放在應用程式安裝目錄下，應用程式更新時該目錄會被清空",
       "cancel": "取消",
       "confirm": "確認切換",
       "migrationSuccessTitle": "資料遷移完成",
