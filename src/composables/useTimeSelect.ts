@@ -65,7 +65,7 @@ export function useTimeSelect(route: RouteLocationNormalizedLoaded, router: Rout
 
   /**
    * 从 URL query 构建 TimeSelect 初始状态。
-   * 优先级：URL 参数 > 缓存（上次用户设置）> 默认值（总览 Tab「全部」，其余「最近一年」）
+   * 优先级：URL 参数 > 缓存（上次用户设置）> 默认值（最近一年）
    */
   const initialTimeState = computed<Partial<TimeSelectState>>(() => {
     const q = route.query
@@ -86,7 +86,7 @@ export function useTimeSelect(route: RouteLocationNormalizedLoaded, router: Rout
     }
     return {
       mode: 'recent',
-      recentDays: activeTab.value === 'overview' ? 0 : 365,
+      recentDays: 365,
     }
   })
 
