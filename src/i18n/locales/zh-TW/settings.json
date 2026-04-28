@@ -127,6 +127,7 @@
       "modelNameHintLocal": "輸入本機部署的模型名稱",
       "apiEndpoint": "API 位址",
       "apiEndpointHint": "相容 OpenAI 格式的 API 端點",
+      "resolvedUrl": "實際請求地址:",
       "apiEndpointOverrideHint": "預設地址已填入，可按需改為完整 URL",
       "disableThinking": "關閉思考模式",
       "disableThinkingDesc": "針對 Qwen3、DeepSeek-R1 等模型，停用後使用標準工具呼叫格式",

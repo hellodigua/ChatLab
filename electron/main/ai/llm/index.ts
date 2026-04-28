@@ -432,6 +432,28 @@ function normalizeAnthropicBaseUrl(url: string): string {
   return url.replace(/\/v1\/?$/, '')
 }
 
+/**
+ * 规范化 OpenAI Compatible baseUrl：
+ * 用户经常忘记在域名后加 /v1，OpenAI SDK 不会自动补全。
+ * 如果 URL 没有以 /v1 结尾且路径部分为空或仅有 /，自动补上。
+ * 已有具体路径（如 /api/v1、/proxy）的不做修改。
+ */
+function normalizeOpenAICompatibleBaseUrl(url: string): string {
+  if (!url) return url
+  const trimmed = url.replace(/\/+$/, '')
+  if (trimmed.endsWith('/v1')) return trimmed
+  try {
+    const parsed = new URL(trimmed)
+    // 仅当路径为空或 "/" 时补全 /v1，避免破坏已有的自定义路径
+    if (parsed.pathname === '/' || parsed.pathname === '') {
+      return trimmed + '/v1'
+    }
+  } catch {
+    // URL 解析失败，不做处理
+  }
+  return trimmed
+}
+
 export function buildPiModel(config: AIServiceConfig): PiModel<PiApi> {
   const providerDef = getBuiltinProviderById(config.provider)
   const providerInfo = getProviderInfo(config.provider)
@@ -477,12 +499,18 @@ export function buildPiModel(config: AIServiceConfig): PiModel<PiApi> {
     }
   }
 
+  // openai-compatible + openai-completions：自动补全 /v1（用户经常忘记）
+  const resolvedBaseUrl =
+    config.provider === 'openai-compatible' && apiFormat === 'openai-completions'
+      ? normalizeOpenAICompatibleBaseUrl(baseUrl)
+      : baseUrl
+
   return {
     id: modelId,
     name: modelId,
     api: apiFormat,
     provider: config.provider,
-    baseUrl,
+    baseUrl: resolvedBaseUrl,
     headers: config.provider === 'openai-compatible' ? buildChatLabUserAgentHeaders() : undefined,
     reasoning: config.isReasoningModel ?? false,
     input: ['text'],

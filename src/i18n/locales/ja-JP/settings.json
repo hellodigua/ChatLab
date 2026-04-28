@@ -127,6 +127,7 @@
       "modelNameHintLocal": "ローカルにデプロイしたモデル名を入力",
       "apiEndpoint": "API URL",
       "apiEndpointHint": "OpenAI 互換形式の API エンドポイント",
+      "resolvedUrl": "実際のリクエストURL:",
       "apiEndpointOverrideHint": "デフォルトURLは入力済みです。必要に応じて変更してください",
       "disableThinking": "思考モードをオフ",
       "disableThinkingDesc": "Qwen3 や DeepSeek-R1 などのモデル向け。オフにすると標準のツール実行形式を使います",

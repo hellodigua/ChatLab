@@ -179,6 +179,50 @@ export function useAIConfigForm(props: {
     props.mode.value === 'add' ? t('settings.aiConfig.modal.addConfig') : t('settings.aiConfig.modal.editConfig')
   )
 
+  const BUILTIN_PROVIDER_API: Record<string, string> = {
+    gemini: 'google-generative-ai',
+    anthropic: 'anthropic-messages',
+  }
+
+  const API_PATH_SUFFIX: Record<string, string> = {
+    'openai-completions': '/chat/completions',
+    'openai-responses': '/responses',
+    'anthropic-messages': '/v1/messages',
+  }
+
+  const resolvedApiUrl = computed(() => {
+    const rawInput = formData.value.baseUrl?.trim()
+    const raw = rawInput || (isPresetMode.value ? currentProviderDef.value?.defaultBaseUrl : '')
+    if (!raw) return ''
+
+    const effectiveApiFormat = isPresetMode.value
+      ? BUILTIN_PROVIDER_API[formData.value.provider] || API_FORMAT_DEFAULT
+      : formData.value.apiFormat || API_FORMAT_DEFAULT
+
+    const trimmed = raw.replace(/\/+$/, '')
+
+    let baseUrl: string
+    if (effectiveApiFormat === 'anthropic-messages') {
+      baseUrl = trimmed.replace(/\/v1\/?$/, '')
+    } else if (effectiveApiFormat === 'openai-completions' || effectiveApiFormat === 'openai-responses') {
+      try {
+        const parsed = new URL(trimmed)
+        if (!trimmed.endsWith('/v1') && (parsed.pathname === '/' || parsed.pathname === '')) {
+          baseUrl = trimmed + '/v1'
+        } else {
+          baseUrl = trimmed
+        }
+      } catch {
+        baseUrl = trimmed
+      }
+    } else {
+      baseUrl = trimmed
+    }
+
+    const suffix = API_PATH_SUFFIX[effectiveApiFormat]
+    return suffix ? baseUrl + suffix : baseUrl
+  })
+
   // ============ 表单操作 ============
 
   function resetForm() {
@@ -253,7 +297,7 @@ export function useAIConfigForm(props: {
 
     if (mode === 'local') {
       formData.value.provider = 'openai-compatible'
-      formData.value.baseUrl = 'http://localhost:11434/v1'
+      formData.value.baseUrl = 'http://localhost:11434'
       formData.value.model = compatModels.value[0]?.id || ''
       formData.value.apiKey = ''
     } else if (mode === 'openai-compat') {
@@ -575,6 +619,7 @@ export function useAIConfigForm(props: {
     canSave,
     apiFormatItems,
     modalTitle,
+    resolvedApiUrl,
 
     // 方法
     selectProvider,

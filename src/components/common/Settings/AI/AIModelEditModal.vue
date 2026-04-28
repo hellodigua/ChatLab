@@ -46,6 +46,7 @@ const {
   canSave,
   apiFormatItems,
   modalTitle,
+  resolvedApiUrl,
   selectProvider,
   onConnectionModeChange,
   openAddModelDialog,
@@ -176,6 +177,18 @@ function closeModal() {
                 <p class="mt-1 text-[10px] text-gray-400">
                   {{ t('settings.aiConfig.modal.apiEndpointOverrideHint') }}
                 </p>
+                <p
+                  v-if="resolvedApiUrl"
+                  class="mt-1.5 flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500"
+                >
+                  <UIcon name="i-heroicons-link" class="h-3 w-3 shrink-0" />
+                  <span>{{ t('settings.aiConfig.modal.resolvedUrl') }}</span>
+                  <code
+                    class="ml-0.5 break-all rounded bg-gray-100 px-1 py-0.5 font-mono text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                  >
+                    {{ resolvedApiUrl }}
+                  </code>
+                </p>
               </div>
 
               <!-- 模型选择 -->
@@ -226,11 +239,23 @@ function closeModal() {
                   {{ t('settings.aiConfig.modal.apiEndpoint') }}
                 </label>
                 <div class="flex gap-2">
-                  <UInput v-model="formData.baseUrl" placeholder="http://localhost:11434/v1" class="flex-1" />
+                  <UInput v-model="formData.baseUrl" placeholder="http://localhost:11434" class="flex-1" />
                   <UButton :loading="isValidating" :disabled="!formData.baseUrl" variant="soft" @click="validateKey">
                     {{ t('settings.aiConfig.modal.validate') }}
                   </UButton>
                 </div>
+                <p
+                  v-if="resolvedApiUrl"
+                  class="mt-1.5 flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500"
+                >
+                  <UIcon name="i-heroicons-link" class="h-3 w-3 shrink-0" />
+                  <span>{{ t('settings.aiConfig.modal.resolvedUrl') }}</span>
+                  <code
+                    class="ml-0.5 break-all rounded bg-gray-100 px-1 py-0.5 font-mono text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                  >
+                    {{ resolvedApiUrl }}
+                  </code>
+                </p>
               </div>
 
               <!-- 模型选择 -->
@@ -312,8 +337,20 @@ function closeModal() {
                 <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   {{ t('settings.aiConfig.modal.apiEndpoint') }}
                 </label>
-                <UInput v-model="formData.baseUrl" class="w-full" placeholder="https://api.example.com/v1" />
+                <UInput v-model="formData.baseUrl" class="w-full" placeholder="https://api.example.com" />
                 <p class="mt-1 text-xs text-gray-500">{{ t('settings.aiConfig.modal.apiEndpointHint') }}</p>
+                <p
+                  v-if="resolvedApiUrl"
+                  class="mt-1.5 flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500"
+                >
+                  <UIcon name="i-heroicons-link" class="h-3 w-3 shrink-0" />
+                  <span>{{ t('settings.aiConfig.modal.resolvedUrl') }}</span>
+                  <code
+                    class="ml-0.5 break-all rounded bg-gray-100 px-1 py-0.5 font-mono text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                  >
+                    {{ resolvedApiUrl }}
+                  </code>
+                </p>
               </div>
 
               <!-- 模型选择 -->

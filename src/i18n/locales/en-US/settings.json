@@ -127,6 +127,7 @@
       "modelNameHintLocal": "Enter the locally deployed model name",
       "apiEndpoint": "API URL",
       "apiEndpointHint": "OpenAI-compatible API endpoint",
+      "resolvedUrl": "Resolved URL:",
       "apiEndpointOverrideHint": "Default URL is prefilled. Replace if needed",
       "disableThinking": "Disable Thinking Mode",
       "disableThinkingDesc": "For models like Qwen3, DeepSeek-R1. Uses standard tool calling format when disabled.",
