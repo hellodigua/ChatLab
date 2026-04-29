@@ -77,14 +77,37 @@ function formatCompactNumber(value: number): string {
 const totalTokenUsageText = computed(() => formatNumber(props.sessionTokenUsage.totalTokens))
 const totalTokenUsageCompactText = computed(() => formatCompactNumber(props.sessionTokenUsage.totalTokens))
 
-const contextTokensCompactText = computed(() => {
-  if (props.agentStatus?.contextTokens) {
-    return formatCompactNumber(props.agentStatus.contextTokens)
-  }
-  if (props.estimatedContextTokens && props.estimatedContextTokens > 0) {
-    return formatCompactNumber(props.estimatedContextTokens)
-  }
-  return ''
+const contextTokens = computed(() => {
+  if (props.agentStatus?.contextTokens) return props.agentStatus.contextTokens
+  if (props.estimatedContextTokens && props.estimatedContextTokens > 0) return props.estimatedContextTokens
+  return 0
+})
+
+const modelContextWindow = computed(() => {
+  if (!activeConfig.value) return 128000
+  const model = llmStore.getModelById(activeConfig.value.provider, activeConfig.value.model)
+  return model?.contextWindow ?? 128000
+})
+
+const contextUsagePercent = computed(() => {
+  if (contextTokens.value <= 0 || modelContextWindow.value <= 0) return 0
+  return Math.min(100, Math.round((contextTokens.value / modelContextWindow.value) * 100))
+})
+
+const contextBarColor = computed(() => {
+  const pct = contextUsagePercent.value
+  if (pct >= 80) return 'bg-red-500'
+  if (pct >= 60) return 'bg-amber-500'
+  return 'bg-emerald-500'
+})
+
+const contextBarTooltip = computed(() => {
+  const lines = []
+  lines.push(
+    `${t('ai.chat.statusBar.agent.contextTokens')}: ${formatNumber(contextTokens.value)} / ${formatNumber(modelContextWindow.value)} (${contextUsagePercent.value}%)`
+  )
+  lines.push(`${t('ai.chat.statusBar.tokenUsageTitle')}: ${totalTokenUsageText.value}`)
+  return lines.join('\n')
 })
 
 const agentCompactTitle = computed(() => {
@@ -322,17 +345,34 @@ async function openAiLogFile() {
         </span>
       </div>
 
-      <!-- Context Tokens -->
-      <div
-        v-if="contextTokensCompactText"
-        class="hidden shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-xs text-gray-400 dark:text-gray-500 md:flex"
-        :title="t('ai.chat.statusBar.agent.contextTokens')"
-      >
-        <UIcon name="i-heroicons-document-text" class="h-3.5 w-3.5" />
-        <span>{{ contextTokensCompactText }}</span>
-      </div>
+      <!-- Context 进度条 -->
+      <UTooltip v-if="contextTokens > 0">
+        <div
+          class="hidden shrink-0 items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-gray-400 dark:text-gray-500 md:flex"
+        >
+          <div class="h-1.5 w-16 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+            <div
+              class="h-full rounded-full transition-all duration-300"
+              :class="contextBarColor"
+              :style="{ width: `${contextUsagePercent}%` }"
+            />
+          </div>
+          <span class="text-[10px]">{{ contextUsagePercent }}%</span>
+        </div>
+        <template #content>
+          <div class="space-y-1 text-xs">
+            <div>
+              {{ t('ai.chat.statusBar.agent.contextTokens') }}: {{ formatCompactNumber(contextTokens) }} /
+              {{ formatCompactNumber(modelContextWindow) }}
+            </div>
+            <div>{{ t('ai.chat.statusBar.tokenUsageTitle') }}: {{ totalTokenUsageCompactText }}</div>
+          </div>
+        </template>
+      </UTooltip>
+
       <!-- Used Tokens -->
       <div
+        v-if="sessionTokenUsage.totalTokens > 0"
         class="hidden shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-xs text-gray-400 dark:text-gray-500 md:flex"
         :title="t('ai.chat.statusBar.tokenUsageTitle')"
       >

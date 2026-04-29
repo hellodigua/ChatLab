@@ -24,16 +24,6 @@ const globalMaxMessages = computed({
   },
 })
 
-// AI上下文限制
-const globalMaxHistoryRounds = computed({
-  get: () => aiGlobalSettings.value.maxHistoryRounds ?? 10,
-  set: (val: number) => {
-    const clampedVal = Math.max(1, Math.min(50, val || 10))
-    promptStore.updateAIGlobalSettings({ maxHistoryRounds: clampedVal })
-    emit('config-changed')
-  },
-})
-
 // 导出格式选项（AI 对话）
 const exportFormatTabs = computed(() => [
   { label: 'Markdown', value: 'markdown' },
@@ -124,9 +114,9 @@ const compressionBuffer = computed({
 })
 
 const maxToolResultPercent = computed({
-  get: () => aiGlobalSettings.value.contextCompression?.maxToolResultPercent ?? 35,
+  get: () => aiGlobalSettings.value.contextCompression?.maxToolResultPercent ?? 50,
   set: (val: number) => {
-    const clampedVal = Math.max(10, Math.min(60, val || 35))
+    const clampedVal = Math.max(10, Math.min(60, val || 50))
     promptStore.updateAIGlobalSettings({
       contextCompression: { ...aiGlobalSettings.value.contextCompression, maxToolResultPercent: clampedVal },
     })
@@ -155,19 +145,6 @@ const maxToolResultPercent = computed({
             </p>
           </div>
           <UInputNumber v-model="globalMaxMessages" :min="0" :max="50000" class="w-30" />
-        </div>
-
-        <!-- AI上下文限制 -->
-        <div class="flex items-center justify-between">
-          <div class="flex-1 pr-4">
-            <p class="text-sm font-medium text-gray-900 dark:text-white">
-              {{ t('settings.aiPrompt.maxHistory.title') }}
-            </p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">
-              {{ t('settings.aiPrompt.maxHistory.description') }}
-            </p>
-          </div>
-          <UInputNumber v-model="globalMaxHistoryRounds" :min="1" :max="50" class="w-30" />
         </div>
 
         <!-- 搜索上下文窗口 -->

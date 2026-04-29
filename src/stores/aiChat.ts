@@ -97,6 +97,7 @@ interface ConversationBuffer {
   currentKeywords: string[]
   assistantId: string | null
   loaded: boolean
+  sessionTokenUsage?: TokenUsage
 }
 
 export interface AIChatSessionState {
@@ -284,14 +285,20 @@ export const useAIChatStore = defineStore('aiChatRuntime', () => {
    * 这里只切换显示，不会影响后台正在推理的 buffer。
    */
   function bindDisplayedBuffer(state: AIChatSessionState, bufferKey: string): void {
+    // 保存当前对话的 token 使用量
+    const currentKey = state.currentConversationId ?? DRAFT_CONVERSATION_KEY
+    const currentBuffer = state.conversationBuffers[currentKey]
+    if (currentBuffer) {
+      currentBuffer.sessionTokenUsage = { ...state.sessionTokenUsage }
+    }
+
     const buffer = getOrCreateBuffer(state, bufferKey)
     state.currentConversationId = bufferKey === DRAFT_CONVERSATION_KEY ? null : bufferKey
     state.messages = buffer.messages
     state.sourceMessages = buffer.sourceMessages
     state.currentKeywords = buffer.currentKeywords
     state.selectedAssistantId = buffer.assistantId
-    // 切换对话时重置运行时状态
-    state.sessionTokenUsage = createEmptyTokenUsage()
+    state.sessionTokenUsage = buffer.sessionTokenUsage ? { ...buffer.sessionTokenUsage } : createEmptyTokenUsage()
     state.agentStatus = null
   }
 
@@ -756,7 +763,6 @@ export const useAIChatStore = defineStore('aiChatRuntime', () => {
         updateActiveTaskConversationId(chatKey, conversation.id)
       }
 
-      const maxHistoryRounds = aiGlobalSettings.value.maxHistoryRounds ?? 5
       const preprocessConfig = settingsStore.aiPreprocessConfig
       const hasPreprocess =
         preprocessConfig.dataCleaning ||
@@ -887,7 +893,6 @@ export const useAIChatStore = defineStore('aiChatRuntime', () => {
         },
         state.chatType,
         state.locale,
-        maxHistoryRounds,
         currentAssistantId,
         currentSkillId,
         !currentSkillId ? autoSkillEnabled : undefined,
@@ -896,7 +901,7 @@ export const useAIChatStore = defineStore('aiChatRuntime', () => {
           tokenThresholdPercent: aiGlobalSettings.value.contextCompression?.tokenThresholdPercent ?? 75,
           bufferSizePercent: aiGlobalSettings.value.contextCompression?.bufferSizePercent ?? 20,
           compressionModelConfigId: aiGlobalSettings.value.contextCompression?.compressionModelConfigId,
-          maxToolResultPercent: aiGlobalSettings.value.contextCompression?.maxToolResultPercent ?? 35,
+          maxToolResultPercent: aiGlobalSettings.value.contextCompression?.maxToolResultPercent ?? 50,
         }
       )
 

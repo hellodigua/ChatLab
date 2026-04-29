@@ -945,7 +945,6 @@ export const agentApi = {
    * Agent 通过 context.conversationId 从后端 SQLite 读取对话历史
    * @param chatType 聊天类型（'group' | 'private'）
    * @param locale 语言设置（可选，默认 'zh-CN'）
-   * @param maxHistoryRounds 最大历史轮数（可选，每轮 = user + assistant = 2 条）
    * @returns 返回 { requestId, promise }，requestId 可用于中止请求
    */
   runStream: (
@@ -954,7 +953,6 @@ export const agentApi = {
     onChunk?: (chunk: AgentStreamChunk) => void,
     chatType?: 'group' | 'private',
     locale?: string,
-    maxHistoryRounds?: number,
     assistantId?: string,
     skillId?: string | null,
     enableAutoSkill?: boolean,
@@ -1052,7 +1050,6 @@ export const agentApi = {
           sanitizedContext,
           chatType,
           locale,
-          maxHistoryRounds,
           assistantId,
           skillId,
           enableAutoSkill,

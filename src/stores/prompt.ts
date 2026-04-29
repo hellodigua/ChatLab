@@ -11,18 +11,17 @@ export const usePromptStore = defineStore(
     const aiConfigVersion = ref(0)
     const aiGlobalSettings = ref({
       maxMessagesPerRequest: 1000,
-      maxHistoryRounds: 5,
       exportFormat: 'markdown' as 'markdown' | 'txt',
       sqlExportFormat: 'csv' as 'csv' | 'json',
       enableAutoSkill: true,
       searchContextBefore: 2,
       searchContextAfter: 2,
       contextCompression: {
-        enabled: false,
+        enabled: true,
         tokenThresholdPercent: 75,
         bufferSizePercent: 20,
         compressionModelConfigId: undefined as string | undefined,
-        maxToolResultPercent: 35,
+        maxToolResultPercent: 50,
       },
     })
     const customKeywordTemplates = ref<KeywordTemplate[]>([])
@@ -41,7 +40,6 @@ export const usePromptStore = defineStore(
     function updateAIGlobalSettings(
       settings: Partial<{
         maxMessagesPerRequest: number
-        maxHistoryRounds: number
         exportFormat: 'markdown' | 'txt'
         sqlExportFormat: 'csv' | 'json'
         enableAutoSkill: boolean

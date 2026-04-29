@@ -801,7 +801,6 @@ interface AgentApi {
     onChunk?: (chunk: AgentStreamChunk) => void,
     chatType?: 'group' | 'private',
     locale?: string,
-    maxHistoryRounds?: number,
     assistantId?: string,
     skillId?: string | null,
     enableAutoSkill?: boolean,

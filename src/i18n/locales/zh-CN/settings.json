@@ -273,10 +273,6 @@
       "title": "发送条数限制",
       "description": "每次提交给 AI 的最大消息数，数值越大 Token 消耗越多，分析也更准确（新手建议2000）"
     },
-    "maxHistory": {
-      "title": "AI上下文限制",
-      "description": "每次对话保留最近的对话轮数（1轮 = 用户提问 + AI回复），防止上下文过长消耗 Token"
-    },
     "searchContext": {
       "title": "搜索上下文窗口",
       "description": "搜索命中消息时自动携带前后的对话上下文，帮助 AI 理解消息背景。设为 0 则不携带上下文",

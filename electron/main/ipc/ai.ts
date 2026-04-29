@@ -1028,7 +1028,6 @@ export function registerAIHandlers({ win }: IpcContext): void {
    * Agent 通过 context.conversationId 从 SQLite 读取对话历史（数据流倒置）
    * @param chatType 聊天类型（'group' | 'private'）
    * @param locale 语言设置（可选，默认 'zh-CN'）
-   * @param maxHistoryRounds 前端用户配置的最大历史轮数（可选，每轮 = user + assistant = 2 条）
    * @param assistantId 助手 ID（可选，传入时从 AssistantManager 获取配置）
    */
   ipcMain.handle(
@@ -1040,7 +1039,6 @@ export function registerAIHandlers({ win }: IpcContext): void {
       context: ToolContext,
       chatType?: 'group' | 'private',
       locale?: string,
-      maxHistoryRounds?: number,
       assistantId?: string,
       skillId?: string | null,
       enableAutoSkill?: boolean,
@@ -1106,14 +1104,11 @@ export function registerAIHandlers({ win }: IpcContext): void {
           }
         }
 
-        const contextHistoryLimit = maxHistoryRounds ? maxHistoryRounds * 2 : undefined
-
         const pp = context.preprocessConfig
         aiLogger.info('IPC', `Agent context: ${requestId}`, {
           model: activeAIConfig.model,
           provider: activeAIConfig.provider,
           baseUrl: activeAIConfig.baseUrl || '(default)',
-          maxHistoryRounds: maxHistoryRounds ?? '(default)',
           maxMessagesLimit: context.maxMessagesLimit,
           hasTimeFilter: !!context.timeFilter,
           mentionedMembersCount: context.mentionedMembers?.length ?? 0,
@@ -1161,7 +1156,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
         }
 
         // 工具结果 token 预算注入：基于 context window 百分比计算
-        const maxToolResultPercent = compressionConfig?.maxToolResultPercent ?? 35
+        const maxToolResultPercent = compressionConfig?.maxToolResultPercent ?? 50
         const modelDef = llm.findModelDefinition(activeAIConfig.provider, activeAIConfig.model || '')
         const resolvedContextWindow = modelDef?.contextWindow || 128000
         const maxToolResultTokens = Math.floor(resolvedContextWindow * (maxToolResultPercent / 100))
@@ -1171,7 +1166,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
           enrichedContext,
           piModel,
           activeAIConfig.apiKey,
-          { abortSignal: abortController.signal, contextHistoryLimit },
+          { abortSignal: abortController.signal },
           chatType ?? 'group',
           locale ?? 'zh-CN',
           assistantConfig,
