@@ -123,19 +123,6 @@ const compressionBuffer = computed({
   },
 })
 
-const compressionMaxTokens = computed({
-  get: () => aiGlobalSettings.value.contextCompression?.maxContextTokens ?? null,
-  set: (val: number | null) => {
-    promptStore.updateAIGlobalSettings({
-      contextCompression: {
-        ...aiGlobalSettings.value.contextCompression,
-        maxContextTokens: val && val > 0 ? val : undefined,
-      },
-    })
-    emit('config-changed')
-  },
-})
-
 const maxToolResultPercent = computed({
   get: () => aiGlobalSettings.value.contextCompression?.maxToolResultPercent ?? 35,
   set: (val: number) => {
@@ -299,25 +286,6 @@ const maxToolResultPercent = computed({
               <UInputNumber v-model="compressionBuffer" :min="5" :max="50" class="w-24" />
               <span class="text-xs text-gray-400">%</span>
             </div>
-          </div>
-
-          <!-- 手动 context window -->
-          <div class="flex items-center justify-between">
-            <div class="flex-1 pr-4">
-              <p class="text-sm font-medium text-gray-900 dark:text-white">
-                {{ t('settings.aiPrompt.compression.maxContextTokens') }}
-              </p>
-              <p class="text-xs text-gray-500 dark:text-gray-400">
-                {{ t('settings.aiPrompt.compression.maxContextTokensDesc') }}
-              </p>
-            </div>
-            <UInputNumber
-              v-model="compressionMaxTokens"
-              :min="0"
-              :max="10000000"
-              :placeholder="t('settings.aiPrompt.compression.maxContextTokensPlaceholder')"
-              class="w-36"
-            />
           </div>
         </template>
       </div>

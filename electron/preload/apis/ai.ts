@@ -557,7 +557,6 @@ export const aiApi = {
       tokenThresholdPercent: number
       bufferSizePercent: number
       compressionModelConfigId?: string
-      maxContextTokens?: number
       maxToolResultPercent?: number
     },
     systemPrompt: string
@@ -964,7 +963,6 @@ export const agentApi = {
       tokenThresholdPercent: number
       bufferSizePercent: number
       compressionModelConfigId?: string
-      maxContextTokens?: number
       maxToolResultPercent?: number
     }
   ): {

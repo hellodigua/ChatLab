@@ -402,7 +402,6 @@ interface AiApi {
       tokenThresholdPercent: number
       bufferSizePercent: number
       compressionModelConfigId?: string
-      maxContextTokens?: number
       maxToolResultPercent?: number
     },
     systemPrompt: string
@@ -811,7 +810,6 @@ interface AgentApi {
       tokenThresholdPercent: number
       bufferSizePercent: number
       compressionModelConfigId?: string
-      maxContextTokens?: number
       maxToolResultPercent?: number
     }
   ) => { requestId: string; promise: Promise<{ success: boolean; result?: AgentResult; error?: SerializedErrorInfo }> }

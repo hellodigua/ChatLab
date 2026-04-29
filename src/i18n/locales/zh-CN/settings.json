@@ -300,9 +300,6 @@
       "thresholdDesc": "上下文 Token 达到模型窗口的百分比时触发压缩",
       "buffer": "缓冲区大小",
       "bufferDesc": "保留最近消息原文的比例，不参与压缩",
-      "maxContextTokens": "手动上下文窗口",
-      "maxContextTokensDesc": "覆盖模型的默认上下文窗口大小（留空使用模型默认值）",
-      "maxContextTokensPlaceholder": "如 128000",
       "maxToolResultPercent": "工具结果上限",
       "maxToolResultPercentDesc": "单次工具返回给 AI 的最大数据量占比（基于模型上下文窗口计算），超出部分会被智能截断"
     },

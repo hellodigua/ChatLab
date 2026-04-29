@@ -1163,7 +1163,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
         // 工具结果 token 预算注入：基于 context window 百分比计算
         const maxToolResultPercent = compressionConfig?.maxToolResultPercent ?? 35
         const modelDef = llm.findModelDefinition(activeAIConfig.provider, activeAIConfig.model || '')
-        const resolvedContextWindow = compressionConfig?.maxContextTokens || modelDef?.contextWindow || 128000
+        const resolvedContextWindow = modelDef?.contextWindow || 128000
         const maxToolResultTokens = Math.floor(resolvedContextWindow * (maxToolResultPercent / 100))
         const enrichedContext: ToolContext = { ...context, maxToolResultTokens }
 

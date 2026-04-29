@@ -300,9 +300,6 @@
       "thresholdDesc": "Trigger compression when context tokens reach this percentage of the model's context window",
       "buffer": "Buffer size",
       "bufferDesc": "Percentage of recent messages to keep uncompressed",
-      "maxContextTokens": "Manual context window",
-      "maxContextTokensDesc": "Override the model's default context window size (leave empty to use model default)",
-      "maxContextTokensPlaceholder": "e.g. 128000",
       "maxToolResultPercent": "Tool result limit",
       "maxToolResultPercentDesc": "Maximum data percentage per tool call sent to AI (based on model context window). Excess results are intelligently truncated"
     },

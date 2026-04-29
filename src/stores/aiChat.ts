@@ -896,7 +896,6 @@ export const useAIChatStore = defineStore('aiChatRuntime', () => {
           tokenThresholdPercent: aiGlobalSettings.value.contextCompression?.tokenThresholdPercent ?? 75,
           bufferSizePercent: aiGlobalSettings.value.contextCompression?.bufferSizePercent ?? 20,
           compressionModelConfigId: aiGlobalSettings.value.contextCompression?.compressionModelConfigId,
-          maxContextTokens: aiGlobalSettings.value.contextCompression?.maxContextTokens,
           maxToolResultPercent: aiGlobalSettings.value.contextCompression?.maxToolResultPercent ?? 35,
         }
       )

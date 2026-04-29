@@ -192,7 +192,6 @@ async function handleManualCompress() {
         tokenThresholdPercent: compressionConfig.tokenThresholdPercent ?? 75,
         bufferSizePercent: compressionConfig.bufferSizePercent ?? 20,
         compressionModelConfigId: compressionConfig.compressionModelConfigId,
-        maxContextTokens: compressionConfig.maxContextTokens,
       },
       ''
     )

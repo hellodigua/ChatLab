@@ -33,8 +33,6 @@ export interface CompressionConfig {
   bufferSizePercent: number
   /** 独立压缩模型配置（为空则使用当前对话模型） */
   compressionModelConfigId?: string
-  /** 手动覆盖 context window 大小 */
-  maxContextTokens?: number
   /** 单次工具返回的最大上下文占比（相对于 context window 的百分比），默认 35 */
   maxToolResultPercent?: number
 }
@@ -192,10 +190,7 @@ export async function manualCompress(
 
 // ==================== 内部辅助函数 ====================
 
-function resolveContextWindow(config: CompressionConfig, activeAIConfig: AIServiceConfig): number {
-  if (config.maxContextTokens && config.maxContextTokens > 0) {
-    return config.maxContextTokens
-  }
+function resolveContextWindow(_config: CompressionConfig, activeAIConfig: AIServiceConfig): number {
   const modelDef = findModelDefinition(activeAIConfig.provider, activeAIConfig.model || '')
   return modelDef?.contextWindow ?? DEFAULT_CONTEXT_WINDOW
 }
