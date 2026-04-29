@@ -18,6 +18,7 @@ const props = defineProps<{
   sessionTokenUsage: { totalTokens: number }
   agentStatus?: AgentRuntimeStatus | null
   currentConversationId?: string | null
+  estimatedContextTokens?: number
 }>()
 
 // Store
@@ -75,6 +76,16 @@ function formatCompactNumber(value: number): string {
 
 const totalTokenUsageText = computed(() => formatNumber(props.sessionTokenUsage.totalTokens))
 const totalTokenUsageCompactText = computed(() => formatCompactNumber(props.sessionTokenUsage.totalTokens))
+
+const contextTokensCompactText = computed(() => {
+  if (props.agentStatus?.contextTokens) {
+    return formatCompactNumber(props.agentStatus.contextTokens)
+  }
+  if (props.estimatedContextTokens && props.estimatedContextTokens > 0) {
+    return formatCompactNumber(props.estimatedContextTokens)
+  }
+  return ''
+})
 
 const agentCompactTitle = computed(() => {
   if (!props.agentStatus) return ''
@@ -160,6 +171,52 @@ async function handleExportConversation() {
     toast.fail(t('common.exportFailed'), { description: String(error) })
   } finally {
     isExporting.value = false
+  }
+}
+
+// 手动压缩上下文
+const isCompressing = ref(false)
+
+async function handleManualCompress() {
+  if (isCompressing.value || !props.currentConversationId) return
+
+  const compressionConfig = aiGlobalSettings.value.contextCompression
+  if (!compressionConfig) return
+
+  isCompressing.value = true
+  try {
+    const result = await window.aiApi.compressContext(
+      props.currentConversationId,
+      {
+        enabled: true,
+        tokenThresholdPercent: compressionConfig.tokenThresholdPercent ?? 75,
+        bufferSizePercent: compressionConfig.bufferSizePercent ?? 20,
+        compressionModelConfigId: compressionConfig.compressionModelConfigId,
+        maxContextTokens: compressionConfig.maxContextTokens,
+      },
+      ''
+    )
+
+    if (result.success && result.result) {
+      if (result.result.compressed) {
+        toast.success(t('ai.chat.statusBar.compress.success'), {
+          description: t('ai.chat.statusBar.compress.successDesc', {
+            before: result.result.tokensBefore ?? '?',
+            after: result.result.tokensAfter ?? '?',
+          }),
+        })
+      } else {
+        toast.warn(t('ai.chat.statusBar.compress.skipped'), {
+          description: t('ai.chat.statusBar.compress.skippedDesc'),
+        })
+      }
+    } else {
+      toast.fail(t('ai.chat.statusBar.compress.failed'), { description: result.error })
+    }
+  } catch (error) {
+    toast.fail(t('ai.chat.statusBar.compress.failed'), { description: String(error) })
+  } finally {
+    isCompressing.value = false
   }
 }
 
@@ -266,6 +323,16 @@ async function openAiLogFile() {
         </span>
       </div>
 
+      <!-- Context Tokens -->
+      <div
+        v-if="contextTokensCompactText"
+        class="hidden shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-xs text-gray-400 dark:text-gray-500 md:flex"
+        :title="t('ai.chat.statusBar.agent.contextTokens')"
+      >
+        <UIcon name="i-heroicons-document-text" class="h-3.5 w-3.5" />
+        <span>{{ contextTokensCompactText }}</span>
+      </div>
+      <!-- Used Tokens -->
       <div
         class="hidden shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-xs text-gray-400 dark:text-gray-500 md:flex"
         :title="t('ai.chat.statusBar.tokenUsageTitle')"
@@ -293,6 +360,23 @@ async function openAiLogFile() {
       >
         <UIcon name="i-heroicons-arrow-down-tray" class="h-3.5 w-3.5" />
         <span class="hidden xl:inline">{{ t('ai.chat.statusBar.export.label') }}</span>
+      </button>
+      <!-- 手动压缩按钮 -->
+      <button
+        v-if="aiGlobalSettings.contextCompression?.enabled"
+        class="flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-xs text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+        :title="t('ai.chat.statusBar.compress.title')"
+        :disabled="isCompressing || !currentConversationId"
+        @click="handleManualCompress"
+      >
+        <UIcon
+          name="i-heroicons-archive-box-arrow-down"
+          class="h-3.5 w-3.5"
+          :class="[isCompressing ? 'animate-pulse' : '']"
+        />
+        <span class="hidden xl:inline">
+          {{ isCompressing ? t('ai.chat.statusBar.compress.compressing') : t('ai.chat.statusBar.compress.label') }}
+        </span>
       </button>
       <!-- 日志按钮 -->
       <button

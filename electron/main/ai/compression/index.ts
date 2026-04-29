@@ -35,6 +35,8 @@ export interface CompressionConfig {
   compressionModelConfigId?: string
   /** 手动覆盖 context window 大小 */
   maxContextTokens?: number
+  /** 单次工具返回的最大上下文占比（相对于 context window 的百分比），默认 35 */
+  maxToolResultPercent?: number
 }
 
 export interface CompressionResult {

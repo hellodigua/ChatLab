@@ -392,6 +392,9 @@ interface AiApi {
     sessionId: string
   ) => Promise<ToolExecuteResult>
   cancelToolTest: (testId: string) => Promise<{ success: boolean }>
+  estimateContextTokens: (
+    conversationId: string
+  ) => Promise<{ success: boolean; tokens: number; messageCount?: number; error?: string }>
   compressContext: (
     conversationId: string,
     compressionConfig: {
@@ -400,6 +403,7 @@ interface AiApi {
       bufferSizePercent: number
       compressionModelConfigId?: string
       maxContextTokens?: number
+      maxToolResultPercent?: number
     },
     systemPrompt: string
   ) => Promise<{
@@ -808,6 +812,7 @@ interface AgentApi {
       bufferSizePercent: number
       compressionModelConfigId?: string
       maxContextTokens?: number
+      maxToolResultPercent?: number
     }
   ) => { requestId: string; promise: Promise<{ success: boolean; result?: AgentResult; error?: SerializedErrorInfo }> }
   abort: (requestId: string) => Promise<{ success: boolean; error?: string }>

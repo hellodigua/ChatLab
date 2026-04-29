@@ -12,6 +12,7 @@ import { Agent, type AgentStreamChunk, type SkillContext } from '../ai/agent'
 import { getDefaultGeneralAssistantId } from '../ai/assistant/defaultGeneral'
 import { getActiveConfig, buildPiModel } from '../ai/llm'
 import { checkAndCompress, manualCompress, type CompressionConfig } from '../ai/compression'
+import { countMessagesTokens } from '../ai/tokenizer'
 import * as assistantManager from '../ai/assistant'
 import type { AssistantConfig } from '../ai/assistant/types'
 import * as skillManager from '../ai/skills'
@@ -1159,8 +1160,15 @@ export function registerAIHandlers({ win }: IpcContext): void {
           }
         }
 
+        // 工具结果 token 预算注入：基于 context window 百分比计算
+        const maxToolResultPercent = compressionConfig?.maxToolResultPercent ?? 35
+        const modelDef = llm.findModelDefinition(activeAIConfig.provider, activeAIConfig.model || '')
+        const resolvedContextWindow = compressionConfig?.maxContextTokens || modelDef?.contextWindow || 128000
+        const maxToolResultTokens = Math.floor(resolvedContextWindow * (maxToolResultPercent / 100))
+        const enrichedContext: ToolContext = { ...context, maxToolResultTokens }
+
         const agent = new Agent(
-          context,
+          enrichedContext,
           piModel,
           activeAIConfig.apiKey,
           { abortSignal: abortController.signal, contextHistoryLimit },
@@ -1298,6 +1306,16 @@ export function registerAIHandlers({ win }: IpcContext): void {
       }
     }
   )
+
+  ipcMain.handle('ai:estimateContextTokens', async (_, conversationId: string) => {
+    try {
+      const history = aiConversations.getHistoryForAgent(conversationId)
+      const tokens = countMessagesTokens(history.map((m) => ({ role: m.role, content: m.content })))
+      return { success: true, tokens, messageCount: history.length }
+    } catch (error) {
+      return { success: false, tokens: 0, error: String(error) }
+    }
+  })
 
   // ==================== Embedding 多配置管理 ====================
 

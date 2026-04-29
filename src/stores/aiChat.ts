@@ -290,6 +290,9 @@ export const useAIChatStore = defineStore('aiChatRuntime', () => {
     state.sourceMessages = buffer.sourceMessages
     state.currentKeywords = buffer.currentKeywords
     state.selectedAssistantId = buffer.assistantId
+    // 切换对话时重置运行时状态
+    state.sessionTokenUsage = createEmptyTokenUsage()
+    state.agentStatus = null
   }
 
   function renameBufferKey(state: AIChatSessionState, fromKey: string, toKey: string): ConversationBuffer {
@@ -888,15 +891,14 @@ export const useAIChatStore = defineStore('aiChatRuntime', () => {
         currentAssistantId,
         currentSkillId,
         !currentSkillId ? autoSkillEnabled : undefined,
-        aiGlobalSettings.value.contextCompression?.enabled
-          ? {
-              enabled: true,
-              tokenThresholdPercent: aiGlobalSettings.value.contextCompression.tokenThresholdPercent ?? 75,
-              bufferSizePercent: aiGlobalSettings.value.contextCompression.bufferSizePercent ?? 20,
-              compressionModelConfigId: aiGlobalSettings.value.contextCompression.compressionModelConfigId,
-              maxContextTokens: aiGlobalSettings.value.contextCompression.maxContextTokens,
-            }
-          : undefined
+        {
+          enabled: aiGlobalSettings.value.contextCompression?.enabled ?? false,
+          tokenThresholdPercent: aiGlobalSettings.value.contextCompression?.tokenThresholdPercent ?? 75,
+          bufferSizePercent: aiGlobalSettings.value.contextCompression?.bufferSizePercent ?? 20,
+          compressionModelConfigId: aiGlobalSettings.value.contextCompression?.compressionModelConfigId,
+          maxContextTokens: aiGlobalSettings.value.contextCompression?.maxContextTokens,
+          maxToolResultPercent: aiGlobalSettings.value.contextCompression?.maxToolResultPercent ?? 35,
+        }
       )
 
       state.currentAgentRequestId = agentReqId

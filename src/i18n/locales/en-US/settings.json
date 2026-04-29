@@ -292,6 +292,20 @@
       "title": "SQL Lab Export Format",
       "description": "File format for exporting SQL query results"
     },
+    "compression": {
+      "title": "Context Compression",
+      "enable": "Auto-compress context",
+      "enableDesc": "Automatically compress long conversation history into summaries to reduce token usage",
+      "threshold": "Compression threshold",
+      "thresholdDesc": "Trigger compression when context tokens reach this percentage of the model's context window",
+      "buffer": "Buffer size",
+      "bufferDesc": "Percentage of recent messages to keep uncompressed",
+      "maxContextTokens": "Manual context window",
+      "maxContextTokensDesc": "Override the model's default context window size (leave empty to use model default)",
+      "maxContextTokensPlaceholder": "e.g. 128000",
+      "maxToolResultPercent": "Tool result limit",
+      "maxToolResultPercentDesc": "Maximum data percentage per tool call sent to AI (based on model context window). Excess results are intelligently truncated"
+    },
     "presets": {
       "title": "System Prompts",
       "add": "Add Preset",

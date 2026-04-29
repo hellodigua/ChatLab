@@ -544,6 +544,12 @@ export const aiApi = {
     return ipcRenderer.invoke('ai:cancelToolTest', testId)
   },
 
+  estimateContextTokens: (
+    conversationId: string
+  ): Promise<{ success: boolean; tokens: number; messageCount?: number; error?: string }> => {
+    return ipcRenderer.invoke('ai:estimateContextTokens', conversationId)
+  },
+
   compressContext: (
     conversationId: string,
     compressionConfig: {
@@ -552,6 +558,7 @@ export const aiApi = {
       bufferSizePercent: number
       compressionModelConfigId?: string
       maxContextTokens?: number
+      maxToolResultPercent?: number
     },
     systemPrompt: string
   ): Promise<{
@@ -958,6 +965,7 @@ export const agentApi = {
       bufferSizePercent: number
       compressionModelConfigId?: string
       maxContextTokens?: number
+      maxToolResultPercent?: number
     }
   ): {
     requestId: string
