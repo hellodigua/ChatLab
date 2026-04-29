@@ -11,6 +11,7 @@ import { getLogsDir } from '../paths'
 import { Agent, type AgentStreamChunk, type SkillContext } from '../ai/agent'
 import { getDefaultGeneralAssistantId } from '../ai/assistant/defaultGeneral'
 import { getActiveConfig, buildPiModel } from '../ai/llm'
+import { checkAndCompress, manualCompress, type CompressionConfig } from '../ai/compression'
 import * as assistantManager from '../ai/assistant'
 import type { AssistantConfig } from '../ai/assistant/types'
 import * as skillManager from '../ai/skills'
@@ -312,7 +313,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
     async (
       _,
       conversationId: string,
-      role: 'user' | 'assistant',
+      role: aiConversations.AIMessageRole,
       content: string,
       dataKeywords?: string[],
       dataMessageCount?: number,
@@ -1041,7 +1042,8 @@ export function registerAIHandlers({ win }: IpcContext): void {
       maxHistoryRounds?: number,
       assistantId?: string,
       skillId?: string | null,
-      enableAutoSkill?: boolean
+      enableAutoSkill?: boolean,
+      compressionConfig?: CompressionConfig
     ) => {
       aiLogger.info('IPC', `Agent stream request received: ${requestId}`, {
         userMessage: userMessage.slice(0, 100),
@@ -1062,6 +1064,46 @@ export function registerAIHandlers({ win }: IpcContext): void {
           return { success: false, error: t('llm.notConfigured') }
         }
         const piModel = buildPiModel(activeAIConfig)
+
+        // 上下文压缩前置步骤（在 Agent 创建之前执行）
+        if (compressionConfig?.enabled && context.conversationId) {
+          try {
+            win.webContents.send('agent:streamChunk', {
+              requestId,
+              chunk: { type: 'status', status: 'compressing' },
+            })
+
+            // 获取助手 systemPrompt 用于 token 计算
+            const tempAssistantConfig = assistantId
+              ? (assistantManager.getAssistantConfig(assistantId) ?? undefined)
+              : undefined
+            const systemPromptForCompression = tempAssistantConfig?.systemPrompt || ''
+
+            const compressionResult = await checkAndCompress(
+              context.conversationId,
+              compressionConfig,
+              systemPromptForCompression,
+              activeAIConfig
+            )
+
+            aiLogger.info('IPC', `Compression result for ${requestId}`, compressionResult)
+
+            if (compressionResult.compressed) {
+              win.webContents.send('agent:streamChunk', {
+                requestId,
+                chunk: {
+                  type: 'status',
+                  status: 'compressed',
+                  content: `Context compressed: ${compressionResult.tokensBefore} → ${compressionResult.tokensAfter} tokens`,
+                },
+              })
+            }
+          } catch (error) {
+            aiLogger.error('IPC', `Compression failed for ${requestId}, continuing without compression`, {
+              error: String(error),
+            })
+          }
+        }
 
         const contextHistoryLimit = maxHistoryRounds ? maxHistoryRounds * 2 : undefined
 
@@ -1236,6 +1278,26 @@ export function registerAIHandlers({ win }: IpcContext): void {
       return { success: false, error: 'Request not found' }
     }
   })
+
+  // ==================== 上下文压缩 ====================
+
+  ipcMain.handle(
+    'ai:compressContext',
+    async (_, conversationId: string, compressionConfig: CompressionConfig, systemPrompt: string) => {
+      try {
+        const activeAIConfig = getActiveConfig()
+        if (!activeAIConfig) {
+          return { success: false, error: t('llm.notConfigured') }
+        }
+
+        const result = await manualCompress(conversationId, compressionConfig, systemPrompt, activeAIConfig)
+        return { success: true, result }
+      } catch (error) {
+        aiLogger.error('IPC', 'Manual compression failed', { error: String(error) })
+        return { success: false, error: String(error) }
+      }
+    }
+  )
 
   // ==================== Embedding 多配置管理 ====================
 

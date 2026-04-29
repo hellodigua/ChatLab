@@ -305,10 +305,12 @@ type AIContentBlock =
     }
   | { type: 'skill'; skillId: string; skillName: string }
 
+type AIMessageRole = 'user' | 'assistant' | 'summary'
+
 interface AIMessage {
   id: string
   conversationId: string
-  role: 'user' | 'assistant'
+  role: AIMessageRole
   content: string
   timestamp: number
   dataKeywords?: string[]
@@ -390,6 +392,27 @@ interface AiApi {
     sessionId: string
   ) => Promise<ToolExecuteResult>
   cancelToolTest: (testId: string) => Promise<{ success: boolean }>
+  compressContext: (
+    conversationId: string,
+    compressionConfig: {
+      enabled: boolean
+      tokenThresholdPercent: number
+      bufferSizePercent: number
+      compressionModelConfigId?: string
+      maxContextTokens?: number
+    },
+    systemPrompt: string
+  ) => Promise<{
+    success: boolean
+    result?: {
+      compressed: boolean
+      reason: string
+      tokensBefore?: number
+      tokensAfter?: number
+      error?: string
+    }
+    error?: string
+  }>
   // 自定义筛选（支持分页）
   filterMessagesWithContext: (
     sessionId: string,
@@ -778,7 +801,14 @@ interface AgentApi {
     maxHistoryRounds?: number,
     assistantId?: string,
     skillId?: string | null,
-    enableAutoSkill?: boolean
+    enableAutoSkill?: boolean,
+    compressionConfig?: {
+      enabled: boolean
+      tokenThresholdPercent: number
+      bufferSizePercent: number
+      compressionModelConfigId?: string
+      maxContextTokens?: number
+    }
   ) => { requestId: string; promise: Promise<{ success: boolean; result?: AgentResult; error?: SerializedErrorInfo }> }
   abort: (requestId: string) => Promise<{ success: boolean; error?: string }>
 }

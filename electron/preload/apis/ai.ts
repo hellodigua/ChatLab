@@ -41,10 +41,12 @@ export type ContentBlock =
     }
   | { type: 'skill'; skillId: string; skillName: string }
 
+export type AIMessageRole = 'user' | 'assistant' | 'summary'
+
 export interface AIMessage {
   id: string
   conversationId: string
-  role: 'user' | 'assistant'
+  role: AIMessageRole
   content: string
   timestamp: number
   dataKeywords?: string[]
@@ -479,7 +481,7 @@ export const aiApi = {
    */
   addMessage: (
     conversationId: string,
-    role: 'user' | 'assistant',
+    role: AIMessageRole,
     content: string,
     dataKeywords?: string[],
     dataMessageCount?: number,
@@ -540,6 +542,30 @@ export const aiApi = {
 
   cancelToolTest: (testId: string): Promise<{ success: boolean }> => {
     return ipcRenderer.invoke('ai:cancelToolTest', testId)
+  },
+
+  compressContext: (
+    conversationId: string,
+    compressionConfig: {
+      enabled: boolean
+      tokenThresholdPercent: number
+      bufferSizePercent: number
+      compressionModelConfigId?: string
+      maxContextTokens?: number
+    },
+    systemPrompt: string
+  ): Promise<{
+    success: boolean
+    result?: {
+      compressed: boolean
+      reason: string
+      tokensBefore?: number
+      tokensAfter?: number
+      error?: string
+    }
+    error?: string
+  }> => {
+    return ipcRenderer.invoke('ai:compressContext', conversationId, compressionConfig, systemPrompt)
   },
 }
 
@@ -925,7 +951,14 @@ export const agentApi = {
     maxHistoryRounds?: number,
     assistantId?: string,
     skillId?: string | null,
-    enableAutoSkill?: boolean
+    enableAutoSkill?: boolean,
+    compressionConfig?: {
+      enabled: boolean
+      tokenThresholdPercent: number
+      bufferSizePercent: number
+      compressionModelConfigId?: string
+      maxContextTokens?: number
+    }
   ): {
     requestId: string
     promise: Promise<{ success: boolean; result?: AgentResult; error?: SerializedErrorInfo }>
@@ -1016,7 +1049,8 @@ export const agentApi = {
           maxHistoryRounds,
           assistantId,
           skillId,
-          enableAutoSkill
+          enableAutoSkill,
+          compressionConfig
         )
         .then((result) => {
           console.log('[preload] Agent invoke 返回:', result)

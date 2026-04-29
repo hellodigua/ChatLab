@@ -54,7 +54,7 @@ export type ContentBlock =
 // 消息类型
 export interface ChatMessage {
   id: string
-  role: 'user' | 'assistant'
+  role: 'user' | 'assistant' | 'summary'
   content: string
   timestamp: number
   dataSource?: {
@@ -887,7 +887,16 @@ export const useAIChatStore = defineStore('aiChatRuntime', () => {
         maxHistoryRounds,
         currentAssistantId,
         currentSkillId,
-        !currentSkillId ? autoSkillEnabled : undefined
+        !currentSkillId ? autoSkillEnabled : undefined,
+        aiGlobalSettings.value.contextCompression?.enabled
+          ? {
+              enabled: true,
+              tokenThresholdPercent: aiGlobalSettings.value.contextCompression.tokenThresholdPercent ?? 75,
+              bufferSizePercent: aiGlobalSettings.value.contextCompression.bufferSizePercent ?? 20,
+              compressionModelConfigId: aiGlobalSettings.value.contextCompression.compressionModelConfigId,
+              maxContextTokens: aiGlobalSettings.value.contextCompression.maxContextTokens,
+            }
+          : undefined
       )
 
       state.currentAgentRequestId = agentReqId

@@ -23,7 +23,7 @@ import { buildSystemPrompt } from './prompt-builder'
 import { extractThinkingContent, stripToolCallTags } from './content-parser'
 import { AgentEventHandler } from './event-handler'
 
-type SimpleHistoryMessage = { role: 'user' | 'assistant'; content: string }
+type SimpleHistoryMessage = { role: 'user' | 'assistant' | 'summary'; content: string }
 
 // Re-export types for external consumers
 export type { AgentConfig, AgentStreamChunk, AgentResult, TokenUsage, AgentRuntimeStatus, SkillContext } from './types'
@@ -330,6 +330,7 @@ export class Agent {
         }
       }
 
+      // summary 作为 assistant 消息传给 LLM（它是压缩后的上下文摘要）
       return {
         role: 'assistant',
         content: [{ type: 'text', text: msg.content || '' }],

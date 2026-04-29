@@ -13,7 +13,7 @@ const toast = useToast()
 
 // Props
 const props = defineProps<{
-  role: 'user' | 'assistant'
+  role: 'user' | 'assistant' | 'summary'
   content: string
   timestamp: number
   isStreaming?: boolean

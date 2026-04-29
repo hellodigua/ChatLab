@@ -17,6 +17,13 @@ export const usePromptStore = defineStore(
       enableAutoSkill: true,
       searchContextBefore: 2,
       searchContextAfter: 2,
+      contextCompression: {
+        enabled: false,
+        tokenThresholdPercent: 75,
+        bufferSizePercent: 20,
+        compressionModelConfigId: undefined as string | undefined,
+        maxContextTokens: undefined as number | undefined,
+      },
     })
     const customKeywordTemplates = ref<KeywordTemplate[]>([])
     const deletedPresetTemplateIds = ref<string[]>([])
@@ -40,9 +47,24 @@ export const usePromptStore = defineStore(
         enableAutoSkill: boolean
         searchContextBefore: number
         searchContextAfter: number
+        contextCompression: {
+          enabled: boolean
+          tokenThresholdPercent: number
+          bufferSizePercent: number
+          compressionModelConfigId?: string
+          maxContextTokens?: number
+        }
       }>
     ) {
-      aiGlobalSettings.value = { ...aiGlobalSettings.value, ...settings }
+      if (settings.contextCompression) {
+        aiGlobalSettings.value = {
+          ...aiGlobalSettings.value,
+          ...settings,
+          contextCompression: { ...aiGlobalSettings.value.contextCompression, ...settings.contextCompression },
+        }
+      } else {
+        aiGlobalSettings.value = { ...aiGlobalSettings.value, ...settings }
+      }
       notifyAIConfigChanged()
     }
 
