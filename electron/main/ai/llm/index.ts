@@ -58,11 +58,13 @@ export function getProviderDefinitionById(id: string): ProviderDefinition | null
   return getBuiltinProviderById(id) || loadCustomProviders().find((p) => p.id === id) || null
 }
 
-/** 按 providerId + modelId 查找模型定义（内置优先，再查自定义） */
+/** 按 providerId + modelId 查找模型定义（内置优先，再查自定义，最后跨 provider 兜底） */
 export function findModelDefinition(providerId: string, modelId: string): ModelDefinition | null {
   return (
     getBuiltinModelById(providerId, modelId) ||
     loadCustomModels().find((m) => m.providerId === providerId && m.id === modelId) ||
+    BUILTIN_MODELS.find((m) => m.id === modelId) ||
+    loadCustomModels().find((m) => m.id === modelId) ||
     null
   )
 }

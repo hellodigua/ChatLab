@@ -161,6 +161,7 @@
       "contextWindow": "Context Window",
       "contextWindowPlaceholder": "e.g. 128000",
       "contextWindowHint": "Maximum context tokens supported by this model (used for context compression)",
+      "contextWindowMissing": "Context window not set, will use default. Click \"Edit Model\" to set it manually",
       "modelRequired": "Add at least one model to save",
       "modelCapabilities": "Model Capabilities",
       "apiFormat": "API Format",

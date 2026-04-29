@@ -67,6 +67,10 @@ export const useLLMStore = defineStore('llm', () => {
     return modelCatalog.value.find((m) => m.providerId === providerId && m.id === modelId)
   }
 
+  function findModelAcrossProviders(modelId: string): ModelDefinition | undefined {
+    return modelCatalog.value.find((m) => m.id === modelId)
+  }
+
   // ============ 方法 ============
 
   async function init() {
@@ -144,5 +148,6 @@ export const useLLMStore = defineStore('llm', () => {
     getProviderById,
     getModelsByProviderId,
     getModelById,
+    findModelAcrossProviders,
   }
 })

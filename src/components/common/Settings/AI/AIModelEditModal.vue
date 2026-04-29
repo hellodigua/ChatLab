@@ -58,6 +58,7 @@ const {
   canFetchModels,
   showEditModelDialog,
   editModelContextWindow,
+  editModelName,
   selectProvider,
   onConnectionModeChange,
   openAddModelDialog,
@@ -225,6 +226,13 @@ function closeModal() {
                     }}
                   </span>
                 </p>
+                <p
+                  v-if="formData.model && !selectedModelContextWindow"
+                  class="mt-1 flex items-center gap-1 text-xs text-red-500 dark:text-red-400"
+                >
+                  <UIcon name="i-heroicons-exclamation-triangle" class="h-3.5 w-3.5 shrink-0" />
+                  {{ t('settings.aiConfig.modal.contextWindowMissing') }}
+                </p>
 
                 <div class="mt-2 flex items-center gap-2">
                   <button
@@ -305,7 +313,7 @@ function closeModal() {
                 </label>
 
                 <UITabs v-if="modelTabItems.length > 0" v-model="formData.model" :items="modelTabItems" size="xs" />
-                <p v-else class="flex items-center gap-1 text-xs text-amber-500 dark:text-amber-400">
+                <p v-else class="flex items-center gap-1 text-xs text-red-500 dark:text-red-400">
                   <UIcon name="i-heroicons-exclamation-triangle" class="h-3.5 w-3.5 shrink-0" />
                   {{ t('settings.aiConfig.modal.modelRequired') }}
                 </p>
@@ -319,6 +327,13 @@ function closeModal() {
                         : Math.round(selectedModelContextWindow / 1024) + 'K'
                     }}
                   </span>
+                </p>
+                <p
+                  v-if="formData.model && !selectedModelContextWindow"
+                  class="mt-1 flex items-center gap-1 text-xs text-red-500 dark:text-red-400"
+                >
+                  <UIcon name="i-heroicons-exclamation-triangle" class="h-3.5 w-3.5 shrink-0" />
+                  {{ t('settings.aiConfig.modal.contextWindowMissing') }}
                 </p>
 
                 <div class="mt-2 flex items-center gap-2">
@@ -424,7 +439,7 @@ function closeModal() {
                 </label>
 
                 <UITabs v-if="modelTabItems.length > 0" v-model="formData.model" :items="modelTabItems" size="xs" />
-                <p v-else class="flex items-center gap-1 text-xs text-amber-500 dark:text-amber-400">
+                <p v-else class="flex items-center gap-1 text-xs text-red-500 dark:text-red-400">
                   <UIcon name="i-heroicons-exclamation-triangle" class="h-3.5 w-3.5 shrink-0" />
                   {{ t('settings.aiConfig.modal.modelRequired') }}
                 </p>
@@ -438,6 +453,13 @@ function closeModal() {
                         : Math.round(selectedModelContextWindow / 1024) + 'K'
                     }}
                   </span>
+                </p>
+                <p
+                  v-if="formData.model && !selectedModelContextWindow"
+                  class="mt-1 flex items-center gap-1 text-xs text-red-500 dark:text-red-400"
+                >
+                  <UIcon name="i-heroicons-exclamation-triangle" class="h-3.5 w-3.5 shrink-0" />
+                  {{ t('settings.aiConfig.modal.contextWindowMissing') }}
                 </p>
 
                 <div class="mt-2 flex items-center gap-2">
@@ -686,6 +708,17 @@ function closeModal() {
               {{ t('settings.aiConfig.modal.customModelId') }}
             </label>
             <p class="text-sm text-gray-600 dark:text-gray-400">{{ formData.model }}</p>
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {{ t('settings.aiConfig.modal.customModelDisplayName') }}
+              <span class="font-normal text-gray-400">{{ t('settings.aiConfig.modal.optional') }}</span>
+            </label>
+            <UInput
+              v-model="editModelName"
+              class="w-full"
+              :placeholder="formData.model || t('settings.aiConfig.modal.customModelDisplayNamePlaceholder')"
+            />
           </div>
           <div>
             <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">

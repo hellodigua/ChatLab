@@ -161,6 +161,7 @@
       "contextWindow": "コンテキストウィンドウ",
       "contextWindowPlaceholder": "例: 128000",
       "contextWindowHint": "モデルがサポートする最大コンテキストトークン数（コンテキスト圧縮に使用）",
+      "contextWindowMissing": "コンテキストウィンドウが未設定です。デフォルト値が使用されます。「モデル編集」から手動で設定してください",
       "modelRequired": "少なくとも 1 つのモデルを追加してから保存してください",
       "modelCapabilities": "モデル能力ラベル",
       "apiFormat": "API インターフェース",

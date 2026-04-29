@@ -161,6 +161,7 @@
       "contextWindow": "上下文視窗",
       "contextWindowPlaceholder": "如 128000",
       "contextWindowHint": "模型支援的最大上下文 token 數（用於上下文壓縮）",
+      "contextWindowMissing": "未設定上下文視窗，將使用預設值，建議點擊「編輯模型」手動填寫",
       "modelRequired": "至少新增一個模型才能儲存",
       "modelCapabilities": "模型能力標註",
       "apiFormat": "API 介面類型",

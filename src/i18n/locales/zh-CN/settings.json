@@ -161,6 +161,7 @@
       "contextWindow": "上下文窗口",
       "contextWindowPlaceholder": "如 128000",
       "contextWindowHint": "模型支持的最大上下文 token 数（用于上下文压缩）",
+      "contextWindowMissing": "未设置上下文窗口，将使用默认值，建议点击「编辑模型」手动填写",
       "modelCapabilities": "模型能力标注",
       "modelRequired": "至少添加一个模型才能保存",
       "apiFormat": "API 接口类型",

@@ -85,7 +85,9 @@ const contextTokens = computed(() => {
 
 const modelContextWindow = computed(() => {
   if (!activeConfig.value) return 128000
-  const model = llmStore.getModelById(activeConfig.value.provider, activeConfig.value.model)
+  const model =
+    llmStore.getModelById(activeConfig.value.provider, activeConfig.value.model) ||
+    llmStore.findModelAcrossProviders(activeConfig.value.model)
   return model?.contextWindow ?? 128000
 })
 
