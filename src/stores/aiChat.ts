@@ -54,7 +54,7 @@ export type ContentBlock =
 // 消息类型
 export interface ChatMessage {
   id: string
-  role: 'user' | 'assistant' | 'summary'
+  role: 'user' | 'assistant' | 'system'
   content: string
   timestamp: number
   dataSource?: {
@@ -658,7 +658,7 @@ export const useAIChatStore = defineStore('aiChatRuntime', () => {
         })
       }
       targetBuffer.messages.push(aiMessage)
-      const aiMessageIndex = targetBuffer.messages.length - 1
+      let aiMessageIndex = targetBuffer.messages.length - 1
       let hasStreamError = false
 
       const updateAIMessage = (updates: Partial<ChatMessage>) => {
@@ -860,6 +860,20 @@ export const useAIChatStore = defineStore('aiChatRuntime', () => {
             case 'status':
               if (chunk.status && (!state.agentStatus || chunk.status.updatedAt >= state.agentStatus.updatedAt)) {
                 state.agentStatus = chunk.status
+              }
+              break
+
+            case 'compression_done':
+              if (chunk.compressionResult) {
+                const systemMsg: ChatMessage = {
+                  id: `system-${Date.now()}`,
+                  role: 'system',
+                  content: chunk.compressionResult.summaryContent,
+                  timestamp: chunk.compressionResult.timestamp,
+                }
+                const insertIdx = Math.max(0, targetBuffer.messages.length - 1)
+                targetBuffer.messages.splice(insertIdx, 0, systemMsg)
+                aiMessageIndex++
               }
               break
 

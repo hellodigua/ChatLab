@@ -305,7 +305,7 @@ type AIContentBlock =
     }
   | { type: 'skill'; skillId: string; skillName: string }
 
-type AIMessageRole = 'user' | 'assistant' | 'summary'
+type AIMessageRole = 'user' | 'assistant' | 'system'
 
 interface AITokenUsageData {
   promptTokens: number
@@ -720,7 +720,7 @@ interface RAGConfig {
 
 // Agent 相关类型
 interface AgentStreamChunk {
-  type: 'content' | 'think' | 'tool_start' | 'tool_result' | 'status' | 'done' | 'error'
+  type: 'content' | 'think' | 'tool_start' | 'tool_result' | 'status' | 'compression_done' | 'done' | 'error'
   content?: string
   thinkTag?: string
   thinkDurationMs?: number
@@ -730,6 +730,12 @@ interface AgentStreamChunk {
   status?: AgentRuntimeStatus
   error?: SerializedErrorInfo
   isFinished?: boolean
+  compressionResult?: {
+    summaryContent: string
+    tokensBefore: number
+    tokensAfter: number
+    timestamp: number
+  }
   /** Token 使用量（type=done 时返回累计值） */
   usage?: TokenUsage
 }

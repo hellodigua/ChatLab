@@ -31,7 +31,7 @@ export interface TokenUsage {
 }
 
 export interface AgentRuntimeStatus {
-  phase: 'preparing' | 'thinking' | 'tool_running' | 'responding' | 'completed' | 'aborted' | 'error'
+  phase: 'compressing' | 'preparing' | 'thinking' | 'tool_running' | 'responding' | 'completed' | 'aborted' | 'error'
   round: number
   toolsUsed: number
   currentTool?: string

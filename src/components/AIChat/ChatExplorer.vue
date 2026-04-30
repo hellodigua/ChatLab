@@ -398,7 +398,15 @@ watch(
 
               <!-- QA 对渲染 -->
               <template v-for="pair in qaPairs" :key="pair.id">
-                <div class="qa-pair space-y-6 pb-4">
+                <!-- 独立消息（summary 等非 user/assistant） -->
+                <ChatMessage
+                  v-if="pair.standalone"
+                  :role="pair.standalone.role"
+                  :content="pair.standalone.content"
+                  :timestamp="pair.standalone.timestamp"
+                />
+                <!-- QA 对 -->
+                <div v-else class="qa-pair space-y-6 pb-4">
                   <!-- 用户问题 -->
                   <ChatMessage
                     v-if="pair.user && (pair.user.role === 'user' || pair.user.content)"
@@ -434,6 +442,7 @@ watch(
                 "
                 :current-tool-status="currentToolStatus"
                 :tools-used="toolsUsedInCurrentRound"
+                :agent-status="agentStatus"
               />
             </div>
           </div>

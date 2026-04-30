@@ -120,7 +120,8 @@
     "thinking": {
       "processingResult": "Processing result",
       "called": "Called:",
-      "analyzing": "Analyzing question..."
+      "analyzing": "Analyzing question...",
+      "compressing": "Compressing context..."
     },
     "statusBar": {
       "preset": {
@@ -145,6 +146,7 @@
         "contextTokens": "Context",
         "stats": "seg {segment} · tags {tags}",
         "phase": {
+          "compressing": "Compressing",
           "preparing": "Preparing",
           "thinking": "Thinking",
           "tool_running": "Running tool",
@@ -154,6 +156,7 @@
           "error": "Error"
         },
         "phaseShort": {
+          "compressing": "Compress",
           "preparing": "Prep",
           "thinking": "Think",
           "tool_running": "Tool",

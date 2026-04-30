@@ -5,8 +5,8 @@
  * 核心流程：
  *   1. 计算当前上下文总 token → 未超阈值则跳过
  *   2. 确定缓冲区：最近 bufferSizePercent% context window 的消息原文
- *   3. 缓冲区之前的消息（含旧 summary）→ LLM 压缩为新摘要
- *   4. 写入 ai_message(role='summary')，替换旧 summary
+ *   3. 缓冲区之前的消息（含旧 system 摘要）→ LLM 压缩为新摘要
+ *   4. 写入 ai_message(role='system')，替换旧摘要
  *   5. Thrashing 检查
  */
 
@@ -49,18 +49,21 @@ export interface CompressionResult {
     | 'error'
   tokensBefore?: number
   tokensAfter?: number
+  summaryContent?: string
   error?: string
 }
 
-const DEFAULT_COMPRESSION_PROMPT = `Please compress the following conversation history into a concise summary, preserving key information, decisions, and context.
-Requirements:
-- Preserve key facts, data, names, and conclusions
-- Preserve user preferences and important instructions
-- Preserve time points and important events
-- Output in the same language as the conversation
-- Keep it within {maxTokens} tokens
+const DEFAULT_COMPRESSION_PROMPT = `You are a context compression assistant. Compress the conversation below into a structured summary.
 
-Conversation history:
+STRICT RULES:
+- Output ONLY the summary content. No greetings, no preamble, no meta-commentary, no word/token counts.
+- Use the same language as the conversation.
+- Maximum output length: {maxTokens} tokens. Be concise.
+- Organize by topic/thread when possible.
+- Preserve: key facts, decisions, user preferences, data, names, timestamps, action items.
+- Omit: pleasantries, filler, redundant back-and-forth.
+
+CONVERSATION:
 {messages}`
 
 const DEFAULT_CONTEXT_WINDOW = 128000
@@ -121,7 +124,7 @@ export async function checkAndCompress(
 
     // 构建压缩输入文本
     const compressInput = buildCompressionInput(messagesToCompress, summary)
-    const targetTokens = Math.floor(contextWindow * 0.1)
+    const targetTokens = Math.min(Math.floor(contextWindow * 0.1), 16384)
 
     // 三级降级：独立模型 → 当前模型 → 强制截断
     let summaryText: string | null = null
@@ -158,11 +161,23 @@ export async function checkAndCompress(
         'Compression',
         `Thrashing detected: ${tokensAfter} tokens after compression still >= ${thresholdTokens}`
       )
-      return { compressed: true, reason: 'thrashing', tokensBefore: currentTokens, tokensAfter }
+      return {
+        compressed: true,
+        reason: 'thrashing',
+        tokensBefore: currentTokens,
+        tokensAfter,
+        summaryContent: summaryText,
+      }
     }
 
     aiLogger.info('Compression', `Compressed: ${currentTokens} → ${tokensAfter} tokens`)
-    return { compressed: true, reason: 'success', tokensBefore: currentTokens, tokensAfter }
+    return {
+      compressed: true,
+      reason: 'success',
+      tokensBefore: currentTokens,
+      tokensAfter,
+      summaryContent: summaryText,
+    }
   } catch (error) {
     aiLogger.error('Compression', 'Compression failed', { error: String(error) })
     return { compressed: false, reason: 'error', error: String(error) }

@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import type { AgentRuntimeStatus } from '@electron/shared/types'
 
 const { t, te } = useI18n()
 
@@ -10,7 +12,7 @@ function localizedToolName(name: string, fallback?: string): string {
 }
 
 // Props
-defineProps<{
+const props = defineProps<{
   // 当前工具执行状态
   currentToolStatus: {
     name: string
@@ -19,11 +21,25 @@ defineProps<{
   } | null
   // 当前轮次已使用的工具列表
   toolsUsed: string[]
+  // Agent 运行状态
+  agentStatus?: AgentRuntimeStatus | null
 }>()
+
+const isCompressing = computed(() => props.agentStatus?.phase === 'compressing')
 </script>
 
 <template>
-  <div class="flex items-start gap-3">
+  <!-- 压缩上下文状态（工具块样式，无气泡包裹） -->
+  <div
+    v-if="isCompressing"
+    class="flex w-fit items-center gap-1.5 rounded-lg bg-gray-100 px-2.5 py-1 text-xs transition-colors dark:bg-gray-800/50"
+  >
+    <UIcon name="i-heroicons-arrow-path" class="h-3.5 w-3.5 shrink-0 animate-spin text-gray-600 dark:text-gray-400" />
+    <span class="font-medium text-gray-600 dark:text-gray-400">{{ t('ai.chat.thinking.compressing') }}</span>
+  </div>
+
+  <!-- 常规思考/工具状态（头像+气泡） -->
+  <div v-else class="flex items-start gap-3">
     <!-- AI 头像 -->
     <div
       class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-pink-500 to-pink-600"

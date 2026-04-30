@@ -23,7 +23,7 @@ import { buildSystemPrompt } from './prompt-builder'
 import { extractThinkingContent, stripToolCallTags } from './content-parser'
 import { AgentEventHandler } from './event-handler'
 
-type SimpleHistoryMessage = { role: 'user' | 'assistant' | 'summary'; content: string }
+type SimpleHistoryMessage = { role: 'user' | 'assistant' | 'system'; content: string }
 
 // Re-export types for external consumers
 export type { AgentConfig, AgentStreamChunk, AgentResult, TokenUsage, AgentRuntimeStatus, SkillContext } from './types'

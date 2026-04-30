@@ -120,7 +120,8 @@
     "thinking": {
       "processingResult": "結果を整理中",
       "called": "実行したツール:",
-      "analyzing": "問題を分析中..."
+      "analyzing": "問題を分析中...",
+      "compressing": "コンテキストを圧縮中..."
     },
     "statusBar": {
       "preset": {
@@ -145,6 +146,7 @@
         "contextTokens": "コンテキスト",
         "stats": "セグメント {segment} ・タグ {tags}",
         "phase": {
+          "compressing": "圧縮中",
           "preparing": "準備中",
           "thinking": "思考中",
           "tool_running": "ツール実行中",
@@ -154,6 +156,7 @@
           "error": "エラー"
         },
         "phaseShort": {
+          "compressing": "圧縮",
           "preparing": "準備",
           "thinking": "思考",
           "tool_running": "ツール",

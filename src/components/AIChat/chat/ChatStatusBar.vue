@@ -45,6 +45,8 @@ const agentPhaseClass = computed(() => {
   if (!props.agentStatus) return 'text-gray-500 bg-gray-100 dark:bg-gray-800 dark:text-gray-300'
 
   switch (props.agentStatus.phase) {
+    case 'compressing':
+      return 'text-purple-600 bg-purple-50 dark:bg-purple-900/30 dark:text-purple-300'
     case 'tool_running':
       return 'text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 dark:text-indigo-300'
     case 'thinking':
@@ -199,51 +201,6 @@ async function handleExportConversation() {
   }
 }
 
-// 手动压缩上下文
-const isCompressing = ref(false)
-
-async function handleManualCompress() {
-  if (isCompressing.value || !props.currentConversationId) return
-
-  const compressionConfig = aiGlobalSettings.value.contextCompression
-  if (!compressionConfig) return
-
-  isCompressing.value = true
-  try {
-    const result = await window.aiApi.compressContext(
-      props.currentConversationId,
-      {
-        enabled: true,
-        tokenThresholdPercent: compressionConfig.tokenThresholdPercent ?? 75,
-        bufferSizePercent: compressionConfig.bufferSizePercent ?? 20,
-        compressionModelConfigId: compressionConfig.compressionModelConfigId,
-      },
-      ''
-    )
-
-    if (result.success && result.result) {
-      if (result.result.compressed) {
-        toast.success(t('ai.chat.statusBar.compress.success'), {
-          description: t('ai.chat.statusBar.compress.successDesc', {
-            before: result.result.tokensBefore ?? '?',
-            after: result.result.tokensAfter ?? '?',
-          }),
-        })
-      } else {
-        toast.warn(t('ai.chat.statusBar.compress.skipped'), {
-          description: t('ai.chat.statusBar.compress.skippedDesc'),
-        })
-      }
-    } else {
-      toast.fail(t('ai.chat.statusBar.compress.failed'), { description: result.error })
-    }
-  } catch (error) {
-    toast.fail(t('ai.chat.statusBar.compress.failed'), { description: String(error) })
-  } finally {
-    isCompressing.value = false
-  }
-}
-
 // 打开当前 AI 日志文件并定位到文件
 async function openAiLogFile() {
   if (isOpeningLog.value) return
@@ -391,23 +348,6 @@ async function openAiLogFile() {
       >
         <UIcon name="i-heroicons-arrow-down-tray" class="h-3.5 w-3.5" />
         <span class="hidden xl:inline">{{ t('ai.chat.statusBar.export.label') }}</span>
-      </button>
-      <!-- 手动压缩按钮 -->
-      <button
-        v-if="aiGlobalSettings.contextCompression?.enabled"
-        class="flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-xs text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-gray-800 dark:hover:text-gray-300"
-        :title="t('ai.chat.statusBar.compress.title')"
-        :disabled="isCompressing || !currentConversationId"
-        @click="handleManualCompress"
-      >
-        <UIcon
-          name="i-heroicons-archive-box-arrow-down"
-          class="h-3.5 w-3.5"
-          :class="[isCompressing ? 'animate-pulse' : '']"
-        />
-        <span class="hidden xl:inline">
-          {{ isCompressing ? t('ai.chat.statusBar.compress.compressing') : t('ai.chat.statusBar.compress.label') }}
-        </span>
       </button>
       <!-- 日志按钮 -->
       <button

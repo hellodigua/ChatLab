@@ -41,7 +41,7 @@ export type ContentBlock =
     }
   | { type: 'skill'; skillId: string; skillName: string }
 
-export type AIMessageRole = 'user' | 'assistant' | 'summary'
+export type AIMessageRole = 'user' | 'assistant' | 'system'
 
 export interface TokenUsageData {
   promptTokens: number
@@ -93,7 +93,7 @@ import type { TokenUsage, AgentRuntimeStatus, SerializedErrorInfo } from '../../
 export type { SerializedErrorInfo } from '../../shared/types'
 
 export interface AgentStreamChunk {
-  type: 'content' | 'think' | 'tool_start' | 'tool_result' | 'status' | 'done' | 'error'
+  type: 'content' | 'think' | 'tool_start' | 'tool_result' | 'status' | 'compression_done' | 'done' | 'error'
   content?: string
   thinkTag?: string
   thinkDurationMs?: number
@@ -103,6 +103,12 @@ export interface AgentStreamChunk {
   status?: AgentRuntimeStatus
   error?: SerializedErrorInfo
   isFinished?: boolean
+  compressionResult?: {
+    summaryContent: string
+    tokensBefore: number
+    tokensAfter: number
+    timestamp: number
+  }
   /** Token 使用量（type=done 时返回累计值） */
   usage?: TokenUsage
 }

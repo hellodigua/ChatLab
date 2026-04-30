@@ -120,7 +120,8 @@
     "thinking": {
       "processingResult": "正在整理結果",
       "called": "已執行：",
-      "analyzing": "正在分析問題..."
+      "analyzing": "正在分析問題...",
+      "compressing": "正在壓縮上下文..."
     },
     "statusBar": {
       "preset": {
@@ -145,6 +146,7 @@
         "contextTokens": "上下文",
         "stats": "段 {segment} · 標籤 {tags}",
         "phase": {
+          "compressing": "壓縮上下文",
           "preparing": "準備中",
           "thinking": "思考中",
           "tool_running": "工具執行中",
@@ -154,6 +156,7 @@
           "error": "錯誤"
         },
         "phaseShort": {
+          "compressing": "壓縮",
           "preparing": "準備",
           "thinking": "思考",
           "tool_running": "工具",

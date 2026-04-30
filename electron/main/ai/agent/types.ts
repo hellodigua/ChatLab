@@ -21,7 +21,7 @@ export interface AgentConfig {
  */
 export interface AgentStreamChunk {
   /** chunk 类型 */
-  type: 'content' | 'think' | 'tool_start' | 'tool_result' | 'status' | 'done' | 'error'
+  type: 'content' | 'think' | 'tool_start' | 'tool_result' | 'status' | 'compression_done' | 'done' | 'error'
   /** 文本内容（type=content 时） */
   content?: string
   /** 思考标签名称（type=think 时） */
@@ -42,6 +42,13 @@ export interface AgentStreamChunk {
   usage?: TokenUsage
   /** 运行状态（type=status 时返回） */
   status?: AgentRuntimeStatus
+  /** 压缩结果（type=compression_done 时） */
+  compressionResult?: {
+    summaryContent: string
+    tokensBefore: number
+    tokensAfter: number
+    timestamp: number
+  }
 }
 
 /**

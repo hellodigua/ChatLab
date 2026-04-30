@@ -1093,7 +1093,7 @@ export function registerAIHandlers({ win }: IpcContext): void {
               chunk: {
                 type: 'status',
                 status: {
-                  phase: 'preparing',
+                  phase: 'compressing',
                   round: 0,
                   toolsUsed: 0,
                   contextTokens: 0,
@@ -1118,13 +1118,17 @@ export function registerAIHandlers({ win }: IpcContext): void {
 
             aiLogger.info('IPC', `Compression result for ${requestId}`, compressionResult)
 
-            if (compressionResult.compressed) {
+            if (compressionResult.compressed && compressionResult.summaryContent) {
               win.webContents.send('agent:streamChunk', {
                 requestId,
                 chunk: {
-                  type: 'status',
-                  status: 'compressed',
-                  content: `Context compressed: ${compressionResult.tokensBefore} → ${compressionResult.tokensAfter} tokens`,
+                  type: 'compression_done',
+                  compressionResult: {
+                    summaryContent: compressionResult.summaryContent,
+                    tokensBefore: compressionResult.tokensBefore ?? 0,
+                    tokensAfter: compressionResult.tokensAfter ?? 0,
+                    timestamp: Date.now(),
+                  },
                 },
               })
             }

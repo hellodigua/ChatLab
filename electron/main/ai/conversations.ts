@@ -224,7 +224,7 @@ export type ContentBlock =
 /**
  * AI 消息类型
  */
-export type AIMessageRole = 'user' | 'assistant' | 'summary'
+export type AIMessageRole = 'user' | 'assistant' | 'system'
 
 export interface TokenUsageData {
   promptTokens: number
@@ -509,38 +509,36 @@ export function getConversationTokenUsage(conversationId: string): TokenUsageDat
  * 以避免重复加载已被压缩的旧消息。
  *
  * @param conversationId 对话 ID
- * @param maxMessages 最大返回条数（取最近 N 条，仅对 summary 之后的消息生效）
+ * @param maxMessages 最大返回条数（取最近 N 条，仅对 system 摘要之后的消息生效）
  */
 export function getHistoryForAgent(
   conversationId: string,
   maxMessages?: number
-): Array<{ role: 'user' | 'assistant' | 'summary'; content: string }> {
+): Array<{ role: 'user' | 'assistant' | 'system'; content: string }> {
   const messages = getMessages(conversationId)
   const validMessages = messages.filter(
-    (m) => (m.role === 'user' || m.role === 'assistant' || m.role === 'summary') && m.content?.trim()
+    (m) => (m.role === 'user' || m.role === 'assistant' || m.role === 'system') && m.content?.trim()
   )
 
-  // 查找最新的 summary 消息位置
-  let summaryIndex = -1
+  // 查找最新的 system 消息位置（压缩摘要）
+  let systemIndex = -1
   for (let i = validMessages.length - 1; i >= 0; i--) {
-    if (validMessages[i].role === 'summary') {
-      summaryIndex = i
+    if (validMessages[i].role === 'system') {
+      systemIndex = i
       break
     }
   }
 
-  let result: Array<{ role: 'user' | 'assistant' | 'summary'; content: string }>
+  let result: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>
 
-  if (summaryIndex >= 0) {
-    // 返回 summary + summary 之后的消息
-    result = validMessages.slice(summaryIndex).map((m) => ({ role: m.role, content: m.content }))
+  if (systemIndex >= 0) {
+    result = validMessages.slice(systemIndex).map((m) => ({ role: m.role, content: m.content }))
   } else {
     result = validMessages.map((m) => ({ role: m.role, content: m.content }))
   }
 
   if (maxMessages && result.length > maxMessages) {
-    // 如果有 summary 且它是第一条，保留它再截取后面的
-    if (result.length > 0 && result[0].role === 'summary') {
+    if (result.length > 0 && result[0].role === 'system') {
       const rest = result.slice(1)
       const truncated = rest.slice(-(maxMessages - 1))
       return [result[0], ...truncated]
@@ -553,15 +551,14 @@ export function getHistoryForAgent(
 // ==================== Summary / 压缩专用 ====================
 
 /**
- * 添加 summary 消息并替换旧的 summary（每个对话只保留一条最新 summary）
+ * 添加 system 消息并替换旧的 system（每个对话只保留一条最新压缩摘要）
  */
 export function addSummaryMessage(conversationId: string, content: string): AIMessage {
   const db = getAiDb()
 
-  // 删除该对话中所有旧的 summary 消息
-  db.prepare("DELETE FROM ai_message WHERE conversation_id = ? AND role = 'summary'").run(conversationId)
+  db.prepare("DELETE FROM ai_message WHERE conversation_id = ? AND role = 'system'").run(conversationId)
 
-  return addMessage(conversationId, 'summary', content)
+  return addMessage(conversationId, 'system', content)
 }
 
 /**
@@ -575,7 +572,7 @@ export function getLatestSummary(conversationId: string): AIMessage | null {
     SELECT id, conversation_id as conversationId, role, content, timestamp,
            data_keywords as dataKeywords, data_message_count as dataMessageCount, content_blocks as contentBlocks
     FROM ai_message
-    WHERE conversation_id = ? AND role = 'summary'
+    WHERE conversation_id = ? AND role = 'system'
     ORDER BY timestamp DESC
     LIMIT 1
   `
@@ -607,7 +604,7 @@ export function getLatestSummary(conversationId: string): AIMessage | null {
 }
 
 /**
- * 获取 summary 之后的所有 user/assistant 消息（用于压缩计算）
+ * 获取 system（压缩摘要）之后的所有 user/assistant 消息（用于压缩计算）
  */
 export function getMessagesAfterSummary(
   conversationId: string,
