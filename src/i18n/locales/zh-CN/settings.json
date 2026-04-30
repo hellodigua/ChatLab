@@ -80,7 +80,7 @@
     }
   },
   "aiConfig": {
-    "title": "服务配置",
+    "title": "模型服务",
     "providerTitle": "服务提供商",
     "loading": "加载中...",
     "inUse": "使用中",
@@ -92,11 +92,11 @@
       "title": "还没有配置 AI 服务",
       "description": "添加一个配置开始使用 AI 功能"
     },
-    "addConfig": "添加新配置",
+    "addConfig": "添加新服务",
     "maxConfigs": "已达最大配置数量（10个）",
     "modal": {
-      "addConfig": "添加新配置",
-      "editConfig": "编辑配置",
+      "addConfig": "添加新服务",
+      "editConfig": "编辑服务",
       "officialApi": "官方API",
       "officialApiDesc": "DeepSeek、Gemini 等",
       "localService": "本地服务",

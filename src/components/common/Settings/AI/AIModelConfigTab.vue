@@ -127,22 +127,22 @@ onMounted(() => {
     </h4>
     <AlertTips v-if="configs.length === 0 && aiTips.configTab?.show" :content="aiTips.configTab?.content" />
     <!-- 配置列表 -->
-    <div v-if="configs.length > 0" class="space-y-2">
+    <div v-if="configs.length > 0" class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-800">
       <div
         v-for="config in configs"
         :key="config.id"
-        class="group flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors"
+        class="group flex cursor-pointer items-center justify-between px-3 py-2 transition-colors"
         :class="[
           config.id === activeConfigId
-            ? 'border-primary-300 bg-primary-50 dark:border-primary-700 dark:bg-primary-900/20'
-            : 'border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:hover:bg-gray-800',
+            ? 'bg-primary-50/60 dark:bg-primary-900/20'
+            : 'bg-card-bg hover:bg-gray-50 dark:bg-card-dark dark:hover:bg-gray-800/50',
         ]"
         @click="setActive(config.id)"
       >
         <!-- 配置信息 -->
         <div class="flex items-center gap-3">
           <div
-            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+            class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
             :class="[
               config.id === activeConfigId
                 ? 'bg-primary-500 text-white'
@@ -151,24 +151,20 @@ onMounted(() => {
           >
             <UIcon
               :name="config.id === activeConfigId ? 'i-heroicons-check' : 'i-heroicons-sparkles'"
-              class="h-4 w-4"
+              class="h-3.5 w-3.5"
             />
           </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="font-medium text-gray-900 dark:text-white">{{ config.name }}</span>
-              <UBadge v-if="config.id === activeConfigId" color="primary" variant="soft" size="xs">
-                {{ t('settings.aiConfig.inUse') }}
-              </UBadge>
-            </div>
-            <div class="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-              <span>{{ getProviderName(config.provider) }}</span>
+          <div class="flex min-w-0 items-center gap-2">
+            <span class="w-28 shrink-0 truncate font-medium text-sm text-gray-900 dark:text-white">{{ config.name }}</span>
+            <span class="h-3.5 w-px shrink-0 bg-gray-200 dark:bg-gray-700" />
+            <span class="flex min-w-0 items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+              <span class="truncate">{{ getProviderName(config.provider) }}</span>
               <UBadge v-if="getProviderKindLabel(config.provider)" color="neutral" variant="subtle" size="xs">
                 {{ getProviderKindLabel(config.provider) }}
               </UBadge>
-              <span>·</span>
-              <span>{{ getModelDisplayName(config.provider, config.model) }}</span>
-            </div>
+              <span class="shrink-0">·</span>
+              <span class="truncate">{{ getModelDisplayName(config.provider, config.model) }}</span>
+            </span>
           </div>
         </div>
 
@@ -189,16 +185,16 @@ onMounted(() => {
     <!-- 空状态 -->
     <div
       v-else
-      class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-200 py-12 dark:border-gray-700"
+      class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-200 py-8 dark:border-gray-700"
     >
-      <UIcon name="i-heroicons-sparkles" class="h-12 w-12 text-gray-300 dark:text-gray-600" />
-      <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">{{ t('settings.aiConfig.empty.title') }}</p>
+      <UIcon name="i-heroicons-sparkles" class="h-10 w-10 text-gray-300 dark:text-gray-600" />
+      <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">{{ t('settings.aiConfig.empty.title') }}</p>
       <p class="text-xs text-gray-400 dark:text-gray-500">{{ t('settings.aiConfig.empty.description') }}</p>
     </div>
 
     <!-- 添加按钮 -->
     <div class="flex justify-center">
-      <UButton variant="soft" :disabled="isMaxConfigs" class="mt-4" @click="openAddModal">
+      <UButton variant="soft" :disabled="isMaxConfigs" size="sm" @click="openAddModal">
         <UIcon name="i-heroicons-plus" class="mr-2 h-4 w-4" />
         {{ isMaxConfigs ? t('settings.aiConfig.maxConfigs') : t('settings.aiConfig.addConfig') }}
       </UButton>

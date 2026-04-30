@@ -80,7 +80,7 @@
     }
   },
   "aiConfig": {
-    "title": "Service Configurations",
+    "title": "Model Services",
     "providerTitle": "Service Providers",
     "loading": "Loading...",
     "inUse": "Active",
@@ -92,11 +92,11 @@
       "title": "No AI service configured",
       "description": "Add a configuration to start using AI features"
     },
-    "addConfig": "Add Configuration",
+    "addConfig": "Add New Service",
     "maxConfigs": "Maximum configurations reached (10)",
     "modal": {
-      "addConfig": "Add New Configuration",
-      "editConfig": "Edit Configuration",
+      "addConfig": "Add New Service",
+      "editConfig": "Edit Service",
       "officialApi": "Official API",
       "officialApiDesc": "DeepSeek, Gemini, etc.",
       "localService": "Local Service",

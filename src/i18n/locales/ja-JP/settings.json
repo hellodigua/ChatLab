@@ -80,7 +80,7 @@
     }
   },
   "aiConfig": {
-    "title": "サービス設定",
+    "title": "モデルサービス",
     "providerTitle": "サービスプロバイダー",
     "loading": "読み込み中...",
     "inUse": "使用中",
@@ -92,11 +92,11 @@
       "title": "AI サービスが未設定です",
       "description": "設定を追加して AI を使い始めましょう"
     },
-    "addConfig": "設定を追加",
+    "addConfig": "サービスを追加",
     "maxConfigs": "設定は最大 10 件までです",
     "modal": {
-      "addConfig": "設定を追加",
-      "editConfig": "設定を編集",
+      "addConfig": "サービスを追加",
+      "editConfig": "サービスを編集",
       "officialApi": "公式 API",
       "officialApiDesc": "DeepSeek や Gemini など",
       "localService": "ローカルサービス",

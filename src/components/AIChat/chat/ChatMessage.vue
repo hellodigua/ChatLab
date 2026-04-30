@@ -305,7 +305,7 @@ async function handleCopyMarkdown() {
   <div class="flex items-start gap-3" :class="[isUser ? 'flex-row-reverse' : '', isSystem ? 'justify-center' : '']">
     <!-- 消息内容 -->
     <div :class="[isSystem ? 'w-full min-w-0' : 'max-w-[85%] min-w-0']">
-      <!-- System 消息：可折叠的上下文摘要 -->
+      <!-- System 消息：可折叠的上下文总结 -->
       <template v-if="isSystem">
         <details
           class="w-full rounded-lg border border-gray-200 bg-gray-50/80 dark:border-gray-700/50 dark:bg-gray-800/40"

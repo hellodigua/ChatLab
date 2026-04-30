@@ -328,7 +328,7 @@ export class Agent {
         }
       }
 
-      // summary 作为 assistant 消息传给 LLM（它是压缩后的上下文摘要）
+      // summary 作为 assistant 消息传给 LLM（它是压缩后的上下文总结）
       return {
         role: 'assistant',
         content: [{ type: 'text', text: msg.content || '' }],
