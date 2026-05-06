@@ -8,12 +8,12 @@ import { electronAPI } from '@electron-toolkit/preload'
 // 从拆分的模块导入 API
 import { extendedApi } from './apis/core'
 import { chatApi, mergeApi } from './apis/chat'
-import { aiApi, llmApi, agentApi, embeddingApi, assistantApi, skillApi } from './apis/ai'
+import { aiApi, llmApi, agentApi, assistantApi, skillApi } from './apis/ai'
 import { nlpApi, networkApi, cacheApi, sessionApi } from './apis/utils'
 import { apiServerApi } from './apis/api-server'
 
 // 为渲染进程提供统一的类型入口，避免 type-only import 指向无导出的运行时代码。
-export type { PreprocessConfig, EmbeddingServiceConfig, EmbeddingServiceConfigDisplay } from './apis/ai'
+export type { PreprocessConfig } from './apis/ai'
 export type {
   ProviderDefinition,
   ProviderKind,
@@ -39,7 +39,6 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('aiApi', aiApi)
     contextBridge.exposeInMainWorld('llmApi', llmApi)
     contextBridge.exposeInMainWorld('agentApi', agentApi)
-    contextBridge.exposeInMainWorld('embeddingApi', embeddingApi)
     contextBridge.exposeInMainWorld('assistantApi', assistantApi)
     contextBridge.exposeInMainWorld('skillApi', skillApi)
     contextBridge.exposeInMainWorld('cacheApi', cacheApi)
@@ -65,8 +64,6 @@ if (process.contextIsolated) {
   window.llmApi = llmApi
   // @ts-ignore (define in dts)
   window.agentApi = agentApi
-  // @ts-ignore (define in dts)
-  window.embeddingApi = embeddingApi
   // @ts-ignore (define in dts)
   window.assistantApi = assistantApi
   // @ts-ignore (define in dts)

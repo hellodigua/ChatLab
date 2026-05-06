@@ -639,90 +639,6 @@ interface LlmApi {
   ) => Promise<{ success: boolean; error?: string }>
 }
 
-// ==================== Embedding 多配置相关类型 ====================
-
-interface EmbeddingServiceConfig {
-  id: string
-  name: string
-  apiSource: 'reuse_llm' | 'custom'
-  model: string
-  baseUrl?: string
-  apiKey?: string
-  createdAt: number
-  updatedAt: number
-}
-
-interface EmbeddingServiceConfigDisplay {
-  id: string
-  name: string
-  apiSource: 'reuse_llm' | 'custom'
-  model: string
-  baseUrl?: string
-  apiKeySet: boolean
-  createdAt: number
-  updatedAt: number
-}
-
-interface EmbeddingApi {
-  getAllConfigs: () => Promise<EmbeddingServiceConfigDisplay[]>
-  getConfig: (id: string) => Promise<EmbeddingServiceConfig | null>
-  getActiveConfigId: () => Promise<string | null>
-  isEnabled: () => Promise<boolean>
-  addConfig: (
-    config: Omit<EmbeddingServiceConfig, 'id' | 'createdAt' | 'updatedAt'>
-  ) => Promise<{ success: boolean; config?: EmbeddingServiceConfig; error?: string }>
-  updateConfig: (
-    id: string,
-    updates: Partial<Omit<EmbeddingServiceConfig, 'id' | 'createdAt' | 'updatedAt'>>
-  ) => Promise<{ success: boolean; error?: string }>
-  deleteConfig: (id: string) => Promise<{ success: boolean; error?: string }>
-  setActiveConfig: (id: string) => Promise<{ success: boolean; error?: string }>
-  validateConfig: (config: EmbeddingServiceConfig) => Promise<{ success: boolean; error?: string }>
-  getVectorStoreStats: () => Promise<{
-    enabled: boolean
-    count?: number
-    sizeBytes?: number
-    error?: string
-  }>
-  clearVectorStore: () => Promise<{ success: boolean; error?: string }>
-}
-
-// ==================== 旧版 RAG 相关类型（兼容） ====================
-
-interface EmbeddingConfig {
-  enabled: boolean
-  provider: 'api'
-  apiSource?: 'reuse_llm' | 'custom'
-  model?: string
-  baseUrl?: string
-  apiKey?: string
-}
-
-interface VectorStoreConfig {
-  enabled: boolean
-  type: 'memory' | 'sqlite' | 'lancedb'
-  memoryCacheSize?: number
-  dbPath?: string
-}
-
-interface RerankConfig {
-  enabled: boolean
-  provider: 'jina' | 'cohere' | 'bge' | 'custom'
-  model?: string
-  baseUrl?: string
-  apiKey?: string
-  topK?: number
-}
-
-interface RAGConfig {
-  embedding?: EmbeddingConfig
-  vectorStore?: VectorStoreConfig
-  rerank?: RerankConfig
-  enableSemanticPipeline?: boolean
-  candidateLimit?: number
-  topK?: number
-}
-
 // TokenUsage & AgentRuntimeStatus — imported from electron/shared/types.ts
 
 // Agent 相关类型
@@ -1237,7 +1153,6 @@ declare global {
     mergeApi: MergeApi
     aiApi: AiApi
     llmApi: LlmApi
-    embeddingApi: EmbeddingApi
     agentApi: AgentApi
     assistantApi: AssistantApi
     skillApi: SkillApi
@@ -1261,9 +1176,6 @@ export {
   ModelCapability,
   ModelStatus,
   ModelRecommendedFor,
-  EmbeddingApi,
-  EmbeddingServiceConfig,
-  EmbeddingServiceConfigDisplay,
   AgentApi,
   AssistantApi,
   AssistantSummary,
@@ -1300,10 +1212,6 @@ export {
   FilterMessage,
   ContextBlock,
   FilterResult,
-  RAGConfig,
-  EmbeddingConfig,
-  VectorStoreConfig,
-  RerankConfig,
   WordFrequencyItem,
   WordFrequencyResult,
   WordFrequencyParams,

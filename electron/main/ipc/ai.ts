@@ -4,7 +4,6 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as aiConversations from '../ai/conversations'
 import * as llm from '../ai/llm'
-import * as rag from '../ai/rag'
 import { aiLogger, setDebugMode } from '../ai/logger'
 import { serializeError } from '../ai/serialize-error'
 import { getLogsDir } from '../paths'
@@ -1375,147 +1374,6 @@ export function registerAIHandlers({ win }: IpcContext): void {
     }
   })
 
-  // ==================== Embedding 多配置管理 ====================
-
-  /**
-   * 获取所有 Embedding 配置（展示用，隐藏 apiKey）
-   */
-  ipcMain.handle('embedding:getAllConfigs', async () => {
-    try {
-      const configs = rag.getAllEmbeddingConfigs()
-      // 隐藏敏感信息
-      return configs.map((c) => ({
-        ...c,
-        apiKey: undefined,
-        apiKeySet: !!c.apiKey,
-      }))
-    } catch (error) {
-      aiLogger.error('IPC', 'Failed to get Embedding configs', error)
-      return []
-    }
-  })
-
-  /**
-   * 获取单个 Embedding 配置（用于编辑，包含完整信息）
-   */
-  ipcMain.handle('embedding:getConfig', async (_, id: string) => {
-    try {
-      return rag.getEmbeddingConfigById(id)
-    } catch (error) {
-      aiLogger.error('IPC', 'Failed to get Embedding config', error)
-      return null
-    }
-  })
-
-  /**
-   * 获取激活的 Embedding 配置 ID
-   */
-  ipcMain.handle('embedding:getActiveConfigId', async () => {
-    try {
-      return rag.getActiveEmbeddingConfigId()
-    } catch (error) {
-      return null
-    }
-  })
-
-  /**
-   * 检查语义搜索是否启用
-   */
-  ipcMain.handle('embedding:isEnabled', async () => {
-    try {
-      return rag.isEmbeddingEnabled()
-    } catch (error) {
-      return false
-    }
-  })
-
-  /**
-   * 添加 Embedding 配置
-   */
-  ipcMain.handle(
-    'embedding:addConfig',
-    async (_, config: Omit<rag.EmbeddingServiceConfig, 'id' | 'createdAt' | 'updatedAt'>) => {
-      try {
-        aiLogger.info('IPC', 'Adding Embedding config', { name: config.name, model: config.model })
-        const result = rag.addEmbeddingConfig(config)
-        if (result.success) {
-          await rag.resetEmbeddingService()
-        }
-        return result
-      } catch (error) {
-        aiLogger.error('IPC', 'Failed to add Embedding config', error)
-        return { success: false, error: String(error) }
-      }
-    }
-  )
-
-  /**
-   * 更新 Embedding 配置
-   */
-  ipcMain.handle(
-    'embedding:updateConfig',
-    async (_, id: string, updates: Partial<Omit<rag.EmbeddingServiceConfig, 'id' | 'createdAt' | 'updatedAt'>>) => {
-      try {
-        aiLogger.info('IPC', 'Updating Embedding config', { id })
-        const result = rag.updateEmbeddingConfig(id, updates)
-        if (result.success) {
-          await rag.resetEmbeddingService()
-        }
-        return result
-      } catch (error) {
-        aiLogger.error('IPC', 'Failed to update Embedding config', error)
-        return { success: false, error: String(error) }
-      }
-    }
-  )
-
-  /**
-   * 删除 Embedding 配置
-   */
-  ipcMain.handle('embedding:deleteConfig', async (_, id: string) => {
-    try {
-      aiLogger.info('IPC', 'Deleting Embedding config', { id })
-      const result = rag.deleteEmbeddingConfig(id)
-      if (result.success) {
-        await rag.resetEmbeddingService()
-      }
-      return result
-    } catch (error) {
-      aiLogger.error('IPC', 'Failed to delete Embedding config', error)
-      return { success: false, error: String(error) }
-    }
-  })
-
-  /**
-   * 设置激活的 Embedding 配置
-   */
-  ipcMain.handle('embedding:setActiveConfig', async (_, id: string) => {
-    try {
-      aiLogger.info('IPC', 'Setting active Embedding config', { id })
-      const result = rag.setActiveEmbeddingConfig(id)
-      if (result.success) {
-        await rag.resetEmbeddingService()
-      }
-      return result
-    } catch (error) {
-      aiLogger.error('IPC', 'Failed to set active Embedding config', error)
-      return { success: false, error: String(error) }
-    }
-  })
-
-  /**
-   * 验证 Embedding 配置
-   */
-  ipcMain.handle('embedding:validateConfig', async (_, config: rag.EmbeddingServiceConfig) => {
-    try {
-      return await rag.validateEmbeddingConfig(config)
-    } catch (error) {
-      return { success: false, error: String(error) }
-    }
-  })
-
-  // ==================== 向量存储管理 ====================
-
   /**
    * [Debug] 获取 AI 数据库 Schema
    */
@@ -1537,35 +1395,6 @@ export function registerAIHandlers({ win }: IpcContext): void {
     } catch (error: any) {
       console.error('Failed to execute AI SQL:', error)
       throw error
-    }
-  })
-
-  /**
-   * 获取向量存储统计信息
-   */
-  ipcMain.handle('rag:getVectorStoreStats', async () => {
-    try {
-      return await rag.getVectorStoreStats()
-    } catch (error) {
-      console.error('Failed to get vector store stats:', error)
-      return { enabled: false, error: String(error) }
-    }
-  })
-
-  /**
-   * 清空向量存储
-   */
-  ipcMain.handle('rag:clearVectorStore', async () => {
-    try {
-      const store = await rag.getVectorStore()
-      if (store) {
-        await store.clear()
-        return { success: true }
-      }
-      return { success: false, error: 'Vector store not enabled' }
-    } catch (error) {
-      console.error('Failed to clear vector store:', error)
-      return { success: false, error: String(error) }
     }
   })
 }

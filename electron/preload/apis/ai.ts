@@ -196,30 +196,6 @@ export interface AIServiceConfigDisplay {
   updatedAt: number
 }
 
-// Embedding 服务配置（多配置模式）
-export interface EmbeddingServiceConfig {
-  id: string
-  name: string
-  apiSource: 'reuse_llm' | 'custom'
-  model: string
-  baseUrl?: string
-  apiKey?: string
-  createdAt: number
-  updatedAt: number
-}
-
-// Embedding 配置展示用（隐藏 apiKey）
-export interface EmbeddingServiceConfigDisplay {
-  id: string
-  name: string
-  apiSource: 'reuse_llm' | 'custom'
-  model: string
-  baseUrl?: string
-  apiKeySet: boolean
-  createdAt: number
-  updatedAt: number
-}
-
 // ==================== AI API ====================
 
 export const aiApi = {
@@ -1148,91 +1124,5 @@ export const agentApi = {
   abort: (requestId: string): Promise<{ success: boolean; error?: string }> => {
     console.log('[preload] Agent abort 请求，requestId:', requestId)
     return ipcRenderer.invoke('agent:abort', requestId)
-  },
-}
-
-// ==================== Embedding API ====================
-
-export const embeddingApi = {
-  /**
-   * 获取所有 Embedding 配置（展示用）
-   */
-  getAllConfigs: (): Promise<EmbeddingServiceConfigDisplay[]> => {
-    return ipcRenderer.invoke('embedding:getAllConfigs')
-  },
-
-  /**
-   * 获取单个 Embedding 配置（用于编辑）
-   */
-  getConfig: (id: string): Promise<EmbeddingServiceConfig | null> => {
-    return ipcRenderer.invoke('embedding:getConfig', id)
-  },
-
-  /**
-   * 获取激活的配置 ID
-   */
-  getActiveConfigId: (): Promise<string | null> => {
-    return ipcRenderer.invoke('embedding:getActiveConfigId')
-  },
-
-  /**
-   * 检查语义搜索是否启用
-   */
-  isEnabled: (): Promise<boolean> => {
-    return ipcRenderer.invoke('embedding:isEnabled')
-  },
-
-  /**
-   * 添加 Embedding 配置
-   */
-  addConfig: (
-    config: Omit<EmbeddingServiceConfig, 'id' | 'createdAt' | 'updatedAt'>
-  ): Promise<{ success: boolean; config?: EmbeddingServiceConfig; error?: string }> => {
-    return ipcRenderer.invoke('embedding:addConfig', config)
-  },
-
-  /**
-   * 更新 Embedding 配置
-   */
-  updateConfig: (
-    id: string,
-    updates: Partial<Omit<EmbeddingServiceConfig, 'id' | 'createdAt' | 'updatedAt'>>
-  ): Promise<{ success: boolean; error?: string }> => {
-    return ipcRenderer.invoke('embedding:updateConfig', id, updates)
-  },
-
-  /**
-   * 删除 Embedding 配置
-   */
-  deleteConfig: (id: string): Promise<{ success: boolean; error?: string }> => {
-    return ipcRenderer.invoke('embedding:deleteConfig', id)
-  },
-
-  /**
-   * 设置激活的配置
-   */
-  setActiveConfig: (id: string): Promise<{ success: boolean; error?: string }> => {
-    return ipcRenderer.invoke('embedding:setActiveConfig', id)
-  },
-
-  /**
-   * 验证 Embedding 配置
-   */
-  validateConfig: (config: EmbeddingServiceConfig): Promise<{ success: boolean; error?: string }> => {
-    return ipcRenderer.invoke('embedding:validateConfig', config)
-  },
-
-  /**
-   * 获取向量存储统计信息
-   */
-  getVectorStoreStats: (): Promise<{ enabled: boolean; count?: number; sizeBytes?: number }> => {
-    return ipcRenderer.invoke('rag:getVectorStoreStats')
-  },
-
-  /**
-   * 清空向量存储
-   */
-  clearVectorStore: (): Promise<{ success: boolean; error?: string }> => {
-    return ipcRenderer.invoke('rag:clearVectorStore')
   },
 }
