@@ -21,6 +21,8 @@ import { pipeline } from 'stream/promises'
 import { getTempDir } from '../../paths'
 import * as worker from '../../worker/workerManager'
 import {
+  ApiError,
+  ApiErrorCode,
   successResponse,
   importInProgress,
   importFailed,
@@ -180,7 +182,7 @@ async function handleUnifiedImport(request: FastifyRequest, reply: FastifyReply,
       reply.code(err.statusCode).send(errorResponse(err))
       return
     }
-    tempFile = writeResult.tempFile
+    tempFile = writeResult.tempFile!
 
     // Idempotency-Key check (after tempFile is written so we can hash JSONL content)
     if (cacheKey) {
@@ -193,13 +195,11 @@ async function handleUnifiedImport(request: FastifyRequest, reply: FastifyReply,
           return
         }
         if (cached.status === 'pending') {
-          reply.code(409).send(
-            errorResponse({
-              statusCode: 409,
-              code: 'IDEMPOTENCY_PENDING',
-              message: 'A request with this Idempotency-Key is still in progress. Please retry later.',
-            })
+          const pendingErr = new ApiError(
+            ApiErrorCode.IDEMPOTENCY_PENDING,
+            'A request with this Idempotency-Key is still in progress. Please retry later.'
           )
+          reply.code(pendingErr.statusCode).send(errorResponse(pendingErr))
           return
         }
         reply.send(cached.response)
@@ -368,7 +368,7 @@ async function handleLegacyImport(request: FastifyRequest, reply: FastifyReply, 
       reply.code(err.statusCode).send(errorResponse(err))
       return
     }
-    tempFile = writeResult.tempFile
+    tempFile = writeResult.tempFile!
 
     if (sessionId) {
       const session = await worker.getSession(sessionId)

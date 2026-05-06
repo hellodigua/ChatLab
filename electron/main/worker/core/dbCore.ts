@@ -86,11 +86,9 @@ export function getCacheDir(): string {
 
 // ==================== 时间过滤工具 ====================
 
-export interface TimeFilter {
-  startTs?: number
-  endTs?: number
-  memberId?: number | null // 成员筛选，null 表示全部成员
-}
+// Re-export from shared-types
+export type { TimeFilter } from '@openchatlab/shared-types'
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 /**
  * 构建时间过滤 WHERE 子句

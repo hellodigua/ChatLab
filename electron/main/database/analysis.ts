@@ -28,13 +28,8 @@ import type {
 } from '../../../src/types/analysis'
 import { openDatabase } from './core'
 
-/**
- * 时间过滤参数
- */
-export interface TimeFilter {
-  startTs?: number
-  endTs?: number
-}
+export type { TimeFilter } from '@openchatlab/shared-types'
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 /**
  * 构建时间过滤 WHERE 子句

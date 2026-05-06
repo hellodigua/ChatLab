@@ -6,11 +6,18 @@
     "electron/main/**/*",
     "electron/preload/**/*",
     "electron/shared/**/*",
-    "src/types/**/*"
+    "src/types/**/*",
+    "packages/shared-types/**/*"
   ],
   "compilerOptions": {
     "composite": true,
     "types": ["electron-vite/node"],
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@electron/*": ["electron/*"],
+      "@openchatlab/*": ["packages/*"]
+    }
   }
 }

@@ -7,8 +7,12 @@ export default defineConfig(() => {
   return {
     main: {
       plugins: [externalizeDepsPlugin()],
+      resolve: {
+        alias: {
+          '@openchatlab': resolve('packages'),
+        },
+      },
       define: {
-        // 使用系统环境变量
         'process.env.APTABASE_APP_KEY': JSON.stringify(process.env.APTABASE_APP_KEY || ''),
       },
       build: {
@@ -22,6 +26,11 @@ export default defineConfig(() => {
     },
     preload: {
       plugins: [externalizeDepsPlugin()],
+      resolve: {
+        alias: {
+          '@openchatlab': resolve('packages'),
+        },
+      },
       build: {
         rollupOptions: {
           input: {
@@ -37,6 +46,9 @@ export default defineConfig(() => {
           '~': resolve('src/'),
           '@openchatlab': resolve('packages'),
         },
+      },
+      define: {
+        __IS_ELECTRON__: JSON.stringify(true),
       },
       plugins: [
         vue(),

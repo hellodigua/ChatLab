@@ -8,12 +8,7 @@
  */
 
 import type { MemberRow, MessageRow, ClusterGraphData, ClusterGraphOptions, BuildClusterInput } from './types'
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-  memberId?: number | null
-}
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const DEFAULT_OPTIONS: Required<ClusterGraphOptions> = {
   lookAhead: 3,

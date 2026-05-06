@@ -7,13 +7,9 @@ import { ListPro } from '@/components/charts'
 import { LoadingState, EmptyState, SectionCard } from '@/components/UI'
 import { formatDate, getRankBadgeClass } from '@/utils'
 import { useLayoutStore } from '@/stores/layout'
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const { t } = useI18n()
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-}
 
 const props = defineProps<{
   sessionId: string

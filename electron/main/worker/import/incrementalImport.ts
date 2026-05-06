@@ -196,7 +196,6 @@ export async function incrementalImport(
       id: number
       platform_id: string
     }>
-    const initialMemberCount = existingMembers.length
     for (const m of existingMembers) {
       memberIdMap.set(m.platform_id, m.id)
     }

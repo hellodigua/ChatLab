@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import { KeywordAnalysis } from '@/components/analysis/quotes'
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-}
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const props = defineProps<{
   sessionId: string

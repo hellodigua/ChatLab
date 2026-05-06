@@ -266,7 +266,7 @@ export function loadConfigStore(): AIConfigStore {
     }
 
     // Schema v2 → v3 迁移
-    if (store.schemaVersion < 3) {
+    if ((store.schemaVersion ?? 0) < 3) {
       store = { ...migrateToSchemaV3(store), schemaVersion: CURRENT_SCHEMA_VERSION } as typeof store
       needsSchemaSave = true
     }

@@ -6,13 +6,9 @@ import UserSelect from '@/components/common/UserSelect.vue'
 import MessageView from '@openchatlab/chart-message/MessageView.vue'
 import RelationshipView from './view/RelationshipView.vue'
 import { WordcloudTab, LanguagePreferenceTab } from '@/components/analysis/quotes'
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const { t } = useI18n()
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-}
 
 const props = defineProps<{
   sessionId: string

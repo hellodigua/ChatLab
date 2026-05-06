@@ -1,12 +1,8 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const { t } = useI18n()
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-}
 
 // Props
 defineProps<{

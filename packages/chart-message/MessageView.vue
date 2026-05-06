@@ -25,12 +25,7 @@ import type {
   TextStats,
 } from './types'
 import MessageProfileCard from './MessageProfileCard.vue'
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-  memberId?: number | null
-}
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const props = defineProps<{
   sessionId: string

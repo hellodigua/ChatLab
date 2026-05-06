@@ -245,9 +245,9 @@ export class Agent {
           ctx.api = lastMsg.api
         }
         // 从 model.baseUrl 和 api 类型构造完整请求 URL
-        const baseUrl = (this.piModel as Record<string, unknown>).baseUrl as string | undefined
+        const baseUrl = (this.piModel as unknown as Record<string, unknown>).baseUrl as string | undefined
         if (baseUrl) {
-          const apiType = lastMsg?.api || (this.piModel as Record<string, unknown>).api
+          const apiType = lastMsg?.api || (this.piModel as unknown as Record<string, unknown>).api
           const pathMap: Record<string, string> = {
             'openai-completions': '/chat/completions',
             'openai-responses': '/responses',

@@ -13,14 +13,9 @@ import { CanvasRenderer } from 'echarts/renderers'
 import type { EChartsOption } from 'echarts'
 import { loadClusterGraph } from './queries'
 import type { ClusterGraphData, ClusterGraphOptions } from './types'
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 echarts.use([HeatmapChart, TooltipComponent, GridComponent, VisualMapComponent, CanvasRenderer])
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-  memberId?: number | null
-}
 
 const props = defineProps<{
   sessionId: string

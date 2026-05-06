@@ -6,11 +6,7 @@ import type { RankItem } from '@/components/charts'
 import { LoadingState, Tabs, SectionCard, TopNSelect } from '@/components/UI'
 import { EChartBattleRank } from '../charts'
 import { queryMemeBattleAnalysis } from '../queries'
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-}
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const props = withDefaults(
   defineProps<{

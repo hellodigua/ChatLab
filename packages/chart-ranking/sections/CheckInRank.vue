@@ -4,11 +4,7 @@ import type { CheckInAnalysis } from '../types'
 import { EChartStreakRank } from '../charts'
 import { SectionCard, LoadingState, EmptyState, Tabs, TopNSelect } from '@/components/UI'
 import { queryCheckInAnalysis } from '../queries'
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-}
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const props = withDefaults(
   defineProps<{

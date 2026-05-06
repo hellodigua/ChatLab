@@ -9,14 +9,10 @@ import CatchphrasePKSection from './sections/CatchphrasePKSection.vue'
 import PosPortraitSection from './sections/PosPortraitSection.vue'
 import ModalParticleSection from './sections/ModalParticleSection.vue'
 import PunctuationSection from './sections/PunctuationSection.vue'
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const { t, locale } = useI18n()
 const layoutStore = useLayoutStore()
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-}
 
 const props = defineProps<{
   sessionId: string

@@ -3,13 +3,9 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { SubTabs } from '@/components/UI'
 import { CatchphraseTab, HotRepeatTab } from '@/components/analysis/quotes'
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const { t } = useI18n()
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-}
 
 const props = defineProps<{
   sessionId: string

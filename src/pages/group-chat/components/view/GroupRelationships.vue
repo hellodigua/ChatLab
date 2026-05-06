@@ -9,14 +9,9 @@ import { SubTabs } from '@/components/UI'
 import InteractionView from '@openchatlab/chart-interaction/InteractionView.vue'
 import Relationships from './Relationships.vue'
 import ClusterView from '@openchatlab/chart-cluster/ClusterView.vue'
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const { t } = useI18n()
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-  memberId?: number | null
-}
 
 const props = defineProps<{
   sessionId: string

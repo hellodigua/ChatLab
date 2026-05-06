@@ -5,13 +5,9 @@ import type { MentionAnalysis, MemberMentionDetail } from '@/types/analysis'
 import { RankListPro } from '@/components/charts'
 import type { RankItem } from '@/components/charts'
 import { SectionCard, EmptyState, LoadingState } from '@/components/UI'
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const { t } = useI18n()
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-}
 
 const props = defineProps<{
   sessionId: string

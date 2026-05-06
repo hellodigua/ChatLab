@@ -13,17 +13,13 @@ import { useSettingsStore } from '@/stores/settings'
 import { useLayoutStore } from '@/stores/layout'
 import { useWordFilterStore } from '@/stores/wordFilter'
 import { useToast } from '@/composables/useToast'
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const { t } = useI18n()
 const settingsStore = useSettingsStore()
 const layoutStore = useLayoutStore()
 const wordFilterStore = useWordFilterStore()
 const toast = useToast()
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-}
 
 interface PosTagInfo {
   tag: string

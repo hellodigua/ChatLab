@@ -51,14 +51,14 @@ export function createTool(context: ToolContext): AgentTool<typeof schema> {
         posFilterMode: 'meaningful',
         enableStopwords: true,
       }
-      const freqMap = batchSegmentWithFrequency(texts, segLocale, segOptions)
+      const freqResult = batchSegmentWithFrequency(texts, segLocale, segOptions)
 
-      if (freqMap.size === 0) {
+      if (freqResult.words.size === 0) {
         const text = isZh ? '分词后没有有意义的高频词' : 'No meaningful high-frequency words found after segmentation'
         return { content: [{ type: 'text', text }], details: null }
       }
 
-      const ranking = [...freqMap.entries()].map(([word, count], i) => ({
+      const ranking = [...freqResult.words.entries()].map(([word, count], i) => ({
         rank: i + 1,
         word,
         count,

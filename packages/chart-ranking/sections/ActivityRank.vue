@@ -5,11 +5,7 @@ import { EChartRank } from '@/components/charts'
 import type { RankItem } from '@/components/charts'
 import { SectionCard, LoadingState, Tabs, TopNSelect } from '@/components/UI'
 import { queryDragonKingAnalysis, queryCheckInAnalysis } from '../queries'
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-}
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const props = withDefaults(
   defineProps<{

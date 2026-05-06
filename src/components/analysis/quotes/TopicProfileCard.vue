@@ -4,15 +4,11 @@ import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
 import { ThemeCard } from '@/components/UI'
 import type { WordFrequencyItem, PosTagStat } from './topicProfileTypes'
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const EChartWordcloud = defineAsyncComponent(() => import('@/components/charts/EChartWordcloud.vue'))
 
 const { t } = useI18n()
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-}
 
 const props = defineProps<{
   totalMessages: number

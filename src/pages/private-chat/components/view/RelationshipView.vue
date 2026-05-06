@@ -6,13 +6,9 @@ import { ThemeCard, SectionCard, EmptyState, LoadingState } from '@/components/U
 import { EChart } from '@/components/charts'
 import RelationshipMetricCard from './RelationshipMetricCard.vue'
 import type { EChartsOption } from 'echarts'
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const { t, locale } = useI18n()
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-}
 
 const props = defineProps<{
   sessionId: string

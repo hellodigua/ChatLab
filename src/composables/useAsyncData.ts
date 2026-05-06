@@ -1,14 +1,10 @@
 import { ref, watch, type Ref, type ComputedRef } from 'vue'
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 /**
  * 异步数据加载 Composable
  * 统一处理数据加载、状态管理和错误处理
  */
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-}
 
 interface UseAsyncDataOptions<T> {
   /** 是否立即加载数据（默认 true） */

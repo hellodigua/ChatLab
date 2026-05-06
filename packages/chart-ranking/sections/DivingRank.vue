@@ -4,11 +4,7 @@ import type { DivingAnalysis } from '../types'
 import { EChartDivingRank } from '../charts'
 import { LoadingState } from '@/components/UI'
 import { queryDivingAnalysis } from '../queries'
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-}
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const props = defineProps<{
   sessionId: string

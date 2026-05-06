@@ -10,18 +10,13 @@ import { ThemeCard } from '@/components/UI'
 import { MessageType, getMessageTypeName } from './types'
 import type { MessageTypeCount, HourlyActivity, WeekdayActivity, DailyActivity, TextStats } from './types'
 import { queryLongMessageCount } from './queries'
+import type { TimeFilter } from '@openchatlab/shared-types'
 import dayjs from 'dayjs'
 
 echarts.use([PieChart, BarChart, TooltipComponent, GridComponent, CanvasRenderer])
 
 const { t } = useI18n()
 const isDark = useDark()
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-  memberId?: number | null
-}
 
 const props = defineProps<{
   sessionId: string

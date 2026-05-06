@@ -13,12 +13,7 @@ import type {
   LengthDistribution,
   TextStats,
 } from './types'
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-  memberId?: number | null
-}
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 /**
  * 构建时间和成员过滤条件

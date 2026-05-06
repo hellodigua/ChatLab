@@ -7,12 +7,7 @@ import { PageAnchorsNav, TopNSelect } from '@/components/UI'
 import { usePageAnchors } from '@/composables'
 import type { MemberActivity } from './types'
 import { ActivityRank, CheckInRank, MemeBattleRank, RepeatSection, DivingRank, NightOwlRank } from './sections'
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-  memberId?: number | null
-}
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const props = defineProps<{
   sessionId: string

@@ -8,13 +8,9 @@ import RankingView from '@openchatlab/chart-ranking/RankingView.vue'
 import GroupRelationships from './view/GroupRelationships.vue'
 import { WordcloudTab, CatchphraseTab, HotRepeatTab } from '@/components/analysis/quotes'
 import { isFeatureSupported, type LocaleType } from '@/i18n'
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const { t, locale } = useI18n()
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-}
 
 const props = defineProps<{
   sessionId: string

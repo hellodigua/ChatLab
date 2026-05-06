@@ -6,14 +6,10 @@ const EChartWordcloud = defineAsyncComponent(() => import('@/components/charts/E
 import type { EChartWordcloudData } from '@/components/charts'
 import { LoadingState, EmptyState, UITabs } from '@/components/UI'
 import { useLayoutStore } from '@/stores/layout'
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const { t } = useI18n()
 const layoutStore = useLayoutStore()
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-}
 
 const props = defineProps<{
   sessionId: string

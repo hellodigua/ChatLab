@@ -7,13 +7,9 @@ import type { RankItem } from '@/components/charts'
 import { LoadingState } from '@/components/UI'
 import { getRankBadgeClass } from '@/utils'
 import { usePromptStore } from '@/stores/prompt'
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const { t } = useI18n()
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-}
 
 // 扩展基础模板类型，添加组件内使用的字段
 interface KeywordTemplate extends BaseKeywordTemplate {

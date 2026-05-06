@@ -5,14 +5,10 @@ import { ThemeCard } from '@/components/UI'
 import { useSettingsStore } from '@/stores/settings'
 import type { SharedWord } from '@/types/quotes/languagePreference'
 import type { MemberWithStats } from '@/types/analysis'
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const { t } = useI18n()
 const settingsStore = useSettingsStore()
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-}
 
 type DictType = 'default' | 'zh-CN' | 'zh-TW'
 

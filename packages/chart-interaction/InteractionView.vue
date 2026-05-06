@@ -8,12 +8,7 @@ import { useI18n } from 'vue-i18n'
 import { EChartGraph } from '@/components/charts'
 import type { EChartGraphData } from '@/components/charts'
 import { loadMentionGraph } from './queries'
-
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-  memberId?: number | null
-}
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 const props = defineProps<{
   sessionId: string

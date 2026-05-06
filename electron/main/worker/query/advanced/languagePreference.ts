@@ -269,8 +269,8 @@ export function getLanguagePreferenceAnalysis(params: LanguagePreferenceParams):
     const b = memberProfiles[1]
 
     // 共同高频词
-    const wordsA = new Map(a.topWords.map((w: any) => [w.word, w.count]))
-    const wordsB = new Map(b.topWords.map((w: any) => [w.word, w.count]))
+    const wordsA = new Map<string, number>(a.topWords.map((w: any) => [w.word, w.count]))
+    const wordsB = new Map<string, number>(b.topWords.map((w: any) => [w.word, w.count]))
     const shared: Array<{ word: string; countA: number; countB: number }> = []
     for (const [word, countA] of wordsA) {
       const countB = wordsB.get(word)

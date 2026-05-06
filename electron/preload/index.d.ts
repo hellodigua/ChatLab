@@ -20,11 +20,7 @@ import type { FileParseInfo, ConflictCheckResult, MergeParams, MergeResult } fro
 import type { LanguagePreferenceResult } from '../../src/types/quotes/languagePreference'
 import type { TableSchema, SQLResult } from '../../src/components/analysis/SQLLab/types'
 
-interface TimeFilter {
-  startTs?: number
-  endTs?: number
-  memberId?: number | null // 成员筛选，null 表示全部成员
-}
+import type { TimeFilter } from '@openchatlab/shared-types'
 
 // @ 互动关系图数据
 interface MentionGraphData {
