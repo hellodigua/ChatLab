@@ -103,8 +103,8 @@
       "languagePreference": "语言偏好"
     },
     "groupRelationships": {
-      "mentionGraph": "@ 关系图",
-      "mentionRanking": "@ 排行",
+      "mentionGraph": "{'@'} 关系图",
+      "mentionRanking": "{'@'} 排行",
       "proximity": "发言临近度"
     },
     "member": {
