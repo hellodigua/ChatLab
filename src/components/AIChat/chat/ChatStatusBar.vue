@@ -6,7 +6,7 @@ import { useToast } from '@/composables/useToast'
 import { usePromptStore } from '@/stores/prompt'
 import { useLayoutStore } from '@/stores/layout'
 import { useLLMStore } from '@/stores/llm'
-import { exportConversation, type ExportFormat } from '@/utils/conversationExport'
+import { exportConversation, type ExportFormat, type ExportMessage } from '@/utils/conversationExport'
 import type { AgentRuntimeStatus } from '@electron/shared/types'
 
 const { t } = useI18n()
@@ -86,10 +86,11 @@ const contextTokens = computed(() => {
 })
 
 const modelContextWindow = computed(() => {
-  if (!defaultAssistantConfig.value) return 128000
-  const model =
-    llmStore.getModelById(defaultAssistantConfig.value.provider, defaultAssistantConfig.value.model) ||
-    llmStore.findModelAcrossProviders(defaultAssistantConfig.value.model)
+  const defaultConfig = defaultAssistantConfig.value
+  const modelId = defaultConfig?.model
+  if (!defaultConfig || !modelId) return 128000
+
+  const model = llmStore.getModelById(defaultConfig.provider, modelId) || llmStore.findModelAcrossProviders(modelId)
   return model?.contextWindow ?? 128000
 })
 
@@ -103,15 +104,6 @@ const contextBarColor = computed(() => {
   if (pct >= 80) return 'bg-red-500'
   if (pct >= 60) return 'bg-amber-500'
   return 'bg-emerald-500'
-})
-
-const contextBarTooltip = computed(() => {
-  const lines = []
-  lines.push(
-    `${t('ai.chat.statusBar.agent.contextTokens')}: ${formatNumber(contextTokens.value)} / ${formatNumber(modelContextWindow.value)} (${contextUsagePercent.value}%)`
-  )
-  lines.push(`${t('ai.chat.statusBar.tokenUsageTitle')}: ${totalTokenUsageText.value}`)
-  return lines.join('\n')
 })
 
 const agentCompactTitle = computed(() => {
@@ -168,10 +160,14 @@ async function handleExportConversation() {
       user: t('ai.chat.conversation.export.user'),
       assistant: t('ai.chat.conversation.export.assistant'),
     }
-    const messagesWithMs = messages.map((msg) => ({
-      ...msg,
-      timestamp: msg.timestamp * 1000,
-    }))
+    // 导出面向用户可见的问答内容，跳过压缩摘要等系统生成的内部消息。
+    const messagesWithMs: ExportMessage[] = messages
+      .filter((msg) => msg.role === 'user' || msg.role === 'assistant')
+      .map((msg) => ({
+        role: msg.role as ExportMessage['role'],
+        content: msg.content,
+        timestamp: msg.timestamp * 1000,
+      }))
 
     const result = await exportConversation(title, messagesWithMs, conv.createdAt * 1000, format, labels)
 

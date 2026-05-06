@@ -276,7 +276,7 @@
   },
   "aiPrompt": {
     "chatSettings": {
-      "title": "对话设置"
+      "title": "工具设置"
     },
     "exportSettings": {
       "title": "导出设置"
@@ -382,7 +382,7 @@
     "developer": {
       "title": "开发者选项",
       "debugMode": "DEBUG 模式",
-      "debugModeDesc": "开启后，AI 日志中将记录完整的原始消息内容，不截断。日志文件可能会显著增大"
+      "debugModeDesc": "开启后，将显示调试面板和快捷调试工具，可用于查看数据库、运行测试工具，并记录更详细的调试日志。"
     }
   },
   "embedding": {

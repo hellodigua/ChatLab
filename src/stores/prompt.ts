@@ -2,6 +2,27 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { KeywordTemplate } from '@/types/analysis'
 
+interface ContextCompressionSettings {
+  enabled: boolean
+  tokenThresholdPercent: number
+  bufferSizePercent: number
+  maxToolResultPercent: number
+}
+
+interface AIGlobalSettings {
+  maxMessagesPerRequest: number
+  exportFormat: 'markdown' | 'txt'
+  sqlExportFormat: 'csv' | 'json'
+  enableAutoSkill: boolean
+  searchContextBefore: number
+  searchContextAfter: number
+  contextCompression: ContextCompressionSettings
+}
+
+type AIGlobalSettingsUpdate = Partial<Omit<AIGlobalSettings, 'contextCompression'>> & {
+  contextCompression?: Partial<ContextCompressionSettings>
+}
+
 /**
  * AI 配置与关键词模板相关的全局状态
  */
@@ -9,10 +30,10 @@ export const usePromptStore = defineStore(
   'prompt',
   () => {
     const aiConfigVersion = ref(0)
-    const aiGlobalSettings = ref({
+    const aiGlobalSettings = ref<AIGlobalSettings>({
       maxMessagesPerRequest: 1000,
-      exportFormat: 'markdown' as 'markdown' | 'txt',
-      sqlExportFormat: 'csv' as 'csv' | 'json',
+      exportFormat: 'markdown',
+      sqlExportFormat: 'csv',
       enableAutoSkill: true,
       searchContextBefore: 2,
       searchContextAfter: 2,
@@ -36,30 +57,14 @@ export const usePromptStore = defineStore(
     /**
      * 更新 AI 全局设置
      */
-    function updateAIGlobalSettings(
-      settings: Partial<{
-        maxMessagesPerRequest: number
-        exportFormat: 'markdown' | 'txt'
-        sqlExportFormat: 'csv' | 'json'
-        enableAutoSkill: boolean
-        searchContextBefore: number
-        searchContextAfter: number
-        contextCompression: {
-          enabled: boolean
-          tokenThresholdPercent: number
-          bufferSizePercent: number
-          maxToolResultPercent?: number
-        }
-      }>
-    ) {
-      if (settings.contextCompression) {
-        aiGlobalSettings.value = {
-          ...aiGlobalSettings.value,
-          ...settings,
-          contextCompression: { ...aiGlobalSettings.value.contextCompression, ...settings.contextCompression },
-        }
-      } else {
-        aiGlobalSettings.value = { ...aiGlobalSettings.value, ...settings }
+    function updateAIGlobalSettings(settings: AIGlobalSettingsUpdate) {
+      const { contextCompression, ...baseSettings } = settings
+      aiGlobalSettings.value = {
+        ...aiGlobalSettings.value,
+        ...baseSettings,
+        contextCompression: contextCompression
+          ? { ...aiGlobalSettings.value.contextCompression, ...contextCompression }
+          : aiGlobalSettings.value.contextCompression,
       }
       notifyAIConfigChanged()
     }

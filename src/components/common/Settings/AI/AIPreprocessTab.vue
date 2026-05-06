@@ -112,9 +112,6 @@ function removeCustomRule(ruleId: string) {
         <USwitch v-model="aiPreprocessConfig.dataCleaning" />
       </div>
 
-      <!-- 分隔线 -->
-      <div class="border-t border-gray-200 dark:border-gray-600" />
-
       <!-- 合并连续发言 -->
       <div class="flex items-center justify-between">
         <div class="flex-1 pr-4">
@@ -136,9 +133,6 @@ function removeCustomRule(ruleId: string) {
         <UInputNumber v-model="aiPreprocessConfig.mergeWindowSeconds" :min="30" :max="600" :step="30" class="w-28" />
       </div>
 
-      <!-- 分隔线 -->
-      <div class="border-t border-gray-200 dark:border-gray-600" />
-
       <!-- 智能去噪 -->
       <div class="flex items-center justify-between">
         <div class="flex-1 pr-4">
@@ -152,9 +146,6 @@ function removeCustomRule(ruleId: string) {
         <USwitch v-model="aiPreprocessConfig.denoise" />
       </div>
 
-      <!-- 分隔线 -->
-      <div class="border-t border-gray-200 dark:border-gray-600" />
-
       <!-- 昵称匿名化 -->
       <div class="flex items-center justify-between">
         <div class="flex-1 pr-4">
@@ -167,9 +158,6 @@ function removeCustomRule(ruleId: string) {
         </div>
         <USwitch v-model="aiPreprocessConfig.anonymizeNames" />
       </div>
-
-      <!-- 分隔线 -->
-      <div class="border-t border-gray-200 dark:border-gray-600" />
 
       <!-- 数据脱敏 -->
       <div class="flex items-center justify-between">

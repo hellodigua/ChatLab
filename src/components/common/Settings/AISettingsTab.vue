@@ -5,8 +5,7 @@ import AIModelConfigTab from './AI/AIModelConfigTab.vue'
 import AIDefaultModelTab from './AI/AIDefaultModelTab.vue'
 import AIPromptConfigTab from './AI/AIPromptConfigTab.vue'
 import AIPreprocessTab from './AI/AIPreprocessTab.vue'
-// TODO: 向量模型暂时隐藏，待功能完善后恢复
-// import RAGConfigTab from './AI/RAGConfigTab.vue'
+import AIExportSettingsTab from './AI/AIExportSettingsTab.vue'
 import SubTabs from '@/components/UI/SubTabs.vue'
 import { useSubTabsScroll } from '@/composables/useSubTabsScroll'
 
@@ -21,10 +20,11 @@ const emit = defineEmits<{
 const navItems = computed(() => [
   { id: 'model', label: t('settings.tabs.aiConfig') },
   { id: 'defaultModel', label: t('settings.tabs.aiDefaultModel') },
-  // TODO: 向量模型暂时隐藏，待功能完善后恢复
-  // { id: 'rag', label: t('settings.tabs.aiRAG') },
-  { id: 'chat', label: t('settings.tabs.aiPrompt') },
+  { id: 'chat', label: t('settings.aiPrompt.chatSettings.title') },
+  { id: 'skill', label: t('settings.aiPrompt.skillSettings.title') },
+  { id: 'compression', label: t('settings.aiPrompt.compression.title') },
   { id: 'preprocess', label: t('settings.tabs.aiPreprocess') },
+  { id: 'export', label: t('settings.aiPrompt.exportSettings.title') },
 ])
 
 // 使用二级导航滚动联动 composable
@@ -68,36 +68,22 @@ void aiModelConfigRef.value
           <AIModelConfigTab ref="aiModelConfigRef" @config-changed="handleAIConfigChanged" />
         </div>
 
-        <!-- 分隔线 -->
-        <div class="border-t border-gray-200 dark:border-gray-700" />
-
         <!-- 默认模型 -->
         <div :ref="(el) => setSectionRef('defaultModel', el as HTMLElement)">
           <AIDefaultModelTab @config-changed="handleAIConfigChanged" />
         </div>
 
-        <!-- TODO: 向量模型暂时隐藏，待功能完善后恢复 -->
-        <!--
-        <div class="border-t border-gray-200 dark:border-gray-700" />
-        <div :ref="(el) => setSectionRef('rag', el as HTMLElement)">
-          <RAGConfigTab @config-changed="handleAIConfigChanged" />
-        </div>
-        -->
-
-        <!-- 分隔线 -->
-        <div class="border-t border-gray-200 dark:border-gray-700" />
-
-        <!-- 对话配置 -->
-        <div :ref="(el) => setSectionRef('chat', el as HTMLElement)">
-          <AIPromptConfigTab @config-changed="handleAIConfigChanged" />
-        </div>
-
-        <!-- 分隔线 -->
-        <div class="border-t border-gray-200 dark:border-gray-700" />
+        <!-- 工具设置 -->
+        <AIPromptConfigTab :set-section-ref="setSectionRef" @config-changed="handleAIConfigChanged" />
 
         <!-- 预处理配置 -->
         <div :ref="(el) => setSectionRef('preprocess', el as HTMLElement)">
           <AIPreprocessTab />
+        </div>
+
+        <!-- 导出设置 -->
+        <div :ref="(el) => setSectionRef('export', el as HTMLElement)">
+          <AIExportSettingsTab @config-changed="handleAIConfigChanged" />
         </div>
       </div>
     </div>

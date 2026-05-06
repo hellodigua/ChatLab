@@ -276,7 +276,7 @@
   },
   "aiPrompt": {
     "chatSettings": {
-      "title": "Chat Settings"
+      "title": "Tool Settings"
     },
     "exportSettings": {
       "title": "Export Settings"
@@ -382,7 +382,7 @@
     "developer": {
       "title": "Developer Options",
       "debugMode": "DEBUG Mode",
-      "debugModeDesc": "When enabled, AI logs will include full raw message content without truncation. Log files may grow significantly"
+      "debugModeDesc": "When enabled, the debug panel and quick debugging tools will be shown. You can use them to view databases, run testing tools, and record more detailed debug logs."
     }
   },
   "embedding": {

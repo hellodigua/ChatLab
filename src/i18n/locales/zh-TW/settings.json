@@ -276,7 +276,7 @@
   },
   "aiPrompt": {
     "chatSettings": {
-      "title": "聊天設定"
+      "title": "工具設定"
     },
     "exportSettings": {
       "title": "匯出設定"
@@ -382,7 +382,7 @@
     "developer": {
       "title": "開發者選項",
       "debugMode": "DEBUG 模式",
-      "debugModeDesc": "開啟後，AI 日誌中將紀錄完整的原始訊息內容，不截斷。日誌檔案可能會顯著增大"
+      "debugModeDesc": "開啟後，將顯示除錯面板和快捷除錯工具，可用於查看資料庫、執行測試工具，並記錄更詳細的除錯日誌。"
     }
   },
   "embedding": {

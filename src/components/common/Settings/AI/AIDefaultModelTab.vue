@@ -174,9 +174,6 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- 分隔线 -->
-        <div class="border-t border-gray-200 dark:border-gray-700" />
-
         <!-- 快速模型 -->
         <div>
           <div class="mb-2">
