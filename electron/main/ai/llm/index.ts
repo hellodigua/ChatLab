@@ -352,12 +352,15 @@ export function getDefaultAssistantConfig(): AIServiceConfig | null {
 /** 获取快速模型 slot */
 export function getFastModelSlot(): import('./model-types').ModelSlot | null {
   const store = loadConfigStore()
+  if (store.fastModel === null) return null
   return resolveSlot(store.fastModel, store.configs)
 }
 
 /** 获取快速模型配置（会话摘要），未配置时回退到默认助手 */
 export function getFastModelConfig(): AIServiceConfig | null {
   const store = loadConfigStore()
+  if (store.fastModel === null) return getDefaultAssistantConfig()
+
   const slot = resolveSlot(store.fastModel, store.configs)
   if (slot) {
     const config = store.configs.find((c) => c.id === slot.configId)

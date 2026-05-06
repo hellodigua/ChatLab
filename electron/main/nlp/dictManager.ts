@@ -8,7 +8,6 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { createHash } from 'crypto'
 import { app } from 'electron'
-import axios from 'axios'
 
 const NLP_DIR_NAME = 'nlp'
 const DICT_DOWNLOAD_URL_BASE = 'https://chatlab.fun/assets/nlp'
@@ -19,6 +18,37 @@ const DICT_SHA256: Record<string, string> = {
 
 function sha256Hex(buffer: Buffer): string {
   return createHash('sha256').update(buffer).digest('hex')
+}
+
+async function downloadBuffer(url: string, timeoutMs: number, onProgress?: (percent: number) => void): Promise<Buffer> {
+  const response = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) })
+  if (!response.ok) {
+    throw new Error(`Download failed: HTTP ${response.status}`)
+  }
+
+  const total = Number(response.headers.get('content-length') || 0)
+  if (!response.body) {
+    return Buffer.from(await response.arrayBuffer())
+  }
+
+  const reader = response.body.getReader()
+  const chunks: Buffer[] = []
+  let loaded = 0
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+
+    const chunk = Buffer.from(value)
+    chunks.push(chunk)
+    loaded += chunk.length
+
+    if (total > 0 && onProgress) {
+      onProgress(Math.round((loaded / total) * 100))
+    }
+  }
+
+  return Buffer.concat(chunks)
 }
 
 export interface DictInfo {
@@ -100,17 +130,7 @@ export async function downloadDict(
   const tmpPath = filePath + '.tmp'
 
   try {
-    const response = await axios.get(url, {
-      responseType: 'arraybuffer',
-      timeout: 120_000,
-      onDownloadProgress: (progressEvent) => {
-        if (progressEvent.total && onProgress) {
-          onProgress(Math.round((progressEvent.loaded / progressEvent.total) * 100))
-        }
-      },
-    })
-
-    const buffer = Buffer.from(response.data)
+    const buffer = await downloadBuffer(url, 120_000, onProgress)
 
     // 词库文件至少应 > 1MB，且不应以 HTML 标签开头
     const MIN_DICT_SIZE = 1_000_000

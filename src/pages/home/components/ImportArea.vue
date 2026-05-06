@@ -64,7 +64,7 @@ const router = useRouter()
 const mergeImportEnabled = ref(false)
 
 // 是否展示 Demo 按钮（仅无任何会话时）
-const showDemoButton = computed(() => sessionStore.sessions.length !== 0)
+const showDemoButton = computed(() => sessionStore.sessions.length === 0)
 
 // 计算是否正在导入（单文件、批量或合并）
 const isAnyImporting = computed(() => isImporting.value || isBatchImporting.value || isMergeImporting.value)

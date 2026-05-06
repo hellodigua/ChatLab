@@ -102,8 +102,8 @@
       "languagePreference": "語言偏好"
     },
     "groupRelationships": {
-      "mentionGraph": "@ 關係圖",
-      "mentionRanking": "@ 排行",
+      "mentionGraph": "{'@'} 關係圖",
+      "mentionRanking": "{'@'} 排行",
       "proximity": "發言臨近度"
     },
     "member": {

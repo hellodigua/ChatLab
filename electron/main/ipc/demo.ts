@@ -5,7 +5,6 @@
 import { ipcMain, app } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
-import axios from 'axios'
 import * as worker from '../worker/workerManager'
 import type { IpcContext } from './types'
 
@@ -27,12 +26,12 @@ function getDemoTempDir(): string {
 
 async function downloadFile(url: string, destPath: string): Promise<void> {
   const tmpPath = destPath + '.tmp'
-  const response = await axios.get(url, {
-    responseType: 'arraybuffer',
-    timeout: 60_000,
-  })
+  const response = await fetch(url, { signal: AbortSignal.timeout(60_000) })
+  if (!response.ok) {
+    throw new Error(`Download failed: HTTP ${response.status}`)
+  }
 
-  const buffer = Buffer.from(response.data)
+  const buffer = Buffer.from(await response.arrayBuffer())
   if (buffer.length < 100) {
     throw new Error(`Downloaded file too small (${buffer.length} bytes)`)
   }
